@@ -91,7 +91,18 @@ run() {
   echo "== $1 ($(date +%T))"
   if ! ack "$1"; then
     fresh_shell
-    ack "$1" || { shot "no-shell-before-$(echo "$1" | tr '/' '-')"; echo "   NOT RUN: the Shell did not answer"; return 0; }
+    if ! ack "$1"; then
+      # A program that ignores Ctrl-C can hold the screen (Micropolis after
+      # the LHA suite, 2026-09-29): clicking it away is not reliable, a power
+      # cycle is. Only a suite that needs nothing from the ones before it
+      # may be recovered this way; trials B to D rely on trial A's RAM:.
+      shot "no-shell-before-$(echo "$1" | tr '/' '-')"
+      case "$1" in R/TRIALB|R/TRIALC) echo "   NOT RUN: the Shell did not answer, and this suite needs the one before it"; return 0 ;; esac
+      echo "   the Shell did not answer; power-cycling before $1"
+      boot
+      t "Stack 262144" 1
+      ack "$1" || { echo "   NOT RUN: the Shell did not answer after a power cycle"; return 0; }
+    fi
   fi
   t "Execute PAYLOAD:$1" 2
   n=0; lim=$(( ${3:-40} * 12 ))

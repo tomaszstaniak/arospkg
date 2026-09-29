@@ -18,7 +18,14 @@ HERE=$(cd "$(dirname "$0")/.." && pwd)
 OUT=$1; ISO=$2
 [ -n "$OUT" ] || { echo "usage: $0 OUTDIR [ISO]"; exit 2; }
 for b in apkg PkgManager; do [ -f "$HERE/$b" ] || { echo "build $b first"; exit 1; }; done
-[ -f "$HERE/dist/arospkg.x86_64-aros-v11.zip" ] || { echo "run tools/make-release.sh first"; exit 1; }
+# RELZIP: the release archive ACCEPT tests (default: the 0.3-style dist
+# archive); RELDIR: the drawer it unpacks to. ACCEPT checks both hashes first.
+RELZIP=${RELZIP:-$HERE/dist/arospkg.x86_64-aros-v11.zip}
+RELDIR=${RELDIR:-arospkg.x86_64-aros-v11}
+[ -f "$RELZIP" ] || { echo "no release archive $RELZIP"; exit 1; }
+RELSHA=$(shasum -a 256 "$RELZIP" | cut -c1-64)
+APKGSHA=$(unzip -p "$RELZIP" "$RELDIR/apkg" | shasum -a 256 | cut -c1-64)
+[ "$APKGSHA" = "$(shasum -a 256 "$HERE/apkg" | cut -c1-64)" ] || { echo "the apkg in $RELZIP is not ./apkg"; exit 1; }
 CACHE=$HERE/.cache/archives
 OLD_SHA=37b2774a16afcd950e82ef29dbcb0d2fb994125406b1db0d8071ca69d14a7598
 
@@ -48,7 +55,7 @@ print(p['url'].split('/share/',1)[1], p['sha256'])")
 pick cls     "$HERE/tests/release-index.json" "$OUT/A/CLSZIP"
 pick zaphod  "$HERE/tests/release-index.json" "$OUT/A/ZAPZIP"
 cp "$CACHE/micropolis.x86_64-aros-v11.lha" "$OUT/A/MICROLHA"
-cp "$HERE/dist/arospkg.x86_64-aros-v11.zip" "$OUT/A/RELZIP"
+cp "$RELZIP" "$OUT/A/RELZIP"
 
 # generated fixtures
 FX=$(mktemp -d "${TMPDIR:-/tmp}/pkgfx.XXXXXX")
@@ -70,7 +77,7 @@ cp "$T/gui-upgrade-launch.script" "$OUT/S/GUI"; cp "$T/gui-launch.script" "$OUT/
 cp "$T/json-progress.script" "$OUT/S/JSONTEST"
 cp "$T/release-1.script" "$OUT/R/REL1"; cp "$T/release-1g.script" "$OUT/R/REL1G"; cp "$T/release-2.script" "$OUT/R/REL2"
 for x in a b c d; do cp "$T/trial-$x.script" "$OUT/R/TRIAL$(echo $x | tr a-d A-D)"; done
-cp "$T/acceptance.script" "$OUT/R/ACCEPT"; cp "$T/lha-on-aros.script" "$OUT/R/LHATEST"
+sed -e "s/@RELSHA@/$RELSHA/; s/@APKGSHA@/$APKGSHA/; s/@RELDIR@/$RELDIR/g" "$T/acceptance.script" > "$OUT/R/ACCEPT"; cp "$T/lha-on-aros.script" "$OUT/R/LHATEST"
 
 for d in "$OUT" "$OUT"/A "$OUT"/I "$OUT"/R "$OUT"/S; do
   n=$(ls "$d" | wc -l); [ "$n" -le 12 ] || { echo "$d has $n entries, more than the 12 the guest reads"; exit 1; }
