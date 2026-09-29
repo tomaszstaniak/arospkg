@@ -1,0 +1,9 @@
+FAILAT 1000
+Copy RAM:rxt/hashtime RAM:hashtime
+Protect RAM:hashtime +e
+Date >RESULTS:rq-time.txt
+RAM:hashtime 1000000 1 RESULTS:jent-raw-noise --max-mem 0 >>RESULTS:rq-time.txt
+Date >>RESULTS:rq-time.txt
+RAM:hashtime 1000 1000 RESULTS:jent-raw-noise-restart --max-mem 0 >>RESULTS:rq-time.txt
+Date >>RESULTS:rq-time.txt
+Echo "QUIET DONE" >RESULTS:rq-done.txt

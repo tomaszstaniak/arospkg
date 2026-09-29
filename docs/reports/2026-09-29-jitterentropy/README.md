@@ -31,12 +31,61 @@ and is a different case, not tested here.
 | forcing the internal timer, which is not built | refused (rc 1), no data | refused |
 | `apkg update`, `install zaphod`, `remove` over TLS | worked | worked |
 
+## Raw-noise measurement, upstream procedure (2026-09-29/30)
+
+Configuration: pool slot `v11-1`, AROS One 1.3 x86_64 (ABIv11), QEMU TCG on
+macOS (Apple Silicon host), one boot, nothing else started in the guest.
+Program: upstream `tests/raw-entropy/recording_userspace/jitterentropy-hashtime.c`
+from jitterentropy-library 3.7.0, unchanged, built -O0 against the same
+library as the SDK package (binary SHA-256 `ca39e0e4...`). Commands as in
+`raw-t.script`:
+
+- runtime: `hashtime 1000000 1 RESULTS:jent-raw-noise --max-mem 0`
+  (one million time deltas of the hash loop);
+- restart: `hashtime 1000 1000 RESULTS:jent-raw-noise-restart --max-mem 0`,
+  where a "restart" is a new collector instance (`jent_entropy_collector_alloc`)
+  inside the same process and the same boot, not a reboot of AROS.
+
+The host limited the run to 14400 s. The runtime series took 21:18 to 23:33.
+The restart series had reached **470 of 1000** restarts at the limit.
+Hashes of all data files: `raw-data.sha256` (the data stay local, 8.4 MB).
+
+### Runtime result
+
+Upstream `validation-runtime/processdata.sh`, mask `FF` (8 bits), NIST
+SP800-90B_EntropyAssessment `ea_non_iid` (commit 87c104d0), full output in
+`raw-runtime-ea_non_iid.txt`:
+
+| | value |
+|---|---|
+| H_original (8-bit symbols) | 4.672794 |
+| H_bitstring | 0.276656 |
+| min(H_original, 8 x H_bitstring) | **2.213248 bits per sample** |
+| needed for the library's default oversampling (OSR 3) | 1/3 = 0.333 |
+
+By the upstream procedure the runtime noise **meets** the criterion on this
+system, with a margin of about 6.6.
+
+Limits of this result:
+
+- Under TCG every delta is a multiple of 1000 (QEMU's clock), so the low byte
+  takes only 32 values. The estimate is for that byte as sampled; the GCD is
+  not divided out, as upstream does not either.
+- One machine, one boot, idle guest, one host. Not measured: KVM, real
+  hardware, load, snapshot restore.
+- No SP 800-90B certification is claimed or intended; the thresholds and the
+  data were not changed.
+
+### Restart result
+
+**Not evaluated.** `ea_restart` needs the full 1000 x 1000 matrix; 470 rows
+are not a valid input and were not analysed. A complete restart series needs
+about 4 hours on this setup and was not started again.
+
 ## What this does not establish
 
-- The entropy rate. Upstream's raw-noise collection and SP 800-90B analysis
-  (`tests/raw-entropy/` in the release) has not been run; that is the next
-  step, and its result, not the library's acceptance of the timer, is what
-  can support a claim.
+- The restart entropy (see above), and anything beyond the runtime figure
+  for this one configuration.
 - Behaviour after a RAM snapshot restore, under load, on a CPU with RDRAND,
   or on real hardware.
 - i386 and aarch64: both builds link the library; neither was run with it.
