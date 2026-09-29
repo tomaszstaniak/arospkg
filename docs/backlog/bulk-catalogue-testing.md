@@ -71,9 +71,18 @@ qemu-system-x86_64 -name aros-N -machine pc,accel=tcg -cpu qemu64 -smp 2 -m 2048
 - **Input**: a read-only ISO per batch holding `apkg`, `index.json` and the
   scripts (`mkisofs -J -R -o input-N.iso batchdir/`). Copy them to `RAM:`
   in the guest before use.
-- **Results**: a small FAT image per guest (`results-N.img`, mounted in the
-  guest as a drive). The guest copies its logs there. Read the image on the
-  host only while that guest is stopped.
+- **Results over the network** (preferred): in QEMU's user network the
+  host is `10.0.2.2` from inside the guest. Run
+  `python3 tests/tools/recv.py <dir> <port>` on the host, one port and one
+  directory per guest, and send each log from the guest with
+  `tests/tools/putfile` (the AROS binary; source `putfile.c`). Files arrive
+  while the guest runs, so a crash does not lose what was already sent. Before
+  starting a receiver, check that nothing else listens on its port: a leftover
+  receiver once took a run's files.
+- **Results on a disk** (fallback): a small FAT image per guest
+  (`results-N.img`). Read it on the host only while that guest is stopped.
+- No project-specific VM tools are needed: everything goes through the QMP
+  or monitor socket.
 - **Driving**: keys and screenshots go through QMP (`send-key`,
   `screendump`) or the monitor socket. `usb-tablet` is required for the
   pointer. Wait for Workbench before typing, and press Return if the GRUB
