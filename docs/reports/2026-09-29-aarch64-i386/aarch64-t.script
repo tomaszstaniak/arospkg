@@ -1,0 +1,12 @@
+FAILAT 1000
+SYS:ApkgTest/apkg --version >SYS:ApkgTest/a-version.txt
+SYS:ApkgTest/probe POLL >SYS:ApkgTest/a-poll.txt
+SYS:ApkgTest/probe POLL >>SYS:ApkgTest/a-poll.txt
+SYS:ApkgTest/apkg --root SYS:ApkgRoot search >SYS:ApkgTest/a-off.txt
+SYS:ApkgTest/apkg --root SYS:ApkgRoot --all-abi search game >>SYS:ApkgTest/a-off.txt
+SYS:ApkgTest/apkg --root SYS:ApkgRoot show zaphod >>SYS:ApkgTest/a-off.txt
+SYS:ApkgTest/apkg --root SYS:ApkgRoot install zaphod >>SYS:ApkgTest/a-off.txt
+SYS:ApkgTest/apkg --root SYS:ApkgRoot list >>SYS:ApkgTest/a-off.txt
+SYS:ApkgTest/apkg --root SYS:ApkgN update >SYS:ApkgTest/a-net.txt
+SYS:ApkgTest/probe RAW SYS:ApkgTest/a-raw.bin 50000 >SYS:ApkgTest/a-raw.txt
+Echo "A DONE" >SYS:ApkgTest/a-done.txt

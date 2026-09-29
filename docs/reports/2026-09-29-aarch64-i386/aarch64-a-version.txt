@@ -1,0 +1,8 @@
+apkg 0.3
+  abi     v1
+  binary  a25a4f284cd32e0f646267029b46af45a07cc629917c71030524e55b91c8ea02
+  source  12abf0a4737f530a
+  cc      clang
+  tc      /Volumes/macaros/crosstools
+  sdk     /Volumes/macaros/build/bin/darwin-aarch64
+  tls     Mbed TLS 3.6.7
