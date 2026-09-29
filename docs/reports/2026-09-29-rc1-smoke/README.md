@@ -22,3 +22,20 @@ the earlier candidate (`09b299af`) are not counted for these binaries.
 The release regression was run on the previous candidate, not on these
 binaries (`local`, not in this report). Its trials A to D did not run: the
 LHA suite's Micropolis window covered the Shell.
+
+## aarch64: the posixc.library used
+
+The aarch64 build ran only on Macaros (native aarch64 AROS hosted on macOS),
+and only with a posixc.library added to its `Libs/`, because that Macaros
+build did not include one. The file used:
+
+- `posixc.library`, 404672 bytes,
+  SHA-256 `e0c4f8ba6c87c5f8a1500b9c75ce6069beefed025b0859c81bf18b27f72e62b4`
+- built with `make compiler-posixc` from a clean AROS tree at commit
+  `6a55c079cc6abbd02c00f0290cebef4f0b17637d` (2026-08-30), Macaros
+  darwin-aarch64 configuration;
+- path in that build: `bin/darwin-aarch64/AROS/Libs/posixc.library`.
+
+To reproduce: configure Macaros at that commit, run `make compiler-posixc`,
+copy the library into the system's `Libs/`. Whether an aarch64 AROS that ships
+its own posixc.library runs this apkg is untested.
