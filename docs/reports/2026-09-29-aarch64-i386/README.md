@@ -38,7 +38,7 @@ i386 machine made for this from the clean i386 baseline.
 | step | result (`i386-*.txt`) |
 |---|---|
 | `--version` | `abi v0`, `tls Mbed TLS 3.6.7`, GCC 6.5.0 |
-| entropy | PASS twice; 0.270 bits/sample over 50,000 samples (most-common-value estimate only): less margin than on x86_64 (19x) |
+| entropy | PASS twice; 0.270 bits/sample over 50,000 samples (most-common-value estimate only), lower than on x86_64 |
 | `update` | fetched over TLS |
 | `install zaphod` (x86_64) | refused: wrong CPU |
 | `show ghostscript` (x86_64, ABIv1) | "undetermined, this build does not know its own ABI" |
