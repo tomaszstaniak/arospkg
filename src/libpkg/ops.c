@@ -1180,9 +1180,13 @@ pkg_status pkg_search(pkg_ctx *c, const char *index_path, const char *term,
     for (i = 0; i < es.n; i++) {
         const pkg_entry *p = &es.v[i];
         if (olen + 700 >= cap) { cap *= 2; buf = (char *)realloc(buf, cap); if (!buf) break; }
+        /* Says why a listed entry is not for this machine: the CPU is
+           checked before the ABI, as everywhere else. */
+        const char *tag = p->ours ? ""
+            : (*pkg_arch() && p->arch[0] && strcmp(p->arch, pkg_arch())) ? "[other CPU] "
+            : !pkg_abi_known(p->abi) ? "[unknown ABI] " : "[other ABI] ";
         olen += (size_t)sprintf(buf + olen, "%-20s %-10s %-9s %s%s\n",
-                                p->id, p->version, p->arch,
-                                p->ours ? "" : "[other ABI] ", p->summary);
+                                p->id, p->version, p->arch, tag, p->summary);
     }
     if (!es.n) olen += (size_t)sprintf(buf + olen, "nothing matches\n");
     if (hidden)
