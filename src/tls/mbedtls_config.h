@@ -74,4 +74,8 @@
 #define MBEDTLS_CHACHA20_C
 #define MBEDTLS_POLY1305_C
 #define MBEDTLS_CHACHAPOLY_C
+
+/* mbedtls_strerror(): readable error messages for programs using the
+ * developer package. */
+#define MBEDTLS_ERROR_C
 #endif
