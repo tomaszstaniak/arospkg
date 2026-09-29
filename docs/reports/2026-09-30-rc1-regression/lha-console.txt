@@ -1,0 +1,83 @@
+apkg 0.3.1-rc1
+  abi     v11
+  binary  e4583d6aeb20af0de62b96827cc5c9c43984f4abf5519dbcc7eb12283f2b5aae
+  source  c97cc1d577b4595f
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+  tls     Mbed TLS 3.6.7
+
+== an LHA fetched from AROS Archives ==
+fetching https://archives.arosworld.org/share/utility/misc/hex2.x86_64-aros-v11.lha
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/misc/hex2.x86_64-aros-v11.lha
+verified and cached SYS:PkgLha/cache/hex2.lha
+installed hex2
+report RAM:lrep/hex2.json
+PASS lha-hex2: ok as expected
+Directory "SYS:PkgLha" on Wednesday 09/30/26:
+hex2.info                   1679 ---rwed Today       00:07:46
+hex2                         Dir ---rwed Today       00:07:46
+tmp                          Dir ---rwed Today       00:07:46
+db                           Dir ---rwed Today       00:07:46
+cache                        Dir ---rwed Today       00:07:46
+1 file - 4 directories - 8 blocks used
+
+== our own LHA, with the drawer icon named in the index ==
+installed micropolis
+report RAM:lrep/micro.json
+PASS lha-micropolis: ok as expected
+Directory "SYS:PkgLha" on Wednesday 09/30/26:
+micropolis.info             1822 ---rwed Today       00:07:49
+micropolis                   Dir ---rwed Today       00:07:48
+tmp                          Dir ---rwed Today       00:07:46
+hex2.info                   1679 ---rwed Today       00:07:46
+hex2                         Dir ---rwed Today       00:07:46
+db                           Dir ---rwed Today       00:07:49
+cache                        Dir ---rwed Today       00:07:46
+2 files - 5 directories - 13 blocks used
+
+the drawer icon must be beside the drawer:
+Directory "SYS:PkgLha" on Wednesday 09/30/26:
+micropolis.info             1822 ---rwed Today       00:07:49
+hex2.info                   1679 ---rwed Today       00:07:46
+2 files - 8 blocks used
+
+and .arospkg must NOT be inside it (subdir named the drawer):
+Directory "SYS:PkgLha/micropolis" on Wednesday 09/30/26:
+tiles.bmp                 246838 ---rwed Today       00:07:48
+startup                      Dir ---rwed Today       00:07:48
+sprites                      Dir ---rwed Today       00:07:48
+sounds                       Dir ---rwed Today       00:07:48
+icons                        Dir ---rwed Today       00:07:47
+cities                       Dir ---rwed Today       00:07:47
+SHA256SUMS                 13260 ---rwed Today       00:07:47
+ReadMe.txt                  2469 ---rwed Today       00:07:47
+Micropolis.info             1790 ---rwed Today       00:07:47
+Micropolis               3214864 ---rwed Today       00:07:47
+Licenses                     Dir ---rwed Today       00:07:46
+CITY.CTY.info                823 ---rwed Today       00:07:46
+CITY.CTY                   27120 ---rwed Today       00:07:46
+BUILD.txt                    235 ---rwed Today       00:07:46
+8 files - 6 directories - 6860 blocks used
+
+== does it run? ==
+micropolis after 20 s (a number means it is running):
+ 9
+after Ctrl-C (empty means it closed):
+ 9
+
+== remove both ==
+removed hex2
+report RAM:lrep/hex2rm.json
+PASS lha-hex2-rm: ok as expected
+removed micropolis
+report RAM:lrep/microrm.json
+PASS lha-micro-rm: ok as expected
+nothing installed
+Directory "SYS:PkgLha" on Wednesday 09/30/26:
+tmp                          Dir ---rwed Today       00:08:14
+micropolis                   Dir ---rwed Today       00:08:14
+db                           Dir ---rwed Today       00:08:14
+cache                        Dir ---rwed Today       00:07:46
+4 directories - 4 blocks used
+== end ==

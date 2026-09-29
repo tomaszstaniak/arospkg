@@ -1,0 +1,107 @@
+== a user unpacks the release archive ==
+== the archive under test ==
+PASS assert-hash RAM:unpacked/release.zip
+Archive:  RAM:unpacked/release.zip
+   creating: arospkg-0.3.1-rc1.x86_64-aros-v11/
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/LICENSE  
+   creating: arospkg-0.3.1-rc1.x86_64-aros-v11/licenses/
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/licenses/jitterentropy-3.7.0-LICENSE  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/licenses/zlib-LICENSE  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/licenses/MbedTLS-3.6.7-LICENSE  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/licenses/jitterentropy-3.7.0-LICENSE.bsd  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/BUILD.txt  
+   creating: arospkg-0.3.1-rc1.x86_64-aros-v11/Examples/
+   creating: arospkg-0.3.1-rc1.x86_64-aros-v11/Examples/ARexx/
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/Examples/ARexx/ShowPackage.rexx  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/Examples/ARexx/Upgrade.rexx  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/Examples/ARexx/IsInstalled.rexx  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/Examples/ARexx/InstallWatch.rexx  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/Examples/ARexx/Install.rexx  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/README.txt  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/PkgManager  
+  inflating: arospkg-0.3.1-rc1.x86_64-aros-v11/apkg  
+PASS assert-hash RAM:unpacked/arospkg-0.3.1-rc1.x86_64-aros-v11/apkg
+Directory "RAM:unpacked/arospkg-0.3.1-rc1.x86_64-aros-v11" on Wednesday 09/30/26:
+LICENSE                     1099 ---rw-d Yesterday   22:47:13
+licenses                     Dir ---rwed Today       01:41:37
+BUILD.txt                    239 ---rw-d Yesterday   22:47:13
+Examples                     Dir ---rwed Today       01:41:37
+README.txt                  3749 ---rw-d Yesterday   22:47:13
+PkgManager                967544 ---rwed Yesterday   22:47:13
+apkg                      904944 ---rwed Yesterday   22:47:13
+5 files - 2 directories - 3672 blocks used
+
+== and copies apkg to C:, as the README says ==
+
+== apkg --version: the abi line must say v11 ==
+apkg 0.3.1-rc1
+  abi     v11
+  binary  e4583d6aeb20af0de62b96827cc5c9c43984f4abf5519dbcc7eb12283f2b5aae
+  source  c97cc1d577b4595f
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+  tls     Mbed TLS 3.6.7
+
+== apkg update ==
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: SYS:Packages/db/index.json
+report RAM:acc/a1.json
+PASS a-update: ok as expected
+
+== apkg search game ==
+blips                1.0        x86_64    a sokoban style puzzle
+hocoslamfy           2026       x86_64    SDL Flappy Bird clone.
+micropolis           0.1.0-rc3  x86_64    Classic city-building simulation for AROS
+ominostage           1.1        x86_64    collect all the coins and avoid the enemies
+openloco             0.1.0-rc1  x86_64    Open-source re-implementation of Chris Sawyer's Locomotion
+sdllopan             1.0        x86_64    Lopan - MahJong clone
+sdlpop               1.23       x86_64    SDLPoP, an open-source port of Prince of Persia
+shooterspace         1.0        x86_64    Avoid asteroids and deal with threatening UFOs
+soliton              2.2        x86_64    Klondike & Freecell card game
+untangle             1.2        x86_64    Untangle set of dots joined by lines
+xrick                050500     x86_64    a clone of Rick Dangerous
+
+== apkg install soliton ==
+fetching https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/card/soliton.x86_64-aros-v11.zip
+verified and cached SYS:Packages/cache/soliton.zip
+installed soliton
+report RAM:acc/a2.json
+PASS a-install: ok as expected
+Directory "SYS:Packages" on Wednesday 09/30/26:
+soliton.info               10090 ---rwed Today       01:42:50
+soliton                      Dir ---rwed Today       01:42:49
+tmp                          Dir ---rwed Today       01:42:49
+cache                        Dir ---rwed Today       01:42:49
+db                           Dir ---rwed Today       01:42:50
+1 file - 4 directories - 24 blocks used
+
+== the user starts it from its drawer ==
+soliton running? (a number means yes):
+ 9
+
+== apkg list, info, remove ==
+soliton
+removed soliton
+report RAM:acc/a3.json
+PASS a-remove: ok as expected
+nothing installed
+Directory "SYS:Packages" on Wednesday 09/30/26:
+tmp                          Dir ---rwed Today       01:43:09
+cache                        Dir ---rwed Today       01:42:49
+db                           Dir ---rwed Today       01:43:09
+3 directories - 3 blocks used
+
+== and the checksums in the archive match what was unpacked ==
+TYPE: can't open SHA256SUMS
+object not found
+apkg 0.3.1-rc1
+  abi     v11
+  binary  e4583d6aeb20af0de62b96827cc5c9c43984f4abf5519dbcc7eb12283f2b5aae
+  source  c97cc1d577b4595f
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+  tls     Mbed TLS 3.6.7
+== end of acceptance ==
