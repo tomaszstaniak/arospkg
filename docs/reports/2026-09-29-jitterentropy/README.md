@@ -48,7 +48,11 @@ library as the SDK package (binary SHA-256 `ca39e0e4...`). Commands as in
 
 The host limited the run to 14400 s. The runtime series took 21:18 to 23:33.
 The restart series had reached **470 of 1000** restarts at the limit.
-Hashes of all data files: `raw-data.sha256` (the data stay local, 8.4 MB).
+Hashes of all data files: `raw-data.sha256`. The data themselves (8.4 MB,
+471 files) are kept outside Git in
+`arospkg-jent-raw-20260929-v11-1.tar.xz`, SHA-256
+`61d7f46ff0602028aa1fbdf1909d21102fa1cd268d36de54b4e745523bb06c03`,
+with the analysis output and the guest script.
 
 ### Runtime result
 
@@ -63,8 +67,9 @@ SP800-90B_EntropyAssessment `ea_non_iid` (commit 87c104d0), full output in
 | min(H_original, 8 x H_bitstring) | **2.213248 bits per sample** |
 | needed for the library's default oversampling (OSR 3) | 1/3 = 0.333 |
 
-By the upstream procedure the runtime noise **meets** the criterion on this
-system, with a margin of about 6.6.
+Estimate 2.21 bits per sample; threshold 0.333; the runtime criterion is
+**met in the configuration tested**. The ratio between the two is not a
+safety margin.
 
 Limits of this result:
 
@@ -81,6 +86,10 @@ Limits of this result:
 **Not evaluated.** `ea_restart` needs the full 1000 x 1000 matrix; 470 rows
 are not a valid input and were not analysed. A complete restart series needs
 about 4 hours on this setup and was not started again.
+
+The SP 800-90B style assessment is therefore **not complete**: the runtime
+part passed, and a positive runtime result says nothing about the restart
+part.
 
 ## What this does not establish
 
