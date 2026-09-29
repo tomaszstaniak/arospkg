@@ -1,0 +1,2 @@
+ not opened for output - disk is write-protected
+rc=5

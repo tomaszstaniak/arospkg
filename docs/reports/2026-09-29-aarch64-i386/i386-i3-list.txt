@@ -1,0 +1,6 @@
+Directory "RAM:rxt" on Tuesday 09/29/26:
+apkg                      530360 ---rwed Today       19:38:28
+index.json                   735 ---rw-d Today       19:38:28
+probe                      18436 ---rwed Today       19:38:28
+t.script                     884 ---rw-d Today       20:14:44
+4 files - 1077 blocks used

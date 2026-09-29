@@ -1,0 +1,41 @@
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: SYS:I3T/db/index.json
+antiword             0.37       x86_64    Convert Word documents to TXT/PDF/PS
+bin2iso              1.1        x86_64    convert Bin File to ISO 9660
+blips                1.0        x86_64    a sokoban style puzzle
+ccd2iso              0.3        x86_64    Convert CloneCD (.ccd) to ISO Images
+dirtree              40.8       x86_64    Shell command displaying directory trees
+folio                0.4        x86_64    PDF reader with thumbnails, search and highlighting, on MuPDF
+gmore                1.2        x86_64    Text viewer similar to MORE
+grafx2               2.9        x86_64    256-colour indexed paint program for AROS
+grep                 2.0        x86_64    GNU Grep
+hocoslamfy           2026       x86_64    SDL Flappy Bird clone.
+iconmake             1.2        x86_64    The DualPNG Icon Creator for AROS
+isomaker             1.0        x86_64    Create an ISO CD from DOS
+isotool              1.0        x86_64    Boot Extraction ISO And Rename Volume
+micropolis           0.1.0-rc3  x86_64    Classic city-building simulation for AROS
+ominostage           1.1        x86_64    collect all the coins and avoid the enemies
+openloco             0.1.0-rc1  x86_64    Open-source re-implementation of Chris Sawyer's Locomotion
+rescode              1.2        x86_64    Calculates resistor values (4 and 5 band)
+sdllopan             1.0        x86_64    Lopan - MahJong clone
+sdlpop               1.23       x86_64    SDLPoP, an open-source port of Prince of Persia
+shooterspace         1.0        x86_64    Avoid asteroids and deal with threatening UFOs
+skandalfoclock       1.1        x86_64    Advanced Analog Clock
+soliton              2.2        x86_64    Klondike & Freecell card game
+unlzx                2.16       x86_64    Unpack lzx files
+untangle             1.2        x86_64    Untangle set of dots joined by lines
+xrick                050500     x86_64    a clone of Rick Dangerous
+zaphod               1.3        x86_64    A simple binary file editor
+zunecalc             1.0        x86_64    Simple Calculator
+apkg: wrong CPU for this system
+     zaphod
+     It is built for x86_64; this system is i386. It would install and then not start.
+ghostscript 10.0.0
+  PostScript and PDF interpreter
+  category:     utility/print
+  target:       x86_64, ABI v1
+  compatibility: undetermined -- this build does not know its own ABI
+  download:     12527 KB from https://archives.arosworld.org/share/utility/print/ghostscript-10.0.0.x86_64-aros.lha
+  sha256:       7953164a91c1b63db3aeb177631e2e85c612f03907a958f795c255d715a6e7c6
+  requirements: not checked -- it is not compatible with this machine
+  installed:    no

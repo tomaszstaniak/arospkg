@@ -32,7 +32,20 @@ The ABI tag is `v1`, as for mainline; whether aarch64 needs its own is open.
 
 The ABIv0 i386 toolchain and SDK; zlib compiled from the build's own
 1.2.13 sources with its SIMD stub; 530 KB, 32-bit, no undefined symbols.
-**Not run.** The only i386 machine in the pool is not marked ready and is
-in use for another port. The client does not know the ABI tag `v0`, so it
-treats its own ABI as unknown and hides nothing; `mkindex.py` does not
-accept `v0` either. Supporting ABIv0 packages is a design step of its own.
+Run on pool slot `v0-2` (ABIv0 20250313-1, QEMU TCG, `qemu32`), a new
+i386 machine made for this from the clean i386 baseline.
+
+| step | result (`i386-*.txt`) |
+|---|---|
+| `--version` | `abi v0`, `tls Mbed TLS 3.6.7`, GCC 6.5.0 |
+| entropy | PASS twice; 0.270 bits/sample over 50,000 samples, 4x the credit: less margin than on x86_64 (19x) |
+| `update` | fetched over TLS |
+| `install zaphod` (x86_64) | refused: wrong CPU |
+| `show ghostscript` (x86_64, ABIv1) | "undetermined, this build does not know its own ABI" |
+| `--verify-name wrong.example.com` | refused: CN does not match |
+
+**Gap found:** the client does not know the ABI tag `v0`, so it treats its
+own ABI as unknown, and then `search` hides nothing, not even packages for
+another CPU (`i386-net.txt` lists all 27 x86_64 packages). `install` still
+refuses them on the CPU check. The fix: hide on the CPU even when the ABI
+is unknown, and teach the client and `mkindex.py` the tag `v0`.
