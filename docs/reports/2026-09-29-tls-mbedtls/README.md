@@ -26,7 +26,7 @@ timing jitter: for each sample, the loop iterations until the cycle counter
 changes, together with the change. It is folded through SHA-256, RDRAND is
 added when the CPU has it (QEMU's `qemu64` does not), and SP 800-90B
 repetition-count and adaptive-proportion tests run on every sample. The
-credit is 1/16 bit per sample.
+credit is 1/16 bit per sample, a provisional figure.
 
 | file | method | most-common-value min-entropy, bits/sample |
 |---|---|---|
@@ -38,8 +38,16 @@ Under TCG the counter advances in steps of 1000; about 30 iterations fit
 between steps, and the number varies. The first method failed its health
 check and the client refused to connect ("no good randomness on this
 machine; refusing to connect"), which is the intended failure. Analyse any
-file with `tests/entropy/estimate.py`. This is one estimator, not a
-certification; KVM and real hardware were not measured.
+file with `tests/entropy/estimate.py`.
+
+**These figures are not a security margin.** They are one estimator (most
+common value) on a few runs under one QEMU configuration. They do not rule
+out a predictable sequence, and say nothing about dependence between
+samples, restarts, cloned VM snapshots, other loads or real hardware.
+Passing the health tests does not make the source validated under SP
+800-90B. The source is provisional: see the open work in the branch notes.
+The path without RDRAND is the one measured here (QEMU's `qemu64` has no
+RDRAND); a CPU with RDRAND has not been tested.
 
 ## TLS on the machine (`mb3-*.txt`)
 

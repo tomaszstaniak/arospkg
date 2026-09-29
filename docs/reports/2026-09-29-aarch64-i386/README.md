@@ -20,7 +20,7 @@ That image had no `posixc.library`; it was built from the same tree
 | step | result (`aarch64-*.txt`) |
 |---|---|
 | `--version` | `tls Mbed TLS 3.6.7` |
-| entropy | PASS twice; 1.313 bits/sample over 50,000 samples, 21x the credit (`cntvct_el0`) |
+| entropy | PASS twice; 1.313 bits/sample over 50,000 samples (most-common-value estimate only) (`cntvct_el0`) |
 | `show zaphod` (x86_64 package) | incompatible: built for x86_64, this machine is aarch64; requirements not checked |
 | `install zaphod` | refused: wrong CPU |
 | `update` | no network: hosted Macaros has no `bsdsocket.library` |
@@ -38,7 +38,7 @@ i386 machine made for this from the clean i386 baseline.
 | step | result (`i386-*.txt`) |
 |---|---|
 | `--version` | `abi v0`, `tls Mbed TLS 3.6.7`, GCC 6.5.0 |
-| entropy | PASS twice; 0.270 bits/sample over 50,000 samples, 4x the credit: less margin than on x86_64 (19x) |
+| entropy | PASS twice; 0.270 bits/sample over 50,000 samples (most-common-value estimate only): less margin than on x86_64 (19x) |
 | `update` | fetched over TLS |
 | `install zaphod` (x86_64) | refused: wrong CPU |
 | `show ghostscript` (x86_64, ABIv1) | "undetermined, this build does not know its own ABI" |

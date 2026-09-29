@@ -14,7 +14,7 @@ boot; the second finished the steps a crashing program had cut short.
 | step | result |
 |---|---|
 | `--version` | `abi v1`, `tls Mbed TLS 3.6.7` |
-| entropy (`probe POLL`, `v1b-raw.bin`) | PASS twice; 0.939 bits/sample over 50,000 samples, 15x the credit |
+| entropy (`probe POLL`, `v1b-raw.bin`) | PASS twice; 0.939 bits/sample over 50,000 samples (most-common-value estimate only) |
 | `update` from the published catalogue | fetched over TLS 1.3 |
 | `install zaphod` (an ABIv11 package) | refused before download: "wrong ABI for this system" |
 | `show ghostscript` (test index, ABIv1) | native, requirements none stated |
