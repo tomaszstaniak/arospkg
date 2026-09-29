@@ -1,0 +1,9 @@
+Tuesday 29-Sep-26 20:53:36
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: SYS:JeT/db/index.json
+fetching https://archives.arosworld.org/share/development/edit/zaphod-v1.3-.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=development/edit/zaphod-v1.3-.x86_64-aros-v11.zip
+verified and cached SYS:JeT/cache/zaphod.zip
+installed zaphod
+removed zaphod
+Tuesday 29-Sep-26 20:53:41

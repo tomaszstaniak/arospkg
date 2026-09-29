@@ -1,0 +1,58 @@
+Tuesday 29-Sep-26 20:53:36
+read 1: PASS, 32 bytes, init rc 0: cbbd5236a80117a3a4a1dd44c3442aa7
+read 2: PASS, 32 bytes, init rc 0: 5a3b84fc6702b49b3b57f924b6f1d75f
+read 3: PASS, 32 bytes, init rc 0: 6c8c37575a168edfaa14cd656de48e0c
+{
+	"version": "3.7.0",
+	"healthFailure": {
+		"apt": {
+			"intermittent": false,
+			"permanent": false
+		},
+		"rct": {
+			"intermittent": false,
+			"permanent": false
+		},
+		"rctMemory": {
+			"intermittent": false,
+			"permanent": false
+		},
+		"lag": {
+			"intermittent": false,
+			"permanent": false
+		}
+	},
+	"runtimeEnvironment": {
+		"cpuCores": 1,
+		"cpuCache": {
+			"l1Bytes": 0,
+			"allBytes": 0
+		}
+	},
+	"configuration": {
+		"osr": 3,
+		"memoryBlockSizeBytes": 262144,
+		"hashLoopCount": {
+			"runtime": 1,
+			"initialization": 3
+		},
+		"memoryLoopCount": {
+			"runtime": 128,
+			"initialization": 384
+		},
+		"secureMemory": false,
+		"internalTimer": false,
+		"fipsMode": false,
+		"ntg1Mode": false,
+		"flags": {
+			"JENT_DISABLE_MEMORY_ACCESS": false,
+			"JENT_FORCE_INTERNAL_TIMER": false,
+			"JENT_DISABLE_INTERNAL_TIMER": false,
+			"JENT_FORCE_FIPS": false,
+			"JENT_NTG1": false,
+			"JENT_CACHE_ALL": false
+		}
+	}
+}
+
+rc=0
