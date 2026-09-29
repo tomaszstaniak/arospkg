@@ -7,7 +7,7 @@
 #include <string.h>
 #include <jitterentropy.h>
 int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen);
-int apkg_jent_status(void);
+int aros_jent_status(void);
 int main(int argc, char **argv)
 {
     unsigned char b[32]; size_t ol; int i, k, r;
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     for (k = 0; k < 3; k++) {
         ol = 0;
         r = mbedtls_hardware_poll(NULL, b, sizeof b, &ol);
-        printf("read %d: %s, %lu bytes, init rc %d: ", k + 1, r == 0 ? "PASS" : "FAIL", (unsigned long)ol, apkg_jent_status());
+        printf("read %d: %s, %lu bytes, init rc %d: ", k + 1, r == 0 ? "PASS" : "FAIL", (unsigned long)ol, aros_jent_status());
         for (i = 0; i < 16; i++) printf("%02x", b[i]);
         printf("\n");
         if (r) return 10;
