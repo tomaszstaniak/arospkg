@@ -16,3 +16,5 @@ __pycache__/
 /docs/spikes/network-download/dl
 /docs/spikes/dos-lock/locktest
 /docs/spikes/dos-lock/renlock
+
+/build/

@@ -24,7 +24,9 @@ SDK=${SDK:-$HOME/Work/AROS/sdk}
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-$HERE/../apkg}
 
-BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h "$HERE"/pkg/main.c \
+CC="$TC/x86_64-aros-gcc"; AR="$TC/x86_64-aros-ar"; TAG=abiv11-x86_64
+. "$HERE/tls/tls.sh"
+BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h $TLS_SRC "$HERE"/pkg/main.c \
            | shasum -a 256 | cut -c1-16)
 echo "build id $BUILD_ID  (ABIv11 / AROS One, default)"
 
@@ -34,8 +36,8 @@ echo "build id $BUILD_ID  (ABIv11 / AROS One, default)"
     -DPKG_SDK='"'"$SDK"'"' \
     -DPKG_ABI='"v11"' \
     -DPKG_CC="\"$("$TC/x86_64-aros-gcc" -dumpversion)\"" \
-    -I"$SDK/include" \
-    "$HERE"/libpkg/*.c "$HERE"/pkg/main.c \
-    "$SDK/lib/libz.static.a" -L"$SDK/lib" -lssl -lcrypto \
+    -I"$SDK/include" $TLS_CFLAGS -DPKG_TLS='"'"$TLS"'"' \
+    "$HERE"/libpkg/*.c "$HERE"/pkg/main.c $TLS_SRC \
+    "$SDK/lib/libz.static.a" $TLS_LIBS -L"$SDK/lib" \
     -o "$OUT"
 ls -l "$OUT"

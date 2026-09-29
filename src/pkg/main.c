@@ -3,6 +3,7 @@
  * them. Errors are printed as libpkg wrote them rather than re-phrased here. */
 
 #include "../libpkg/pkg.h"
+#include "../libpkg/tls.h"
 #include "../libpkg/sha256.h"
 #include "../libpkg/verify.h"
 #include <stdio.h>
@@ -278,9 +279,9 @@ static int real_main(int argc, char **argv)
                 char self[65];
                 pkg_self_sha256(self);
                 printf("%s\n  abi     %s\n  binary  %s\n  source  %s\n"
-                       "  cc      %s\n  tc      %s\n  sdk     %s\n",
+                       "  cc      %s\n  tc      %s\n  sdk     %s\n  tls     %s\n",
                        VERSION, pkg_abi(), self, pkg_build_id(), pkg_cc(),
-                       pkg_toolchain(), pkg_sdk());
+                       pkg_toolchain(), pkg_sdk(), tls_name());
             }
             return 0;
         }

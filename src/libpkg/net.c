@@ -23,8 +23,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
+#include "tls.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,22 +31,9 @@
 #define CAFILE   "ENV:SYS/Certificates/ca-bundle.crt"
 #define MAXREDIR 5
 
-/* Require the certificate to match the host we asked for.
- *
- * The function was renamed: OpenSSL 4.0 calls it SSL_set1_dnsname() and
- * deprecates SSL_set1_host(). Mainline's contrib carries 4.0.1; the AROS One
- * SDK carries 1.1.0h from 2018, which has only the old name. This is not a
- * nicety -- without it SSL_VERIFY_PEER validates the chain and would accept
- * any valid certificate for any name at all. */
-#if OPENSSL_VERSION_NUMBER >= 0x40000000L
-#  define PKG_SET_HOSTNAME(ssl, host)  SSL_set1_dnsname((ssl), (host))
-#else
-#  define PKG_SET_HOSTNAME(ssl, host)  SSL_set1_host((ssl), (host))
-#endif
-
-/* libnet.a defines SocketBase but nothing opens it, and OpenSSL's socket
- * calls go through bsdsocket, so the base has to be ours and live before any
- * TLS work happens. */
+/* libnet.a defines SocketBase but nothing opens it, and the TLS layer's
+ * socket calls go through bsdsocket, so the base has to be ours and live
+ * before any TLS work happens. */
 struct Library *SocketBase;
 
 const char *net_cafile(void) { return CAFILE; }
@@ -135,29 +121,13 @@ static size_t dechunk(char *b, size_t len)
 static int fetch_once(const char *host, const char *path, str *body,
                       char *loc, size_t locn, long max_bytes, char why[240])
 {
-    SSL_CTX *ctx = NULL;
-    SSL *ssl = NULL;
+    tls *t = NULL;
     int s = -1, rc = 0, n, code, chunked;
     str raw = {0};
     char req[2048], *hdr_end, *stline, *b;
     size_t blen;
-    long vr;
-
-    ctx = SSL_CTX_new(TLS_client_method());
-    if (!ctx) { snprintf(why, 240, "SSL_CTX_new failed"); goto out; }
-
-    if (SSL_CTX_load_verify_locations(ctx, CAFILE, NULL) != 1) {
-        snprintf(why, 240, "cannot load the CA bundle %s -- refusing to download", CAFILE);
-        goto out;
-    }
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 
     if ((s = tcp_connect(host, why)) < 0) goto out;
-
-    ssl = SSL_new(ctx);
-    if (!ssl) { snprintf(why, 240, "SSL_new failed"); goto out; }
-    SSL_set_fd(ssl, s);
-    SSL_set_tlsext_host_name(ssl, host);          /* SNI: which vhost   */
     {   /* Normally the host we asked for. A test can substitute another name,
            and then the handshake must fail -- that is the only way to show the
            check is doing anything. */
@@ -165,33 +135,20 @@ static int fetch_once(const char *host, const char *path, str *body,
         if (!want || !*want) want = host;
         if (want != host)
             printf("  (test) requiring the certificate to match %s\n", want);
-        if (PKG_SET_HOSTNAME(ssl, want) != 1) {   /* which name must match */
-            snprintf(why, 240, "cannot require the certificate name %s", want);
-            goto out;
-        }
-    }
-
-    if (SSL_connect(ssl) != 1) {
-        vr = SSL_get_verify_result(ssl);
-        if (vr != X509_V_OK)
-            snprintf(why, 240, "certificate for %s rejected: %s", host,
-                     X509_verify_cert_error_string(vr));
-        else
-            snprintf(why, 240, "TLS handshake with %s failed", host);
-        goto out;
+        if (!(t = tls_start(s, host, want, CAFILE, why))) goto out;
     }
 
     snprintf(req, sizeof req,
              "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: arospkg/0.2\r\n"
              "Accept: */*\r\nConnection: close\r\n\r\n", path, host);
-    if (SSL_write(ssl, req, (int)strlen(req)) <= 0) {
+    if (tls_write(t, req, strlen(req)) <= 0) {
         snprintf(why, 240, "cannot send the request to %s", host);
         goto out;
     }
 
     for (;;) {
         char chunk[16384];
-        n = SSL_read(ssl, chunk, sizeof chunk);
+        n = tls_read(t, chunk, sizeof chunk);
         if (n <= 0) break;
         if (!str_add(&raw, chunk, (size_t)n, max_bytes)) {
             snprintf(why, 240, "response from %s exceeds %ld bytes", host, max_bytes);
@@ -260,8 +217,7 @@ static int fetch_once(const char *host, const char *path, str *body,
     rc = 1;
 
 out:
-    if (ssl) { SSL_shutdown(ssl); SSL_free(ssl); }
-    if (ctx) SSL_CTX_free(ctx);
+    tls_end(t);
     if (s >= 0) CloseSocket(s);
     free(raw.p);
     return rc;
