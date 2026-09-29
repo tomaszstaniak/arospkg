@@ -26,7 +26,7 @@ echo "build id $BUILD_ID  (ABIv1 / mainline, additional)"
     -DPKG_ABI='"v1"' \
     -DPKG_SDK='"'"$SDK"'"' \
     -DPKG_CC="\"$("$TC/x86_64-aros-gcc" -dumpversion)\"" \
-    -I"$SDK/include" $TLS_CFLAGS -DPKG_TLS='"'"$TLS"'"' \
+    -I"$SDK/include" $TLS_CFLAGS -DPKG_TLS='"'"$TLS"'"' -DPKG_HAVE_GETENTROPY \
     "$HERE"/libpkg/*.c "$HERE"/pkg/main.c $TLS_SRC \
     "$SDK/lib/libz.static.a" $TLS_LIBS \
     -o "$OUT"

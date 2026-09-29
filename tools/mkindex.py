@@ -57,7 +57,12 @@ REQUIRED = ("id", "version", "arch", "url", "size", "sha256", "kind")
 # The ABIs the 0.3 client knows. It refuses an entry with any other value,
 # or with none, before downloading -- so publishing one only produces an
 # entry nobody can install.
-ABIS = ("v1", "v11")
+# The same list as pkg_abi_known() in src/libpkg/entries.c.
+ABIS = ("v0", "v1", "v11")
+# CPUs an entry may name: those the client is built for. Kept apart from
+# catalogue.SUPPORTED_ARCH, which decides what the importer offers as
+# candidates; widening that would import every i386 upload at once.
+ARCHES = ("x86_64", "aarch64", "i386")
 
 # What the 0.3 client can hold, from its fixed buffers (src/libpkg/pkg.h,
 # entries.c, internal.h, req.h). Past these it truncates without a word.
@@ -99,7 +104,7 @@ def check(m):
         problems.append("sha256 is not 64 hex characters")
     if not m.get("depends_checked", False):
         problems.append("depends_checked is false (not investigated)")
-    if m.get("arch") not in cat.SUPPORTED_ARCH:
+    if m.get("arch") not in ARCHES:
         problems.append(f'arch {m.get("arch")!r} is not one we build for')
     if m.get("id") and not cat.ID_RE.match(str(m["id"])):
         problems.append(f'id {m["id"]!r} is not a legal package id')

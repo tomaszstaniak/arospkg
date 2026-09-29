@@ -1,0 +1,20 @@
+FAILAT 1000
+Copy RAM:rxt/apkg RAM:apkg
+Protect RAM:apkg +e
+RAM:apkg --version >RESULTS:iv-version.txt
+RAM:apkg --root SYS:IvP update >RESULTS:iv-pub.txt
+RAM:apkg --root SYS:IvP search >>RESULTS:iv-pub.txt
+RAM:apkg --root SYS:IvP --all-abi search dirtree >>RESULTS:iv-pub.txt
+RAM:apkg --root SYS:IvA --index RAM:rxt/idxA.json search dirtree >RESULTS:iv-a.txt
+RAM:apkg --root SYS:IvA --index RAM:rxt/idxA.json show dirtree >>RESULTS:iv-a.txt
+RAM:apkg --root SYS:IvA --index RAM:rxt/idxA.json install dirtree >>RESULTS:iv-a.txt
+RAM:apkg --root SYS:IvA info dirtree >RESULTS:iv-a-info.txt
+SYS:IvA/dirtree/C/DirTree SYS:IvA/dirtree >RESULTS:iv-a-run.txt
+Echo "rc=$RC" >>RESULTS:iv-a-run.txt
+RAM:apkg --root SYS:IvA --index RAM:rxt/idxA.json remove dirtree >>RESULTS:iv-a.txt
+RAM:apkg --root SYS:IvA list >>RESULTS:iv-a.txt
+RAM:apkg --root SYS:IvB --index RAM:rxt/idxB.json show dirtree >RESULTS:iv-b.txt
+RAM:apkg --root SYS:IvB --index RAM:rxt/idxB.json install dirtree >>RESULTS:iv-b.txt
+RAM:apkg --root SYS:IvB info dirtree >RESULTS:iv-b-info.txt
+RAM:apkg --root SYS:IvB --index RAM:rxt/idxB.json remove dirtree >>RESULTS:iv-b.txt
+Echo "IV DONE" >RESULTS:iv-done.txt

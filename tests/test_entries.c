@@ -98,8 +98,14 @@ int main(void)
            strstr(why, "ABIv1, mainline AROS") && strstr(why, "ABIv11"), "other ABI: no, and says which");
         ok(pkg_compat_of("aarch64", "v11", "x86_64", "v11", why, sizeof why) == PKG_COMPAT_INCOMPATIBLE &&
            strstr(why, "built for aarch64; this machine is x86_64"), "other CPU: no, before the ABI is looked at");
-        ok(pkg_compat_of("i386", "v0", "x86_64", "v11", why, sizeof why) == PKG_COMPAT_UNDETERMINED &&
-           strstr(why, "\"v0\""), "an ABI this client does not know: undetermined, never native");
+        ok(pkg_compat_of("x86_64", "v9", "x86_64", "v11", why, sizeof why) == PKG_COMPAT_UNDETERMINED &&
+           strstr(why, "\"v9\""), "an ABI this client does not know: undetermined, never native");
+        ok(pkg_compat_of("i386", "v0", "x86_64", "v11", why, sizeof why) == PKG_COMPAT_INCOMPATIBLE &&
+           strstr(why, "built for i386; this machine is x86_64"), "i386/v0 on x86_64: the CPU refuses it");
+        ok(pkg_compat_of("i386", "v0", "i386", "v0", why, sizeof why) == PKG_COMPAT_NATIVE &&
+           strstr(why, "ABIv0"), "i386/v0 on i386/v0: native");
+        ok(pkg_compat_of("x86_64", "v11", "i386", "", why, sizeof why) == PKG_COMPAT_INCOMPATIBLE,
+           "a build that does not know its ABI still refuses another CPU");
         ok(pkg_compat_of("x86_64", "", "x86_64", "v11", why, sizeof why) == PKG_COMPAT_UNDETERMINED,
            "no ABI in the entry: undetermined");
         ok(pkg_compat_of("aarch64", "v11", "", "v11", why, sizeof why) == PKG_COMPAT_NATIVE,
@@ -121,6 +127,14 @@ int main(void)
         pkg_entries_free(&rows);
         ok(entries_from_index(IX, sizeof IX - 1, NULL, "v11", 0, &rows, &hidden) == 0 && rows.n == 2 && hidden == 1,
            "without a CPU, only the ABI hides, as before");
+        pkg_entries_free(&rows);
+        ok(entries_from_index_on(IX, sizeof IX - 1, NULL, "x86_64", "", 0, &rows, &hidden) == 0 &&
+           hidden >= 1 && rows.n >= 1,
+           "a build that does not know its ABI still hides other CPUs");
+        {   int i, other = 0;
+            for (i = 0; i < rows.n; i++) if (strcmp(rows.v[i].arch, "x86_64")) other++;
+            ok(other == 0, "and lists none of them");
+        }
         pkg_entries_free(&rows);
     }
 
@@ -172,6 +186,8 @@ int main(void)
         struct { const char *j; size_t n; const char *arch, *abi; const char *url; int how, same; const char *what; } c[] = {
             { A, sizeof A - 1, "x86_64", "v11", "u-v11", VARIANT_ONE, 1, "one for this machine among three" },
             { B, sizeof B - 1, "x86_64", "v11", "u-v11", VARIANT_ONE, 1, "the same, the index reversed" },
+            { A, sizeof A - 1, "i386", "v0", "u-v0", VARIANT_ONE, 1, "an i386/v0 client takes the i386 entry" },
+            { B, sizeof B - 1, "i386", "v0", "u-v0", VARIANT_ONE, 1, "the same, the index reversed" },
             { A, sizeof A - 1, "aarch64", "v11", "u-arm", VARIANT_ONE, 1, "an installed aarch64 build is upgraded to aarch64" },
             { TWO1, sizeof TWO1 - 1, "x86_64", "v11", "u-a", VARIANT_SEVERAL, 2, "two for this machine: several, the smaller url" },
             { TWO2, sizeof TWO2 - 1, "x86_64", "v11", "u-a", VARIANT_SEVERAL, 2, "the same, the index reversed" },

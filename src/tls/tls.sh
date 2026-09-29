@@ -24,6 +24,7 @@ mbedtls)
         "$AR" rcs "$CACHE/libmbedtls.a" "$CACHE"/mbedtls/*.o
     fi
     TLS_SRC="$HERE/tls/mbedtls.c $HERE/tls/entropy_aros.c"
+    # A build for a system with getentropy() adds -DPKG_HAVE_GETENTROPY.
     TLS_LIBS="$CACHE/libmbedtls.a"
     ;;
 *) echo "TLS must be mbedtls or openssl"; exit 2 ;;

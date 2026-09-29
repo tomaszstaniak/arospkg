@@ -9,10 +9,11 @@
  *      size of that change; many samples per output byte, folded through
  *      SHA-256.
  *
- * Jitter is credited at 1/16 bit per sample, ten times below what was
- * measured. The SP 800-90B health tests run on every sample; if one fails,
- * or the counter never moves, the source reports failure and the handshake
- * is refused rather than run on bad randomness. */
+ * Jitter is credited at 1/16 bit per sample, a provisional figure (see
+ * below). The SP 800-90B health tests (RCT, APT) run on every sample; if
+ * one fails, or the counter never moves, the source reports failure and the
+ * handshake is refused. Running those tests does not make the source
+ * validated under SP 800-90B. */
 #include <mbedtls/sha256.h>
 #include <mbedtls/platform_time.h>
 #include <mbedtls/platform_util.h>
@@ -42,10 +43,13 @@ static int rdrand64(uint64_t *v)
 #if defined(__x86_64__)
         __asm__ volatile("rdrand %0; setc %1" : "=r"(*v), "=qm"(ok));
 #else
-        uint32_t lo, hi;
+        uint32_t lo = 0, hi = 0;
         __asm__ volatile("rdrand %0; setc %1" : "=r"(lo), "=qm"(ok));
-        if (ok) __asm__ volatile("rdrand %0; setc %1" : "=r"(hi), "=qm"(ok));
+        if (!ok) continue;
+        __asm__ volatile("rdrand %0; setc %1" : "=r"(hi), "=qm"(ok));
+        if (!ok) continue;
         *v = ((uint64_t)hi << 32) | lo;
+        return 1;
 #endif
         if (ok) return 1;
     }
@@ -64,15 +68,17 @@ static int rdrand64(uint64_t *v) { (void)v; return 0; }
 #  error "no cycle counter for this CPU"
 #endif
 
-/* Credit: 1/16 bit per sample. Measured on AROS One under QEMU TCG, the
- * most-common-value estimate was 0.665 bits per sample over 50,000 samples
- * (docs/reports/2026-09-29-tls-entropy/), ten times more than credited. */
+/* Credit: 1/16 bit per sample. This is NOT a validated figure. The only
+ * evidence is one estimator (most common value, SP 800-90B 6.3.1) on a few
+ * runs under QEMU TCG (docs/reports/2026-09-29-tls-mbedtls/), which does not
+ * rule out a predictable sequence and says nothing about restarts, cloned
+ * VM snapshots or real hardware. Treat this source as provisional until it
+ * is replaced by a maintained implementation or properly assessed. */
 #define SAMPLES_PER_BIT 16
 /* SP 800-90B 4.4 health tests for H = 1/16 bit/sample, alpha = 2^-20:
  * Repetition Count Test cutoff 1 + ceil(20/H) = 321; Adaptive Proportion
  * Test, window 512, cutoff 509. They catch a source that has stopped
- * varying, not a subtly weak one; the estimate above is what argues for
- * the credit. */
+ * varying, not a subtly weak one. */
 #define RCT_CUTOFF 321
 #define APT_WINDOW 512
 #define APT_CUTOFF 509
@@ -104,6 +110,28 @@ int apkg_jitter_raw(uint64_t *out, size_t n)
     return 0;
 }
 
+#if defined(PKG_HAVE_GETENTROPY)
+/* Mainline: the system has a source (posixc getentropy(), answered from
+ * entropy.resource), and a system source is preferred to ours. It is used
+ * alone; if it fails, the handshake is refused. */
+#include <unistd.h>
+int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
+{
+    size_t at = 0;
+    (void)data;
+    while (at < len) {
+        size_t n = len - at > 256 ? 256 : len - at;   /* getentropy's limit */
+        if (getentropy(output + at, n) != 0) {
+            mbedtls_platform_zeroize(output, len);
+            *olen = 0;
+            return -1;
+        }
+        at += n;
+    }
+    *olen = len;
+    return 0;
+}
+#else
 int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
 {
     mbedtls_sha256_context h;
@@ -144,6 +172,7 @@ int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t 
     *olen = len;
     return 0;
 }
+#endif
 
 mbedtls_ms_time_t mbedtls_ms_time(void)
 {

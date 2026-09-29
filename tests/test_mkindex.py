@@ -32,7 +32,9 @@ def expect(name, change, want):
 
 expect("the base passes", {}, None)
 expect("abi missing", {"abi": None}, "abi None is not one the client knows")
-expect("abi unknown", {"abi": "v0"}, "abi 'v0' is not one the client knows")
+expect("abi unknown", {"abi": "v9"}, "abi 'v9' is not one the client knows")
+expect("abi v0 on i386", {"abi": "v0", "arch": "i386"}, None)
+expect("arch unknown", {"arch": "m68k"}, "arch 'm68k' is not one we build for")
 expect("abi v1", {"abi": "v1"}, None)
 expect("plain http", {"url": "http://example.invalid/demo.lha"}, "url is not https://")
 expect("revision 0", {"revision": 0}, "revision 0 is not an integer")

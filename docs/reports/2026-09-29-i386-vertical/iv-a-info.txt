@@ -1,0 +1,32 @@
+{
+  "schema":1,
+  "name":"dirtree",
+  "version":"40.8",
+  "revision":0,
+  "arch":"i386",
+  "abi":"v0",
+  "subdir":"DirTree",
+  "installed":"2026-09-29T20:36:10Z",
+  "origin":"https://archives.arosworld.org/share/utility/shell/dirtree.i386-aros.lha",
+  "archive_sha256":"046e0ea9364c60f82779a8e3f3021d2519badb53ba3b3f2abf2276b52760bd4d",
+  "archive_size":60764,
+  "reason":"explicit",
+  "dir":"dirtree",
+  "requires_system": [ ],
+  "icon": { "state":"installed", "sha256":"99d51c615f168b9edbc56b30a9d2ddb804455aacf35472ce718591fa99284571", "size":11420, "member":"DirTree.info" },
+  "previous": { "registry":"", "archive":"" },
+  "contents": [
+    { "path":"Source/smakefile", "sha256":"290b7430c72610b275fbdbbcd353e0842101494e09bd4cdcc7a527556a6e9a12", "size":242 },
+    { "path":"Source/make.aros", "sha256":"8db71caad9fb3f0984e7892ecedd9306cea55c6057afbf5681ffa88572ed1988", "size":166 },
+    { "path":"Source/DirTree.c", "sha256":"00b9c326de84bc307bda66a7ea9a04e4606de7b5ed502ab07567c100073cc6d0", "size":8296 },
+    { "path":"Source.info", "sha256":"1296d691dfe5b7c0d21c7ea67b10ce660c1d3289855df732854da809290c597f", "size":17408 },
+    { "path":"Install.info", "sha256":"9aa2769c9a541a105ba69dba9087c430afb023f05cb9e091b2f61e689701e1c7", "size":1824 },
+    { "path":"Install", "sha256":"0f5edd728aae9e6c1349f6175e9c9013345145a91a8afea74d68f93c32d0c72d", "size":994 },
+    { "path":"Docs/DirTree.doc.info", "sha256":"ca8a2587c2be752fb3c2bf609689a7be0249b63dbe84628c87fcc48fb485467d", "size":5734 },
+    { "path":"Docs/DirTree.doc", "sha256":"4ecea693ed978659809b7de5ce2c1f274b4d345aa9a5d6cbd5bc23ecf2ee7f41", "size":677 },
+    { "path":"Docs/COPYING.info", "sha256":"2b2bd98757fef975487d56b3c1956d687e9c869229043eb0ef430cfd3ed300d4", "size":5734 },
+    { "path":"Docs/COPYING", "sha256":"79ef0a0d92fedfc2e4f03cc807ac99229137dc9bdf2c26ad661af8b95d3fe4e5", "size":1524 },
+    { "path":"Docs.info", "sha256":"c7a721691dd6947eec92a8de05209ce5c0f816c7fdd8f97646fe20e64c49e401", "size":20920 },
+    { "path":"C/DirTree", "sha256":"40852baee2143d7698c2e5b8514ae7b4a5133bee4b7bc718cafa4029a2a13900", "size":7188 }
+  ]
+}

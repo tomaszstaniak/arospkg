@@ -102,7 +102,7 @@ static void usage(void)
     printf("  --json                search and list print rows as JSON, for\n");
     printf("                        programs rather than people\n");
     printf("  --all-abi             also list packages for the other ABI\n");
-    printf("  --abi <v1|v11>        install one anyway. It will not start;\n");
+    printf("  --abi <v0|v1|v11>     install one anyway. It will not start;\n");
     printf("                        this is for diagnosis, not for use\n");
     printf("  --expect <status>     PASS only if the run ends with this status;\n");
     printf("                        a test that merely produced a report has\n");

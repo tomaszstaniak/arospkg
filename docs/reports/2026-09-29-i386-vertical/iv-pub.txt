@@ -1,0 +1,8 @@
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: SYS:IvP/db/index.json
+nothing matches
+
+27 package(s) hidden: built for another CPU or ABI, or for one this
+client cannot judge, so not known to run here. apkg show <id> says
+why; --all-abi lists them.
+dirtree              40.8       x86_64    [other ABI] Shell command displaying directory trees

@@ -11,9 +11,12 @@
  * file is meant to build with nothing but json.c and listing.c beside it. */
 #define ENTRIES_MAXTOK 8192
 
+/* The ABI tags a build can declare and an index can carry. The same list is
+ * ABIS in tools/mkindex.py; a tag added in one place and not the other would
+ * publish entries no client installs, or refuse ones it could. */
 int pkg_abi_known(const char *a)
 {
-    return a && (strcmp(a, "v1") == 0 || strcmp(a, "v11") == 0);
+    return a && (strcmp(a, "v0") == 0 || strcmp(a, "v1") == 0 || strcmp(a, "v11") == 0);
 }
 
 const char *pkg_compat_word(pkg_compat r)
@@ -27,6 +30,7 @@ const char *pkg_compat_word(pkg_compat r)
 
 static const char *abi_name(const char *abi)
 {
+    if (!strcmp(abi, "v0"))  return "ABIv0, the i386 release line";
     if (!strcmp(abi, "v1"))  return "ABIv1, mainline AROS";
     if (!strcmp(abi, "v11")) return "ABIv11, current distributions such as AROS One";
     return abi;
@@ -35,6 +39,13 @@ static const char *abi_name(const char *abi)
 pkg_compat pkg_compat_of(const char *arch, const char *abi, const char *my_arch,
                      const char *my_abi, char *why, size_t n)
 {
+    /* The CPU first: a package for another CPU cannot run here whatever
+       either side knows about ABIs, and an unknown ABI must never widen what
+       is offered to include it. */
+    if (my_arch && *my_arch && arch && *arch && strcmp(arch, my_arch)) {
+        snprintf(why, n, "built for %s; this machine is %s", arch, my_arch);
+        return PKG_COMPAT_INCOMPATIBLE;
+    }
     if (!pkg_abi_known(abi)) {
         snprintf(why, n, "the catalogue gives no ABI this client knows (\"%s\")", abi ? abi : "");
         return PKG_COMPAT_UNDETERMINED;
@@ -156,12 +167,13 @@ int entries_from_index_on(const char *json, size_t len, const char *term,
         pkg_entry e;
         if (el < 0) break;
         row_from_element(json, t, ntok, el, &e);
-        /* A build that recorded no ABI cannot tell, so it hides nothing;
-           that is the rule abi_check() applies before an install, too. */
-        if (!pkg_abi_known(my_abi)) e.ours = 1;
-        else {
+        {
+            /* A build that recorded no ABI cannot judge the ABI, so it hides
+               only what is for another CPU; that is the rule the install
+               checks apply too. */
             char why[200];
-            e.ours = pkg_compat_of(e.arch, e.abi, my_arch, my_abi, why, sizeof why) == PKG_COMPAT_NATIVE;
+            pkg_compat c = pkg_compat_of(e.arch, e.abi, my_arch, my_abi, why, sizeof why);
+            e.ours = pkg_abi_known(my_abi) ? c == PKG_COMPAT_NATIVE : c != PKG_COMPAT_INCOMPATIBLE;
         }
 
         if (!pkg_match(e.id, e.summary, e.category, term)) continue;
