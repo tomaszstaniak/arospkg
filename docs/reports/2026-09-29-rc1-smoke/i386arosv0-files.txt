@@ -1,0 +1,7 @@
+Directory "RAM:rc/arospkg-0.3.1-rc1.i386-aros-v0" on Tuesday 09/29/26:
+LICENSE                     1099 ---rw-d Today       22:20:53
+licenses                     Dir ---rwed Today       23:24:48
+BUILD.txt                    159 ---rw-d Today       22:20:53
+README.txt                  2625 ---rw-d Today       22:20:53
+apkg                      580476 ---rwed Today       22:20:53
+4 files - 1 directory - 1145 blocks used

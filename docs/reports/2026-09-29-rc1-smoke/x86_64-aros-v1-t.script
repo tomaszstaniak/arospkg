@@ -1,0 +1,17 @@
+FAILAT 1000
+C:UnZip >NIL: RAM:rxt/rc.zip -d RAM:rc
+CD RAM:rc/arospkg-0.3.1-rc1.x86_64-aros-v1
+Protect apkg +e
+apkg --version >RESULTS:x8664arosv1-version.txt
+List RAM:rc/arospkg-0.3.1-rc1.x86_64-aros-v1 >RESULTS:x8664arosv1-files.txt
+apkg --root RAM:RcTest update >RESULTS:x8664arosv1-net.txt
+apkg --root RAM:RcTest  search >>RESULTS:x8664arosv1-net.txt
+apkg --root RAM:RcTest  show zaphod >>RESULTS:x8664arosv1-net.txt
+apkg --root RAM:RcTest  install zaphod >>RESULTS:x8664arosv1-net.txt
+apkg --root RAM:RcTest list >>RESULTS:x8664arosv1-net.txt
+Echo "no package for this target" >>RESULTS:x8664arosv1-start.txt
+CD RAM:rc/arospkg-0.3.1-rc1.x86_64-aros-v1
+apkg --root RAM:RcTest  remove zaphod >>RESULTS:x8664arosv1-net.txt
+apkg --root RAM:RcTest list >>RESULTS:x8664arosv1-net.txt
+apkg --root RAM:RcBad --index-url https://expired.badssl.com/ update >RESULTS:x8664arosv1-bad.txt
+Echo "DONE" >RESULTS:x8664arosv1-done.txt

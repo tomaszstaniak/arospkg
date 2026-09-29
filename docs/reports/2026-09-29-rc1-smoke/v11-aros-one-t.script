@@ -1,0 +1,21 @@
+FAILAT 1000
+C:UnZip >NIL: RAM:rxt/rc.zip -d RAM:rc
+CD RAM:rc/arospkg-0.3.1-rc1.x86_64-aros-v11
+Protect apkg +e
+apkg --version >RESULTS:one-version.txt
+List RAM:rc/arospkg-0.3.1-rc1.x86_64-aros-v11 >RESULTS:one-files.txt
+apkg --root RAM:RcTest update >RESULTS:one-net.txt
+apkg --root RAM:RcTest  search >>RESULTS:one-net.txt
+apkg --root RAM:RcTest  show zaphod >>RESULTS:one-net.txt
+apkg --root RAM:RcTest  install zaphod >>RESULTS:one-net.txt
+apkg --root RAM:RcTest list >>RESULTS:one-net.txt
+CD RAM:RcTest/zaphod
+Run >NIL: <NIL: ZapHod
+Wait 12
+Status >>RESULTS:one-start.txt
+CD RAM:
+CD RAM:rc/arospkg-0.3.1-rc1.x86_64-aros-v11
+apkg --root RAM:RcTest  remove zaphod >>RESULTS:one-net.txt
+apkg --root RAM:RcTest list >>RESULTS:one-net.txt
+apkg --root RAM:RcBad --index-url https://expired.badssl.com/ update >RESULTS:one-bad.txt
+Echo "DONE" >RESULTS:one-done.txt

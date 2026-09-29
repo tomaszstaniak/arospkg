@@ -1,0 +1,5 @@
+Process 2 Loaded as command: « IPrefs »
+Process 3 Loaded as command: ConClip
+Process 4 Loaded as command: Decorator
+Process 5 Loaded as command: WANDERER:Wanderer
+Process 1 Loaded as command: Status

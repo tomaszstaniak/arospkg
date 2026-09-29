@@ -29,7 +29,20 @@ means compiled only; "runs" means started on that system; "TLS" means it
 fetched over HTTPS and refused bad certificates; "full" means the whole
 package cycle (install, start, remove) was done with it.
 
-STATUS_TABLE
+  archive                    runs   TLS   full cycle   notes
+  -------------------------  -----  ----  -----------  -----------------------------
+  x86_64-aros-v11  apkg       yes    yes   yes          AROS One 1.3 (QEMU); also
+                                                        started on ABIv11 2026.09
+  x86_64-aros-v11  PkgManager no     no    no           built only: not yet run
+  x86_64-aros-v1   apkg       yes    yes   no           mainline (QEMU); the catalogue
+                                                        has no mainline package
+  i386-aros-v0     apkg       yes    yes   yes          ABIv0 20250313 (QEMU), with
+                                                        a test index (no i386 packages
+                                                        in the public catalogue)
+  aarch64-aros     apkg       yes    no    no           EXPERIMENTAL: started only on
+                                                        hosted Macaros with a
+                                                        posixc.library built for it;
+                                                        stock Macaros lacks it
 
 Testing it without touching your installation
 ---------------------------------------------

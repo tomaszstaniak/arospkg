@@ -1,0 +1,18 @@
+FAILAT 1000
+C:UnZip >NIL: RAM:rxt/rc.zip -d RAM:rc
+CD RAM:rc/arospkg-0.3.1-rc1.i386-aros-v0
+Protect apkg +e
+apkg --version >RESULTS:i386arosv0-version.txt
+List RAM:rc/arospkg-0.3.1-rc1.i386-aros-v0 >RESULTS:i386arosv0-files.txt
+apkg --root RAM:RcTest update >RESULTS:i386arosv0-net.txt
+apkg --root RAM:RcTest --index RAM:rxt/idx.json search >>RESULTS:i386arosv0-net.txt
+apkg --root RAM:RcTest --index RAM:rxt/idx.json show dirtree >>RESULTS:i386arosv0-net.txt
+apkg --root RAM:RcTest --index RAM:rxt/idx.json install dirtree >>RESULTS:i386arosv0-net.txt
+apkg --root RAM:RcTest list >>RESULTS:i386arosv0-net.txt
+RAM:RcTest/dirtree/C/DirTree RAM:RcTest/dirtree >>RESULTS:i386arosv0-start.txt
+Echo "rc=$RC" >>RESULTS:i386arosv0-start.txt
+CD RAM:rc/arospkg-0.3.1-rc1.i386-aros-v0
+apkg --root RAM:RcTest --index RAM:rxt/idx.json remove dirtree >>RESULTS:i386arosv0-net.txt
+apkg --root RAM:RcTest list >>RESULTS:i386arosv0-net.txt
+apkg --root RAM:RcBad --index-url https://expired.badssl.com/ update >RESULTS:i386arosv0-bad.txt
+Echo "DONE" >RESULTS:i386arosv0-done.txt

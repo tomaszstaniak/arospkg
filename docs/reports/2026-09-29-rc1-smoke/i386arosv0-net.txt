@@ -1,0 +1,23 @@
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: RAM:RcTest/db/index.json
+dirtree              40.8       i386      Shell command displaying directory trees
+
+1 package(s) hidden: built for another CPU or ABI, or for one this
+client cannot judge, so not known to run here. apkg show <id> says
+why; --all-abi lists them.
+dirtree 40.8
+  Shell command displaying directory trees
+  category:     utility/shell
+  target:       i386, ABI v0 (the index lists: i386/v0, x86_64/v11)
+  compatibility: native -- built for this machine: i386, ABIv0, the i386 release line
+  download:     60 KB from https://archives.arosworld.org/share/utility/shell/dirtree.i386-aros.lha
+  sha256:       046e0ea9364c60f82779a8e3f3021d2519badb53ba3b3f2abf2276b52760bd4d
+  requirements: none stated
+  installed:    no
+fetching https://archives.arosworld.org/share/utility/shell/dirtree.i386-aros.lha
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/shell/dirtree.i386-aros.lha
+verified and cached RAM:RcTest/cache/dirtree.lha
+installed dirtree
+dirtree
+removed dirtree
+nothing installed
