@@ -31,11 +31,11 @@ for t in x86_64-aros-v11 x86_64-aros-v1 i386-aros-v0 aarch64-aros; do
     fi
     [ "$t" = x86_64-aros-v11 ] && mkdir -p "$D/Examples/ARexx" && cp "$HERE"/examples/arexx/*.rexx "$D/Examples/ARexx/"
     { echo "arospkg $V, target $t"; echo "commit $COMMIT"; echo;
-      (cd "$D" && shasum -a 256 apkg PkgManager 2>/dev/null); } > "$D/BUILD.txt"
+      (cd "$D" && for f in apkg PkgManager; do [ -f "$f" ] && shasum -a 256 "$f"; done; true); } > "$D/BUILD.txt"
     (cd "$B/pkg" && zip -qr "$OUT/arospkg-$V.$t.zip" "arospkg-$V.$t")
 done
 (cd "$OUT" && shasum -a 256 *.zip > SHA256SUMS && cat SHA256SUMS)
 for t in x86_64-aros-v11 x86_64-aros-v1 i386-aros-v0 aarch64-aros; do
-    (cd "$B/pkg/arospkg-$V.$t" && echo "$t:" && shasum -a 256 apkg PkgManager 2>/dev/null)
+    (cd "$B/pkg/arospkg-$V.$t" && echo "$t:" && for f in apkg PkgManager; do [ -f "$f" ] && shasum -a 256 "$f"; done; true)
 done
 echo "commit $COMMIT"
