@@ -1,0 +1,10 @@
+job 2 running 
+job 2 running download 0%
+job 2 running download 0%
+job 2 running download 1%
+cancel requested
+job 2 running download 1%
+job 2 running download 1%
+job 2 running download 1%
+job 2 cancelled download 1%
+outcome: cancelled CANCELLED

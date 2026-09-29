@@ -1,0 +1,225 @@
+
+==== screentest ====
+Tuesday 29-Sep-26 01:23:30
+screentest: process after 15 s (a number means it is running):
+ 9
+screentest: after Ctrl-C (empty means it closed):
+ 9
+
+==== untangle ====
+Tuesday 29-Sep-26 01:23:49
+untangle: process after 15 s (a number means it is running):
+ 10
+untangle: after Ctrl-C (empty means it closed):
+
+==== zunecalc ====
+Tuesday 29-Sep-26 01:24:08
+zunecalc: process after 15 s (a number means it is running):
+ 9
+zunecalc: after Ctrl-C (empty means it closed):
+ 9
+
+==== ccd2iso ====
+Tuesday 29-Sep-26 01:24:27
+
+Usage:
+        ccd2iso <.img filename> <.iso filename>
+        ccd2iso <option>
+
+option:
+        -?  -h  --help      show this help
+            -v  --version   show version number
+
+ccd2iso: rc=0
+
+==== bin2iso ====
+Tuesday 29-Sep-26 01:24:27
+Error: bad syntax
+
+Usage is: bin2iso image.bin [image.iso]
+bin2iso: rc=20
+
+==== dirtree ====
+Tuesday 29-Sep-26 01:24:28
+Directory tree "SYS:PkgV01/dirtree" on Tuesday 29-Sep-26
+
+dirtree
+`--Source
+
+
+dirtree: rc=0
+
+==== grep ====
+Tuesday 29-Sep-26 01:24:28
+grep scans file(s) looking for a given pattern. This pattern is not
+an Unix regexp, but an AmigaDOS pattern; * can be used everywhere as
+GREP      Usage:   grep [options] pattern [ File [ File [ ... ]]
+          Purpose: Searches files (a pattern can be given in the file
+                   name(s)) for lines containing a given pattern (with
+                      pattern.grep: rc=0
+
+==== iconmake ====
+Tuesday 29-Sep-26 01:24:28
+iconmake: process after 15 s (a number means it is running):
+ 10
+iconmake: after Ctrl-C (empty means it closed):
+
+==== joytest ====
+Tuesday 29-Sep-26 01:24:47
+joytest: process after 15 s (a number means it is running):
+ 10
+joytest: after Ctrl-C (empty means it closed):
+
+==== cls ====
+Tuesday 29-Sep-26 01:25:06
+cls: rc=12 (run on the console, not redirected)
+
+==== diskusage ====
+Tuesday 29-Sep-26 01:25:06
+          9           4 SYS:PkgV01/diskusage/Source
+        133          63 SYS:PkgV01/diskusage
+diskusage: rc=232
+
+==== gisplita ====
+Tuesday 29-Sep-26 01:25:06
+Split 1.5 (c)05.MAG.97 Giovanni Iacobelli  >>> FREEWARE <<<
+
+ Sintassi:
+
+	 split [opt] <sorgente> file1 file2 file3...
+gisplita: rc=2
+
+==== timeit ====
+Tuesday 29-Sep-26 01:25:06
+timeit: rc=0
+
+==== gmore ====
+Tuesday 29-Sep-26 01:25:06
+gmore: process after 15 s (a number means it is running):
+ 10
+gmore: after Ctrl-C (empty means it closed):
+ 10
+
+==== zapperng ====
+Tuesday 29-Sep-26 01:25:26
+zapperng: process after 15 s (a number means it is running):
+ 11
+zapperng: after Ctrl-C (empty means it closed):
+
+==== isomaker ====
+Tuesday 29-Sep-26 01:25:45
+isomaker: process after 15 s (a number means it is running):
+isomaker: after Ctrl-C (empty means it closed):
+
+==== isotool ====
+Tuesday 29-Sep-26 01:26:04
+isotool: process after 15 s (a number means it is running):
+isotool: after Ctrl-C (empty means it closed):
+
+==== unmount ====
+Tuesday 29-Sep-26 01:26:24
+Unmount: required argument missing
+unmount: rc=20
+
+==== soliton ====
+Tuesday 29-Sep-26 01:26:24
+soliton: process after 15 s (a number means it is running):
+ 11
+soliton: after Ctrl-C (empty means it closed):
+
+==== blips ====
+Tuesday 29-Sep-26 01:26:43
+blips: process after 15 s (a number means it is running):
+ 11
+blips: after Ctrl-C (empty means it closed):
+ 11
+
+==== hocoslamfy ====
+Tuesday 29-Sep-26 01:27:07
+hocoslamfy: process after 15 s (a number means it is running):
+ 12
+hocoslamfy: after Ctrl-C (empty means it closed):
+ 12
+
+==== xrick ====
+Tuesday 29-Sep-26 01:27:35
+xrick: process after 15 s (a number means it is running):
+ 13
+xrick: after Ctrl-C (empty means it closed):
+
+==== shooterspace ====
+Tuesday 29-Sep-26 01:27:59
+shooterspace: process after 15 s (a number means it is running):
+ 13
+shooterspace: after Ctrl-C (empty means it closed):
+ 13
+
+==== ominostage ====
+Tuesday 29-Sep-26 01:28:25
+ominostage: process after 15 s (a number means it is running):
+ 14
+ominostage: after Ctrl-C (empty means it closed):
+ 14
+
+==== unlzx ====
+Tuesday 29-Sep-26 01:28:58
+Usage: UnLzx <options>
+	-v <archive> : list archive
+	-x <archive> : extract archive
+	-p <pattern> : only matching files
+	-o <outpath> : destination path
+unlzx: rc=2
+
+==== lzop ====
+Tuesday 29-Sep-26 01:29:04
+lzop: rc=0
+
+==== antiword ====
+Tuesday 29-Sep-26 01:29:09
+
+
+This is just a small test document.
+
+
+This is just a small document to see if Antiword has been compiled
+correctly.
+The images will only show in the PostScript mode.
+
+[pic]
+
+Figure 1
+
+This JPEG image is the Antiword icon.
+
+[pic]
+
+Figure 2
+
+This PNG image is the cover of the O'Reilly book about PNG.
+NOTE: this image only shown correctly when Antiword is run with the "-i 0"
+option.
+antiword: rc=0
+
+==== tinysid ====
+Tuesday 29-Sep-26 01:29:25
+TinySID v0.94 linux version
+(c)Copyright 1999-2006 T. Hinrichs and R. Sinsch.
+All rights reserved.
+
+Usage: tinysid [sid-file]
+tinysid: rc=0
+
+==== skandalfoclock ====
+Tuesday 29-Sep-26 01:29:30
+skandalfoclock: process after 15 s (a number means it is running):
+ 15
+skandalfoclock: after Ctrl-C (empty means it closed):
+ 15
+
+==== rescode ====
+Tuesday 29-Sep-26 01:30:02
+rescode: process after 15 s (a number means it is running):
+ 16
+rescode: after Ctrl-C (empty means it closed):
+ 16
+== end of trial B ==

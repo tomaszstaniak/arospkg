@@ -1,0 +1,9 @@
+run AX9 phase waitjob
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+version PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+  > WAIT 24
+  < id 24|op install|package cls|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed cls
+PASS wait-parked
+PASS wait-returned-final
+SUMMARY waitjob pass 2 fail 0

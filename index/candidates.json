@@ -1,0 +1,2869 @@
+{
+  "schema": 1,
+  "source": "https://archives.arosworld.org/share/FULLINDEX.readme",
+  "candidates": [
+    {
+      "id": "ab3dhd",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ab3dhd.x86_64-aros-v11.zip",
+        "category": "game/fps",
+        "version": "v0.9.0b1",
+        "date": "20260513-19.37",
+        "size": 2298925,
+        "url": "https://archives.arosworld.org/share/game/fps/ab3dhd.x86_64-aros-v11.zip",
+        "summary": "Alien Breed 3D HD Remaster",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "adoom3-1.5.3",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "adoom3-1.5.3.x86_64-aros-v11.zip",
+        "category": "game/fps",
+        "version": "1.5.3",
+        "date": "20241004-15.00",
+        "size": 10123901,
+        "url": "https://archives.arosworld.org/share/game/fps/adoom3-1.5.3.x86_64-aros-v11.zip",
+        "summary": "Doom3 for AROS x86_64 ABIv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "alac",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "alac.x86_64-aros-v11.zip",
+        "category": "audio/misc",
+        "version": "0.1.3",
+        "date": "20250116-06.27",
+        "size": 73149,
+        "url": "https://archives.arosworld.org/share/audio/misc/alac.x86_64-aros-v11.zip",
+        "summary": "Apple Lossless Audio Codec decoder",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "amiberry-v6.3.4",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "amiberry-v6.3.4.x86_64-aros-v11.zip",
+        "category": "emulation/computer",
+        "version": "6.3.4",
+        "date": "20260816-06.46",
+        "size": 13468412,
+        "url": "https://archives.arosworld.org/share/emulation/computer/amiberry-v6.3.4.x86_64-aros-v11.zip",
+        "summary": "Amiberry preview v6.3.4 x86_64 abiv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "amigagpt",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "amigagpt.x86_64-aros-v11.zip",
+        "category": "network/misc",
+        "version": "3.1.0",
+        "date": "20260816-18.15",
+        "size": 2278989,
+        "url": "https://archives.arosworld.org/share/network/misc/amigagpt.x86_64-aros-v11.zip",
+        "summary": "AmigaGPT for AROS",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "amigakeyremaper",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "amigakeyremaper.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "1.1",
+        "date": "20250227-19.14",
+        "size": 58128,
+        "url": "https://archives.arosworld.org/share/utility/misc/amigakeyremaper.x86_64-aros-v11.zip",
+        "summary": "Simple program that swaps left/right amiga keys",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "amishockolate",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "amishockolate.x86_64-aros-v11.zip",
+        "category": "game/fps",
+        "version": "0.9",
+        "date": "20260719-22.32",
+        "size": 1815215,
+        "url": "https://archives.arosworld.org/share/game/fps/amishockolate.x86_64-aros-v11.zip",
+        "summary": "Porting of Shockolate (System Shock)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "amissl",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "amissl.x86_64-aros-v11.zip",
+        "category": "network/misc",
+        "version": "4.2",
+        "date": "20250523-06.02",
+        "size": 1867717,
+        "url": "https://archives.arosworld.org/share/network/misc/amissl.x86_64-aros-v11.zip",
+        "summary": "AmiSSL is a port of OpenSSL for AROS",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "amissl-5",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "amissl-5.x86_64-aros-v11.zip",
+        "category": "network/misc",
+        "version": "5.27",
+        "date": "20260611-07.59",
+        "size": 2754603,
+        "url": "https://archives.arosworld.org/share/network/misc/amissl-5.x86_64-aros-v11.zip",
+        "summary": "AmiSSL is a port of OpenSSL for AROS",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "antiword-v0.37",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "antiword-v0.37.x86_64-aros-v11.zip",
+        "category": "utility/text/convert",
+        "version": "0.37",
+        "date": "20250611-09.53",
+        "size": 291711,
+        "url": "https://archives.arosworld.org/share/utility/text/convert/antiword-v0.37.x86_64-aros-v11.zip",
+        "summary": "Convert Word documents to TXT/PDF/PS",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "apotris",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "apotris.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "4.2.0a",
+        "date": "20260504-18.41",
+        "size": 9330924,
+        "url": "https://archives.arosworld.org/share/game/puzzle/apotris.x86_64-aros-v11.zip",
+        "summary": "Tetris-style block-stacking game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "aros64_extra_cores",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "aros64_extra_cores.x86_64-aros-v11.lha",
+        "category": "emulation/gamesystem",
+        "version": "1.20.0V1",
+        "date": "20251010-10.36",
+        "size": 120204587,
+        "url": "https://archives.arosworld.org/share/emulation/gamesystem/aros64_extra_cores.x86_64-aros-v11.lha",
+        "summary": "Additional cores for RetroArch for AROS 64 Bit",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "arrakis",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "arrakis.x86_64-aros-v11.zip",
+        "category": "demo/scene",
+        "version": "1.0",
+        "date": "20250529-06.23",
+        "size": 3475491,
+        "url": "https://archives.arosworld.org/share/demo/scene/arrakis.x86_64-aros-v11.zip",
+        "summary": "Arrakis demo x86_64 by Kakiarts/trbl",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "arxlibertatis",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "arxlibertatis.x86_64-aros-v11.zip",
+        "category": "game/adventure",
+        "version": "1.2.1",
+        "date": "20260828-06.42",
+        "size": 21832634,
+        "url": "https://archives.arosworld.org/share/game/adventure/arxlibertatis.x86_64-aros-v11.zip",
+        "summary": "Cross-platform port of Arx Fatalis x86_64 v11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "augustusandjulius",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "augustusandjulius.x86_64-aros-v11..zip",
+        "category": "game/strategy",
+        "version": "4.0.0-1.8",
+        "date": "20260803-06.17",
+        "size": 33543346,
+        "url": "https://archives.arosworld.org/share/game/strategy/augustusandjulius.x86_64-aros-v11..zip",
+        "summary": "Augustus and Julius Caesar3 Engine",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "badapple",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "badapple.x86_64-aros-v11.zip",
+        "category": "demo/misc",
+        "version": "",
+        "date": "20250122-09.35",
+        "size": 2653398,
+        "url": "https://archives.arosworld.org/share/demo/misc/badapple.x86_64-aros-v11.zip",
+        "summary": "The famous Bad Apple animation with player and xm",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "bin2iso",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "bin2iso.x86_64-aros-v11.zip",
+        "category": "utility/filetool",
+        "version": "1.1",
+        "date": "20250116-06.28",
+        "size": 45900,
+        "url": "https://archives.arosworld.org/share/utility/filetool/bin2iso.x86_64-aros-v11.zip",
+        "summary": "convert Bin File to ISO 9660",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "biniax2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "biniax2.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "1.3",
+        "date": "20250320-20.43",
+        "size": 3961609,
+        "url": "https://archives.arosworld.org/share/game/puzzle/biniax2.x86_64-aros-v11.zip",
+        "summary": "Simple and child friendly logical game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "blips",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "blips.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "1.0",
+        "date": "20250323-13.01",
+        "size": 1408356,
+        "url": "https://archives.arosworld.org/share/game/puzzle/blips.x86_64-aros-v11.zip",
+        "summary": "a sokoban style puzzle",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "boy",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "boy.x86_64-aros-v11.zip",
+        "category": "demo/scene/fit",
+        "version": "1.1",
+        "date": "20260308-20.04",
+        "size": 6909377,
+        "url": "https://archives.arosworld.org/share/demo/scene/fit/boy.x86_64-aros-v11.zip",
+        "summary": "Port of OpenGL demo from Icons '08",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "breakhack",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "breakhack.x86_64-aros-v11.zip",
+        "category": "game/roleplaying",
+        "version": "4.0.3",
+        "date": "20260524-07.00",
+        "size": 16058465,
+        "url": "https://archives.arosworld.org/share/game/roleplaying/breakhack.x86_64-aros-v11.zip",
+        "summary": "A casual coffee-break roguelike",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "cabextract1.11",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "cabextract1.11.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "1.11",
+        "date": "20250605-07.04",
+        "size": 1244096,
+        "url": "https://archives.arosworld.org/share/utility/archive/cabextract1.11.x86_64-aros-v11.zip",
+        "summary": "Utility to extract from CAB files",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "cavestory",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "cavestory.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "2.6.5-1",
+        "date": "20260515-06.35",
+        "size": 11043013,
+        "url": "https://archives.arosworld.org/share/game/platform/cavestory.x86_64-aros-v11.zip",
+        "summary": "Cave Story (NXEngine-evo)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ccd2cue-v01",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ccd2cue-v01.x86_64-aros-v11.zip",
+        "category": "utility/filetool",
+        "version": "0.1",
+        "date": "20250621-06.04",
+        "size": 61095,
+        "url": "https://archives.arosworld.org/share/utility/filetool/ccd2cue-v01.x86_64-aros-v11.zip",
+        "summary": "Converts CloneCD CCD to CUE format",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ccd2iso",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ccd2iso.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "0.3",
+        "date": "20250819-20.32",
+        "size": 58798,
+        "url": "https://archives.arosworld.org/share/utility/archive/ccd2iso.x86_64-aros-v11.zip",
+        "summary": "Convert CloneCD (.ccd) to ISO Images",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "cls",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "cls.x86_64-aros-v11.zip",
+        "category": "utility/shell",
+        "version": "1.0",
+        "date": "20250224-19.42",
+        "size": 41871,
+        "url": "https://archives.arosworld.org/share/utility/shell/cls.x86_64-aros-v11.zip",
+        "summary": "CLear Screen command",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "commander_keen_4",
+      "arch": "aarch64",
+      "chosen": {
+        "filename": "commander_keen_4.aarch64-aros.zip",
+        "category": "game/platform",
+        "version": "1.0",
+        "date": "20260814-05.02",
+        "size": 1273631,
+        "url": "https://archives.arosworld.org/share/game/platform/commander_keen_4.aarch64-aros.zip",
+        "summary": "Commander Keen IV. (ARM64 / AARCH64, ABIv1)",
+        "abi": "v1"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "csid",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "csid.x86_64-aros-v11.zip",
+        "category": "audio",
+        "version": "1.0",
+        "date": "20260811-13.27",
+        "size": 1783443,
+        "url": "https://archives.arosworld.org/share/audio/csid.x86_64-aros-v11.zip",
+        "summary": "cSID is a cross-platform command-line SID player",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "davegnukem",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "davegnukem.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.0.2",
+        "date": "20250611-19.44",
+        "size": 21815509,
+        "url": "https://archives.arosworld.org/share/game/platform/davegnukem.x86_64-aros-v11.zip",
+        "summary": "2D scrolling platform shooter",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "daysleeper-v0.9r2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "daysleeper-v0.9r2.x86_64-aros-v11.zip",
+        "category": "utility/text/misc",
+        "version": "0.9r2",
+        "date": "20250611-09.54",
+        "size": 125256,
+        "url": "https://archives.arosworld.org/share/utility/text/misc/daysleeper-v0.9r2.x86_64-aros-v11.zip",
+        "summary": "Shutdown/Reboot at a selected time",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "dclock",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "dclock.x86_64-aros-v11.lha",
+        "category": "utility/workbench",
+        "version": "1.6",
+        "date": "20250113-07.06",
+        "size": 32123,
+        "url": "https://archives.arosworld.org/share/utility/workbench/dclock.x86_64-aros-v11.lha",
+        "summary": "Utilities Clock for wanderer",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "delugem",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "delugem.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "1.1",
+        "date": "20260308-20.04",
+        "size": 10309121,
+        "url": "https://archives.arosworld.org/share/game/puzzle/delugem.x86_64-aros-v11.zip",
+        "summary": "puzzle game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "demac",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "demac.x86_64-aros-v11.zip",
+        "category": "audio/misc",
+        "version": "0.1",
+        "date": "20250222-07.24",
+        "size": 110298,
+        "url": "https://archives.arosworld.org/share/audio/misc/demac.x86_64-aros-v11.zip",
+        "summary": "Decoder for .ape files",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "demoeffects",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "demoeffects.x86_64-aros-v11.zip",
+        "category": "demo/misc",
+        "version": "",
+        "date": "20250131-12.13",
+        "size": 4469454,
+        "url": "https://archives.arosworld.org/share/demo/misc/demoeffects.x86_64-aros-v11.zip",
+        "summary": "Many Demo Effects",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "dethrace-0.10.1",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "dethrace-0.10.1.x86_64-aros-v11.zip",
+        "category": "game/driving",
+        "version": "0.10.1",
+        "date": "20260807-06.05",
+        "size": 32037141,
+        "url": "https://archives.arosworld.org/share/game/driving/dethrace-0.10.1.x86_64-aros-v11.zip",
+        "summary": "Dethrace 0.10.1 x86_64 v11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "devilutionx",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "devilutionx.x86_64-aros-v11.zip",
+        "category": "game/roleplaying",
+        "version": "1.6.0-dev",
+        "date": "20260531-11.38",
+        "size": 8409190,
+        "url": "https://archives.arosworld.org/share/game/roleplaying/devilutionx.x86_64-aros-v11.zip",
+        "summary": "Diablo build for modern operating systems",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "dirtree",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "dirtree.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "40.8",
+        "date": "20250116-17.29",
+        "size": 50125,
+        "url": "https://archives.arosworld.org/share/utility/misc/dirtree.x86_64-aros-v11.zip",
+        "summary": "Shell command displaying directory trees",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "diskusage",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "diskusage.x86_64-aros-v11.zip",
+        "category": "utility/shell",
+        "version": "40.8",
+        "date": "20250116-17.30",
+        "size": 50048,
+        "url": "https://archives.arosworld.org/share/utility/shell/diskusage.x86_64-aros-v11.zip",
+        "summary": "Estimates file space usage",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "dosbox",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "dosbox.x86_64-aros-v11.zip",
+        "category": "emulation/computer",
+        "version": "0.74",
+        "date": "20251003-06.04",
+        "size": 4512101,
+        "url": "https://archives.arosworld.org/share/emulation/computer/dosbox.x86_64-aros-v11.zip",
+        "summary": "Dosbox x86_64",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "dose2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "dose2.x86_64-aros-v11.zip",
+        "category": "demo/scene",
+        "version": "1.1",
+        "date": "20260303-18.49",
+        "size": 5712711,
+        "url": "https://archives.arosworld.org/share/demo/scene/dose2.x86_64-aros-v11.zip",
+        "summary": "Pulsating demo with bawdy humor from Assembly '01.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "edgesnap",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "edgesnap.x86_64-aros-v11.lha",
+        "category": "utility/workbench",
+        "version": "0.31",
+        "date": "20260909-16.29",
+        "size": 293041,
+        "url": "https://archives.arosworld.org/share/utility/workbench/edgesnap.x86_64-aros-v11.lha",
+        "summary": "Tile windows by dragging them to an edge",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "emuv0",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "emuv0.x86_64-aros-v11.zip",
+        "category": "emulation/computer",
+        "version": "1.12",
+        "date": "20260825-07.37",
+        "size": 2259374,
+        "url": "https://archives.arosworld.org/share/emulation/computer/emuv0.x86_64-aros-v11.zip",
+        "summary": "Emulator for 32-bit AROS applications",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "exult",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "exult.x86_64-aros-v11.zip",
+        "category": "game/roleplaying",
+        "version": "1.12.1",
+        "date": "20260627-13.33",
+        "size": 126921161,
+        "url": "https://archives.arosworld.org/share/game/roleplaying/exult.x86_64-aros-v11.zip",
+        "summary": "Ultima 7 Engine",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "fallout",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "fallout.x86_64-aros-v11.zip",
+        "category": "game/roleplaying",
+        "version": "1.1",
+        "date": "20260605-17.27",
+        "size": 1230066,
+        "url": "https://archives.arosworld.org/share/game/roleplaying/fallout.x86_64-aros-v11.zip",
+        "summary": "Fallout for modern operating systems",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "fallout2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "fallout2.x86_64-aros-v11.zip",
+        "category": "game/roleplaying",
+        "version": "1.3",
+        "date": "20260607-11.59",
+        "size": 2003597,
+        "url": "https://archives.arosworld.org/share/game/roleplaying/fallout2.x86_64-aros-v11.zip",
+        "summary": "Fallout 2 for modern operating systems",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ffmpeg",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ffmpeg.x86_64-aros-v11.zip",
+        "category": "graphics/convert",
+        "version": "4.4.5",
+        "date": "20260526-20.27",
+        "size": 31270210,
+        "url": "https://archives.arosworld.org/share/graphics/convert/ffmpeg.x86_64-aros-v11.zip",
+        "summary": "record, convert and stream audio and video.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ffmpegaudioextractor",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ffmpegaudioextractor.x86_64-aros-v11.zip",
+        "category": "audio",
+        "version": "1.0",
+        "date": "20260812-13.27",
+        "size": 69548,
+        "url": "https://archives.arosworld.org/share/audio/ffmpegaudioextractor.x86_64-aros-v11.zip",
+        "summary": "Convert audio or extract audio to Video",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ffmpegvideotool",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ffmpegvideotool.x86_64-aros-v11.zip",
+        "category": "video/convert",
+        "version": "1.0",
+        "date": "20260801-07.28",
+        "size": 70832,
+        "url": "https://archives.arosworld.org/share/video/convert/ffmpegvideotool.x86_64-aros-v11.zip",
+        "summary": "FFmpeg Video Tool for AROS 64-bit v11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "fheroes2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "fheroes2.x86_64-aros-v11.zip",
+        "category": "game/strategy",
+        "version": "1.1.16",
+        "date": "20260601-20.03",
+        "size": 16660558,
+        "url": "https://archives.arosworld.org/share/game/strategy/fheroes2.x86_64-aros-v11.zip",
+        "summary": "Heroes of the Might and Magic II engine",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "filesysbox",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "filesysbox.x86_64-aros-v11.lha",
+        "category": "library/misc",
+        "version": "54.10",
+        "date": "20260322-07.10",
+        "size": 69600,
+        "url": "https://archives.arosworld.org/share/library/misc/filesysbox.x86_64-aros-v11.lha",
+        "summary": "A FUSE compatible file system layer",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "finder-v3.1",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "finder-v3.1.x86_64-aros-v11.zip",
+        "category": "utility/filetool",
+        "version": "3.1",
+        "date": "20250621-06.04",
+        "size": 63513,
+        "url": "https://archives.arosworld.org/share/utility/filetool/finder-v3.1.x86_64-aros-v11.zip",
+        "summary": "MUI File Search Tool",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "fireoftheapes",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "fireoftheapes.x86_64-aros-v11.zip",
+        "category": "game/fps",
+        "version": "1.3",
+        "date": "20260831-17.03",
+        "size": 5216749,
+        "url": "https://archives.arosworld.org/share/game/fps/fireoftheapes.x86_64-aros-v11.zip",
+        "summary": "Atypical FPS/survival horror game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "flexcat-gui",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "flexcat-gui.x86_64-aros-v11.zip",
+        "category": "utility",
+        "version": "1.0",
+        "date": "20260805-06.18",
+        "size": 58038,
+        "url": "https://archives.arosworld.org/share/utility/flexcat-gui.x86_64-aros-v11.zip",
+        "summary": "GUI for FlexCat that allows you to create catalogs",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "flx_play.zip",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "flx_play.x86_64-aros-v11.zip.zip",
+        "category": "video/play",
+        "version": "0.3",
+        "date": "20250405-14.45",
+        "size": 75602,
+        "url": "https://archives.arosworld.org/share/video/play/flx_play.x86_64-aros-v11.zip.zip",
+        "summary": "Simple FLI/FLC/FLX Animation Player",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ft2clone",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ft2clone.x86_64-aros-v11.zip",
+        "category": "audio/tracker",
+        "version": "2.19",
+        "date": "20260527-06.11",
+        "size": 4090439,
+        "url": "https://archives.arosworld.org/share/audio/tracker/ft2clone.x86_64-aros-v11.zip",
+        "summary": "FastTracker II Clone is a music tracker program",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "gemrb-0.8.8-0",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "gemrb-0.8.8-0.x86_64-aros-v11.zip",
+        "category": "game/roleplaying",
+        "version": "0.8.8-0",
+        "date": "20241003-18.57",
+        "size": 30979787,
+        "url": "https://archives.arosworld.org/share/game/roleplaying/gemrb-0.8.8-0.x86_64-aros-v11.zip",
+        "summary": "x86_64-abiv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ghostscript-10.0.0",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ghostscript-10.0.0.x86_64-aros.lha",
+        "category": "utility/print",
+        "version": "10.0.0",
+        "date": "20230228-08.27",
+        "size": 12826633,
+        "url": "https://archives.arosworld.org/share/utility/print/ghostscript-10.0.0.x86_64-aros.lha",
+        "summary": "Ghostscript v10 binary for AROS/x86_64 (ABI_WIP)",
+        "abi": "v1"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "gicriptofilex",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "gicriptofilex.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "1.0",
+        "date": "20260823-16.44",
+        "size": 561041,
+        "url": "https://archives.arosworld.org/share/utility/misc/gicriptofilex.x86_64-aros-v11.zip",
+        "summary": "Encrypt files using 128 bit algorithm",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "giddy3",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "giddy3.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.5",
+        "date": "20250906-07.58",
+        "size": 3693964,
+        "url": "https://archives.arosworld.org/share/game/platform/giddy3.x86_64-aros-v11.zip",
+        "summary": "OpenGL puzzle-solving platform game.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "giocodel15",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "giocodel15.x86_64-aros-v11.zip",
+        "category": "game/board",
+        "version": "1.0",
+        "date": "20260910-18.46",
+        "size": 529710,
+        "url": "https://archives.arosworld.org/share/game/board/giocodel15.x86_64-aros-v11.zip",
+        "summary": "a classic puzzle game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "gisplita",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "gisplita.x86_64-aros-v11.zip",
+        "category": "utility/shell",
+        "version": "1.5",
+        "date": "20260829-20.47",
+        "size": 36387,
+        "url": "https://archives.arosworld.org/share/utility/shell/gisplita.x86_64-aros-v11.zip",
+        "summary": "little program to split large files",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "gmore",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "gmore.x86_64-aros-v11.zip",
+        "category": "utility/text",
+        "version": "1.2",
+        "date": "20260819-23.57",
+        "size": 35787,
+        "url": "https://archives.arosworld.org/share/utility/text/gmore.x86_64-aros-v11.zip",
+        "summary": "Text viewer similar to MORE",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "gnurobbo",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "gnurobbo.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "0.68",
+        "date": "20250321-06.30",
+        "size": 3389410,
+        "url": "https://archives.arosworld.org/share/game/puzzle/gnurobbo.x86_64-aros-v11.zip",
+        "summary": "open source reimplementation of Robbo",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "grep",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "grep.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "2.0",
+        "date": "20250120-18.07",
+        "size": 58437,
+        "url": "https://archives.arosworld.org/share/utility/misc/grep.x86_64-aros-v11.zip",
+        "summary": "GNU Grep",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "hex2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "hex2.x86_64-aros-v11.lha",
+        "category": "utility/misc",
+        "version": "0.2",
+        "date": "20230317-20.44",
+        "size": 248685,
+        "url": "https://archives.arosworld.org/share/utility/misc/hex2.x86_64-aros-v11.lha",
+        "summary": "Calculator with variables",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "hexen2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "hexen2.x86_64-aros-v11.zip",
+        "category": "game/fps",
+        "version": "1.5.10",
+        "date": "20260621-07.31",
+        "size": 3249500,
+        "url": "https://archives.arosworld.org/share/game/fps/hexen2.x86_64-aros-v11.zip",
+        "summary": "Hexen II: Hammer of Thyrion (uHexen2)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "hivelyreplay",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "hivelyreplay.x86_64-aros-v11.zip",
+        "category": "audio/play",
+        "version": "0.2",
+        "date": "20250718-15.38",
+        "size": 90714,
+        "url": "https://archives.arosworld.org/share/audio/play/hivelyreplay.x86_64-aros-v11.zip",
+        "summary": "Replayer from HivelyTracker (AHI)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "hocoslamfy",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "hocoslamfy.x86_64-aros-v11.zip",
+        "category": "game/misc",
+        "version": "2026",
+        "date": "20260301-12.38",
+        "size": 1640158,
+        "url": "https://archives.arosworld.org/share/game/misc/hocoslamfy.x86_64-aros-v11.zip",
+        "summary": "SDL Flappy Bird clone.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "hostile-takeover",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "hostile-takeover.x86_64-aros-v11.zip",
+        "category": "game/strategy",
+        "version": "1.6.0",
+        "date": "20260613-05.09",
+        "size": 9436754,
+        "url": "https://archives.arosworld.org/share/game/strategy/hostile-takeover.x86_64-aros-v11.zip",
+        "summary": "RTS game freeware/opensource",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "hydracastle",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "hydracastle.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "02/2024",
+        "date": "20250323-20.16",
+        "size": 58262762,
+        "url": "https://archives.arosworld.org/share/game/platform/hydracastle.x86_64-aros-v11.zip",
+        "summary": "metroidvania-style action platformer",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "iconmake",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "iconmake.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "1.2",
+        "date": "20260826-17.39",
+        "size": 59623,
+        "url": "https://archives.arosworld.org/share/utility/misc/iconmake.x86_64-aros-v11.zip",
+        "summary": "The DualPNG Icon Creator for AROS",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "installerlg",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "installerlg.x86_64-aros-v11.lha",
+        "category": "utility",
+        "version": "1.0.4",
+        "date": "20251021-18.41",
+        "size": 135413,
+        "url": "https://archives.arosworld.org/share/utility/installerlg.x86_64-aros-v11.lha",
+        "summary": "Commodore Installer replacement",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "isomaker",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "isomaker.x86_64-aros-v11.zip",
+        "category": "utility",
+        "version": "1.0",
+        "date": "20260910-19.57",
+        "size": 44202,
+        "url": "https://archives.arosworld.org/share/utility/isomaker.x86_64-aros-v11.zip",
+        "summary": "Create an ISO CD from DOS",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "isomaker-gui",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "isomaker-gui.x86_64-aros-v11.zip",
+        "category": "utility",
+        "version": "1.1",
+        "date": "20260910-19.57",
+        "size": 276822,
+        "url": "https://archives.arosworld.org/share/utility/isomaker-gui.x86_64-aros-v11.zip",
+        "summary": "A GUI that lets you create ISO files bootable",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "isotool",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "isotool.x86_64-aros-v11.zip",
+        "category": "utility",
+        "version": "1.0",
+        "date": "20260911-19.42",
+        "size": 38403,
+        "url": "https://archives.arosworld.org/share/utility/isotool.x86_64-aros-v11.zip",
+        "summary": "Boot Extraction ISO And Rename Volume",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "isotools-gui",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "isotools-gui.x86_64-aros-v11.zip",
+        "category": "utility",
+        "version": "1.0",
+        "date": "20260911-19.42",
+        "size": 210116,
+        "url": "https://archives.arosworld.org/share/utility/isotools-gui.x86_64-aros-v11.zip",
+        "summary": "Boot Extraction ISO And Rename Volume",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "joytest",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "joytest.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "1.0",
+        "date": "20250116-17.30",
+        "size": 46242,
+        "url": "https://archives.arosworld.org/share/utility/misc/joytest.x86_64-aros-v11.zip",
+        "summary": "joypad test prints lowlevel data to the shell.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "keen4",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "keen4.x86_64-aros-v11.lha",
+        "category": "game/platform",
+        "version": "1.0",
+        "date": "20260717-07.12",
+        "size": 2064705,
+        "url": "https://archives.arosworld.org/share/game/platform/keen4.x86_64-aros-v11.lha",
+        "summary": "Port of the famous DOS game Commander Keen IV.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "lbreakouthd",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "lbreakouthd.x86_64-aros-v11.zip",
+        "category": "game/misc",
+        "version": "1.2.2",
+        "date": "20260516-21.32",
+        "size": 7682130,
+        "url": "https://archives.arosworld.org/share/game/misc/lbreakouthd.x86_64-aros-v11.zip",
+        "summary": "Breakout/Arkanoid-style game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ledblur",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ledblur.x86_64-aros-v11.zip",
+        "category": "demo/scene",
+        "version": "",
+        "date": "20260904-06.37",
+        "size": 364186,
+        "url": "https://archives.arosworld.org/share/demo/scene/ledblur.x86_64-aros-v11.zip",
+        "summary": "Port of oldskool GP32 Demo from '06.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "leu",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "leu.x86_64-aros-v11.lha",
+        "category": "office/spreadsheet",
+        "version": "0.8",
+        "date": "20230315-06.56",
+        "size": 1565342,
+        "url": "https://archives.arosworld.org/share/office/spreadsheet/leu.x86_64-aros-v11.lha",
+        "summary": "A simple spreadsheet viewer",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "libiffanim",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "libiffanim.x86_64-aros.rar",
+        "category": "development/library",
+        "version": "",
+        "date": "20100109-06.50",
+        "size": 407938,
+        "url": "https://archives.arosworld.org/share/development/library/libiffanim.x86_64-aros.rar",
+        "summary": "IFF-ANIM player library",
+        "abi": "v1"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "libmad-0.15.1b",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "libmad-0.15.1b.x86_64-aros-v11.zip",
+        "category": "development/library",
+        "version": "0.15.1b",
+        "date": "20241101-09.28",
+        "size": 120998,
+        "url": "https://archives.arosworld.org/share/development/library/libmad-0.15.1b.x86_64-aros-v11.zip",
+        "summary": "Libmad",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "libmikmod",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "libmikmod.x86_64-aros.rar",
+        "category": "development/library",
+        "version": "3.2.0-b2",
+        "date": "20100108-02.58",
+        "size": 359627,
+        "url": "https://archives.arosworld.org/share/development/library/libmikmod.x86_64-aros.rar",
+        "summary": "Portable sound library (music modules)",
+        "abi": "v1"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "libmpg123",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "libmpg123.x86_64-aros-v11.zip",
+        "category": "development/library",
+        "version": "1.33.2",
+        "date": "20250913-14.37",
+        "size": 2031691,
+        "url": "https://archives.arosworld.org/share/development/library/libmpg123.x86_64-aros-v11.zip",
+        "summary": "Library for decoding mpeg audio files",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "libsdl2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "libsdl2.x86_64-aros-v11.zip",
+        "category": "development/library",
+        "version": "2.32.10",
+        "date": "20260202-15.42",
+        "size": 17045380,
+        "url": "https://archives.arosworld.org/share/development/library/libsdl2.x86_64-aros-v11.zip",
+        "summary": "Simple DirectMedia Layer 2",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "libyaml",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "libyaml.x86_64-aros-v11.zip",
+        "category": "development/library",
+        "version": "0.8.0",
+        "date": "20260902-06.15",
+        "size": 263643,
+        "url": "https://archives.arosworld.org/share/development/library/libyaml.x86_64-aros-v11.zip",
+        "summary": "Static C++ library to manage YAML parser/emitter",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "lzo-2.03",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "lzo-2.03.x86_64.tar.gz",
+        "category": "development/library",
+        "version": "2.03",
+        "date": "20081113-09.48",
+        "size": 224737,
+        "url": "https://archives.arosworld.org/share/development/library/lzo-2.03.x86_64.tar.gz",
+        "summary": "LZO real-time data compression library",
+        "abi": "v1"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "lzop-1.04",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "lzop-1.04.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "1.04",
+        "date": "20251222-11.15",
+        "size": 639377,
+        "url": "https://archives.arosworld.org/share/utility/archive/lzop-1.04.x86_64-aros-v11.zip",
+        "summary": "lzop -- a very fast file compressor",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "mcamiga",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "mcamiga.x86_64-aros-v11.lha",
+        "category": "utility/filetool",
+        "version": "1.0",
+        "date": "20230317-20.44",
+        "size": 302308,
+        "url": "https://archives.arosworld.org/share/utility/filetool/mcamiga.x86_64-aros-v11.lha",
+        "summary": "File Manager",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "metemp3",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "metemp3.x86_64-aros-v11.zip",
+        "category": "audio/play",
+        "version": "1.5",
+        "date": "20250523-06.03",
+        "size": 682499,
+        "url": "https://archives.arosworld.org/share/audio/play/metemp3.x86_64-aros-v11.zip",
+        "summary": "a Mp3,Flac,Wav Player",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "minislug",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "minislug.x86_64-aros-v11.zip",
+        "category": "game/action",
+        "version": "2.0.0.04",
+        "date": "20250317-06.24",
+        "size": 8357508,
+        "url": "https://archives.arosworld.org/share/game/action/minislug.x86_64-aros-v11.zip",
+        "summary": "a metal slug game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "mplayer-1.0-v6",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "mplayer-1.0-v6.x86_64-aros-v11.zip",
+        "category": "video/play",
+        "version": "1.0-v6",
+        "date": "20230502-13.26",
+        "size": 9182048,
+        "url": "https://archives.arosworld.org/share/video/play/mplayer-1.0-v6.x86_64-aros-v11.zip",
+        "summary": "Multimedia player with MUI user interface",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "muimapparium",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "muimapparium.x86_64-aros-v11.lha",
+        "category": "network/misc",
+        "version": "0.9",
+        "date": "20230315-06.56",
+        "size": 756858,
+        "url": "https://archives.arosworld.org/share/network/misc/muimapparium.x86_64-aros-v11.lha",
+        "summary": "OpenStreetMap Client",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "muiplot",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "muiplot.x86_64-aros-v11.lha",
+        "category": "graphics/misc",
+        "version": "0.1",
+        "date": "20230317-20.44",
+        "size": 269792,
+        "url": "https://archives.arosworld.org/share/graphics/misc/muiplot.x86_64-aros-v11.lha",
+        "summary": "Simple function plotter",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "nano",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "nano.x86_64-aros-v11.zip",
+        "category": "demo/scene",
+        "version": "1.2",
+        "date": "20250529-06.23",
+        "size": 3900507,
+        "url": "https://archives.arosworld.org/share/demo/scene/nano.x86_64-aros-v11.zip",
+        "summary": "nano demo x86_64 by Kakiarts",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "nomarch",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "nomarch.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "1.4",
+        "date": "20250117-16.38",
+        "size": 81413,
+        "url": "https://archives.arosworld.org/share/utility/archive/nomarch.x86_64-aros-v11.zip",
+        "summary": "extract old .arc and .ark archives",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ntfs3g",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ntfs3g.x86_64-aros-v11.lha",
+        "category": "driver/filesystem",
+        "version": "53.5",
+        "date": "20260304-13.08",
+        "size": 221261,
+        "url": "https://archives.arosworld.org/share/driver/filesystem/ntfs3g.x86_64-aros-v11.lha",
+        "summary": "Port of Tuxera's NTFS-3G file system",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ominoarcade",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ominoarcade.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.0",
+        "date": "20260903-18.13",
+        "size": 2510500,
+        "url": "https://archives.arosworld.org/share/game/platform/ominoarcade.x86_64-aros-v11.zip",
+        "summary": "recover all the coins while avoiding the enemies",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "ominostage",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "ominostage.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.1",
+        "date": "20260829-06.13",
+        "size": 1645762,
+        "url": "https://archives.arosworld.org/share/game/platform/ominostage.x86_64-aros-v11.zip",
+        "summary": "collect all the coins and avoid the enemies",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "openjazz",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "openjazz.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "20240919",
+        "date": "20250320-06.28",
+        "size": 768643,
+        "url": "https://archives.arosworld.org/share/game/platform/openjazz.x86_64-aros-v11.zip",
+        "summary": "open-source version of the classic Jazz Jackrabbit",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "opentyrian",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "opentyrian.x86_64-aros-v11.zip",
+        "category": "game/action",
+        "version": "2.1.x-AROS",
+        "date": "20250324-16.28",
+        "size": 4591126,
+        "url": "https://archives.arosworld.org/share/game/action/opentyrian.x86_64-aros-v11.zip",
+        "summary": "open-source port of the DOS game Tyrian",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "openxcom",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "openxcom.x86_64-aros-v11.zip",
+        "category": "game/strategy",
+        "version": "1.0",
+        "date": "20260828-06.42",
+        "size": 4557960,
+        "url": "https://archives.arosworld.org/share/game/strategy/openxcom.x86_64-aros-v11.zip",
+        "summary": "Open-source clone of \"UFO: Enemy Unknown\"",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "owb-2.1",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "owb-2.1.x86_64-aros-v11.zip",
+        "category": "network/browser",
+        "version": "2.1",
+        "date": "20241112-17.40",
+        "size": 56469668,
+        "url": "https://archives.arosworld.org/share/network/browser/owb-2.1.x86_64-aros-v11.zip",
+        "summary": "Odyssey Web Browser",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "pekkakana2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "pekkakana2.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.5.2",
+        "date": "20260508-20.17",
+        "size": 14093424,
+        "url": "https://archives.arosworld.org/share/game/platform/pekkakana2.x86_64-aros-v11.zip",
+        "summary": "platformer game where you control a rooster",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "perl-5.7.2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "perl-5.7.2.x86_64-aros-v11.zip",
+        "category": "development/language",
+        "version": "",
+        "date": "20241029-23.40",
+        "size": 12003463,
+        "url": "https://archives.arosworld.org/share/development/language/perl-5.7.2.x86_64-aros-v11.zip",
+        "summary": "Perl 5.7.2 x86_64 ABIv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "pintp",
+      "arch": "aarch64",
+      "chosen": {
+        "filename": "pintp.aarch64-aros.lha",
+        "category": "network",
+        "version": "1.0",
+        "date": "20260908-21.09",
+        "size": 16697,
+        "url": "https://archives.arosworld.org/share/network/pintp.aarch64-aros.lha",
+        "summary": "time synchronization client for Raspberry Pi",
+        "abi": "v1"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "pkg-54321",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "54321.x86_64-aros-v11.zip",
+        "category": "game/board",
+        "version": "1.0",
+        "date": "20260907-17.42",
+        "size": 767258,
+        "url": "https://archives.arosworld.org/share/game/board/54321.x86_64-aros-v11.zip",
+        "summary": "Five common 2d puzzles in multiple dimensions",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "pkg-7mezzoplus",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "7mezzoplus.x86_64-aros-v11.zip",
+        "category": "game/card",
+        "version": "1.0",
+        "date": "20260902-14.26",
+        "size": 668674,
+        "url": "https://archives.arosworld.org/share/game/card/7mezzoplus.x86_64-aros-v11.zip",
+        "summary": "Popular Italian Christmas game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "pkg-7zdec",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "7zdec.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "9.13beta",
+        "date": "20250218-11.48",
+        "size": 253465,
+        "url": "https://archives.arosworld.org/share/utility/archive/7zdec.x86_64-aros-v11.zip",
+        "summary": "Unarchive 7zip files (.7z)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "planethively",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "planethively.x86_64-aros-v11.zip",
+        "category": "demo/music",
+        "version": "1.0",
+        "date": "20250607-06.51",
+        "size": 281533,
+        "url": "https://archives.arosworld.org/share/demo/music/planethively.x86_64-aros-v11.zip",
+        "summary": "A musicdisk about HivelyTracker",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "playsid-gui",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "playsid-gui.x86_64-aros-v11.zip",
+        "category": "audio",
+        "version": "1.0",
+        "date": "20260811-13.28",
+        "size": 65203,
+        "url": "https://archives.arosworld.org/share/audio/playsid-gui.x86_64-aros-v11.zip",
+        "summary": "PlaySID-GUI GUI For cSID Player Sid File",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "potrace",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "potrace.x86_64-aros-v11.zip",
+        "category": "graphics/convert",
+        "version": "1.16",
+        "date": "20250120-18.08",
+        "size": 1173531,
+        "url": "https://archives.arosworld.org/share/graphics/convert/potrace.x86_64-aros-v11.zip",
+        "summary": "Transforming bitmaps into vector graphics",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "prboom-plus",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "prboom-plus.x86_64-aros-v11.zip",
+        "category": "game/fps",
+        "version": "2.6.66",
+        "date": "20260614-11.00",
+        "size": 4110698,
+        "url": "https://archives.arosworld.org/share/game/fps/prboom-plus.x86_64-aros-v11.zip",
+        "summary": "a version of the classic 3D shoot'em'up game Doom",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "processicon",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "processicon.x86_64-aros-v11.zip",
+        "category": "utility",
+        "version": "1.19",
+        "date": "20251222-11.15",
+        "size": 75120,
+        "url": "https://archives.arosworld.org/share/utility/processicon.x86_64-aros-v11.zip",
+        "summary": "ProcessIcon - CLI tool to manipulate icon data",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "protrekkr",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "protrekkr.x86_64-aros-v11.zip",
+        "category": "audio/edit",
+        "version": "2.8.3PRE",
+        "date": "20250509-06.26",
+        "size": 13261598,
+        "url": "https://archives.arosworld.org/share/audio/edit/protrekkr.x86_64-aros-v11.zip",
+        "summary": "Tracker Synth hybrid Program",
+        "abi": "v11"
+      },
+      "selected_by": "newest-upload",
+      "alternatives": [
+        {
+          "filename": "protrekkr.x86_64-aros-v11.zip",
+          "category": "audio/tracker",
+          "version": "2.8.2",
+          "date": "20250213-15.55",
+          "size": 13203478
+        },
+        {
+          "filename": "protrekkr.x86_64-aros-v11.tar",
+          "category": "audio/tracker",
+          "version": "2.8.1",
+          "date": "20250131-12.13",
+          "size": 20326400
+        }
+      ]
+    },
+    {
+      "id": "python-2.5.2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "python-2.5.2.x86_64-aros-v11.zip",
+        "category": "development/language",
+        "version": "2.5.2",
+        "date": "20241004-10.37",
+        "size": 24117235,
+        "url": "https://archives.arosworld.org/share/development/language/python-2.5.2.x86_64-aros-v11.zip",
+        "summary": "x86_64-abiv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "python-2.7.18",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "python-2.7.18.x86_64-aros-v11.zip",
+        "category": "development/language",
+        "version": "2.7.18",
+        "date": "20250913-14.38",
+        "size": 36166652,
+        "url": "https://archives.arosworld.org/share/development/language/python-2.7.18.x86_64-aros-v11.zip",
+        "summary": "python-2.7.18.x86_64-abiv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "qlview",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "qlview.x86_64-aros-v11.zip",
+        "category": "graphics/viewer",
+        "version": "25.09",
+        "date": "20250120-18.10",
+        "size": 267148,
+        "url": "https://archives.arosworld.org/share/graphics/viewer/qlview.x86_64-aros-v11.zip",
+        "summary": "Sinclair QL Screen viewer",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "reminiscence",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "reminiscence.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "0.3.2",
+        "date": "20250325-18.28",
+        "size": 1251359,
+        "url": "https://archives.arosworld.org/share/game/platform/reminiscence.x86_64-aros-v11.zip",
+        "summary": "Flashback engine reimplementation",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "rescode",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "rescode.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "1.2",
+        "date": "20250117-16.39",
+        "size": 89500,
+        "url": "https://archives.arosworld.org/share/utility/misc/rescode.x86_64-aros-v11.zip",
+        "summary": "Calculates resistor values (4 and 5 band)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "residualvm-0.3.1-1",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "residualvm-0.3.1-1.x86_64-aros-v11.zip",
+        "category": "emulation/misc",
+        "version": "0.3.1-1",
+        "date": "20241101-09.27",
+        "size": 4588171,
+        "url": "https://archives.arosworld.org/share/emulation/misc/residualvm-0.3.1-1.x86_64-aros-v11.zip",
+        "summary": "ResidualVM x86_64 abiv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "retroarch",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "retroarch.x86_64-aros-v11.lha",
+        "category": "emulation/gamesystem",
+        "version": "1.0",
+        "date": "20260428-14.05",
+        "size": 62481017,
+        "url": "https://archives.arosworld.org/share/emulation/gamesystem/retroarch.x86_64-aros-v11.lha",
+        "summary": "RetroArch Emulation System",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "rman-v3.3",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "rman-v3.3.x86_64-aros-v11.zip",
+        "category": "utility/text/convert",
+        "version": "3.3",
+        "date": "20250607-18.40",
+        "size": 225125,
+        "url": "https://archives.arosworld.org/share/utility/text/convert/rman-v3.3.x86_64-aros-v11.zip",
+        "summary": "Converting Txt files into various formats",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "rtf-riddle-v3.97b",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "rtf-riddle-v3.97b.x86_64-aros-v11.zip",
+        "category": "utility/text/convert",
+        "version": "3.97b",
+        "date": "20250607-18.39",
+        "size": 166679,
+        "url": "https://archives.arosworld.org/share/utility/text/convert/rtf-riddle-v3.97b.x86_64-aros-v11.zip",
+        "summary": "Rich Text Format to HTML5 converter",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "scopagame",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "scopagame.x86_64-aros-v11.zip",
+        "category": "game/card",
+        "version": "1.0",
+        "date": "20260816-17.12",
+        "size": 651617,
+        "url": "https://archives.arosworld.org/share/game/card/scopagame.x86_64-aros-v11.zip",
+        "summary": "Italian card game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "screentest-v1",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "screentest-v1.x86_64-aros-v11.zip",
+        "category": "demo/misc",
+        "version": "1",
+        "date": "20250607-18.38",
+        "size": 34054,
+        "url": "https://archives.arosworld.org/share/demo/misc/screentest-v1.x86_64-aros-v11.zip",
+        "summary": "Tests the stability of your screen",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "scummvm-1.9.0-1",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "scummvm-1.9.0-1.x86_64-aros-v11.zip",
+        "category": "emulation/misc",
+        "version": "1.9.0-1",
+        "date": "20241101-09.27",
+        "size": 17719470,
+        "url": "https://archives.arosworld.org/share/emulation/misc/scummvm-1.9.0-1.x86_64-aros-v11.zip",
+        "summary": "ScummVM x86_64 abiv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "scummvm-2026.02-sdl1",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "scummvm-2026.02-sdl1.x86_64-aros-v11.zip",
+        "category": "emulation/misc",
+        "version": "2026.02",
+        "date": "20260619-07.15",
+        "size": 80490228,
+        "url": "https://archives.arosworld.org/share/emulation/misc/scummvm-2026.02-sdl1.x86_64-aros-v11.zip",
+        "summary": "ScummVM-2026.02-SDL1.x86_64 ABIv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "scummvm-2026.3.0",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "scummvm-2026.3.0.x86_64-aros-v11.zip",
+        "category": "emulation/misc",
+        "version": "2026.3.0",
+        "date": "20260813-06.01",
+        "size": 135334300,
+        "url": "https://archives.arosworld.org/share/emulation/misc/scummvm-2026.3.0.x86_64-aros-v11.zip",
+        "summary": "ScummVM-2026.3.0-SDL2.x86_64 ABIv11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "sdllopan",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "sdllopan.x86_64-aros-v11.zip",
+        "category": "game/board",
+        "version": "1.0",
+        "date": "20250123-18.34",
+        "size": 490689,
+        "url": "https://archives.arosworld.org/share/game/board/sdllopan.x86_64-aros-v11.zip",
+        "summary": "Lopan - MahJong clone",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "sdlpop",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "sdlpop.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.24RC",
+        "date": "20260508-20.16",
+        "size": 1413476,
+        "url": "https://archives.arosworld.org/share/game/platform/sdlpop.x86_64-aros-v11.zip",
+        "summary": "An open-source port of Prince of Persia.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "sfsobject",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "sfsobject.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "1.6",
+        "date": "20250120-18.14",
+        "size": 79038,
+        "url": "https://archives.arosworld.org/share/utility/misc/sfsobject.x86_64-aros-v11.zip",
+        "summary": "Sets SFS object attributes",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "shooterspace",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "shooterspace.x86_64-aros-v11.zip",
+        "category": "game/misc",
+        "version": "1.0",
+        "date": "20260901-20.05",
+        "size": 1184697,
+        "url": "https://archives.arosworld.org/share/game/misc/shooterspace.x86_64-aros-v11.zip",
+        "summary": "Avoid asteroids and deal with threatening UFOs",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "siddump",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "siddump.x86_64-aros-v11.zip",
+        "category": "audio/misc",
+        "version": "1.08",
+        "date": "20250120-18.16",
+        "size": 92473,
+        "url": "https://archives.arosworld.org/share/audio/misc/siddump.x86_64-aros-v11.zip",
+        "summary": "C64 music debug output utility",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "signus",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "signus.x86_64-aros-v11.zip",
+        "category": "game/strategy",
+        "version": "1.96.0",
+        "date": "20260601-21.27",
+        "size": 4146376,
+        "url": "https://archives.arosworld.org/share/game/strategy/signus.x86_64-aros-v11.zip",
+        "summary": "Signus: The Artefact Wars",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "skandalfoclock",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "skandalfoclock.x86_64-aros-v11.zip",
+        "category": "utility/workbench",
+        "version": "1.1",
+        "date": "20250117-16.39",
+        "size": 177395,
+        "url": "https://archives.arosworld.org/share/utility/workbench/skandalfoclock.x86_64-aros-v11.zip",
+        "summary": "Advanced Analog Clock",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "smb2-gui",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "smb2-gui.x86_64-aros-v11.zip",
+        "category": "network/samba",
+        "version": "1.0",
+        "date": "20260801-07.28",
+        "size": 67221,
+        "url": "https://archives.arosworld.org/share/network/samba/smb2-gui.x86_64-aros-v11.zip",
+        "summary": "SMB2 GUI for AROS 64-bit v11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "smb2fs",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "smb2fs.x86_64-aros-v11.lha",
+        "category": "network/samba",
+        "version": "53.10",
+        "date": "20260221-14.16",
+        "size": 135761,
+        "url": "https://archives.arosworld.org/share/network/samba/smb2fs.x86_64-aros-v11.lha",
+        "summary": "SMB2 file system client",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "sokobangp2x",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "sokobangp2x.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "08032025",
+        "date": "20250323-20.16",
+        "size": 7691108,
+        "url": "https://archives.arosworld.org/share/game/puzzle/sokobangp2x.x86_64-aros-v11.zip",
+        "summary": "a Sokoban engine",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "soliton",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "soliton.x86_64-aros-v11.zip",
+        "category": "game/card",
+        "version": "2.2",
+        "date": "20260517-11.10",
+        "size": 223945,
+        "url": "https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip",
+        "summary": "Klondike & Freecell card game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "soniccd",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "soniccd.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.3.3",
+        "date": "20260606-21.11",
+        "size": 1512590,
+        "url": "https://archives.arosworld.org/share/game/platform/soniccd.x86_64-aros-v11.zip",
+        "summary": "A Full Decompilation of Sonic CD (2011)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "sploiner",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "sploiner.x86_64-aros-v11.zip",
+        "category": "utility/misc",
+        "version": "1.01",
+        "date": "20250818-19.34",
+        "size": 63086,
+        "url": "https://archives.arosworld.org/share/utility/misc/sploiner.x86_64-aros-v11.zip",
+        "summary": "split, join and recover files + AROS build",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "stercus",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "stercus.x86_64-aros-v11.zip",
+        "category": "demo/scene/fit",
+        "version": "1.1",
+        "date": "20260304-19.26",
+        "size": 2364819,
+        "url": "https://archives.arosworld.org/share/demo/scene/fit/stercus.x86_64-aros-v11.zip",
+        "summary": "Port of Amiga Demo from MI '06.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "stratagus",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "stratagus.x86_64-aros-v11.zip",
+        "category": "game/strategy",
+        "version": "3.3.2",
+        "date": "20260611-17.42",
+        "size": 5849826,
+        "url": "https://archives.arosworld.org/share/game/strategy/stratagus.x86_64-aros-v11.zip",
+        "summary": "Warcraft and Warcraft 2 game engine",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "sudokul",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "sudokul.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "1.42",
+        "date": "20260605-23.04",
+        "size": 4087471,
+        "url": "https://archives.arosworld.org/share/game/puzzle/sudokul.x86_64-aros-v11.zip",
+        "summary": "Sudoku game made in C++ and SDL2",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "super-haxagon",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "super-haxagon.x86_64-aros-v11.zip",
+        "category": "game/action",
+        "version": "3.9.1",
+        "date": "20260605-23.04",
+        "size": 36448897,
+        "url": "https://archives.arosworld.org/share/game/action/super-haxagon.x86_64-aros-v11.zip",
+        "summary": "Open source Super Hexagon clone",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "super_trevor_land",
+      "arch": "aarch64",
+      "chosen": {
+        "filename": "super_trevor_land.aarch64-aros.zip",
+        "category": "game/platform",
+        "version": "1.0",
+        "date": "20260813-14.11",
+        "size": 64811445,
+        "url": "https://archives.arosworld.org/share/game/platform/super_trevor_land.aarch64-aros.zip",
+        "summary": "Super Trevor Land (ARM64 / AARCH64, ABIv1)",
+        "abi": "v1"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "super_trevor_land",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "super_trevor_land.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.0",
+        "date": "20260625-05.39",
+        "size": 64822169,
+        "url": "https://archives.arosworld.org/share/game/platform/super_trevor_land.x86_64-aros-v11.zip",
+        "summary": "Super Trevor Land (x64, ABIv11)",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "switch",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "switch.x86_64-aros-v11.zip",
+        "category": "utility/workbench",
+        "version": "1.3",
+        "date": "20250301-15.45",
+        "size": 80089,
+        "url": "https://archives.arosworld.org/share/utility/workbench/switch.x86_64-aros-v11.zip",
+        "summary": "Screens/windows switcher commodity",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "targa_datatype",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "targa_datatype.x86_64-aros-v11.zip",
+        "category": "datatype/image",
+        "version": "41.3",
+        "date": "20260910-21.49",
+        "size": 15377,
+        "url": "https://archives.arosworld.org/share/datatype/image/targa_datatype.x86_64-aros-v11.zip",
+        "summary": "New Targa Datatype",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "tbftss",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "tbftss.x86_64-aros-v11.zip",
+        "category": "game/action",
+        "version": "1.5.1",
+        "date": "20260606-20.18",
+        "size": 47940255,
+        "url": "https://archives.arosworld.org/share/game/action/tbftss.x86_64-aros-v11.zip",
+        "summary": "The Battle for the Solar System: the Pandora War",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "telegramamiga",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "telegramamiga.x86_64-aros-v11.lha",
+        "category": "network/chat",
+        "version": "0.0.92",
+        "date": "20260904-20.15",
+        "size": 447598,
+        "url": "https://archives.arosworld.org/share/network/chat/telegramamiga.x86_64-aros-v11.lha",
+        "summary": "Native MTProto Telegram chat client",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "thextech",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "thextech.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "1.3.8-dev",
+        "date": "20260603-20.16",
+        "size": 46979682,
+        "url": "https://archives.arosworld.org/share/game/platform/thextech.x86_64-aros-v11.zip",
+        "summary": "Super Mario Bros. X engine",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "tiltnroll",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "tiltnroll.x86_64-aros-v11.zip",
+        "category": "game/action",
+        "version": "1.2.0",
+        "date": "20250824-18.37",
+        "size": 1609016,
+        "url": "https://archives.arosworld.org/share/game/action/tiltnroll.x86_64-aros-v11.zip",
+        "summary": "OpenGL and SDL ball-rolling game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "timeit",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "timeit.x86_64-aros-v11.zip",
+        "category": "utility/shell",
+        "version": "40.4",
+        "date": "20250117-16.39",
+        "size": 47271,
+        "url": "https://archives.arosworld.org/share/utility/shell/timeit.x86_64-aros-v11.zip",
+        "summary": "Shell command for timing other commands",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "timeless",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "timeless.x86_64-aros-v11.zip",
+        "category": "demo/scene",
+        "version": "1.0.2",
+        "date": "20260308-20.04",
+        "size": 340524,
+        "url": "https://archives.arosworld.org/share/demo/scene/timeless.x86_64-aros-v11.zip",
+        "summary": "SDL port of Tran's Timeless MS-DOS demo.",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "tinysid",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "tinysid.x86_64-aros-v11.zip",
+        "category": "audio/play",
+        "version": "0.94",
+        "date": "20250117-16.39",
+        "size": 67846,
+        "url": "https://archives.arosworld.org/share/audio/play/tinysid.x86_64-aros-v11.zip",
+        "summary": "A small, multiplatform SID player",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "tinytris",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "tinytris.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "2.3",
+        "date": "20260303-07.56",
+        "size": 2533852,
+        "url": "https://archives.arosworld.org/share/game/puzzle/tinytris.x86_64-aros-v11.zip",
+        "summary": "a clone of the classic game Tetris",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "tressette",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "tressette.x86_64-aros-v11.zip",
+        "category": "game/card",
+        "version": "1.0",
+        "date": "20260908-21.07",
+        "size": 700840,
+        "url": "https://archives.arosworld.org/share/game/card/tressette.x86_64-aros-v11.zip",
+        "summary": "Is a popular Italian card game",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "unlzx",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "unlzx.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "2.16",
+        "date": "20250120-18.17",
+        "size": 61106,
+        "url": "https://archives.arosworld.org/share/utility/archive/unlzx.x86_64-aros-v11.zip",
+        "summary": "Unpack lzx files",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "unmount",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "unmount.x86_64-aros-v11.zip",
+        "category": "utility/text/misc",
+        "version": "0.1",
+        "date": "20250120-18.18",
+        "size": 36467,
+        "url": "https://archives.arosworld.org/share/utility/text/misc/unmount.x86_64-aros-v11.zip",
+        "summary": "Device unmounting tool",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "unrar-v6.11",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "unrar-v6.11.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "6.11",
+        "date": "20250218-06.46",
+        "size": 3291979,
+        "url": "https://archives.arosworld.org/share/utility/archive/unrar-v6.11.x86_64-aros-v11.zip",
+        "summary": "UnRAR for AROS 64 v11",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "unshield1.6.2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "unshield1.6.2.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "1.6.2",
+        "date": "20250605-07.04",
+        "size": 2287208,
+        "url": "https://archives.arosworld.org/share/utility/archive/unshield1.6.2.x86_64-aros-v11.zip",
+        "summary": "Utility to extract files from InstallShield CAB",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "untangle",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "untangle.x86_64-aros-v11.zip",
+        "category": "game/puzzle",
+        "version": "1.2",
+        "date": "20250408-10.59",
+        "size": 60526,
+        "url": "https://archives.arosworld.org/share/game/puzzle/untangle.x86_64-aros-v11.zip",
+        "summary": "Untangle set of dots joined by lines",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "untarka",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "untarka.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "0.34",
+        "date": "20250120-18.21",
+        "size": 64136,
+        "url": "https://archives.arosworld.org/share/utility/archive/untarka.x86_64-aros-v11.zip",
+        "summary": "unpack tar file",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "vim_9.2",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "vim_9.2-x86_64-aros-v11.lha",
+        "category": "development/edit",
+        "version": "9.2.219",
+        "date": "20260324-21.24",
+        "size": 16945535,
+        "url": "https://archives.arosworld.org/share/development/edit/vim_9.2-x86_64-aros-v11.lha",
+        "summary": "The ubiquitous text editor",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "wgetgui",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "wgetgui.x86_64-aros-v11.zip",
+        "category": "network/misc",
+        "version": "20070311",
+        "date": "20241226-16.02",
+        "size": 97546,
+        "url": "https://archives.arosworld.org/share/network/misc/wgetgui.x86_64-aros-v11.zip",
+        "summary": "Gui for Wget",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "wildmidi",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "wildmidi.x86_64-aros-v11.zip",
+        "category": "audio/play",
+        "version": "0.4.6",
+        "date": "20260629-19.41",
+        "size": 456882,
+        "url": "https://archives.arosworld.org/share/audio/play/wildmidi.x86_64-aros-v11.zip",
+        "summary": "Midi Player",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "xrick",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "xrick.x86_64-aros-v11.zip",
+        "category": "game/platform",
+        "version": "050500",
+        "date": "20260308-20.04",
+        "size": 2043720,
+        "url": "https://archives.arosworld.org/share/game/platform/xrick.x86_64-aros-v11.zip",
+        "summary": "a clone of Rick Dangerous",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zaphod-v1.3",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zaphod-v1.3-.x86_64-aros-v11.zip",
+        "category": "development/edit",
+        "version": "1.3",
+        "date": "20251031-05.57",
+        "size": 218782,
+        "url": "https://archives.arosworld.org/share/development/edit/zaphod-v1.3-.x86_64-aros-v11.zip",
+        "summary": "A simple binary file editor",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zapperng",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zapperng.x86_64-aros-v11.zip",
+        "category": "utility/workbench",
+        "version": "1.2",
+        "date": "20250407-14.28",
+        "size": 55986,
+        "url": "https://archives.arosworld.org/share/utility/workbench/zapperng.x86_64-aros-v11.zip",
+        "summary": "Change the behaviour of the zoom-button",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zgloom",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zgloom.x86_64-aros-v11.zip",
+        "category": "game/fps",
+        "version": "052026v2",
+        "date": "20260527-10.32",
+        "size": 20763795,
+        "url": "https://archives.arosworld.org/share/game/fps/zgloom.x86_64-aros-v11.zip",
+        "summary": "port of the Amiga FPS Gloom",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zunearc",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zunearc.x86_64-aros-v11.zip",
+        "category": "utility/archive",
+        "version": "1.6",
+        "date": "20251111-12.51",
+        "size": 295778,
+        "url": "https://archives.arosworld.org/share/utility/archive/zunearc.x86_64-aros-v11.zip",
+        "summary": "a zune front end for archivers",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zunebrot",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zunebrot.x86_64-aros-v11.tar",
+        "category": "graphics/misc",
+        "version": "0.2",
+        "date": "20241222-19.21",
+        "size": 512000,
+        "url": "https://archives.arosworld.org/share/graphics/misc/zunebrot.x86_64-aros-v11.tar",
+        "summary": "Little Fractal Program",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zunecalc",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zunecalc.x86_64-aros-v11.zip",
+        "category": "office/misc",
+        "version": "1.0",
+        "date": "20241223-21.10",
+        "size": 44996,
+        "url": "https://archives.arosworld.org/share/office/misc/zunecalc.x86_64-aros-v11.zip",
+        "summary": "Simple Calculator",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zunepaint",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zunepaint.x86_64-aros-v11.tar",
+        "category": "graphics/edit",
+        "version": "0.14c",
+        "date": "20241222-06.43",
+        "size": 3481600,
+        "url": "https://archives.arosworld.org/share/graphics/edit/zunepaint.x86_64-aros-v11.tar",
+        "summary": "Bitmap Paint With Additional Effect",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    },
+    {
+      "id": "zuneview",
+      "arch": "x86_64",
+      "chosen": {
+        "filename": "zuneview.x86_64-aros-v11.tar",
+        "category": "graphics/viewer",
+        "version": "0.41",
+        "date": "20241222-06.49",
+        "size": 3450880,
+        "url": "https://archives.arosworld.org/share/graphics/viewer/zuneview.x86_64-aros-v11.tar",
+        "summary": "Picture Viewer With Effect",
+        "abi": "v11"
+      },
+      "selected_by": "only-candidate",
+      "alternatives": []
+    }
+  ]
+}

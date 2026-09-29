@@ -1,0 +1,8 @@
+RAM:rxt/apkg --version >RAM:w0-version.txt
+MakeDir SYS:Walk
+RAM:rxt/apkg --root SYS:Walk --index RAM:rxt/index.json show micropolis >RAM:w1-show.txt
+RAM:rxt/apkg --root SYS:Walk --index RAM:rxt/index.json install micropolis >RAM:w2-install.txt
+RAM:rxt/apkg --root SYS:Walk --index RAM:rxt/index.json info micropolis >RAM:w3-info.txt
+RAM:rxt/apkg --root SYS:Walk --index RAM:rxt/index.json list >RAM:w3-list.txt
+List SYS:Walk >RAM:w3-root.txt
+Echo "WALK-A DONE"

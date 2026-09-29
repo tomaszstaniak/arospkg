@@ -1,0 +1,3 @@
+apkg: another instance is running
+     SYS:Packages/db/lock.owner
+     PkgManager worker

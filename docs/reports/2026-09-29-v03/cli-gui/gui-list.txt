@@ -1,0 +1,3 @@
+{ "rows": [
+  { "id": "soliton", "version": "2.2", "revision": 2, "summary": "Klondike & Freecell card game", "category": "game/card", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 225195, "ours": true, "installed": true }
+], "hidden": 0 }

@@ -1,0 +1,11 @@
+unlzx 2.16
+  Unpack lzx files
+  category:     utility/archive
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     60 KB from https://archives.arosworld.org/share/utility/archive/unlzx.x86_64-aros-v11.zip
+  sha256:       bc68cc880afd5f1044870a026cfb19dee98a2451a01812b7c0eef413df5b49b0
+  requirements: satisfied, probed now:
+    crt.library: satisfied (already open, version 5)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

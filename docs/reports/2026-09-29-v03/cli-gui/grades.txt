@@ -1,0 +1,48 @@
+### S/UPGRADE  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 16, expectations 16, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 61 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### S/SOLUP  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 4, expectations 4, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 11 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### S/VERIFY  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 16, expectations 16, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 16 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### S/JSONTEST  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 7, expectations 7, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 7 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/REL1  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 46, expectations 46, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 64 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/REL2  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 6, expectations 6, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 8 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/LHATEST  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 4, expectations 4, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 4 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/TRIALA  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 30, expectations 30, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 30 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/TRIALC  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 60, expectations 30, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 30 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/TRIALD  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 6, expectations 6, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 6 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/ACCEPT  (tools/grade.py ... --main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0)
+reports 3, expectations 3, binaries ['40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 3 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met
+### R/REL1G  (--main 40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0 --binary g2a=37b2774a16afcd950e82ef29dbcb0d2fb994125406b1db0d8071ca69d14a7598)
+reports 2, expectations 2, binaries ['37b2774a16afcd950e82ef29dbcb0d2fb994125406b1db0d8071ca69d14a7598', '40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0']
+console: 4 PASS lines, 0 lines containing FAIL
+RESULT: all expectations met

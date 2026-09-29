@@ -1,0 +1,12 @@
+blips 1.0
+  a sokoban style puzzle
+  category:     game/puzzle
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     1376 KB from https://archives.arosworld.org/share/game/puzzle/blips.x86_64-aros-v11.zip
+  sha256:       bbd9576dfdedc2f3d508894f81c38ee22870804ae56cb9f0b37b91bcd1011362
+  requirements: satisfied, probed now:
+    SDL.library: satisfied (already open, version 1)
+    crt.library: satisfied (already open, version 5)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

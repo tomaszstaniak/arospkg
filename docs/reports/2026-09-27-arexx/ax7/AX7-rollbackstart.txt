@@ -1,0 +1,37 @@
+run AX7 phase rollbackstart
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 7fdb7c80f61eb012372dccbfab9bde6aa8c529c71fb4f9e0ed5d760430d7e000
+version PkgManager 0.3 ARexx 1 sha256 7fdb7c80f61eb012372dccbfab9bde6aa8c529c71fb4f9e0ed5d760430d7e000
+  > ROLLBACK soliton
+  < 21
+PASS rollback-accepted
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < confirm
+PASS rollback-waits-for-confirmation
+SUMMARY rollbackstart pass 2 fail 0

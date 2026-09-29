@@ -1,0 +1,27 @@
+Directory "SYS:Walk" on Tuesday 09/29/26:
+tmp                          Dir ---rwed Today       09:40:56
+micropolis                   Dir ---rwed Today       09:40:57
+cache                        Dir ---rwed Today       09:38:44
+db                           Dir ---rwed Today       09:40:58
+4 directories - 4 blocks used
+Directory "SYS:Walk/tmp" is empty
+Directory "SYS:Walk/micropolis" on Tuesday 09/29/26:
+MyTown.cty.info              844 ---rwed Today       09:40:25
+MyTown.cty                 51120 ---rwed Today       09:40:25
+ReadMe.txt                  2481 ---rwed Today       09:40:52
+3 files - 107 blocks used
+Directory "SYS:Walk/cache" on Tuesday 09/29/26:
+micropolis.lha           2593505 ---rwed Today       09:38:44
+1 file - 5066 blocks used
+Directory "SYS:Walk/db" on Tuesday 09/29/26:
+doctor                       Dir ---rwed Today       09:40:58
+transactions                 Dir ---rwed Today       09:40:58
+installed                    Dir ---rwed Today       09:40:58
+3 directories - 3 blocks used
+Directory "SYS:Walk/db/doctor" on Tuesday 09/29/26:
+micropolis-6abb87aa.json     162 ---rwed Today       09:40:58
+1 file - 1 block used
+Directory "SYS:Walk/db/transactions" is empty
+Directory "SYS:Walk/db/installed" is empty
+
+TOTAL: 5 files - 7 directories - 5181 blocks used

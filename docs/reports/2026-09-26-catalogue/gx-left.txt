@@ -1,0 +1,10 @@
+Directory "SYS:PkgNew/grafx2" on Saturday 09/26/26:
+gfx2.ini                   20849 ---rwed Today       12:25:15
+gfx2-sdl2.cfg              11160 ---rwed Today       12:25:15
+gfx2.lck                   empty ---rwed Today       12:24:45
+3 files - 63 blocks used
+
+TOTAL: 3 files - 0 directories - 63 blocks used
+Directory "SYS:PkgNew/db/doctor" on Saturday 09/26/26:
+grafx2-6ab7b9b3.json         144 ---rwed Today       12:25:23
+1 file - 1 block used

@@ -1,0 +1,14 @@
+run AX9 phase show
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+version PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+  > SHOW soliton
+  < 
+PASS show
+  > SHOW nosuch
+  ! NOTFOUND nosuch is not in the catalogue
+PASS show-unknown
+  > SHOW "sol iton"
+  ! NOTFOUND sol iton is not in the catalogue
+PASS show-space
+SUMMARY show pass 3 fail 0

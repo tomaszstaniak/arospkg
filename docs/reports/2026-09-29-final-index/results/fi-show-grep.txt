@@ -1,0 +1,11 @@
+grep 2.0
+  GNU Grep
+  category:     utility/misc
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     58 KB from https://archives.arosworld.org/share/utility/misc/grep.x86_64-aros-v11.zip
+  sha256:       bd3a6561c93d3adff82c8d9cceb08c636e55b6efbb556892dde2582e7379fd3d
+  requirements: satisfied, probed now:
+    crt.library: satisfied (already open, version 5)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

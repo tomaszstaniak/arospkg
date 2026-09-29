@@ -1,0 +1,27 @@
+-- the 2026-09-12 binary installs cls --
+pkg 0.2
+  abi     v11
+  binary  37b2774a16afcd950e82ef29dbcb0d2fb994125406b1db0d8071ca69d14a7598
+  source  628e220d2861a26f
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+installed cls
+report RAM:relg/g2a.json
+PASS g2a: ok as expected
+-- its registry entry has no icon member (nothing should print) --
+PASS g2: no drawer icon, as that release did not have them
+
+-- this release removes that entry --
+apkg 0.3
+  abi     v11
+  binary  40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0
+  source  987ac354db12ffac
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+removed cls
+report RAM:relg/g2.json
+PASS g2: ok as expected
+PASS g2: an entry from the previous release removed cleanly
+nothing installed

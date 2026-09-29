@@ -1,0 +1,8 @@
+run AX7 phase select
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 7fdb7c80f61eb012372dccbfab9bde6aa8c529c71fb4f9e0ed5d760430d7e000
+version PkgManager 0.3 ARexx 1 sha256 7fdb7c80f61eb012372dccbfab9bde6aa8c529c71fb4f9e0ed5d760430d7e000
+  > SHOW soliton
+  < 
+PASS select
+SUMMARY select pass 1 fail 0

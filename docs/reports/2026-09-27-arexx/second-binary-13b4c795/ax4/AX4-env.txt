@@ -1,0 +1,12 @@
+run AX4 phase env
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
+version PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
+PASS version-interface
+PASS version-sha256
+  > HELP
+  < VERSION HELP LIST INFO REQUIREMENTS SHOW UPDATE INSTALL REMOVE UPGRADE ROLLBACK JOB WAIT CANCEL QUIT LASTERROR
+PASS help
+exists dir 1 file 1 none 0
+PASS helper-exists
+SUMMARY env pass 4 fail 0

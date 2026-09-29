@@ -1,0 +1,11 @@
+rescode 1.2
+  Calculates resistor values (4 and 5 band)
+  category:     utility/misc
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     88 KB from https://archives.arosworld.org/share/utility/misc/rescode.x86_64-aros-v11.zip
+  sha256:       20390af4424f167727fc0765db0bf0cd96f581942272694e5e047fd8df799407
+  requirements: satisfied, probed now:
+    crt.library: satisfied (already open, version 5)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

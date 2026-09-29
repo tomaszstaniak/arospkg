@@ -1,0 +1,73 @@
+refill (start) term="" rows=1 shown=1 installed=0 keep=-
+install pressed for soliton
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/1 can_cancel=0 cancel_button=disabled
+event soliton publish 1/1 can_cancel=0 cancel_button=disabled
+done install soliton status=0
+refill (done) term="" rows=1 shown=1 installed=1 keep=soliton
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+filter category=all state=Not installed
+refill (filter) term="" rows=1 shown=0 installed=1 keep=soliton
+filter category=all state=All
+refill (filter) term="" rows=1 shown=1 installed=1 keep=-
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+upgrade pressed for soliton
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/225195 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+done preview upgrade soliton status=0
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+plan upgrade soliton: 2.2 -> 2.2-aros2 allowed=1 add=1 replace=1 remove=0 kept=0 unchanged=32 conflicts=0
+upgrade soliton confirmed automatically (--yes)
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/225195 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/2 can_cancel=0 cancel_button=disabled
+event soliton publish 2/2 can_cancel=0 cancel_button=disabled
+done upgrade soliton status=0
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=1
+refill (done) term="" rows=1 shown=1 installed=1 keep=soliton
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+rollback pressed for soliton
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+done preview rollback soliton status=0
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+plan rollback soliton: 2.2-aros2 -> 2.2 allowed=1 add=0 replace=1 remove=1 kept=0 unchanged=32 conflicts=0
+rollback soliton confirmed automatically (--yes)
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/2 can_cancel=0 cancel_button=disabled
+event soliton publish 2/2 can_cancel=0 cancel_button=disabled
+done rollback soliton status=0
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=1 shown=1 installed=1 keep=soliton
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+filter category=all state=Not installed
+refill (filter) term="" rows=1 shown=0 installed=1 keep=soliton
+filter category=all state=All
+refill (filter) term="" rows=1 shown=1 installed=1 keep=-
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+upgrade pressed for soliton
+event soliton download 0/225195 can_cancel=1 cancel_button=enabled
+done preview upgrade soliton status=12 cannot fetch the archive
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+upgrade pressed for soliton
+event soliton download 0/225195 can_cancel=1 cancel_button=enabled
+done preview upgrade soliton status=12 cannot fetch the archive
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+filter category=all state=Not installed
+refill (filter) term="" rows=1 shown=0 installed=1 keep=soliton
+filter category=all state=All
+refill (filter) term="" rows=1 shown=1 installed=1 keep=-
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+worker task gone 0 ms after done
+quit

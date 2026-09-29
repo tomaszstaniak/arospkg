@@ -1,0 +1,12 @@
+sdllopan 1.0
+  Lopan - MahJong clone
+  category:     game/board
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     480 KB from https://archives.arosworld.org/share/game/board/sdllopan.x86_64-aros-v11.zip
+  sha256:       5291f44af0f38d43c8bc357d1e23a3ab68da6f14ab1a9ee1974b6324a968fd39
+  requirements: satisfied, probed now:
+    SDL.library: satisfied (already open, version 1)
+    crt.library: satisfied (already open, version 5)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

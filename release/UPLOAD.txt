@@ -1,0 +1,41 @@
+Material for an upload to AROS Archives. Nothing here is submitted
+automatically: publication is a separate decision, and this file is what that
+decision would need.
+
+  File:         arospkg.x86_64-aros-v11.zip
+  Category:     utility/misc
+  Version:      0.1
+  Architecture: x86_64-aros-v11  (ABIv11 -- AROS One; NOT mainline ABIv1)
+  Summary:      Package manager for AROS, used from the Shell
+
+The catalogue lists one line per upload in the form
+
+  utility/misc arospkg.x86_64-aros-v11.zip <size> <date> 0.1 :Package manager for AROS, used from the Shell
+
+Longer description, for the upload form:
+
+  arospkg installs programs from AROS Archives. It reads a small public index
+  of packages, downloads over HTTPS, checks every download against the SHA-256
+  in that index, unpacks it into SYS:Packages/<name>/ with its Workbench icon,
+  and records every file it wrote. Removing a package deletes what it
+  installed and keeps anything you changed, telling you what it kept.
+
+  Every install and removal is journalled, so an interrupted one -- a crash, a
+  reset, power loss -- is finished or undone by the next command, rather than
+  leaving a half-installed program behind.
+
+  This release is the command-line client. It is built for ABIv11 and does not
+  run on mainline AROS. The index currently lists 23 packages, each of which
+  has been installed, started and removed on AROS One 1.3 x86_64 before being
+  published. Dependencies between packages are not resolved, nothing is
+  installed into LIBS: or FONTS:, and there is no upgrade command -- the
+  README in the archive states the limits in full.
+
+  The index is metadata only and lives at
+  https://github.com/tomaszstaniak/arospkg-index -- the programs themselves
+  stay where their authors put them, in AROS Archives. Nothing is mirrored.
+
+Before uploading, decide:
+  * the licence (the archive proposes MIT; this repository has never had one);
+  * whether the source repository is made public, and if so its URL;
+  * the contact address to appear in the upload.

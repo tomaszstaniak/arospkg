@@ -1,0 +1,19 @@
+start PkgManager 0.3 sha256 cd104736a23e3256be3e1d742d82e6c71a9932c060e2aa0a592d781ccf9d587e root SYS:PkgShow: ARexx port PKGMANAGER
+refill (start) term="" rows=4 shown=4 installed=2 keep=-
+arexx> INFO soliton FIELD runs
+arexx< rc=0 len=6 native
+arexx> INFO oldthing FIELD runs
+arexx< rc=0 len=2 no
+arexx> INFO armthing FIELD runs
+arexx< rc=0 len=2 no
+arexx> INFO futurething FIELD runs
+arexx< rc=0 len=12 undetermined
+arexx> INFO rescode FIELD abi
+arexx< rc=0 len=3 v11
+arexx> INFO rescode FIELD runs
+arexx< rc=0 len=6 native
+arexx> SHOW soliton
+refill (arexx show) term="" rows=4 shown=4 installed=2 keep=soliton
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx< rc=0 len=0 
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone

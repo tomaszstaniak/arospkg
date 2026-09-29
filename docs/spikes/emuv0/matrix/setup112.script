@@ -1,0 +1,10 @@
+; EmuV0 1.12 as its archive installs it, but in RAM only: the system's
+; SYS:Tools/EmuV0 copied, the 1.12 archive laid over it, and the two assigns
+; pointed at the copy. Nothing on the disk changes; a reboot undoes it.
+Copy SYS:Tools/EmuV0 RAM:emu112 ALL QUIET
+Copy RAM:rxt/emu112/EmuV0/Tools/EmuV0 RAM:emu112 ALL QUIET
+Copy RAM:rxt/emu112/EmuV0/C/EmuV0-pc RAM:emu112/EmuV0-pc
+Protect RAM:emu112/EmuV0-pc +e
+Assign EmuV0: RAM:emu112
+Assign LIBSV0: EmuV0:Libs
+Assign LIBSV0: EmuV0:Classes ADD

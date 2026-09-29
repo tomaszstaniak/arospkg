@@ -1,0 +1,4 @@
+fetching https://archives.arosworld.org/share/development/edit/zaphod-v1.3-.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=development/edit/zaphod-v1.3-.x86_64-aros-v11.zip
+verified and cached SYS:FinalIdx/cache/zaphod.zip
+installed zaphod

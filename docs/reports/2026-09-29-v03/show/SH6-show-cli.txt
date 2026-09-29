@@ -1,0 +1,153 @@
+run SH6 phase cli
+apkg apkg 0.3|  abi     v11|  binary  40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0|  source  987ac354db12ffac|  cc      10.5.0|  tc      /Users/tumash/Work/AROS/toolchain|  sdk     /Users/tumash/Work/AROS/sdk
+  $ apkg show soliton
+  | apkg: no index, and no such package installed -- run apkg update first
+  |      soliton
+PASS no-index-unknown
+PASS install-other-cpu-refused
+PASS install-other-abi-refused
+PASS install-i386-refused-on-cpu-first
+PASS install-twin-refused
+  $ apkg show twin
+  | twin 1.0
+  |   listed twice for the same target
+  |   ambiguous:    the index lists 2 builds of it for this system; install refuses
+  |   category:     test
+  |   target:       x86_64, ABI v11 (the index lists: x86_64/v11, x86_64/v11)
+  |   compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  |   download:     1 KB from https://example.invalid/twin-a.zip
+  |   sha256:       0000000000000000000000000000000000000000000000000000000000000000
+  |   requirements: none stated
+  |   installed:    no
+PASS show-says-ambiguous
+PASS refused-before-download
+  $ apkg show soliton
+  | soliton 2.2
+  |   Klondike & Freecell card game
+  |   category:     game/card
+  |   target:       x86_64, ABI v11
+  |   compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  |   download:     219 KB from https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip
+  |   sha256:       62c9b8a9713d80ffc303f1b1ca83625ae54faf452a45442d048a45ef87a9115e
+  |   requirements: satisfied, probed now:
+  |     crt.library: satisfied (already open, version 5)
+  |     stdlib.library: satisfied (already open, version 3)
+  |   installed:    no
+PASS target
+PASS compatible-native
+PASS download
+PASS sha256
+PASS requirements-summary
+PASS needs-probed
+PASS not-installed
+PASS no-source-when-none
+  $ apkg show nosuch
+  | apkg: no such package in the index, and none installed
+  |      nosuch
+PASS unknown-id
+  $ apkg show oldthing
+  | oldthing 1.0
+  |   built for mainline
+  |   category:     test
+  |   target:       x86_64, ABI v1
+  |   compatibility: incompatible -- built for ABIv1, mainline AROS; this machine runs ABIv11, current distributions such as AROS One
+  |   download:     1 KB from https://example.invalid/oldthing.zip
+  |   sha256:       0000000000000000000000000000000000000000000000000000000000000000
+  |   requirements: not checked -- it is not compatible with this machine
+  |   installed:    no
+PASS other-abi
+PASS other-abi-needs-not-probed
+  $ apkg show armthing
+  | armthing 1.0
+  |   built for another CPU
+  |   category:     test
+  |   target:       aarch64, ABI v11
+  |   compatibility: incompatible -- built for aarch64; this machine is x86_64
+  |   download:     1 KB from https://example.invalid/armthing.zip
+  |   sha256:       0000000000000000000000000000000000000000000000000000000000000000
+  |   requirements: not checked -- it is not compatible with this machine
+  |   installed:    no
+PASS other-cpu
+  $ apkg show futurething
+  | futurething 1.0
+  |   an ABI this client does not know
+  |   category:     test
+  |   target:       i386, ABI v0
+  |   compatibility: undetermined -- the catalogue gives no ABI this client knows ("v0")
+  |   download:     1 KB from https://example.invalid/futurething.zip
+  |   sha256:       0000000000000000000000000000000000000000000000000000000000000000
+  |   requirements: not checked -- it is not compatible with this machine
+  |   installed:    no
+PASS unknown-abi
+  $ apkg show rescode
+  | rescode 1.2
+  |   Calculates resistor values (4 and 5 band)
+  |   category:     utility/misc
+  |   target:       x86_64, ABI v11 (the index lists: i386/v0, x86_64/v11)
+  |   compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  |   download:     88 KB from https://archives.arosworld.org/share/utility/misc/rescode.x86_64-aros-v11.zip
+  |   sha256:       20390af4424f167727fc0765db0bf0cd96f581942272694e5e047fd8df799407
+  |   source:       https://example.invalid/rescode-source
+  |   license:      Freeware
+  |   requirements: satisfied, probed now:
+  |     crt.library: satisfied (already open, version 5)
+  |     stdlib.library: satisfied (already open, version 3)
+  |   installed:    no
+PASS variant-described
+PASS variant-native
+PASS source
+PASS license
+PASS needs-of-the-described-variant
+  $ apkg show rescode
+  | rescode 1.2
+  |   Calculates resistor values (4 and 5 band)
+  |   category:     utility/misc
+  |   target:       x86_64, ABI v11 (the index lists: i386/v0, x86_64/v11)
+  |   compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  |   download:     88 KB from https://archives.arosworld.org/share/utility/misc/rescode.x86_64-aros-v11.zip
+  |   sha256:       20390af4424f167727fc0765db0bf0cd96f581942272694e5e047fd8df799407
+  |   source:       https://example.invalid/rescode-source
+  |   license:      Freeware
+  |   requirements: satisfied, probed now:
+  |     crt.library: satisfied (already open, version 5)
+  |     stdlib.library: satisfied (already open, version 3)
+  |   installed:    no
+PASS reversed-index-same-description
+PASS search-says-why-hidden
+PASS search-hides-other-targets
+PASS show-changes-nothing
+  $ apkg show soliton
+  | soliton 2.2-aros2
+  |   Klondike & Freecell card game
+  |   category:     game/card
+  |   target:       x86_64, ABI v11 (the index lists: i386/v0, x86_64/v11)
+  |   compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  |   download:     220 KB from https://example.invalid/soliton-r2.zip
+  |   sha256:       d24f50dec6a1a17756417fd50920cfd6c142f08377416577904ed3afee71c033
+  |   requirements: satisfied, probed now:
+  |     crt.library: satisfied (already open, version 5)
+  |     stdlib.library: satisfied (already open, version 3)
+  |   installed:    2.2 (x86_64), in SYS:PkgShow/soliton, since 2026-09-29T03:22:46Z
+  |   upgrade:      available, 2.2 -> 2.2-aros2
+  |   roll back:    no -- no upgrade of this package is recorded, or its record is gone
+PASS header-is-the-index-revision
+PASS installed-where-when
+PASS upgrade-available
+PASS no-rollback
+PASS upgrade-stays-on-target
+PASS upgrade-does-not-cross
+PASS upgrade-stays-on-target-reversed
+PASS upgrade-does-not-cross-reversed
+PASS install-took-the-native-variant
+PASS install-took-the-native-url
+PASS info-unchanged
+  $ apkg show soliton
+  | soliton 2.2
+  |   index:        none on this machine -- apkg update fetches it
+  |   compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  |   installed:    2.2 (x86_64), in SYS:PkgShow/soliton, since 2026-09-29T03:22:46Z
+  |   roll back:    no -- no upgrade of this package is recorded, or its record is gone
+PASS no-index-installed
+PASS no-index-verdict-from-registry
+PASS no-index-installed-line
+SUMMARY cli pass 43 fail 0

@@ -1,0 +1,67 @@
+Current stack size is 40960 bytes
+apkg 0.2
+  abi     v11
+  binary  a513aea7d8b066911a88466ac83d166f9c30578fb80768b0961d14df426040fc
+  source  354e780509e8fe36
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+
+==== grafx2 ====
+crt.library: satisfied (already open, version 5)
+m.library: satisfied (already open, version 1)
+stdlib.library: satisfied (already open, version 3)
+fetching https://github.com/tomaszstaniak/aros-grafx2/releases/download/v2.9-r4/GrafX2-2.9-r4.x86_64-aros-v11.lha
+  redirect -> https://release-assets.githubusercontent.com/github-production-release-asset/1378617132/4d6dfbec-7cf3-4aa2-b160-35731f164d17?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-09-26T11%3A05%3A30Z&rscd=attachment%3B+filename%3DGrafX2-2.9-r4.x86_64-aros-v11.lha&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-09-26T10%3A04%3A57Z&ske=2026-09-26T11%3A05%3A30Z&sks=b&skv=2018-11-09&sig=WaVlsinwL6j5%2BeFhbjT6iFJQ3uXq53hOtV7Ynn5P7Tg%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5MDQxODU2NywibmJmIjoxNzkwNDE4MjY3LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.BVd4R1X-EKLfkeCZgKW8DUW3GpCFQAlwUz19DvW00X4&response-content-disposition=attachment%3B%20filename%3DGrafX2-2.9-r4.x86_64-aros-v11.lha&response-content-type=application%2Foctet-stream
+verified and cached SYS:PkgNew/cache/grafx2.lha
+installed grafx2
+report RAM:nrep/grafx2-install.json
+PASS n-grafx2-install: ok as expected
+Directory "SYS:PkgNew" on Saturday 09/26/26:
+grafx2.info                 1757 ---rwed Today       12:24:44
+grafx2                       Dir ---rwed Today       12:24:38
+tmp                          Dir ---rwed Today       12:24:32
+cache                        Dir ---rwed Today       12:24:32
+db                           Dir ---rwed Today       12:24:44
+1 file - 4 directories - 8 blocks used
+grafx2: process after 20 s (a number means it is running):
+ 10
+grafx2: after Ctrl-C (empty means it closed):
+removed grafx2
+report RAM:nrep/grafx2-remove.json
+PASS n-grafx2-remove: ok as expected
+
+==== folio ====
+crt.library: satisfied (already open, version 5)
+m.library: satisfied (already open, version 1)
+stdlib.library: satisfied (already open, version 3)
+fetching https://github.com/tomaszstaniak/aros-foliopdf/releases/download/v0.3.8/Folio-0.3.8.x86_64-aros-v11.lha
+  redirect -> https://release-assets.githubusercontent.com/github-production-release-asset/1381300564/cf79dd81-7563-481c-8521-246ef5903038?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-09-26T11%3A09%3A12Z&rscd=attachment%3B+filename%3DFolio-0.3.8.x86_64-aros-v11.lha&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-09-26T10%3A08%3A22Z&ske=2026-09-26T11%3A09%3A12Z&sks=b&skv=2018-11-09&sig=Bbt%2FcgSwduLI3%2BuovVmZBPy2VzNUFFP37iAv8jJmnVM%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5MDQyMDEyNSwibmJmIjoxNzkwNDE4MzI1LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.7KyfSiOCppbbOolCctAt7t6R_Q9hAtsf1b3tXbuXBwI&response-content-disposition=attachment%3B%20filename%3DFolio-0.3.8.x86_64-aros-v11.lha&response-content-type=application%2Foctet-stream
+verified and cached SYS:PkgNew/cache/folio.lha
+installed folio
+report RAM:nrep/folio-install.json
+PASS n-folio-install: ok as expected
+Directory "SYS:PkgNew" on Saturday 09/26/26:
+folio.info                  4420 ---rwed Today       12:27:11
+folio                        Dir ---rwed Today       12:27:05
+tmp                          Dir ---rwed Today       12:26:27
+grafx2                       Dir ---rwed Today       12:25:23
+cache                        Dir ---rwed Today       12:26:20
+db                           Dir ---rwed Today       12:27:11
+1 file - 5 directories - 14 blocks used
+folio: process after 20 s (a number means it is running):
+ 11
+folio: after Ctrl-C (empty means it closed):
+removed folio
+report RAM:nrep/folio-remove.json
+PASS n-folio-remove: ok as expected
+
+-- after both removals: the root must hold only db, cache, tmp --
+Directory "SYS:PkgNew" on Saturday 09/26/26:
+tmp                          Dir ---rwed Today       12:27:46
+grafx2                       Dir ---rwed Today       12:25:23
+cache                        Dir ---rwed Today       12:26:20
+db                           Dir ---rwed Today       12:27:51
+4 directories - 4 blocks used
+nothing installed
+== end ==

@@ -1,0 +1,9 @@
+; matrix case M-rescode-110: RAM:ev/ResCode/ResCode under EmuV0 110, from a fresh boot
+Failat 30
+Echo >RESULTS:M-rescode-110.txt "run M-rescode-110"
+Version C:EmuV0 FULL >>RESULTS:M-rescode-110.txt
+Echo "== LIBSV0" >>RESULTS:M-rescode-110.txt
+List LIBSV0: FILES LFORMAT="%n %l" >>RESULTS:M-rescode-110.txt
+Echo "C:EmuV0 RAM:ev/ResCode/ResCode" >RAM:launch
+Echo "== starting emulator in its own Shell" >>RESULTS:M-rescode-110.txt
+NewShell "CON:0/560/500/150/rescode/AUTO" FROM RAM:launch

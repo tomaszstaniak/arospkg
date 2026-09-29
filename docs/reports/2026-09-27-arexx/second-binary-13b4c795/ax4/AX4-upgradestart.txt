@@ -1,0 +1,94 @@
+run AX4 phase upgradestart
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
+version PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
+  > INFO soliton
+  < id soliton|version 2.2|revision 2|state installed|installedversion 2.2|installedrevision 0|summary Klondike & Freecell card game|category game/card|arch x86_64|
+PASS info-before-upgrade
+PASS canupgrade
+  > UPGRADE soliton
+  < 17
+PASS upgrade-accepted
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < preview
+  > JOB 17 FIELD state
+  < confirm
+PASS upgrade-waits-for-confirmation
+  > JOB 17 FIELD message
+  < from 2.2 to 2.2-aros2: 1 added, 1 replaced, 0 removed, 0 kept as changed, 32 unchanged
+PASS plan-message
+PASS plan-in-message
+  > INSTALL cls
+  ! BUSY job 17 (upgrade soliton) is confirm
+PASS busy-while-confirming
+  > CANCEL 17
+  < declined
+PASS cancel-declines
+PASS cancel-declines-value
+  > JOB 17 FIELD state
+  < declined
+PASS declined-state
+PASS declined-state-value
+  > INFO soliton FIELD installedrevision
+  < 0
+PASS nothing-changed
+PASS revision-unchanged-after-decline
+  > UPGRADE soliton
+  < 18
+PASS upgrade-again
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < preview
+  > JOB 18 FIELD state
+  < confirm
+PASS upgrade-again-confirm
+SUMMARY upgradestart pass 15 fail 0

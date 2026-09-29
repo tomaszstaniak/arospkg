@@ -1,0 +1,33 @@
+run AX1 phase cancel
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8c248304e439036b2aaec7c1f7a10a6c2f007aedd87fac3271efc5f5bfdbe7ae
+version PkgManager 0.3 ARexx 1 sha256 8c248304e439036b2aaec7c1f7a10a6c2f007aedd87fac3271efc5f5bfdbe7ae
+  > INSTALL xrick
+  < 10
+PASS download-install-accepted
+  > JOB 10
+  < id 10|op install|package xrick|origin arexx|state running|phase |done 0|total 0|cancancel 0|error |message 
+  > JOB 10
+  < id 10|op install|package xrick|origin arexx|state running|phase download|done 0|total 2043720|cancancel 1|error |message 
+PASS reached-download
+  > JOB 10 FIELD cancancel
+  < 1
+PASS cancancel-in-download
+PASS cancancel-1-in-download
+  > CANCEL 10
+  < requested
+PASS cancel-accepted
+PASS cancel-requested
+  > WAIT 10
+  < id 10|op install|package xrick|origin arexx|state cancelled|phase download|done 0|total 2043720|cancancel 0|error CANCELLED|message download cancelled (xrick) -
+PASS cancel-wait
+PASS cancelled
+  > INFO xrick FIELD state
+  < available
+PASS info-after-cancel
+PASS not-installed-after-cancel
+PASS nothing-left-after-cancel
+  > CANCEL 10
+  ! FINISHED job 10 is already cancelled
+PASS cancel-twice
+SUMMARY cancel pass 12 fail 0

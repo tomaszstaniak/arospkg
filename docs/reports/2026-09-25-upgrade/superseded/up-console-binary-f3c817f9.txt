@@ -1,0 +1,274 @@
+
+== install revision 1 ==
+installed up
+report RAM:urep/u-install.json
+PASS u-install: ok as expected
+PASS assert-hash SYS:PkgUp/Up/Prog
+PASS assert-hash SYS:PkgUp/Up/OldFile
+PASS assert-hash SYS:PkgUp/Up.info
+
+== the user edits config.txt ==
+PASS assert-hash SYS:PkgUp/Up/config.txt
+
+== upgrade to revision 2: Prog replaced, NewFile added, OldFile removed, config kept, icon replaced ==
+upgrading up 1.0 revision 1 -> 2
+plan for SYS:PkgUp/up: 1 add, 1 replace, 1 remove, 0 kept, 2 unchanged
+  add        NewFile
+  remove     OldFile
+  replace    Prog
+upgraded up
+report RAM:urep/u-upgrade.json
+PASS u-upgrade: ok as expected
+PASS assert-hash SYS:PkgUp/Up/Prog
+PASS assert-hash SYS:PkgUp/Up/NewFile
+PASS assert-hash SYS:PkgUp/Up/config.txt
+PASS assert-hash SYS:PkgUp/Up.info
+PASS u-upgrade: Up/OldFile absent
+{
+  "schema":1,
+  "name":"up",
+  "version":"1.0",
+  "revision":2,
+  "arch":"x86_64",
+  "installed":"2026-09-25T10:57:44Z",
+  "origin":"https://example.invalid/up-r2.zip",
+  "archive_sha256":"e5ebea91dfddf6de002ec4489b871ec3f77179d09726dd7541b3a40eb20936c3",
+  "archive_size":530,
+  "reason":"explicit",
+  "dir":"up",
+  "requires_system": [ ],
+  "icon": { "state":"installed", "sha256":"df49d444954fe6148896b06dc9cb6c9f34880ecd5b0d5f646aed7a072591167e", "size":96, "member":"Up.info" },
+  "previous": { "registry":"SYS:PkgUp/db/previous/up.json", "archive":"SYS:PkgUp/cache/previous/up.zip" },
+  "contents": [
+    { "path":"config.txt", "sha256":"6878eb21668e065767933db2ca22b0f30e85accf08015d5e6f204bd58dffc0ea", "size":14 },
+    { "path":"Same", "sha256":"a6328afc76e9db71da297ebff4b0d3e7a7eb3b01d917c05a6573fef121b6ecb6", "size":5 },
+    { "path":"NewFile", "sha256":"7aa7a5359173d05b63cfd682e3c38487f3cb4f7f1d60659fe59fab1505977d4c", "size":4 },
+    { "path":"Prog", "sha256":"681c1e1e81ef3103ee146d92458c19913ec2d567556d9cabf110e7bbfcaff3d4", "size":8 }
+  ]
+}
+Directory "SYS:PkgUp/cache" on Friday 09/25/26:
+up.zip                       530 ---rw-d Today       10:57:43
+previous                     Dir ---rwed Today       10:57:44
+1 file - 1 directory - 3 blocks used
+Directory "SYS:PkgUp/cache/previous" on Friday 09/25/26:
+up.zip                       530 ---rw-d Today       10:57:43
+1 file - 2 blocks used
+Directory "SYS:PkgUp/db/previous" on Friday 09/25/26:
+up.json                     1003 ---rwed Today       10:57:44
+1 file - 2 blocks used
+
+== the user edits NewFile after the upgrade ==
+
+== rollback: Prog back to r1, OldFile back, NewFile kept as edited, config kept, icon back ==
+rolling up back to 1.0 revision 1
+plan for SYS:PkgUp/up: 5 add, 0 replace, 3 remove, 1 kept, 0 unchanged
+  keep (changed by the user) NewFile
+  remove     Prog
+  remove     Same
+  add        Up.info
+  add        Up/OldFile
+  add        Up/Prog
+  add        Up/Same
+  add        Up/config.txt
+  remove     config.txt
+rolled back up
+report RAM:urep/u-rollback.json
+PASS u-rollback: ok as expected
+FAIL assert-hash SYS:PkgUp/Up/Prog: cannot read it
+FAIL assert-hash SYS:PkgUp/Up/OldFile: cannot read it
+PASS assert-hash SYS:PkgUp/Up/NewFile
+FAIL assert-hash SYS:PkgUp/Up/config.txt: cannot read it
+PASS assert-hash SYS:PkgUp/Up.info
+
+== rollback again: nothing to go back to ==
+apkg: nothing to roll back to
+     up
+     No upgrade of this package is recorded, or its record is gone.
+report RAM:urep/u-rollback-none.json
+PASS u-rollback-none: not found as expected
+
+== conflict: the user edits Prog, which revision 2 changes -> refused, nothing touched ==
+upgrading up 1.0 revision 1 -> 2
+plan for SYS:PkgUp/up: 3 add, 0 replace, 5 remove, 0 kept, 0 unchanged
+  add        NewFile
+  CONFLICT   Prog
+  add        Same
+  remove     Up.info
+  remove     Up/OldFile
+  remove     Up/Prog
+  remove     Up/Same
+  remove     Up/config.txt
+  add        config.txt
+nothing was changed. Move the file(s) away, or remove and install if you
+do not want them, and try again.
+apkg: a file you changed would be overwritten by the new revision
+     up
+     Prog
+report RAM:urep/u-conflict.json
+PASS u-conflict: conflict as expected
+FAIL assert-hash SYS:PkgUp/Up/Prog
+  want 08b02ed3c4659b116c00535c573f2a97cd94cdcfb109b5437c45aff3cae6ceb7
+  got  2e626800eedcc40b2a522f492a6ddf5485aa2d342e1ad96e019dd3462435cdd3
+FAIL assert-hash SYS:PkgUp/Up/OldFile: cannot read it
+PASS assert-hash SYS:PkgUp/Up.info
+PASS u-conflict: Up/NewFile absent
+Directory "SYS:PkgUp/db/transactions" is empty
+Directory "SYS:PkgUp/tmp" is empty
+
+== restore Prog; interrupted upgrades: 9 (old tree aside), 10 (new tree in place), 5 (before commit) ==
+PASS assert-hash SYS:PkgUp/Up/Prog
+upgrading up 1.0 revision 1 -> 2
+plan for SYS:PkgUp/up: 3 add, 0 replace, 5 remove, 0 kept, 0 unchanged
+  add        NewFile
+  CONFLICT   Prog
+  add        Same
+  remove     Up.info
+  remove     Up/OldFile
+  remove     Up/Prog
+  remove     Up/Same
+  remove     Up/config.txt
+  add        config.txt
+nothing was changed. Move the file(s) away, or remove and install if you
+do not want them, and try again.
+apkg: a file you changed would be overwritten by the new revision
+     up
+     Prog
+report RAM:urep/u-int9.json
+FAIL u-int9: expected interrupted on purpose, got conflict
+
+== after interruption 9: the next write open recovers; revision 1 must be intact ==
+root      SYS:PkgUp
+
+no unresolved transactions
+report RAM:urep/u-int9-doctor.json
+PASS u-int9-doctor: ok as expected
+PASS assert-hash SYS:PkgUp/Up/Prog
+FAIL assert-hash SYS:PkgUp/Up/OldFile: cannot read it
+FAIL assert-hash SYS:PkgUp/Up/config.txt: cannot read it
+PASS assert-hash SYS:PkgUp/Up.info
+PASS u-int9: Up/NewFile absent
+Directory "SYS:PkgUp/db/transactions" is empty
+Directory "SYS:PkgUp/tmp" is empty
+upgrading up 1.0 revision 1 -> 2
+plan for SYS:PkgUp/up: 3 add, 0 replace, 5 remove, 0 kept, 0 unchanged
+  add        NewFile
+  CONFLICT   Prog
+  add        Same
+  remove     Up.info
+  remove     Up/OldFile
+  remove     Up/Prog
+  remove     Up/Same
+  remove     Up/config.txt
+  add        config.txt
+nothing was changed. Move the file(s) away, or remove and install if you
+do not want them, and try again.
+apkg: a file you changed would be overwritten by the new revision
+     up
+     Prog
+report RAM:urep/u-int10.json
+FAIL u-int10: expected interrupted on purpose, got conflict
+
+== after interruption 10: the next write open recovers; revision 1 must be intact ==
+root      SYS:PkgUp
+
+no unresolved transactions
+report RAM:urep/u-int10-doctor.json
+PASS u-int10-doctor: ok as expected
+PASS assert-hash SYS:PkgUp/Up/Prog
+FAIL assert-hash SYS:PkgUp/Up/OldFile: cannot read it
+FAIL assert-hash SYS:PkgUp/Up/config.txt: cannot read it
+PASS assert-hash SYS:PkgUp/Up.info
+PASS u-int10: Up/NewFile absent
+Directory "SYS:PkgUp/db/transactions" is empty
+Directory "SYS:PkgUp/tmp" is empty
+upgrading up 1.0 revision 1 -> 2
+plan for SYS:PkgUp/up: 3 add, 0 replace, 5 remove, 0 kept, 0 unchanged
+  add        NewFile
+  CONFLICT   Prog
+  add        Same
+  remove     Up.info
+  remove     Up/OldFile
+  remove     Up/Prog
+  remove     Up/Same
+  remove     Up/config.txt
+  add        config.txt
+nothing was changed. Move the file(s) away, or remove and install if you
+do not want them, and try again.
+apkg: a file you changed would be overwritten by the new revision
+     up
+     Prog
+report RAM:urep/u-int5.json
+FAIL u-int5: expected interrupted on purpose, got conflict
+
+== after interruption 5: the next write open recovers; revision 1 must be intact ==
+root      SYS:PkgUp
+
+no unresolved transactions
+report RAM:urep/u-int5-doctor.json
+PASS u-int5-doctor: ok as expected
+PASS assert-hash SYS:PkgUp/Up/Prog
+FAIL assert-hash SYS:PkgUp/Up/OldFile: cannot read it
+FAIL assert-hash SYS:PkgUp/Up/config.txt: cannot read it
+PASS assert-hash SYS:PkgUp/Up.info
+PASS u-int5: Up/NewFile absent
+Directory "SYS:PkgUp/db/transactions" is empty
+Directory "SYS:PkgUp/tmp" is empty
+
+== the real upgrade, then an interrupted rollback at 10, recovered: revision 2 must be intact ==
+upgrading up 1.0 revision 1 -> 2
+plan for SYS:PkgUp/up: 3 add, 0 replace, 5 remove, 0 kept, 0 unchanged
+  add        NewFile
+  CONFLICT   Prog
+  add        Same
+  remove     Up.info
+  remove     Up/OldFile
+  remove     Up/Prog
+  remove     Up/Same
+  remove     Up/config.txt
+  add        config.txt
+nothing was changed. Move the file(s) away, or remove and install if you
+do not want them, and try again.
+apkg: a file you changed would be overwritten by the new revision
+     up
+     Prog
+report RAM:urep/u-upgrade2.json
+FAIL u-upgrade2: expected ok, got conflict
+FAIL assert-hash SYS:PkgUp/Up/Prog
+  want 681c1e1e81ef3103ee146d92458c19913ec2d567556d9cabf110e7bbfcaff3d4
+  got  de2e9dd44a1e7c1f67da798f8f458006704db548863cd87d4c81c2dd2a06b450
+apkg: nothing to roll back to
+     up
+     No upgrade of this package is recorded, or its record is gone.
+report RAM:urep/u-rint10.json
+FAIL u-rint10: expected interrupted on purpose, got not found
+root      SYS:PkgUp
+
+no unresolved transactions
+report RAM:urep/u-rint10-doctor.json
+PASS u-rint10-doctor: ok as expected
+FAIL assert-hash SYS:PkgUp/Up/Prog
+  want 681c1e1e81ef3103ee146d92458c19913ec2d567556d9cabf110e7bbfcaff3d4
+  got  de2e9dd44a1e7c1f67da798f8f458006704db548863cd87d4c81c2dd2a06b450
+FAIL assert-hash SYS:PkgUp/Up/NewFile: cannot read it
+FAIL assert-hash SYS:PkgUp/Up.info
+  want df49d444954fe6148896b06dc9cb6c9f34880ecd5b0d5f646aed7a072591167e
+  got  9a3b0850727271dcc7d3d254b46fb0e9b69d4f277dd97d9abfd1fb4982c8f3cb
+PASS u-rint10: Up/OldFile absent
+
+== and the rollback for real ==
+apkg: nothing to roll back to
+     up
+     No upgrade of this package is recorded, or its record is gone.
+report RAM:urep/u-rollback2.json
+FAIL u-rollback2: expected ok, got not found
+PASS assert-hash SYS:PkgUp/Up/Prog
+FAIL assert-hash SYS:PkgUp/Up/OldFile: cannot read it
+PASS u-rollback2: Up/NewFile absent
+
+== upgrade to a different upstream version is refused ==
+apkg: nothing to upgrade to
+     up
+     installed is version 1.0, the index offers 2.0: no rule orders one upstream version against another yet, so this is refused rather than guessed
+report RAM:urep/u-version.json
+PASS u-version: conflict as expected
+== end ==

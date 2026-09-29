@@ -1,0 +1,32 @@
+start PkgManager 0.3 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849 root SYS:PkgRx: ARexx port PKGMANAGER
+refill (start) term="" rows=3 shown=3 installed=1 keep=-
+arexx> VERSION
+arexx< rc=10 NOMEM no memory for the answer (len=94)
+arexx> LASTERROR
+arexx< rc=0 lasterror NOMEM no memory for the answer
+arexx> VERSION
+arexx< rc=10 NOMEM no memory for the answer (len=94)
+arexx> LASTERROR
+arexx< rc=0 lasterror NOMEM no memory for the answer
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 installed
+arexx> INSTALL cls
+job 1 install cls from arexx
+job 1 install cls failed CANNOTSTART: could not start the worker process
+arexx< rc=10 CANNOTSTART could not start the worker process
+arexx> LASTERROR
+arexx< rc=0 lasterror CANNOTSTART could not start the worker process
+arexx> JOB FIELD state
+arexx< rc=0 len=6 failed
+arexx> JOB FIELD error
+arexx< rc=0 len=11 CANNOTSTART
+arexx> INFO cls FIELD state
+arexx< rc=0 len=9 available
+arexx> INSTALL cls
+job 2 install cls from arexx
+job 2 install cls failed CANNOTSTART: could not start the worker process
+arexx< rc=10 CANNOTSTART could not start the worker process
+arexx> LASTERROR
+arexx< rc=0 lasterror CANNOTSTART could not start the worker process
+worker task gone 0 ms after done
+quit

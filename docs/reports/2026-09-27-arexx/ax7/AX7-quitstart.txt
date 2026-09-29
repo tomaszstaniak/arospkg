@@ -1,0 +1,20 @@
+run AX7 phase quitstart
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 7fdb7c80f61eb012372dccbfab9bde6aa8c529c71fb4f9e0ed5d760430d7e000
+version PkgManager 0.3 ARexx 1 sha256 7fdb7c80f61eb012372dccbfab9bde6aa8c529c71fb4f9e0ed5d760430d7e000
+  > REMOVE cls
+  < 23
+PASS remove-cls
+  > WAIT 23 FIELD state
+  < done
+PASS remove-cls-wait
+  > INSTALL cls
+  < 24
+PASS install-before-quit
+  > QUIT
+  < closing
+PASS quit-accepted
+  > INSTALL soliton
+  ! CLOSING PkgManager is closing
+PASS refused-while-closing
+SUMMARY quitstart pass 5 fail 0

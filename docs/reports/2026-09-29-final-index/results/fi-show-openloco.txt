@@ -1,0 +1,14 @@
+openloco 0.1.0-rc1-aros1
+  Open-source re-implementation of Chris Sawyer's Locomotion
+  category:     game/strategy
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     16600 KB from https://github.com/tomaszstaniak/aros-openloco/releases/download/v0.1.0-rc1/openloco.x86_64-aros-v11.lha
+  sha256:       59fb5f11a8fe848f249d2a3399b67d6d28f617d52c167307c3d2a596d320efe0
+  source:       https://github.com/tomaszstaniak/aros-openloco
+  requirements: satisfied, probed now:
+    openal.library: satisfied (already open, version 45)
+    crt.library: satisfied (already open, version 5)
+    m.library: satisfied (already open, version 1)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

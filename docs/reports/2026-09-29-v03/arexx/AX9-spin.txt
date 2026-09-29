@@ -1,0 +1,21 @@
+run AX9 phase spin
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+version PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+  > INSTALL cls
+  < 15
+polled 107416 times without a pause over 13.1 s; final state done
+PASS install-finishes-under-polling
+PASS really-without-pause
+  > INFO cls FIELD state
+  < installed
+PASS spin-installed
+PASS spin-installed-value
+  > REMOVE cls
+  < 16
+PASS spin-cleanup
+  > WAIT 16 FIELD state
+  < done
+PASS spin-cleanup-wait
+PASS spin-cleanup-done
+SUMMARY spin pass 7 fail 0

@@ -1,0 +1,7 @@
+apkg 0.3
+  abi     v11
+  binary  40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0
+  source  987ac354db12ffac
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk

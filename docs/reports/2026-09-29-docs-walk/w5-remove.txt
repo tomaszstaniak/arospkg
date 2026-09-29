@@ -1,0 +1,3 @@
+note: 1 file(s) changed locally were kept in SYS:Walk/micropolis:
+      ReadMe.txt
+removed micropolis

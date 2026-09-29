@@ -1,0 +1,900 @@
+start PkgManager 0.3 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b root SYS:PkgRx: ARexx port PKGMANAGER
+refill (start) term="" rows=3 shown=3 installed=0 keep=-
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> HELP
+arexx< rc=0 len=110 VERSION HELP LIST INFO REQUIREMENTS SHOW UPDATE INSTALL REMOVE UPGRADE ...
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> FROB
+arexx< rc=20 BADCOMMAND unknown command "FROB"; HELP lists the commands
+arexx> LASTERROR
+arexx< rc=0 lasterror BADCOMMAND unknown command "FROB"; HELP lists the commands
+arexx> IN soliton
+arexx< rc=20 BADCOMMAND unknown command "IN"; HELP lists the commands
+arexx> LASTERROR
+arexx< rc=0 lasterror BADCOMMAND unknown command "IN"; HELP lists the commands
+arexx> INSTALL
+arexx< rc=20 BADARGS INSTALL needs PACKAGE
+arexx> LASTERROR
+arexx< rc=0 lasterror BADARGS INSTALL needs PACKAGE
+arexx> INSTALL soliton extra
+arexx< rc=20 BADARGS INSTALL: unexpected argument "extra"
+arexx> LASTERROR
+arexx< rc=0 lasterror BADARGS INSTALL: unexpected argument "extra"
+arexx> INFO soliton FIELD colour
+arexx< rc=20 BADARGS unknown field "colour"; fields: id version revision state installedversion installedrevision summary category arch abi kind size requires canupgrade canrollback compatibility requirements
+arexx> LASTERROR
+arexx< rc=0 lasterror BADARGS unknown field "colour"; fields: id version revision state installedversion installedrevision summary category arch abi kind size requires canupgrade canrollback compatibility requirements
+arexx> INFO "soliton
+arexx< rc=20 BADARGS unterminated quote
+arexx> LASTERROR
+arexx< rc=0 lasterror BADARGS unterminated quote
+arexx> JOB 0
+arexx< rc=20 BADARGS ID must be a job number
+arexx> LASTERROR
+arexx< rc=0 lasterror BADARGS ID must be a job number
+arexx> JOB
+arexx< rc=10 NOJOB no job has been started
+arexx> LASTERROR
+arexx< rc=0 lasterror NOJOB no job has been started
+arexx> CANCEL 99
+arexx< rc=10 NOJOB there is no job 99
+arexx> LASTERROR
+arexx< rc=0 lasterror NOJOB there is no job 99
+arexx> INFO "sol iton"
+arexx< rc=10 NOTFOUND sol iton is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND sol iton is neither in the catalogue nor installed
+arexx> INFO "a*"b;$x&y"
+arexx< rc=10 NOTFOUND a"b;$x&y is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND a"b;$x&y is neither in the catalogue nor installed
+arexx> info soliton field STATE
+arexx< rc=0 len=9 available
+arexx> INFO PACKAGE=soliton FIELD=summary
+arexx< rc=0 len=29 Klondike & Freecell card game
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> LASTERROR
+arexx< rc=0 lasterror 
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> (the line above 2 more times)
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> LIST
+arexx< rc=0 len=17 cls soliton xrick
+arexx> LIST INSTALLED
+arexx< rc=0 len=0 
+arexx> LIST MATCH card
+arexx< rc=0 len=7 soliton
+arexx> LIST MATCH "no such thing"
+arexx< rc=0 len=0 
+arexx> INFO soliton
+arexx< rc=0 len=292 id soliton|version 2.2|revision 0|state available|installedversion |ins...
+arexx> REQUIREMENTS soliton
+arexx< rc=0 len=100 crt.library: satisfied (already open, version 5)|stdlib.library: satisf...
+arexx> REQUIREMENTS nosuch
+arexx< rc=10 NOTFOUND nosuch is not in the catalogue
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is not in the catalogue
+arexx> INFO nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> SHOW soliton
+refill (arexx show) term="" rows=3 shown=3 installed=0 keep=soliton
+arexx< rc=0 len=0 
+arexx> SHOW nosuch
+arexx< rc=10 NOTFOUND nosuch is not in the catalogue
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is not in the catalogue
+arexx> SHOW "sol iton"
+arexx< rc=10 NOTFOUND sol iton is not in the catalogue
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND sol iton is not in the catalogue
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> INSTALL soliton
+job 1 install soliton from arexx
+arexx< rc=0 len=1 1
+arexx> INSTALL cls
+arexx< rc=5 BUSY job 1 (install soliton) is running
+arexx> LASTERROR
+arexx< rc=0 lasterror BUSY job 1 (install soliton) is running
+arexx> UPDATE
+arexx< rc=5 BUSY job 1 (install soliton) is running
+arexx> LASTERROR
+arexx< rc=0 lasterror BUSY job 1 (install soliton) is running
+arexx> JOB 1
+arexx< rc=0 len=108 id 1|op install|package soliton|origin arexx|state running|phase |done ...
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+arexx> (the line above 1 more times)
+arexx> JOB 1 FIELD cancancel
+arexx< rc=0 len=1 0
+arexx> CANCEL 1
+arexx< rc=5 NOTCANCELLABLE job 1 is in phase extract, which cannot be cancelled
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTCANCELLABLE job 1 is in phase extract, which cannot be cancelled
+arexx> JOB 1 FIELD state
+arexx< rc=0 len=7 running
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/1 can_cancel=0 cancel_button=disabled
+event soliton publish 1/1 can_cancel=0 cancel_button=disabled
+done install soliton status=0
+job 1 install soliton done: installed soliton
+refill (done) term="" rows=3 shown=3 installed=1 keep=soliton
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> WAIT 1
+arexx< rc=0 len=129 id 1|op install|package soliton|origin arexx|state done|phase publish|d...
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 installed
+arexx> LIST INSTALLED
+arexx< rc=0 len=7 soliton
+arexx> CANCEL 1
+arexx< rc=5 FINISHED job 1 is already done
+arexx> LASTERROR
+arexx< rc=0 lasterror FINISHED job 1 is already done
+arexx> INSTALL soliton
+job 2 install soliton from arexx
+arexx< rc=0 len=1 2
+arexx> WAIT 2 FIELD error
+arexx wait for job 2 (running)
+done install soliton status=5 already installed
+job 2 install soliton failed EXISTS: already installed (soliton) -- use pkg remove first
+arexx< rc=0 len=6 EXISTS
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=3 shown=3 installed=1 keep=soliton
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> REMOVE soliton
+job 3 remove soliton from arexx
+arexx< rc=0 len=1 3
+arexx> WAIT 3
+arexx wait for job 3 (running)
+done remove soliton status=0
+job 3 remove soliton done: removed soliton
+arexx< rc=0 len=119 id 3|op remove|package soliton|origin arexx|state done|phase |done 0|to...
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=not installed
+refill (done) term="" rows=3 shown=3 installed=0 keep=soliton
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 available
+arexx> LIST INSTALLED
+arexx< rc=0 len=0 
+arexx> REMOVE soliton
+job 4 remove soliton from arexx
+arexx< rc=0 len=1 4
+arexx> WAIT 4 FIELD error
+arexx wait for job 4 (running)
+done remove soliton status=4 not installed
+job 4 remove soliton failed NOTFOUND: not installed (soliton)
+arexx< rc=0 len=8 NOTFOUND
+refill (done) term="" rows=3 shown=3 installed=0 keep=soliton
+arexx> REMOVE nosuch
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> INSTALL cls
+job 5 install cls from arexx
+arexx< rc=0 len=1 5
+arexx> JOB 5
+arexx< rc=0 len=104 id 5|op install|package cls|origin arexx|state running|phase |done 0|to...
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+arexx> (the line above 10 more times)
+arexx> REMOVE cls
+arexx< rc=5 BUSY job 5 (install cls) is running
+done install cls status=0
+job 5 install cls done: installed cls
+refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+job 6 remove cls from arexx
+arexx> (the line above 3 more times)
+arexx> JOB 5 FIELD state
+arexx< rc=0 len=4 done
+arexx> WAIT 5
+arexx< rc=0 len=121 id 5|op install|package cls|origin arexx|state done|phase publish|done ...
+arexx> WAIT 6
+arexx wait for job 6 (running)
+done remove cls status=0
+job 6 remove cls done: removed cls
+arexx< rc=0 len=111 id 6|op remove|package cls|origin arexx|state done|phase |done 0|total ...
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=not installed
+refill (done) term="" rows=3 shown=3 installed=0 keep=cls
+arexx> INSTALL cls
+job 7 install cls from arexx
+arexx< rc=0 len=1 7
+arexx> JOB 7
+arexx< rc=0 len=104 id 7|op install|package cls|origin arexx|state running|phase |done 0|to...
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+arexx> (the line above 10 more times)
+arexx> REMOVE cls
+arexx< rc=5 BUSY job 7 (install cls) is running
+done install cls status=0
+job 7 install cls done: installed cls
+refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+job 8 remove cls from arexx
+arexx> (the line above 3 more times)
+arexx> JOB 7 FIELD state
+arexx< rc=0 len=4 done
+arexx> WAIT 7
+arexx< rc=0 len=121 id 7|op install|package cls|origin arexx|state done|phase publish|done ...
+arexx> WAIT 8
+arexx wait for job 8 (running)
+done remove cls status=0
+job 8 remove cls done: removed cls
+arexx< rc=0 len=111 id 8|op remove|package cls|origin arexx|state done|phase |done 0|total ...
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=not installed
+refill (done) term="" rows=3 shown=3 installed=0 keep=cls
+arexx> INSTALL cls
+job 9 install cls from arexx
+arexx< rc=0 len=1 9
+arexx> JOB 9
+arexx< rc=0 len=104 id 9|op install|package cls|origin arexx|state running|phase |done 0|to...
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+arexx> (the line above 10 more times)
+arexx> REMOVE cls
+arexx< rc=5 BUSY job 9 (install cls) is running
+done install cls status=0
+job 9 install cls done: installed cls
+refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+job 10 remove cls from arexx
+arexx> (the line above 3 more times)
+arexx> JOB 9 FIELD state
+arexx< rc=0 len=4 done
+arexx> WAIT 9
+arexx< rc=0 len=121 id 9|op install|package cls|origin arexx|state done|phase publish|done ...
+arexx> WAIT 10
+arexx wait for job 10 (running)
+done remove cls status=0
+job 10 remove cls done: removed cls
+arexx< rc=0 len=112 id 10|op remove|package cls|origin arexx|state done|phase |done 0|total...
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=not installed
+refill (done) term="" rows=3 shown=3 installed=0 keep=cls
+arexx> INSTALL cls
+job 11 install cls from arexx
+arexx< rc=0 len=2 11
+arexx> JOB 11
+arexx< rc=0 len=105 id 11|op install|package cls|origin arexx|state running|phase |done 0|t...
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+arexx> (the line above 10 more times)
+arexx> REMOVE cls
+arexx< rc=5 BUSY job 11 (install cls) is running
+done install cls status=0
+job 11 install cls done: installed cls
+refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+job 12 remove cls from arexx
+arexx> (the line above 3 more times)
+arexx> JOB 11 FIELD state
+arexx< rc=0 len=4 done
+arexx> WAIT 11
+arexx< rc=0 len=122 id 11|op install|package cls|origin arexx|state done|phase publish|done...
+arexx> WAIT 12
+arexx wait for job 12 (running)
+done remove cls status=0
+job 12 remove cls done: removed cls
+arexx< rc=0 len=112 id 12|op remove|package cls|origin arexx|state done|phase |done 0|total...
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=not installed
+refill (done) term="" rows=3 shown=3 installed=0 keep=cls
+arexx> INSTALL cls
+job 13 install cls from arexx
+arexx< rc=0 len=2 13
+arexx> JOB 13
+arexx< rc=0 len=105 id 13|op install|package cls|origin arexx|state running|phase |done 0|t...
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+arexx> (the line above 10 more times)
+arexx> REMOVE cls
+arexx< rc=5 BUSY job 13 (install cls) is running
+done install cls status=0
+job 13 install cls done: installed cls
+refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+job 14 remove cls from arexx
+arexx> (the line above 3 more times)
+arexx> JOB 13 FIELD state
+arexx< rc=0 len=4 done
+arexx> WAIT 13
+arexx< rc=0 len=122 id 13|op install|package cls|origin arexx|state done|phase publish|done...
+arexx> WAIT 14
+arexx wait for job 14 (running)
+done remove cls status=0
+job 14 remove cls done: removed cls
+arexx< rc=0 len=112 id 14|op remove|package cls|origin arexx|state done|phase |done 0|total...
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=not installed
+refill (done) term="" rows=3 shown=3 installed=0 keep=cls
+arexx> INFO cls FIELD state
+arexx< rc=0 len=9 available
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> INSTALL cls
+job 15 install cls from arexx
+arexx< rc=0 len=2 15
+arexx> JOB 15 FIELD state
+arexx< rc=0 len=7 running
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+refill (search) term="cls" rows=1 shown=1 installed=0 keep=cls
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+refill (search) term="" rows=3 shown=3 installed=1 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+done install cls status=0
+job 15 install cls done: installed cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> (the line above 107415 more times)
+arexx> INFO cls FIELD state
+arexx< rc=0 len=9 installed
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> REMOVE cls
+job 16 remove cls from arexx
+arexx< rc=0 len=2 16
+arexx> WAIT 16 FIELD state
+arexx wait for job 16 (running)
+done remove cls status=0
+job 16 remove cls done: removed cls
+arexx< rc=0 len=4 done
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=not installed
+refill (done) term="" rows=3 shown=3 installed=0 keep=cls
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> SHOW soliton
+refill (arexx show) term="" rows=3 shown=3 installed=0 keep=soliton
+arexx< rc=0 len=0 
+install pressed for soliton
+job 17 install soliton from window
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> JOB
+arexx< rc=0 len=122 id 17|op install|package soliton|origin window|state running|phase extr...
+arexx> INSTALL cls
+arexx< rc=5 BUSY job 17 (install soliton) is running
+arexx> LASTERROR
+arexx< rc=0 lasterror BUSY job 17 (install soliton) is running
+arexx> WAIT 17
+arexx wait for job 17 (running)
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/1 can_cancel=0 cancel_button=disabled
+event soliton publish 1/1 can_cancel=0 cancel_button=disabled
+done install soliton status=0
+job 17 install soliton done: installed soliton
+arexx< rc=0 len=131 id 17|op install|package soliton|origin window|state done|phase publish...
+refill (done) term="" rows=3 shown=3 installed=1 keep=soliton
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 installed
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> REMOVE soliton
+job 18 remove soliton from arexx
+arexx< rc=0 len=2 18
+arexx> WAIT 18
+arexx wait for job 18 (running)
+done remove soliton status=1 another instance is running
+job 18 remove soliton failed LOCKED: another instance is running (SYS:PkgRx/db/lock.owner) -- RAM:rxt/apkg
+arexx< rc=0 len=182 id 18|op remove|package soliton|origin arexx|state failed|phase |done 0...
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=3 shown=3 installed=1 keep=soliton
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> INFO cls FIELD state
+arexx< rc=0 len=9 installed
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> INFO soliton
+arexx< rc=0 len=296 id soliton|version 2.2|revision 2|state installed|installedversion 2.2|...
+arexx> UPGRADE soliton
+job 19 upgrade soliton from arexx
+arexx< rc=0 len=2 19
+arexx> JOB 19 FIELD state
+arexx< rc=0 len=7 preview
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/225195 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+done preview upgrade soliton status=0
+plan upgrade soliton: 2.2 -> 2.2-aros2 allowed=1 add=1 replace=1 remove=0 kept=0 unchanged=32 conflicts=0
+arexx> (the line above 13 more times)
+arexx> JOB 19 FIELD message
+arexx< rc=0 len=86 from 2.2 to 2.2-aros2: 1 added, 1 replaced, 0 removed, 0 kept as change...
+arexx> INSTALL cls
+arexx< rc=5 BUSY job 19 (upgrade soliton) is confirm
+arexx> LASTERROR
+arexx< rc=0 lasterror BUSY job 19 (upgrade soliton) is confirm
+arexx> CANCEL 19
+upgrade soliton declined (ARexx CANCEL)
+job 19 upgrade soliton declined: nothing changed
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx< rc=0 len=8 declined
+arexx> JOB 19 FIELD state
+arexx< rc=0 len=8 declined
+arexx> INFO soliton FIELD installedrevision
+arexx< rc=0 len=1 0
+arexx> UPGRADE soliton
+job 20 upgrade soliton from arexx
+arexx< rc=0 len=2 20
+arexx> JOB 20 FIELD state
+arexx< rc=0 len=7 preview
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/225195 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+done preview upgrade soliton status=0
+plan upgrade soliton: 2.2 -> 2.2-aros2 allowed=1 add=1 replace=1 remove=0 kept=0 unchanged=32 conflicts=0
+arexx> (the line above 13 more times)
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> WAIT 20
+arexx wait for job 20 (confirm)
+upgrade soliton confirmed
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/225195 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/2 can_cancel=0 cancel_button=disabled
+event soliton publish 2/2 can_cancel=0 cancel_button=disabled
+done upgrade soliton status=0
+job 20 upgrade soliton done: upgraded soliton
+arexx< rc=0 len=129 id 20|op upgrade|package soliton|origin arexx|state done|phase publish|...
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 0 and the index offers revision 0, which is not newer
+refill (done) term="" rows=3 shown=3 installed=2 keep=soliton
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> JOB 20 FIELD state
+arexx< rc=0 len=4 done
+arexx> INFO soliton
+arexx< rc=0 len=296 id soliton|version 2.2|revision 2|state installed|installedversion 2.2|...
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> ROLLBACK soliton
+job 21 rollback soliton from arexx
+arexx< rc=0 len=2 21
+arexx> JOB 21 FIELD state
+arexx< rc=0 len=7 preview
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+done preview rollback soliton status=0
+plan rollback soliton: 2.2-aros2 -> 2.2 allowed=1 add=0 replace=1 remove=1 kept=0 unchanged=32 conflicts=0
+rollback soliton confirmed
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/2 can_cancel=0 cancel_button=disabled
+event soliton publish 2/2 can_cancel=0 cancel_button=disabled
+done rollback soliton status=0
+job 21 rollback soliton done: rolled back soliton
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=3 shown=3 installed=2 keep=soliton
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> (the line above 13 more times)
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> WAIT 21
+arexx< rc=0 len=133 id 21|op rollback|package soliton|origin arexx|state done|phase publish...
+arexx> INFO soliton
+arexx< rc=0 len=296 id soliton|version 2.2|revision 2|state installed|installedversion 2.2|...
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> INSTALL xrick
+job 22 install xrick from arexx
+arexx< rc=0 len=2 22
+arexx> JOB 22
+arexx< rc=0 len=107 id 22|op install|package xrick|origin arexx|state running|phase |done 0...
+event xrick download 0/2043720 can_cancel=1 cancel_button=enabled
+arexx> (the line above 1 more times)
+arexx> JOB 22 FIELD cancancel
+arexx< rc=0 len=1 1
+arexx> CANCEL 22
+cancel asked by ARexx for job 22 in download
+arexx< rc=0 len=9 requested
+arexx> WAIT 22
+arexx wait for job 22 (running)
+event xrick download 0/2043720 can_cancel=1 cancel_button=enabled
+done install xrick status=14 download cancelled
+job 22 install xrick cancelled CANCELLED: download cancelled (xrick) -- Nothing was written; the cache has no partial file.
+arexx< rc=0 len=213 id 22|op install|package xrick|origin arexx|state cancelled|phase downl...
+detail soliton: installed 2.2, index 2.2-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=3 shown=3 installed=2 keep=xrick
+arexx> INFO xrick FIELD state
+arexx< rc=0 len=9 available
+arexx> CANCEL 22
+arexx< rc=5 FINISHED job 22 is already cancelled
+arexx> LASTERROR
+arexx< rc=0 lasterror FINISHED job 22 is already cancelled
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> REMOVE cls
+job 23 remove cls from arexx
+arexx< rc=0 len=2 23
+arexx> WAIT 23 FIELD state
+arexx wait for job 23 (running)
+done remove cls status=0
+job 23 remove cls done: removed cls
+arexx< rc=0 len=4 done
+refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+arexx> INSTALL cls
+job 24 install cls from arexx
+arexx< rc=0 len=2 24
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f2...
+arexx> WAIT 24
+arexx wait for job 24 (running)
+arexx> QUIT
+close requested during extract can_cancel=0
+arexx< rc=0 len=7 closing
+arexx> INSTALL soliton
+arexx< rc=10 CLOSING PkgManager is closing
+arexx> LASTERROR
+arexx< rc=0 lasterror CLOSING PkgManager is closing
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+done install cls status=0
+job 24 install cls done: installed cls
+arexx< rc=0 len=122 id 24|op install|package cls|origin arexx|state done|phase publish|done...
+worker task gone 0 ms after done
+quit

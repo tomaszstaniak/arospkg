@@ -1,0 +1,14 @@
+run EV2 contract
+EmuV0 1.10 (01/25/26)
+== no argument
+EmuV0 needs at least one argument - program name
+rc 0
+== missing program
+Program 'RAM:ev/nonexistent' not found.
+rc 0
+== native binary given to EmuV0
+(skipped: may crash the emulator)
+== ABIv0 binary run directly
+RAM:ev/ResCode/ResCode: file is not executable
+rc 0
+done

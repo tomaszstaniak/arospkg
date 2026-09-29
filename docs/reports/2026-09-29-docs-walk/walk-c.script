@@ -1,0 +1,6 @@
+List SYS:Walk/micropolis >RAM:w5-before.txt
+RAM:rxt/apkg --root SYS:Walk --index RAM:rxt/index.json remove micropolis >RAM:w5-remove.txt
+List SYS:Walk ALL >RAM:w6-after.txt
+RAM:rxt/apkg --root SYS:Walk --index RAM:rxt/index.json list >RAM:w6-list.txt
+Copy RAM:w#? RESULTS:
+Echo "WALK-C DONE"

@@ -1,0 +1,21 @@
+start PkgManager 0.3 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849 root SYS:PkgRx: ARexx port PKGMANAGER
+refill (start) term="" rows=3 shown=3 installed=1 keep=-
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc72...
+arexx> UPDATE
+job 1 update - from arexx
+arexx< rc=0 len=1 1
+arexx> WAIT 1
+arexx wait for job 1 (running)
+done update  status=0
+job 1 update - done: index updated 
+arexx< rc=0 len=111 id 1|op update|package |origin arexx|state done|phase |done 0|total 0|c...
+refill (done) term="" rows=27 shown=27 installed=1 keep=-
+arexx> LIST
+arexx< rc=0 len=227 antiword bin2iso blips ccd2iso dirtree folio gmore grafx2 grep hocoslam...
+arexx> INFO grafx2 FIELD version
+arexx< rc=0 len=3 2.9
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 installed
+worker task gone 0 ms after done
+quit

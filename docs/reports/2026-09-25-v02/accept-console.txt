@@ -1,0 +1,94 @@
+== a user unpacks the release archive ==
+Archive:  RAM:unpacked/arospkg.x86_64-aros-v11.zip
+   creating: arospkg.x86_64-aros-v11/
+  inflating: arospkg.x86_64-aros-v11/LICENSE  
+   creating: arospkg.x86_64-aros-v11/licenses/
+  inflating: arospkg.x86_64-aros-v11/licenses/zlib-LICENSE  
+  inflating: arospkg.x86_64-aros-v11/licenses/OpenSSL-1.1.0h-LICENSE  
+  inflating: arospkg.x86_64-aros-v11/README  
+  inflating: arospkg.x86_64-aros-v11/PkgManager  
+  inflating: arospkg.x86_64-aros-v11/apkg  
+  inflating: arospkg.x86_64-aros-v11/SHA256SUMS  
+Directory "RAM:unpacked/arospkg.x86_64-aros-v11" on Friday 09/25/26:
+LICENSE                     1099 ---rw-d Today       20:11:35
+licenses                     Dir ---rwed Today       22:00:00
+README                      9525 ---rw-d Today       20:11:35
+PkgManager               3678368 ---rwed Today       20:11:35
+apkg                     3658088 ---rwed Today       20:11:35
+SHA256SUMS                   481 ---rw-d Today       20:11:35
+5 files - 1 directory - 14354 blocks used
+
+== and copies apkg to C:, as the README says ==
+
+== apkg --version: the abi line must say v11 ==
+apkg 0.2
+  abi     v11
+  binary  a513aea7d8b066911a88466ac83d166f9c30578fb80768b0961d14df426040fc
+  source  354e780509e8fe36
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+
+== apkg update ==
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: SYS:Packages/db/index.json
+report RAM:acc/a1.json
+PASS a-update: ok as expected
+
+== apkg search game ==
+blips                1.0        x86_64    a sokoban style puzzle
+hocoslamfy           2026       x86_64    SDL Flappy Bird clone.
+ominostage           1.1        x86_64    collect all the coins and avoid the enemies
+sdllopan             1.0        x86_64    Lopan - MahJong clone
+sdlpop               1.23       x86_64    SDLPoP, an open-source port of Prince of Persia
+shooterspace         1.0        x86_64    Avoid asteroids and deal with threatening UFOs
+soliton              2.2        x86_64    Klondike & Freecell card game
+untangle             1.2        x86_64    Untangle set of dots joined by lines
+xrick                050500     x86_64    a clone of Rick Dangerous
+
+== apkg install soliton ==
+fetching https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/card/soliton.x86_64-aros-v11.zip
+verified and cached SYS:Packages/cache/soliton.zip
+installed soliton
+report RAM:acc/a2.json
+PASS a-install: ok as expected
+Directory "SYS:Packages" on Friday 09/25/26:
+soliton.info               10090 ---rwed Today       22:01:06
+soliton                      Dir ---rwed Today       22:01:06
+tmp                          Dir ---rwed Today       22:01:05
+cache                        Dir ---rwed Today       22:01:05
+db                           Dir ---rwed Today       22:01:06
+1 file - 4 directories - 24 blocks used
+
+== the user starts it from its drawer ==
+soliton running? (a number means yes):
+ 9
+
+== apkg list, info, remove ==
+soliton
+removed soliton
+report RAM:acc/a3.json
+PASS a-remove: ok as expected
+nothing installed
+Directory "SYS:Packages" on Friday 09/25/26:
+tmp                          Dir ---rwed Today       22:01:25
+cache                        Dir ---rwed Today       22:01:05
+db                           Dir ---rwed Today       22:01:25
+3 directories - 3 blocks used
+
+== and the checksums in the archive match what was unpacked ==
+a513aea7d8b066911a88466ac83d166f9c30578fb80768b0961d14df426040fc  apkg
+abbda66a38af05b9bbf5e4ab6ed18fe85329be3dbd18c50b2deab13712db30fc  LICENSE
+350c7817af2ef980d3f3922bc5e0bb6a9d9f6cc21e784a699bcd2a31c74a84b1  licenses/OpenSSL-1.1.0h-LICENSE
+dbeb23e15038d49308c4832c2f812a06df5bed826f8894e0447b2bbc313a6a69  licenses/zlib-LICENSE
+34033ab6800dfd93fc4ea94da0e5a2ecb41df47a2ff98068c2d100338544e6df  PkgManager
+c057cd7e5297f433a92bd8e9f332dbaf0bf01b40bf424e99bd155462cde5b17f  README
+apkg 0.2
+  abi     v11
+  binary  a513aea7d8b066911a88466ac83d166f9c30578fb80768b0961d14df426040fc
+  source  354e780509e8fe36
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+== end of acceptance ==

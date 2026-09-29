@@ -1,0 +1,7 @@
+run AX9 phase collide
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+version PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+PASS first-still-answers
+PASS second-says-port-in-use
+SUMMARY collide pass 2 fail 0

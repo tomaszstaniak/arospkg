@@ -1,0 +1,10 @@
+zunecalc 1.0
+  Simple Calculator
+  category:     office/misc
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     44 KB from https://archives.arosworld.org/share/office/misc/zunecalc.x86_64-aros-v11.zip
+  sha256:       e730fdbb86aa4190f91d78bd9e26a3291ff42e42d0caab9bd2a8bf6ef18150d4
+  requirements: satisfied, probed now:
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

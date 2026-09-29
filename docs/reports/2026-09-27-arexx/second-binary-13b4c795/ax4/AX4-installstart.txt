@@ -1,0 +1,35 @@
+run AX4 phase installstart
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
+version PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
+  > INSTALL soliton
+  < 1
+PASS install-accepted
+PASS install-job-id
+  > INSTALL cls
+  ! BUSY job 1 (install soliton) is running
+PASS second-install-busy
+  > UPDATE
+  ! BUSY job 1 (install soliton) is running
+PASS update-busy
+  > JOB 1
+  < id 1|op install|package soliton|origin arexx|state running|phase |done 0|total 0|cancancel 0|error |message 
+  > JOB 1
+  < id 1|op install|package soliton|origin arexx|state running|phase extract|done 0|total 223945|cancancel 0|error |message 
+PASS reached-extract
+  > JOB 1 FIELD cancancel
+  < 0
+PASS cancancel-in-extract
+PASS cancancel-0-in-extract
+  > CANCEL 1
+  ! NOTCANCELLABLE job 1 is in phase extract, which cannot be cancelled
+PASS cancel-refused-in-extract
+cli: apkg: another instance is running
+     SYS:PkgRx/db/lock.owner
+     PkgManager worker
+PASS cli-refused-by-lock
+  > JOB 1 FIELD state
+  < running
+PASS job-still-running
+PASS job-running-at-exit
+SUMMARY installstart pass 11 fail 0

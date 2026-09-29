@@ -1,0 +1,13 @@
+grafx2 2.9-aros4
+  256-colour indexed paint program for AROS
+  category:     graphics/edit
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     4110 KB from https://github.com/tomaszstaniak/aros-grafx2/releases/download/v2.9-r4/GrafX2-2.9-r4.x86_64-aros-v11.lha
+  sha256:       b037cb10dbdd7e2d527764a3b6f1d48bcf9876dd954ba7595fed3c55820d2d61
+  source:       https://github.com/tomaszstaniak/aros-grafx2
+  requirements: satisfied, probed now:
+    crt.library: satisfied (already open, version 5)
+    m.library: satisfied (already open, version 1)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

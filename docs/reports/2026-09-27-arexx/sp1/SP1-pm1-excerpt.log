@@ -1,0 +1,29 @@
+# Excerpt of SP1-pm1.log (562618 lines, 14347417 bytes; this build logs every command).
+# SHA-256 of the whole log: 5cfb8d7fec1ca0499717a3c64000189841bbc80da6c0675e4600383fa8fb2889
+# Every line that is not a JOB poll or its answer, with its line number:
+1:start PkgManager 0.3 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849 root SYS:PkgRx: ARexx port PKGMANAGER
+2:refill (start) term="" rows=3 shown=3 installed=0 keep=-
+3:arexx> VERSION
+4:arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc72...
+5:arexx> INSTALL cls
+6:job 1 install cls from arexx
+7:arexx< rc=0 len=1 1
+562600:arexx> INFO cls FIELD state
+562601:arexx< rc=0 len=9 available
+562602:arexx> REMOVE cls
+562603:arexx< rc=5 BUSY job 1 (install cls) is running
+562604:arexx> LASTERROR
+562605:arexx< rc=0 lasterror BUSY job 1 (install cls) is running
+562606:arexx> WAIT  FIELD state
+562607:arexx wait for job 1 (running)
+562608:event cls verify 1/1 can_cancel=1 cancel_button=enabled
+562609:event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+562610:event cls extract 1/1 can_cancel=0 cancel_button=disabled
+562611:event cls publish 0/1 can_cancel=0 cancel_button=disabled
+562612:event cls publish 1/1 can_cancel=0 cancel_button=disabled
+562613:done install cls status=0
+562614:job 1 install cls done: installed cls
+562615:arexx< rc=0 len=4 done
+562616:refill (done) term="" rows=3 shown=3 installed=1 keep=cls
+562617:detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+562618:detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone

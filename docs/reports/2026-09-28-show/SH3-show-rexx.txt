@@ -1,0 +1,14 @@
+run SH3 phase rexx
+  > INFO soliton FIELD runs < native
+PASS rexx-soliton-runs
+  > INFO oldthing FIELD runs < no
+PASS rexx-oldthing-runs
+  > INFO armthing FIELD runs < no
+PASS rexx-armthing-runs
+  > INFO futurething FIELD runs < undetermined
+PASS rexx-futurething-runs
+  > INFO rescode FIELD abi < v11
+PASS rexx-rescode-abi
+  > INFO rescode FIELD runs < native
+PASS rexx-rescode-runs
+SUMMARY rexx pass 6 fail 0

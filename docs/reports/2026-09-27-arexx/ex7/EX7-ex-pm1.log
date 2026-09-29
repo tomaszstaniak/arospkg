@@ -1,0 +1,91 @@
+start PkgManager 0.3 sha256 7fdb7c80f61eb012372dccbfab9bde6aa8c529c71fb4f9e0ed5d760430d7e000 root SYS:PkgRx: ARexx port PKGMANAGER
+refill (start) term="" rows=3 shown=3 installed=0 keep=-
+arexx> INFO "soliton" FIELD state
+arexx< rc=0 len=9 available
+arexx> INSTALL "soliton"
+job 1 install soliton from arexx
+arexx< rc=0 len=1 1
+arexx> WAIT 1
+arexx wait for job 1 (running)
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/1 can_cancel=0 cancel_button=disabled
+event soliton publish 1/1 can_cancel=0 cancel_button=disabled
+done install soliton status=0
+job 1 install soliton done: installed soliton
+arexx< rc=0 len=129 id 1|op install|package soliton|origin arexx|state done|phase publish|d...
+refill (done) term="" rows=3 shown=3 installed=1 keep=soliton
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail soliton: installed 2.2, index 2.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> INFO "soliton" FIELD state
+arexx< rc=0 len=9 installed
+arexx> INFO "soliton" FIELD installedversion
+arexx< rc=0 len=3 2.2
+arexx> INFO "nosuch" FIELD state
+arexx< rc=10 NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> LASTERROR
+arexx< rc=0 lasterror NOTFOUND nosuch is neither in the catalogue nor installed
+arexx> SHOW "cls"
+refill (arexx show) term="" rows=3 shown=3 installed=1 keep=cls
+arexx< rc=0 len=0 
+arexx> INSTALL "xrick"
+job 2 install xrick from arexx
+arexx< rc=0 len=1 2
+arexx> JOB 2
+arexx< rc=0 len=106 id 2|op install|package xrick|origin arexx|state running|phase |done 0|...
+event xrick download 0/2043720 can_cancel=1 cancel_button=enabled
+event xrick download 0/2043720 can_cancel=1 cancel_button=enabled
+event xrick download 10240/2043720 can_cancel=1 cancel_button=enabled
+arexx> (the line above 3 more times)
+arexx> CANCEL 2
+cancel asked by ARexx for job 2 in download
+arexx< rc=0 len=9 requested
+event xrick download 20480/2043720 can_cancel=1 cancel_button=enabled
+arexx> JOB 2
+arexx< rc=0 len=124 id 2|op install|package xrick|origin arexx|state running|phase download...
+done install xrick status=14 download cancelled
+job 2 install xrick cancelled CANCELLED: download cancelled (xrick) -- Nothing was written; the cache has no partial file.
+refill (done) term="" rows=3 shown=3 installed=1 keep=xrick
+arexx> (the line above 3 more times)
+arexx> INSTALL "cls"
+job 3 install cls from arexx
+arexx< rc=0 len=1 3
+arexx> JOB 3
+arexx< rc=0 len=104 id 3|op install|package cls|origin arexx|state running|phase |done 0|to...
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+done install cls status=0
+job 3 install cls done: installed cls
+refill (done) term="" rows=3 shown=3 installed=2 keep=cls
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> (the line above 13 more times)
+arexx> UPGRADE "soliton"
+job 4 upgrade soliton from arexx
+arexx< rc=0 len=1 4
+arexx> WAIT 4
+arexx wait for job 4 (preview)
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/225195 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+done preview upgrade soliton status=0
+plan upgrade soliton: 2.2 -> 2.2-aros2 allowed=1 add=1 replace=1 remove=0 kept=0 unchanged=32 conflicts=0
+upgrade soliton confirmed
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/225195 can_cancel=0 cancel_button=disabled
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/2 can_cancel=0 cancel_button=disabled
+event soliton publish 2/2 can_cancel=0 cancel_button=disabled
+done upgrade soliton status=0
+job 4 upgrade soliton done: upgraded soliton
+arexx< rc=0 len=128 id 4|op upgrade|package soliton|origin arexx|state done|phase publish|d...
+detail cls: installed 1.0, index 1.0, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=3 shown=3 installed=2 keep=soliton
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer
+detail soliton: installed 2.2-aros2, index 2.2-aros2, can_upgrade=0 can_rollback=1 why=installed is 2.2 revision 2 and the index offers revision 2, which is not newer

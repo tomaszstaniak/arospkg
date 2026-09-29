@@ -1,0 +1,219 @@
+run AX9 phase stress
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+version PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > INFO soliton FIELD state
+  < available
+PASS hundred-in-a-procedure
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+  > LASTERROR
+  < 
+PASS lasterror-cleared-by-success
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+  > LASTERROR
+  < NOTFOUND nosuch is neither in the catalogue nor installed
+PASS lasterror-after-failure
+  > LASTERROR
+  < NOTFOUND nosuch is neither in the catalogue nor installed
+PASS lasterror-kept-by-itself
+SUMMARY stress pass 4 fail 0

@@ -1,0 +1,9 @@
+untangle 1.2
+  Untangle set of dots joined by lines
+  category:     game/puzzle
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     60 KB from https://archives.arosworld.org/share/game/puzzle/untangle.x86_64-aros-v11.zip
+  sha256:       0c97bbf1b4aceb4eea66a91a6e94f00e2cffbc7318c652f334a367eefcc053dc
+  requirements: none stated
+  installed:    no

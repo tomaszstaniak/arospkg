@@ -1,0 +1,45 @@
+start PkgManager 0.3 sha256 92d6aa28dfb817828101639221e49eb558ce0fb1f49a70bf44228748175bca82 root SYS:PkgRx: ARexx port PKGMANAGER
+refill (start) term="" rows=3 shown=3 installed=0 keep=-
+arexx> VERSION
+arexx< rc=0 len=94 PkgManager 0.3 ARexx 1 sha256 92d6aa28dfb817828101639221e49eb558ce0fb1f...
+arexx> INSTALL cls
+job 1 install cls from arexx
+arexx< rc=0 len=1 1
+arexx> JOB 1
+arexx< rc=0 len=104 id 1|op install|package cls|origin arexx|state running|phase |done 0|to...
+event cls verify 1/1 can_cancel=1 cancel_button=enabled
+event cls extract 0/41871 can_cancel=0 cancel_button=disabled
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+arexx> JOB 1
+arexx< rc=0 len=115 id 1|op install|package cls|origin arexx|state running|phase extract|do...
+event cls extract 1/1 can_cancel=0 cancel_button=disabled
+event cls publish 0/1 can_cancel=0 cancel_button=disabled
+event cls publish 1/1 can_cancel=0 cancel_button=disabled
+arexx> JOB 1
+arexx< rc=0 len=111 id 1|op install|package cls|origin arexx|state running|phase publish|do...
+arexx> REMOVE cls
+job 2 remove cls from arexx
+arexx< rc=0 len=1 2
+arexx> JOB 1 FIELD state
+arexx< rc=0 len=7 running
+arexx> WAIT 1
+arexx wait for job 1 (running)
+message for job 1 ignored: job 2 is out
+done remove cls status=0
+job 2 remove cls done: removed cls
+refill (done) term="" rows=3 shown=3 installed=0 keep=cls

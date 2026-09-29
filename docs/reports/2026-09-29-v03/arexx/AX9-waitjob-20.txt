@@ -1,0 +1,9 @@
+run AX9 phase waitjob
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+version PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+  > WAIT 20
+  < id 20|op upgrade|package soliton|origin arexx|state done|phase publish|done 2|total 2|cancancel 0|error |message upgraded soliton
+PASS wait-parked
+PASS wait-returned-final
+SUMMARY waitjob pass 2 fail 0

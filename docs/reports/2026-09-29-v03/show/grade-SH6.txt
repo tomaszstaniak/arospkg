@@ -1,0 +1,4 @@
+SUMMARY noindex pass 3 fail 0
+SUMMARY cli pass 43 fail 0
+SUMMARY rexx pass 8 fail 0
+Everything holds.

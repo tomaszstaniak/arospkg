@@ -1,0 +1,35 @@
+MakeDir SYS:FinalIdx
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json search >RESULTS:fi-search.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json --json search >RESULTS:fi-search-json.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show antiword >RESULTS:fi-show-antiword.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show bin2iso >RESULTS:fi-show-bin2iso.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show blips >RESULTS:fi-show-blips.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show ccd2iso >RESULTS:fi-show-ccd2iso.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show dirtree >RESULTS:fi-show-dirtree.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show folio >RESULTS:fi-show-folio.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show gmore >RESULTS:fi-show-gmore.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show grafx2 >RESULTS:fi-show-grafx2.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show grep >RESULTS:fi-show-grep.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show hocoslamfy >RESULTS:fi-show-hocoslamfy.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show iconmake >RESULTS:fi-show-iconmake.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show isomaker >RESULTS:fi-show-isomaker.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show isotool >RESULTS:fi-show-isotool.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show micropolis >RESULTS:fi-show-micropolis.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show ominostage >RESULTS:fi-show-ominostage.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show openloco >RESULTS:fi-show-openloco.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show rescode >RESULTS:fi-show-rescode.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show sdllopan >RESULTS:fi-show-sdllopan.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show sdlpop >RESULTS:fi-show-sdlpop.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show shooterspace >RESULTS:fi-show-shooterspace.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show skandalfoclock >RESULTS:fi-show-skandalfoclock.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show soliton >RESULTS:fi-show-soliton.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show unlzx >RESULTS:fi-show-unlzx.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show untangle >RESULTS:fi-show-untangle.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show xrick >RESULTS:fi-show-xrick.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show zaphod >RESULTS:fi-show-zaphod.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json show zunecalc >RESULTS:fi-show-zunecalc.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json install zaphod >RESULTS:fi-install.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json list >RESULTS:fi-list.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json remove zaphod >RESULTS:fi-remove.txt
+RAM:rxt/apkg --root SYS:FinalIdx --index RAM:rxt/index.json list >RESULTS:fi-list2.txt
+Echo "FINAL DONE"

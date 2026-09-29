@@ -1,0 +1,2 @@
+job 4: confirm or cancel the upgrade of soliton in PkgManager
+soliton upgraded

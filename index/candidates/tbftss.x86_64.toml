@@ -1,0 +1,31 @@
+# SKELETON -- imported from the archives catalogue, not reviewed.
+#
+# Nothing here may be installed while status = "skeleton". Approving means:
+#   * checking that `id` is the right stable name for this program. The
+#     catalogue bakes versions into filenames, so the suggestion may well be
+#     wrong (python-2.5.2 and python-2.7.18 are one program, not two).
+#   * downloading the archive, recording its sha256, and looking inside it to
+#     fill in `subdir` and any install rules.
+#   * establishing dependencies and setting depends_checked = true. An empty
+#     `depends` with depends_checked = false means NOT YET LOOKED AT; it does
+#     not mean the package has no dependencies.
+#   * confirming this upload is the one we want. `selected_by` records why the
+#     importer picked it; see `alternatives` in candidates.json for the rest.
+
+status          = "skeleton"
+id              = "tbftss"
+version         = "1.5.1"
+summary         = "The Battle for the Solar System: the Pandora War"
+arch            = "x86_64"
+abi             = "v11"
+category        = "game/action"
+url             = "https://archives.arosworld.org/share/game/action/tbftss.x86_64-aros-v11.zip"
+size            = 47940255
+upload_date     = "20260606-20.18"
+selected_by     = "only-candidate"
+
+sha256          = ""        # required before this package can be installed
+depends         = []
+depends_checked = false     # false = not investigated, NOT "no dependencies"
+kind            = "app"     # app | lib
+subdir          = ""        # directory inside the archive; "" = archive root

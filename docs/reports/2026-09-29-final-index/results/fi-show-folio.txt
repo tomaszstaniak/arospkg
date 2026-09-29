@@ -1,0 +1,13 @@
+folio 0.4
+  PDF reader with thumbnails, search and highlighting, on MuPDF
+  category:     office/misc
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     28678 KB from https://github.com/tomaszstaniak/aros-foliopdf/releases/download/v0.4/Folio-0.4.x86_64-aros-v11.lha
+  sha256:       432298b9bc4abfe92cb573c6cc157d12b54ceef43888405796a7a6e68de186a2
+  source:       https://github.com/tomaszstaniak/aros-foliopdf
+  requirements: satisfied, probed now:
+    crt.library: satisfied (already open, version 5)
+    m.library: satisfied (already open, version 1)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

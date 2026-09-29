@@ -1,0 +1,160 @@
+== version ==
+apkg 0.2
+  abi     v11
+  binary  ba9a94d95d44fb98791ff205c8c3d27d6a3222d6f3315bfdd8bc7a33a01c58b9
+  source  fb8ecd9f56d4ac40
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+
+== search game, text: must equal the 09-22 acceptance output ==
+blips                1.0        x86_64    a sokoban style puzzle
+hocoslamfy           2026       x86_64    SDL Flappy Bird clone.
+ominostage           1.1        x86_64    collect all the coins and avoid the enemies
+sdllopan             1.0        x86_64    Lopan - MahJong clone
+sdlpop               1.23       x86_64    SDLPoP, an open-source port of Prince of Persia
+shooterspace         1.0        x86_64    Avoid asteroids and deal with threatening UFOs
+soliton              2.2        x86_64    Klondike & Freecell card game
+untangle             1.2        x86_64    Untangle set of dots joined by lines
+xrick                050500     x86_64    a clone of Rick Dangerous
+
+== search game, json ==
+{ "rows": [
+  { "id": "blips", "version": "1.0", "revision": 0, "summary": "a sokoban style puzzle", "category": "game/puzzle", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 1408356, "ours": true, "installed": false },
+  { "id": "hocoslamfy", "version": "2026", "revision": 0, "summary": "SDL Flappy Bird clone.", "category": "game/misc", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 1640158, "ours": true, "installed": false },
+  { "id": "ominostage", "version": "1.1", "revision": 0, "summary": "collect all the coins and avoid the enemies", "category": "game/platform", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 1645762, "ours": true, "installed": false },
+  { "id": "sdllopan", "version": "1.0", "revision": 0, "summary": "Lopan - MahJong clone", "category": "game/board", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 490689, "ours": true, "installed": false },
+  { "id": "sdlpop", "version": "1.23", "revision": 0, "summary": "SDLPoP, an open-source port of Prince of Persia", "category": "game/platform", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 1413476, "ours": true, "installed": false },
+  { "id": "shooterspace", "version": "1.0", "revision": 0, "summary": "Avoid asteroids and deal with threatening UFOs", "category": "game/misc", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 1184697, "ours": true, "installed": false },
+  { "id": "soliton", "version": "2.2", "revision": 0, "summary": "Klondike & Freecell card game", "category": "game/card", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 223945, "ours": true, "installed": false },
+  { "id": "untangle", "version": "1.2", "revision": 0, "summary": "Untangle set of dots joined by lines", "category": "game/puzzle", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 60526, "ours": true, "installed": false },
+  { "id": "xrick", "version": "050500", "revision": 0, "summary": "a clone of Rick Dangerous", "category": "game/platform", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 2043720, "ours": true, "installed": false }
+], "hidden": 0 }
+
+== list json, nothing installed ==
+{ "rows": [], "hidden": 0 }
+
+== install soliton with --progress ==
+fetching https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip
+progress soliton download 0/223945 cancel=yes
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/card/soliton.x86_64-aros-v11.zip
+progress soliton download 0/223945 cancel=yes
+progress soliton download 10240/223945 cancel=yes
+progress soliton download 20480/223945 cancel=yes
+progress soliton download 30720/223945 cancel=yes
+progress soliton download 40960/223945 cancel=yes
+progress soliton download 51200/223945 cancel=yes
+progress soliton download 61440/223945 cancel=yes
+progress soliton download 71680/223945 cancel=yes
+progress soliton download 81920/223945 cancel=yes
+progress soliton download 92160/223945 cancel=yes
+progress soliton download 102400/223945 cancel=yes
+progress soliton download 112640/223945 cancel=yes
+progress soliton download 122880/223945 cancel=yes
+progress soliton download 133120/223945 cancel=yes
+progress soliton download 143360/223945 cancel=yes
+progress soliton download 153600/223945 cancel=yes
+progress soliton download 163840/223945 cancel=yes
+progress soliton download 174080/223945 cancel=yes
+progress soliton download 184320/223945 cancel=yes
+progress soliton download 194560/223945 cancel=yes
+progress soliton download 204800/223945 cancel=yes
+progress soliton download 215040/223945 cancel=yes
+progress soliton download 223945/223945 cancel=yes
+verified and cached SYS:PkgJson/cache/soliton.zip
+progress soliton verify 1/1 cancel=yes
+progress soliton extract 0/223945 cancel=no
+progress soliton extract 1/1 cancel=no
+progress soliton publish 0/1 cancel=no
+progress soliton publish 1/1 cancel=no
+installed soliton
+report RAM:jrep/1.json
+PASS js-install: ok as expected
+
+== list json, soliton installed (summary comes from the index) ==
+{ "rows": [
+  { "id": "soliton", "version": "2.2", "revision": 0, "summary": "Klondike & Freecell card game", "category": "game/card", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 223945, "ours": true, "installed": true }
+], "hidden": 0 }
+
+== search json: soliton shows installed true ==
+{ "rows": [
+  { "id": "soliton", "version": "2.2", "revision": 0, "summary": "Klondike & Freecell card game", "category": "game/card", "arch": "x86_64", "abi": "v11", "kind": "app", "size": 223945, "ours": true, "installed": true }
+], "hidden": 0 }
+
+== cancel during download: 14, no .part, nothing installed ==
+fetching https://archives.arosworld.org/share/demo/misc/screentest-v1.x86_64-aros-v11.zip
+progress screentest download 0/34054 cancel=yes
+apkg: cancelled before the download
+     screentest
+report RAM:jrep/2.json
+PASS js-cancel-download: cancelled as expected
+Directory "SYS:PkgJson/cache" on Friday 09/25/26:
+soliton.zip               223945 ---rwed Today       18:52:38
+1 file - 438 blocks used
+Directory "SYS:PkgJson/db/installed" on Friday 09/25/26:
+soliton.json                5418 ---rwed Today       18:52:39
+1 file - 11 blocks used
+
+== cancel while bytes flow: 14, no .part, nothing installed ==
+fetching https://archives.arosworld.org/share/demo/misc/screentest-v1.x86_64-aros-v11.zip
+progress screentest download 0/34054 cancel=yes
+  redirect -> https://arosarchives.os4depot.net/download.php?file=demo/misc/screentest-v1.x86_64-aros-v11.zip
+progress screentest download 0/34054 cancel=yes
+progress screentest download 10240/34054 cancel=yes
+apkg: download cancelled
+     screentest
+     Nothing was written; the cache has no partial file.
+report RAM:jrep/2b.json
+PASS js-cancel-download-mid: cancelled as expected
+Directory "SYS:PkgJson/cache" on Friday 09/25/26:
+soliton.zip               223945 ---rwed Today       18:52:38
+1 file - 438 blocks used
+Directory "SYS:PkgJson/db/installed" on Friday 09/25/26:
+soliton.json                5418 ---rwed Today       18:52:39
+1 file - 11 blocks used
+
+== cancel after verify: 14, archive cached, nothing installed ==
+fetching https://archives.arosworld.org/share/demo/misc/screentest-v1.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=demo/misc/screentest-v1.x86_64-aros-v11.zip
+verified and cached SYS:PkgJson/cache/screentest.zip
+apkg: cancelled after verification
+     screentest
+     The archive stays in the cache; nothing else was touched.
+report RAM:jrep/3.json
+PASS js-cancel-verify: cancelled as expected
+Directory "SYS:PkgJson/cache" on Friday 09/25/26:
+screentest.zip             34054 ---rwed Today       18:52:43
+soliton.zip               223945 ---rwed Today       18:52:38
+2 files - 505 blocks used
+Directory "SYS:PkgJson/db/installed" on Friday 09/25/26:
+soliton.json                5418 ---rwed Today       18:52:39
+1 file - 11 blocks used
+
+== cancel at extract is ignored: the install completes ==
+progress screentest verify 1/1 cancel=yes
+progress screentest extract 0/34054 cancel=no
+progress screentest extract 1/1 cancel=no
+progress screentest publish 0/1 cancel=no
+progress screentest publish 1/1 cancel=no
+installed screentest
+report RAM:jrep/4.json
+PASS js-cancel-extract: ok as expected
+Directory "SYS:PkgJson" on Friday 09/25/26:
+screentest.info             7968 ---rwed Today       18:52:44
+screentest                   Dir ---rwed Today       18:52:44
+tmp                          Dir ---rwed Today       18:52:44
+soliton.info               10090 ---rwed Today       18:52:39
+soliton                      Dir ---rwed Today       18:52:39
+cache                        Dir ---rwed Today       18:52:43
+db                           Dir ---rwed Today       18:52:44
+2 files - 5 directories - 41 blocks used
+
+== remove both ==
+removed soliton
+report RAM:jrep/5.json
+PASS js-rm-soliton: ok as expected
+removed screentest
+report RAM:jrep/6.json
+PASS js-rm-screentest: ok as expected
+{ "rows": [], "hidden": 0 }
+== end ==

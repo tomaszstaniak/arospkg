@@ -1,0 +1,9 @@
+; matrix case M-sudoku-110: RAM:ev/Sudoku/sudoku-mui under EmuV0 110, from a fresh boot
+Failat 30
+Echo >RESULTS:M-sudoku-110.txt "run M-sudoku-110"
+Version C:EmuV0 FULL >>RESULTS:M-sudoku-110.txt
+Echo "== LIBSV0" >>RESULTS:M-sudoku-110.txt
+List LIBSV0: FILES LFORMAT="%n %l" >>RESULTS:M-sudoku-110.txt
+Echo "C:EmuV0 RAM:ev/Sudoku/sudoku-mui" >RAM:launch
+Echo "== starting emulator in its own Shell" >>RESULTS:M-sudoku-110.txt
+NewShell "CON:0/560/500/150/sudoku/AUTO" FROM RAM:launch

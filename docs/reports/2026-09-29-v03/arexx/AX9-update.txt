@@ -1,0 +1,25 @@
+run AX9 phase update
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+version PkgManager 0.3 ARexx 1 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b
+  > UPDATE
+  < 1
+PASS update-accepted
+  > WAIT 1
+  < id 1|op update|package |origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message index updated 
+PASS update-wait
+PASS update-done
+  > LIST
+  < antiword bin2iso blips ccd2iso dirtree folio gmore grafx2 grep hocoslamfy iconmake isomaker isotool micropolis ominostage openloco rescode sdllopan sdlpop shoot
+PASS list-after-update
+catalogue antiword bin2iso blips ccd2iso dirtree folio gmore grafx2 grep hocoslamfy iconmake isomaker isotool micropolis ominostage openloco rescode sdllopan sdlpop shooterspace skandalfoclock soliton unlzx untangle xrick zaphod zunecalc
+PASS public-catalogue-listed
+  > INFO grafx2 FIELD version
+  < 2.9
+PASS info-from-new-catalogue
+PASS grafx2-version
+  > INFO soliton FIELD state
+  < installed
+PASS installed-survives-update
+PASS installed-survives-update-value
+SUMMARY update pass 9 fail 0

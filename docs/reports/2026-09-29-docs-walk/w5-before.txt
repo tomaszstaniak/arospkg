@@ -1,0 +1,18 @@
+Directory "SYS:Walk/micropolis" on Tuesday 09/29/26:
+MyTown.cty.info              844 ---rwed Today       09:40:25
+MyTown.cty                 51120 ---rwed Today       09:40:25
+tiles.bmp                 246838 ---rwed Today       09:38:47
+startup                      Dir ---rwed Today       09:38:47
+sprites                      Dir ---rwed Today       09:38:46
+sounds                       Dir ---rwed Today       09:38:46
+icons                        Dir ---rwed Today       09:38:46
+cities                       Dir ---rwed Today       09:38:46
+SHA256SUMS                 13260 ---rwed Today       09:38:46
+ReadMe.txt                  2481 ---rwed Today       09:40:52
+Micropolis.info             1790 ---rwed Today       09:38:46
+Micropolis               3214864 ---rwed Today       09:38:46
+Licenses                     Dir ---rwed Today       09:38:44
+CITY.CTY.info                823 ---rwed Today       09:38:44
+CITY.CTY                   27120 ---rwed Today       09:38:44
+BUILD.txt                    235 ---rwed Today       09:38:44
+10 files - 6 directories - 6962 blocks used

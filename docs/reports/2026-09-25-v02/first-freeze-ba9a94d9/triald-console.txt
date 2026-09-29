@@ -1,0 +1,53 @@
+
+==== zaphod ====
+fetching https://archives.arosworld.org/share/development/edit/zaphod-v1.3-.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=development/edit/zaphod-v1.3-.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/zaphod.zip
+installed zaphod
+report RAM:trial/zaphod-install.json
+PASS t-zaphod-install: ok as expected
+zaphod: process after 15 s (a number means it is running):
+ 10
+zaphod: after Ctrl-C (empty means it closed):
+ 10
+removed zaphod
+report RAM:trial/zaphod-remove.json
+PASS t-zaphod-remove: ok as expected
+
+==== sdllopan ====
+fetching https://archives.arosworld.org/share/game/board/sdllopan.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/board/sdllopan.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/sdllopan.zip
+installed sdllopan
+report RAM:trial/sdllopan-install.json
+PASS t-sdllopan-install: ok as expected
+sdllopan: process after 15 s (a number means it is running):
+ 11
+sdllopan: after Ctrl-C (empty means it closed):
+ 11
+removed sdllopan
+report RAM:trial/sdllopan-remove.json
+PASS t-sdllopan-remove: ok as expected
+
+==== sdlpop ====
+fetching https://archives.arosworld.org/share/game/platform/sdlpop.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/platform/sdlpop.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/sdlpop.zip
+installed sdlpop
+report RAM:trial/sdlpop-install.json
+PASS t-sdlpop-install: ok as expected
+sdlpop: process after 15 s (a number means it is running):
+ 12
+sdlpop: after Ctrl-C (empty means it closed):
+removed sdlpop
+report RAM:trial/sdlpop-remove.json
+PASS t-sdlpop-remove: ok as expected
+Directory "SYS:PkgV01" on Friday 09/25/26:
+tmp                          Dir ---rwed Today       20:10:23
+sdlpop                       Dir ---rwed Today       20:10:24
+sdllopan                     Dir ---rwed Today       20:09:58
+zaphod                       Dir ---rwed Today       20:09:37
+cache                        Dir ---rwed Today       20:10:00
+db                           Dir ---rwed Today       20:10:24
+6 directories - 6 blocks used
+== end of trial D ==

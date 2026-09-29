@@ -1,0 +1,18 @@
+.cache/
+/apkg
+.DS_Store
+
+# Build outputs. Releases ship them in an archive, not in git.
+/apkg
+/apkg-mainline
+/pkg-one
+/dist/
+
+__pycache__/
+*.pyc
+/PkgManager
+
+# Spike builds; each has its build.sh.
+/docs/spikes/network-download/dl
+/docs/spikes/dos-lock/locktest
+/docs/spikes/dos-lock/renlock

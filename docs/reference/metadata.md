@@ -1,0 +1,373 @@
+---
+title: "arospkg metadata reference"
+status: reference
+describes: arospkg 0.3 (apkg 40c2ba93…) and tools/mkindex.py, 2026-09-29
+audience: index maintainers, application authors, tool writers
+---
+
+# arospkg metadata reference
+
+What every field means **today**, and who checks it. For how to fill it in,
+see the [packaging guide](../guide/packaging.md). For formats that are only
+proposed, see the [RFCs](../rfc/). If this file disagrees with the code, the
+code is what runs, and this file needs fixing.
+
+## Three files, three writers
+
+| | **manifest** | **index** | **registry** |
+|---|---|---|---|
+| file | `manifests/<id>.<arch>.toml` in arospkg-index | `index.json` in arospkg-index | `<root>/db/installed/<id>.json` |
+| format | TOML | JSON, `schema: 1` | JSON, `schema: 1` |
+| written by | the index maintainer (the author may draft it) | `tools/mkindex.py`, never by hand | the client, when it installs or upgrades |
+| read by | `mkindex.py` | `apkg`, `PkgManager` | `apkg`, `PkgManager` |
+| describes | one package build, as reviewed | every published build | one installation on one machine |
+
+```
+manifests ──mkindex.py──▶ index.json ──apkg update──▶ <root>/db/index.json ──install──▶ <root>/db/installed/<id>.json
+ (reviewed)               (derived)                    (the machine's copy)                (what happened here)
+```
+
+- **Nobody writes the index by hand.** Change the manifest and regenerate.
+- **The registry is not something an author writes.** It records what the
+  client did on one machine: when, from which URL, which files with which
+  hashes, and what the requirement probe found. A package cannot supply
+  one, and it is never published.
+- An archive's own `.arospkg/manifest.toml` is **not** one of these files.
+  Nothing reads it today. See [RFC 0001](../rfc/0001-package-format.md).
+
+## The manifest
+
+All keys are top-level unless shown inside a table. Keys `mkindex.py` does
+not know are ignored without a warning.
+
+**Every string must be printable ASCII, and must contain neither `"` nor
+`\`.** The 0.3 client does not decode JSON escapes. It would act on
+`1.0 \"beta\"` instead of `1.0 "beta"`, and on `\u00e9` instead of `é`.
+`mkindex.py` refuses any string it would have to escape. Strings the client
+acts on (`id`, `version`, `arch`, `abi`, `url`, `subdir`, `icon`, and the
+`id` and `type` of each requirement) are also refused when they are longer
+than the client holds. Strings it only shows (`summary`, `category`, `kind`,
+`license`, `source`) get a note instead, and the client shortens them.
+
+**Required** means that `mkindex.py` rejects the manifest without it.
+**Index** says which index key the value is copied to. **Client** says what
+the 0.3 client does with it.
+
+### Review state
+
+| field | type | required | default | meaning and constraints |
+|---|---|---|---|---|
+| `status` | string | yes | none | `"approved"` is published; anything else is rejected. Generated candidates carry `"skeleton"`, which means nobody has reviewed them. There is no other status. |
+| `excluded` | string | no | none | A reason. If present, the manifest is rejected as a deliberate exclusion, whatever else it says. |
+| `depends_checked` | boolean | yes, and it must be `true` | `false` | Someone has checked what the package needs from other packages. An empty `depends` with `depends_checked = false` means nobody has looked yet. It does not mean the package needs nothing. Not copied to the index. |
+| `upload_date`, `selected_by` | string | no | none | Where a generated candidate came from in the catalogue. Not copied to the index. |
+
+### Identity
+
+| field | type | required | default | index | client | meaning and constraints |
+|---|---|---|---|---|---|---|
+| `id` | string | yes | none | `id` | registry key; installed drawer is `<root>/<id>`, icon `<root>/<id>.info` | `^[a-z][a-z0-9._-]{0,63}$`, and at most 63 characters (refused otherwise: the client keeps 63). Stable: a different `id` is a different package. Unique per `arch` in one index. |
+| `version` | string | yes | none | `version` | compared for equality only | Upstream's own version string, opaque. Example `"0.1.0-rc3"`. At most 63 characters. |
+| `revision` | integer | no | absent | `revision` | absent reads as 0; shown as `<version>-aros<revision>`; upgrade requires the same `version` and a higher `revision` | This port's release count for that `version`: an integer from 1 to 2147483647. Anything else is refused. |
+| `summary` | string | no | `""` | `summary` | shown; searched | One line, no trailing full stop. Client keeps 159 characters. |
+| `category` | string | no | `""` | `category` | shown; searched | AROS Archives style, `"game/strategy"`. Client keeps 63 characters. |
+| `kind` | string | yes | none | `kind` | shown in ARexx `INFO`; no effect on installing | `"app"` for everything published so far. Client keeps 15 characters. |
+| `license` | string | no | absent | `license` | shown by `show` and in the window | Free text. Nothing checks it. Client keeps 63 characters. |
+
+### Target
+
+| field | type | required | default | index | client | meaning and constraints |
+|---|---|---|---|---|---|---|
+| `arch` | string | yes | none | `arch` | must equal the client's CPU, or install is refused before download | `"x86_64"` or `"aarch64"`. |
+| `abi` | string | yes | none | `abi` | must equal the client's, or install is refused before download | `"v11"`: AROS One and current distributions. `"v1"`: mainline. Nothing else is accepted, since the client refuses any other value, or none. |
+
+**Choosing between builds.** The client collects the entries with the
+requested `id`, and keeps those whose `arch` and `abi` both match its own
+(compatibility `native`):
+
+- exactly one: that entry is used;
+- none: `install` is refused (wrong CPU, wrong ABI or unknown ABI), and
+  `show` describes the first entry in (`arch`, `abi`, `url`) order;
+- more than one: `install` and `upgrade` refuse rather than pick.
+
+The order of entries in the file never changes the choice. An upgrade stays on
+the `arch` and `abi` recorded in the registry. `mkindex.py` allows only one
+manifest per (`id`, `arch`), so an index it generates cannot hold both a `v1`
+and a `v11` build of one id.
+
+**Compatibility is not "runs".** `native` means the CPU and the ABI match,
+nothing more. Requirements are reported separately, and only a test on a real
+system says it runs.
+
+### Archive and integrity
+
+| field | type | required | default | index | client | meaning and constraints |
+|---|---|---|---|---|---|---|
+| `url` | string | yes | none | `url` | fetched over HTTPS only, redirects followed | The exact file. Must start with `https://`, and be at most 511 characters. Must not change content. |
+| `size` | integer | yes | none | `size` | download must have exactly this size, or it is discarded | Bytes, a positive integer. Not compared with the file. |
+| `sha256` | string | yes | none | `sha256` | download must hash to it, or it is discarded; install refused if it is not 64 characters | Lower-case hex, 64 characters, of the archive at `url`. `mkindex.py` checks the form, not that it matches the file. |
+| `subdir` | string | no | `""` | `subdir` | the part of the archive that is installed, as `<root>/<id>/` | <a id="subdir"></a>A directory at the archive's top level, no trailing `/`, at most 127 characters. `""` installs the whole top level, **including `.arospkg/` if present**. Only the members under `subdir/` are installed. Checked against the archive by `mkindex.py` when the archive is in `--cache`, together with the length of every path the client will store (at most 255 bytes inside the package). |
+| `icon` | string | no | `""` | `icon` | extracted to `<root>/<id>.info`; install refused if the archive lacks it; an existing icon there is left alone and not claimed | The drawer icon, at most 127 characters. `mkindex.py` checks that the file exists in the archive, not what it is: whether it is the drawer icon and not the program icon is for the reviewer to decide. |
+
+### Requirements and dependencies
+
+| field | type | required | default | index | client | meaning and constraints |
+|---|---|---|---|---|---|---|
+| `requires_system` | array of tables | no | `[]` | copied as is | probed before download; *missing* refuses the install; *undetermined* installs with a warning and is recorded | What the machine must already provide. At most 16. |
+| `requires_system[].type` | string | yes | none | | only `"library"` is probed | Any other value is accepted: `mkindex.py` prints a note and the client reports *undetermined*. |
+| `requires_system[].id` | string | yes | none | | the library name | `"crt.library"`. At most 63 characters. |
+| `requires_system[].min_version` | integer ≥ 0 | no | `0` | | `OpenLibrary(id, min_version)` | Only when you know it. No other keys are allowed in the table. |
+| `depends` | array of strings | no | `[]` | `depends` | **not read in 0.3** | Other packages in the same index. `mkindex.py` drops a manifest whose `depends` cannot be met in the same `arch`, and repeats until nothing more is dropped. |
+| `install` | table | no | `{}` | `install`, copied as is | not read | Reserved. No manifest uses it. |
+
+A library requirement is decided on the machine, in this order:
+
+1. the library is already open, at `min_version` or later: **satisfied**;
+2. `OpenLibrary` succeeds: **satisfied**. This runs the library's
+   initialisation, as the program would;
+3. otherwise **missing**, and the message says whether a file of that name is
+   in `LIBS:`.
+
+A machine short of memory can report *missing* for a library that is there.
+
+### Claims from testing
+
+| field | type | required | default | index | client | meaning |
+|---|---|---|---|---|---|---|
+| `installs_on` | array of strings | no | `[]` | copied | not read | Systems where the package was installed. |
+| `runs_on` | array of strings | no | `[]` | copied | not read | Systems where it was started. |
+| `does_not_run_on` | array of strings | no | `[]` | copied | not read | Systems where it is known not to run. |
+
+The values used so far are `"aros-one"` and `"mainline-x86_64"`. There is no
+fixed vocabulary, and nothing checks these claims. Write only what was done.
+
+### `[source]`
+
+Optional, recommended for anything built from source. It records where the
+source is. Installing never needs it, never fetches it and never checks it,
+and a missing `[source]` produces no warning.
+
+| field | type | index | meaning |
+|---|---|---|---|
+| `repository` | string | `source` (this value only) | Repository URL. Shown by `show`, 255 characters. |
+| `revision` | string | none | A commit or tag, so the link names a fixed point. |
+| `archive` | string | none | File name of a source archive published beside the package. |
+| `sha256` | string | none | That archive's hash. |
+| `built_with` | string | none | Toolchain or SDK profile. |
+| `built_on` | string | none | Build date of that SDK, not of the package. |
+
+A pinned repository and a hashed source archive are equally valid, alone or
+together. Nothing in `[source]` proves that the sources produced the binary.
+
+### A worked example
+
+The manifest in [guide section 4](../guide/packaging.md#4-the-manifest) is
+complete, and is checked by `tests/test_doc_examples.py`.
+
+## The index
+
+`mkindex.py` writes one JSON object:
+
+| key | meaning |
+|---|---|
+| `schema` | `1`. The client does not check it. |
+| `source` | The AROS Archives catalogue the candidates were imported from. **Not** the per-package `source`. |
+| `packages` | Array of entries, sorted by `id`, then `arch`. |
+
+This is the entry generated from the guide's manifest. The test checks that
+it matches `mkindex.py`'s output exactly:
+
+<!-- validate: index-entry -->
+```json
+{
+  "id": "micropolis",
+  "version": "0.1.0-rc3",
+  "summary": "Classic city-building simulation for AROS",
+  "arch": "x86_64",
+  "abi": "v11",
+  "category": "game/strategy",
+  "url": "https://github.com/tomaszstaniak/aros-micropolis/releases/download/v0.1.0-rc3/micropolis.x86_64-aros-v11.lha",
+  "size": 2593505,
+  "sha256": "c46bbc14274af53fb4452f59081fbcf28f1ce5fffb534c06d169b0b1911cd124",
+  "depends": [],
+  "requires_system": [
+    { "type": "library", "id": "crt.library" },
+    { "type": "library", "id": "m.library" },
+    { "type": "library", "id": "stdlib.library" }
+  ],
+  "installs_on": ["aros-one"],
+  "runs_on": ["aros-one"],
+  "does_not_run_on": ["mainline-x86_64"],
+  "kind": "app",
+  "subdir": "Micropolis",
+  "icon": "Micropolis.info",
+  "install": {},
+  "revision": 1,
+  "source": "https://github.com/tomaszstaniak/aros-micropolis",
+  "license": "GPL-3.0-or-later with EA Section 7 terms; Micropolis Public Name License"
+}
+```
+
+`revision`, `source` and `license` appear only when the manifest gives them.
+`abi` is `null` when the manifest has none.
+
+**How the 0.3 client reads it**:
+
+- It skips keys it does not know, so new keys can be added.
+- Strings are copied as they stand. JSON escapes are not decoded, so a
+  non-ASCII character reaches the screen as `é`. **Use plain ASCII in
+  every string.**
+- The whole file may hold at most 8192 JSON values. Each key counts, and so
+  does each value, array and object. The count depends on the fields, not
+  only on the number of packages: the entry above uses 61, and the 27
+  published packages use 1373. Past the limit the client reports *the index
+  is not valid JSON*. `apkg update` also refuses an index larger than 4 MiB.
+  `mkindex.py` prints both figures and refuses to write an index that
+  exceeds either.
+
+## The local registry
+
+Written by the client, one file per installed package, as
+`<root>/db/installed/<id>.json`. The default root is `SYS:Packages`.
+`apkg info <id>` prints it. This one is from the guide's walk, with the
+contents list cut to one file (the full entry listed 130):
+
+<!-- validate: registry -->
+```json
+{
+  "schema":1,
+  "name":"micropolis",
+  "version":"0.1.0-rc3",
+  "revision":1,
+  "arch":"x86_64",
+  "abi":"v11",
+  "subdir":"Micropolis",
+  "installed":"2026-09-29T09:38:48Z",
+  "origin":"https://github.com/tomaszstaniak/aros-micropolis/releases/download/v0.1.0-rc3/micropolis.x86_64-aros-v11.lha",
+  "archive_sha256":"c46bbc14274af53fb4452f59081fbcf28f1ce5fffb534c06d169b0b1911cd124",
+  "archive_size":2593505,
+  "reason":"explicit",
+  "dir":"micropolis",
+  "requires_system": [
+    { "type":"library", "id":"crt.library", "min_version":0, "state":"satisfied", "found_version":5, "checked":"already open, version 5" },
+    { "type":"library", "id":"m.library", "min_version":0, "state":"satisfied", "found_version":1, "checked":"already open, version 1" },
+    { "type":"library", "id":"stdlib.library", "min_version":0, "state":"satisfied", "found_version":3, "checked":"already open, version 3" }
+  ],
+  "icon": { "state":"installed", "sha256":"8d131cb407523acbcce1cd7000370aa391a9aa34bd31889400267433372a68db", "size":1822, "member":"Micropolis.info" },
+  "previous": { "registry":"", "archive":"" },
+  "contents": [
+    { "path":"tiles.bmp", "sha256":"b6e0dd77ca5e59baba6a473aa50a6e41b53471beaa2613a04eb404251dfe1399", "size":246838 }
+  ]
+}
+```
+
+| key | from | meaning |
+|---|---|---|
+| `schema` | client | `1` |
+| `name` | index `id` | |
+| `version`, `revision` | index | `revision` is `0` when the index gave none |
+| `arch`, `abi` | index | The build installed; an upgrade stays on it. `abi` is missing in entries written before 0.3, and readers then assume the client's own. |
+| `subdir` | index | How the archive was cut, so a rollback cuts the same way. |
+| `installed` | client | UTC time of the install or upgrade. |
+| `origin`, `archive_sha256`, `archive_size` | index, verified | The archive that was installed. |
+| `reason` | client | Always `"explicit"` in 0.3. |
+| `dir` | client | The drawer under the root: always the `id`. |
+| `requires_system` | index + probe | Each requirement with its `state` (`satisfied`, `missing`, `undetermined`), `found_version` (`-1` if none) and the probe's words in `checked`. It records what this machine said at install time. |
+| `icon` | client | `state`: `installed` (the icon belongs to the package), `kept-existing` (an icon was already there and was not touched) or `none`. When the icon was installed, `sha256` and `size` let removal tell whether Workbench has since rewritten it. `member` is its name in the archive. |
+| `previous` | client | After an upgrade: the registry entry and archive it replaced, for `rollback`. Empty otherwise. |
+| `contents` | client | Every installed file, with `path` relative to the drawer, `sha256` and `size`. Removal deletes a file only if it still matches. Directories are not listed. |
+
+Other things under the root, all the client's:
+
+- `db/index.json`, the index `apkg update` fetched;
+- `db/transactions/`, the journal of work in progress;
+- `db/previous/<id>.json` and `cache/previous/<id>.<ext>`, kept for rollback;
+- `db/doctor/<id>-<n>.json`, what a removal left behind and why;
+- `cache/<id>.<ext>`, the verified archive, kept after removal;
+- `tmp/`.
+
+## What is checked where
+
+| check | `mkindex.py` | client | a person |
+|---|---|---|---|
+| status is approved, `depends_checked` is true | ✔ | | decides it |
+| required keys present | ✔ | | |
+| `id` pattern | ✔ | | chooses a stable name |
+| `arch` is x86_64 or aarch64 | ✔ | equals its own CPU | |
+| `abi` value | ✔ `v1` or `v11` | equal to its own | that the binary really is that ABI |
+| one entry per (`id`, `arch`) | ✔ | refuses when several match | |
+| `sha256` form | ✔ | 64 characters | |
+| `size` and `sha256` match the file at `url` | none | ✔ on every download | measures them |
+| `url` is HTTPS, reachable and stable | HTTPS ✔ | refuses anything but HTTPS; fetches it | chooses it |
+| `subdir` and `icon` exist in the archive | ✔ if the archive is cached | `icon` ✔; `subdir` is not checked, and members outside it are skipped | that `icon` is the drawer icon |
+| archive member paths and sizes | none | ✔ before writing anything | |
+| `requires_system` shape | ✔ | ✔ | |
+| `requires_system` is complete and correct | none | probes what is listed | derives it from the binary |
+| `depends` exist in the index | ✔ | not read | |
+| strings readable by the client, operational lengths | ✔ | reads them as they stand | |
+| the index fits the client (8192 values, 4 MiB) | ✔ | reports invalid JSON past it | |
+| `version`, `revision`, `summary`, `license`, `[source]` | `revision` range | display only | all of it |
+| `installs_on`, `runs_on`, `does_not_run_on` | none | none | only claims that were tested |
+| the program starts and keeps user data | none | none | ✔ |
+
+**Neither tool authenticates anything.** A SHA-256 in the index proves that a
+download is the file the index names. It does not prove who wrote the index,
+and nothing is signed.
+
+## Running `mkindex.py`
+
+It reads every manifest in `--manifests` (default
+`../arospkg-index/manifests`) and writes `--out` (default
+`../arospkg-index/index.json`).
+
+- A skeleton or an excluded manifest is left out and listed, and that is
+  normal.
+- If any manifest marked `approved` is refused, including one dropped for an
+  unmet `depends` or a duplicate (`id`, `arch`), it prints `NOT WRITTEN`,
+  leaves the previous `--out` as it was, and exits 1. The same happens when
+  the index would not fit the client.
+- Otherwise it writes the new index in one step (a `.part` file renamed
+  over the old one) and exits 0.
+- With `--cache`, `subdir` and `icon` are checked in any archive found
+  there. An archive that is missing produces a warning, not a failure.
+
+Unreviewed candidates are kept in this repository, in `index/candidates/`,
+and are never published.
+
+## Known limits and gaps
+
+Found while writing this reference and checking the final index on 0.3.
+Items 1 to 5 were fixed in `mkindex.py` on 2026-09-29. Items 6 to 11 are
+limits of the 0.3 client or the tools, and are left as they are.
+
+1. *Fixed:* `mkindex.py` exited 0 even when it refused approved manifests.
+2. *Fixed:* `abi` was optional in `mkindex.py` but required by the client.
+3. *Fixed:* `url` was not checked for HTTPS, and `revision` was not checked.
+4. *Fixed:* strings the client reads differently (`"`, `\`, non-ASCII) were
+   published. Measured on the client's parser: a `"` in `version` is stored
+   escaped a second time in the registry, so the installed version never
+   equals the index's again. A `\` in `url` fetches a different address.
+   In `subdir`, no member matches, so the drawer installs empty. None of the
+   published packages had such a string.
+5. *Fixed:* operational strings longer than the client holds were published.
+6. **The client does not decode JSON escapes.** The generator keeps such
+   strings out of the index. Decoding needs a decision on characters beyond
+   ASCII (the index is UTF-8, the AROS console Latin-1), and belongs to a
+   later client.
+7. **Only one manifest per (`id`, `arch`).** The client can choose between
+   ABIs, but the generator and the file name `<id>.<arch>.toml` cannot hold
+   a `v1` and a `v11` build of one id. This must change before such a pair is
+   published.
+8. **`icon` is checked for existence, not role.** A file inside the drawer
+   can be named by mistake. It can also be a deliberate choice, so the
+   location alone is not treated as an error.
+9. **`subdir = ""` installs `.arospkg/`** along with everything else at the
+   top level. RFC 0001 proposes skipping it; the 0.3 client does not.
+10. **The removal report lists changed files, but not files the package never
+    installed**, such as saved games. Both are kept. This is a gap in the
+    report, not in the removal.
+11. **Display strings are shortened** (`license` at 63 characters, and the
+    others at the lengths above). The index keeps the whole value.
+12. **Backslashes in archive member names.** The LHA reader turns `\` into
+    `/`, and the ZIP reader refuses only a leading `\`. RFC 0001 proposes
+    refusing them everywhere.

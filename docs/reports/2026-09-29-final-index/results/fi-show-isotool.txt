@@ -1,0 +1,11 @@
+isotool 1.0
+  Boot Extraction ISO And Rename Volume
+  category:     utility
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     38 KB from https://archives.arosworld.org/share/utility/isotool.x86_64-aros-v11.zip
+  sha256:       ab747f8eb6296957b4461d36561c1b3d5e9e17be805d26cf99a55d35579f5fad
+  requirements: satisfied, probed now:
+    crt.library: satisfied (already open, version 5)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

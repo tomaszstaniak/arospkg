@@ -1,0 +1,12 @@
+The build under test in MX2 (PkgManager 92d6aa28...) is the fixed source
+with the window's busy test put back the way it was before the fix: busy
+means "the worker is running", which the worker clears before its final
+message has been read.
+
+--- src/pkgmanager/main.c
++++ src/pkgmanager/main.c (MX2 only, never committed)
+-static int busy_now(void) { return in_flight || confirming; }
++static int busy_now(void) { return cur.running || confirming; }
+@@ start()
+-    if (in_flight) return -1;
++    if (cur.running) return -1;

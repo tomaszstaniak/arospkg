@@ -1,0 +1,35 @@
+refill (start) term="" rows=23 shown=23 installed=0 keep=-
+refill (search) term="soliton" rows=1 shown=1 installed=0 keep=-
+install pressed for soliton
+event soliton download 0/223945 can_cancel=1 cancel_button=enabled
+event soliton download 0/223945 can_cancel=1 cancel_button=enabled
+event soliton download 10240/223945 can_cancel=1 cancel_button=enabled
+event soliton download 20480/223945 can_cancel=1 cancel_button=enabled
+event soliton download 30720/223945 can_cancel=1 cancel_button=enabled
+event soliton download 40960/223945 can_cancel=1 cancel_button=enabled
+event soliton download 51200/223945 can_cancel=1 cancel_button=enabled
+event soliton download 61440/223945 can_cancel=1 cancel_button=enabled
+event soliton download 71680/223945 can_cancel=1 cancel_button=enabled
+event soliton download 81920/223945 can_cancel=1 cancel_button=enabled
+event soliton download 92160/223945 can_cancel=1 cancel_button=enabled
+event soliton download 102400/223945 can_cancel=1 cancel_button=enabled
+event soliton download 112640/223945 can_cancel=1 cancel_button=enabled
+event soliton download 122880/223945 can_cancel=1 cancel_button=enabled
+event soliton download 133120/223945 can_cancel=1 cancel_button=enabled
+event soliton download 143360/223945 can_cancel=1 cancel_button=enabled
+event soliton download 153600/223945 can_cancel=1 cancel_button=enabled
+event soliton download 163840/223945 can_cancel=1 cancel_button=enabled
+event soliton download 174080/223945 can_cancel=1 cancel_button=enabled
+event soliton download 184320/223945 can_cancel=1 cancel_button=enabled
+event soliton download 194560/223945 can_cancel=1 cancel_button=enabled
+event soliton download 204800/223945 can_cancel=1 cancel_button=enabled
+event soliton download 215040/223945 can_cancel=1 cancel_button=enabled
+event soliton download 223945/223945 can_cancel=1 cancel_button=enabled
+event soliton verify 1/1 can_cancel=1 cancel_button=enabled
+event soliton extract 0/223945 can_cancel=0 cancel_button=disabled
+close requested during extract can_cancel=0
+event soliton extract 1/1 can_cancel=0 cancel_button=disabled
+event soliton publish 0/1 can_cancel=0 cancel_button=disabled
+event soliton publish 1/1 can_cancel=0 cancel_button=disabled
+done install soliton status=0
+quit

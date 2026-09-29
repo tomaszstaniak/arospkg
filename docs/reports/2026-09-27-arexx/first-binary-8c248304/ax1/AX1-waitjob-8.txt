@@ -1,0 +1,9 @@
+run AX1 phase waitjob
+  > VERSION
+  < PkgManager 0.3 ARexx 1 sha256 8c248304e439036b2aaec7c1f7a10a6c2f007aedd87fac3271efc5f5bfdbe7ae
+version PkgManager 0.3 ARexx 1 sha256 8c248304e439036b2aaec7c1f7a10a6c2f007aedd87fac3271efc5f5bfdbe7ae
+  > WAIT 8
+  < id 8|op upgrade|package soliton|origin arexx|state done|phase publish|done 2|total 2|cancancel 0|error |message upgraded soliton
+PASS wait-parked
+PASS wait-returned-final
+SUMMARY waitjob pass 2 fail 0

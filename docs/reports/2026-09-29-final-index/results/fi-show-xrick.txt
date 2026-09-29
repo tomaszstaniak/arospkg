@@ -1,0 +1,11 @@
+xrick 050500
+  a clone of Rick Dangerous
+  category:     game/platform
+  target:       x86_64, ABI v11
+  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
+  download:     1996 KB from https://archives.arosworld.org/share/game/platform/xrick.x86_64-aros-v11.zip
+  sha256:       671d89c9b45c9358cd02faf379510ef8a49bf746119fa45f7b90c466575c3e98
+  requirements: satisfied, probed now:
+    crt.library: satisfied (already open, version 5)
+    stdlib.library: satisfied (already open, version 3)
+  installed:    no

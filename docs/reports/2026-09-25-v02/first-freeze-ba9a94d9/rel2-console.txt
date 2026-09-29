@@ -1,0 +1,64 @@
+== v0.1 release suite, part 2: after the reboot ==
+apkg 0.2
+  abi     v11
+  binary  ba9a94d95d44fb98791ff205c8c3d27d6a3222d6f3315bfdd8bc7a33a01c58b9
+  source  fb8ecd9f56d4ac40
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+
+==== H. the transaction interrupted before the reboot ====
+read-only view must warn, not show a settled state:
+WARNING: 1 uncommitted transaction(s) exist. What follows is
+         what is on disk, not a settled state. A mutating
+         command will recover them.
+cls
+recovery: 1 transaction(s) to resolve
+  6ab6c143-cls: install without commit -- rolling back
+      6 file(s) removed, 0 left because changed
+      drawer icon removed
+recovered 1 interrupted transaction(s)
+root      SYS:PkgRel
+
+no unresolved transactions
+
+removals that left files behind:
+  db/doctor/cls-6ab6c141.json
+report RAM:rel/h2.json
+PASS h2: ok as expected
+PASS h: uncommitted install rolled back after a reboot
+PASS h: icon rolled back after a reboot
+
+==== I. TLS, negative: every one of these must be REFUSED ====
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+  (test) requiring the certificate to match example.invalid
+apkg: the index could not be fetched
+     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     certificate for raw.githubusercontent.com rejected: Hostname mismatch
+report RAM:rel/n1.json
+PASS n1: network error as expected
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+  (test) requiring the certificate to match www.google.com
+apkg: the index could not be fetched
+     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     certificate for raw.githubusercontent.com rejected: Hostname mismatch
+report RAM:rel/n2.json
+PASS n2: network error as expected
+fetching http://archives.arosworld.org/share/RECENT.readme
+apkg: the index could not be fetched
+     http://archives.arosworld.org/share/RECENT.readme
+     not an https URL: http://archives.arosworld.org/share/RECENT.readme
+report RAM:rel/n3.json
+PASS n3: network error as expected
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+apkg: the index could not be fetched
+     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     cannot load the CA bundle ENV:SYS/Certificates/ca-bundle.crt -- refusing to download
+report RAM:rel/n4.json
+PASS n4: network error as expected
+and the positive control, so the refusals above are not just no network:
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: RAM:N/db/index.json
+report RAM:rel/n0.json
+PASS n0: ok as expected
+== end of part 2 ==

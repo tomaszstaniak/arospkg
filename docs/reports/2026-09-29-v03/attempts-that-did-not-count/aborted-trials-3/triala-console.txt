@@ -1,0 +1,249 @@
+apkg 0.3
+  abi     v11
+  binary  40c2ba9350bc10e6da294d0cf0675aefb8f3dc86c519fd8c992bb4bf675609e0
+  source  987ac354db12ffac
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+fetching https://archives.arosworld.org/share/demo/misc/screentest-v1.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=demo/misc/screentest-v1.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/screentest.zip
+installed screentest
+report RAM:trial/screentest-install.json
+PASS t-screentest-install: ok as expected
+fetching https://archives.arosworld.org/share/game/puzzle/untangle.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/puzzle/untangle.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/untangle.zip
+installed untangle
+report RAM:trial/untangle-install.json
+PASS t-untangle-install: ok as expected
+fetching https://archives.arosworld.org/share/office/misc/zunecalc.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=office/misc/zunecalc.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/zunecalc.zip
+installed zunecalc
+report RAM:trial/zunecalc-install.json
+PASS t-zunecalc-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/archive/ccd2iso.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/archive/ccd2iso.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/ccd2iso.zip
+installed ccd2iso
+report RAM:trial/ccd2iso-install.json
+PASS t-ccd2iso-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/filetool/bin2iso.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/filetool/bin2iso.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/bin2iso.zip
+installed bin2iso
+report RAM:trial/bin2iso-install.json
+PASS t-bin2iso-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/misc/dirtree.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/misc/dirtree.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/dirtree.zip
+installed dirtree
+report RAM:trial/dirtree-install.json
+PASS t-dirtree-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/misc/grep.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/misc/grep.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/grep.zip
+installed grep
+report RAM:trial/grep-install.json
+PASS t-grep-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/misc/iconmake.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/misc/iconmake.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/iconmake.zip
+installed iconmake
+report RAM:trial/iconmake-install.json
+PASS t-iconmake-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/misc/joytest.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/misc/joytest.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/joytest.zip
+installed joytest
+report RAM:trial/joytest-install.json
+PASS t-joytest-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/shell/cls.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/shell/cls.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/cls.zip
+installed cls
+report RAM:trial/cls-install.json
+PASS t-cls-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/shell/diskusage.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/shell/diskusage.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/diskusage.zip
+installed diskusage
+report RAM:trial/diskusage-install.json
+PASS t-diskusage-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/shell/gisplita.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/shell/gisplita.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/gisplita.zip
+installed gisplita
+report RAM:trial/gisplita-install.json
+PASS t-gisplita-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/shell/timeit.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/shell/timeit.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/timeit.zip
+installed timeit
+report RAM:trial/timeit-install.json
+PASS t-timeit-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/text/gmore.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/text/gmore.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/gmore.zip
+installed gmore
+report RAM:trial/gmore-install.json
+PASS t-gmore-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/workbench/zapperng.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/workbench/zapperng.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/zapperng.zip
+installed zapperng
+report RAM:trial/zapperng-install.json
+PASS t-zapperng-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/isomaker.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/isomaker.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/isomaker.zip
+installed isomaker
+report RAM:trial/isomaker-install.json
+PASS t-isomaker-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/isotool.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/isotool.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/isotool.zip
+installed isotool
+report RAM:trial/isotool-install.json
+PASS t-isotool-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/text/misc/unmount.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/text/misc/unmount.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/unmount.zip
+installed unmount
+report RAM:trial/unmount-install.json
+PASS t-unmount-install: ok as expected
+fetching https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/card/soliton.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/soliton.zip
+installed soliton
+report RAM:trial/soliton-install.json
+PASS t-soliton-install: ok as expected
+fetching https://archives.arosworld.org/share/game/puzzle/blips.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/puzzle/blips.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/blips.zip
+installed blips
+report RAM:trial/blips-install.json
+PASS t-blips-install: ok as expected
+fetching https://archives.arosworld.org/share/game/misc/hocoslamfy.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/misc/hocoslamfy.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/hocoslamfy.zip
+installed hocoslamfy
+report RAM:trial/hocoslamfy-install.json
+PASS t-hocoslamfy-install: ok as expected
+fetching https://archives.arosworld.org/share/game/platform/xrick.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/platform/xrick.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/xrick.zip
+installed xrick
+report RAM:trial/xrick-install.json
+PASS t-xrick-install: ok as expected
+fetching https://archives.arosworld.org/share/game/misc/shooterspace.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/misc/shooterspace.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/shooterspace.zip
+installed shooterspace
+report RAM:trial/shooterspace-install.json
+PASS t-shooterspace-install: ok as expected
+fetching https://archives.arosworld.org/share/game/platform/ominostage.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=game/platform/ominostage.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/ominostage.zip
+installed ominostage
+report RAM:trial/ominostage-install.json
+PASS t-ominostage-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/archive/unlzx.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/archive/unlzx.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/unlzx.zip
+installed unlzx
+report RAM:trial/unlzx-install.json
+PASS t-unlzx-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/archive/lzop-1.04.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/archive/lzop-1.04.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/lzop.zip
+installed lzop
+report RAM:trial/lzop-install.json
+PASS t-lzop-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/text/convert/antiword-v0.37.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/text/convert/antiword-v0.37.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/antiword.zip
+installed antiword
+report RAM:trial/antiword-install.json
+PASS t-antiword-install: ok as expected
+fetching https://archives.arosworld.org/share/audio/play/tinysid.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=audio/play/tinysid.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/tinysid.zip
+installed tinysid
+report RAM:trial/tinysid-install.json
+PASS t-tinysid-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/workbench/skandalfoclock.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/workbench/skandalfoclock.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/skandalfoclock.zip
+installed skandalfoclock
+report RAM:trial/skandalfoclock-install.json
+PASS t-skandalfoclock-install: ok as expected
+fetching https://archives.arosworld.org/share/utility/misc/rescode.x86_64-aros-v11.zip
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/misc/rescode.x86_64-aros-v11.zip
+verified and cached SYS:PkgV01/cache/rescode.zip
+installed rescode
+report RAM:trial/rescode-install.json
+PASS t-rescode-install: ok as expected
+
+-- what is installed, and each drawer with its icon beside it --
+antiword
+bin2iso
+blips
+ccd2iso
+cls
+dirtree
+diskusage
+gisplita
+gmore
+grep
+hocoslamfy
+iconmake
+isomaker
+isotool
+joytest
+lzop
+ominostage
+rescode
+screentest
+shooterspace
+skandalfoclock
+soliton
+timeit
+tinysid
+unlzx
+unmount
+untangle
+xrick
+zapperng
+zunecalc
+Directory "SYS:PkgV01" on Tuesday 09/29/26:
+rescode.info                9222 ---rwed Today       00:59:41
+tinysid.info                8344 ---rwed Today       00:59:36
+antiword.info               7517 ---rwed Today       00:59:34
+unlzx.info                  8344 ---rwed Today       00:59:27
+ominostage.info             7463 ---rwed Today       00:59:24
+shooterspace.info           7463 ---rwed Today       00:59:12
+xrick.info                 10350 ---rwed Today       00:59:04
+hocoslamfy.info             9606 ---rwed Today       00:58:56
+blips.info                 10375 ---rwed Today       00:58:50
+soliton.info               10090 ---rwed Today       00:58:44
+unmount.info                8344 ---rwed Today       00:58:42
+isotool.info                8344 ---rwed Today       00:58:40
+isomaker.info               8344 ---rwed Today       00:58:37
+zapperng.info               8876 ---rwed Today       00:58:35
+gmore.info                  7463 ---rwed Today       00:58:33
+timeit.info                 8344 ---rwed Today       00:58:31
+diskusage.info              8344 ---rwed Today       00:58:27
+cls.info                    8344 ---rwed Today       00:58:24
+joytest.info                8344 ---rwed Today       00:58:22
+iconmake.info               9460 ---rwed Today       00:58:20
+grep.info                   8344 ---rwed Today       00:58:18
+dirtree.info                8344 ---rwed Today       00:58:16
+bin2iso.info                8344 ---rwed Today       00:58:14
+ccd2iso.info                8344 ---rwed Today       00:58:12
+zunecalc.info               8364 ---rwed Today       00:58:09
+untangle.info              10375 ---rwed Today       00:58:07
+screentest.info             7968 ---rwed Today       00:58:05
+27 files - 472 blocks used
+== end of trial A ==
