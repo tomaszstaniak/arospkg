@@ -12,6 +12,8 @@ verifies what is installed, and can show what an operation would do before
 doing it. `apkg show` describes a package: whether it is built for this
 machine, what it needs, what is installed. PkgManager has an ARexx port.
 
+![PkgManager: the catalogue, with GrafX2 selected](docs/images/pkgmanager.png)
+
 ## Using it
 
 Download `arospkg.x86_64-aros-v11.zip` from the
@@ -24,6 +26,20 @@ apkg search
 apkg install zaphod
 apkg remove zaphod
 ```
+
+`apkg search` lists what the catalogue offers, and `apkg show` says whether
+a package is built for this machine and whether the machine has what it
+needs, before anything is downloaded:
+
+![apkg search and apkg show in an AROS Shell](docs/images/apkg-search-show.png)
+
+Installing and removing a package from AROS Archives:
+
+![apkg install, list and remove](docs/images/apkg-install-remove.png)
+
+PkgManager does the same from a window, and shows the plan of an upgrade
+or a rollback before it runs. The screenshots are from AROS One 1.3 under
+QEMU, with the published catalogue.
 
 ## Documentation
 
