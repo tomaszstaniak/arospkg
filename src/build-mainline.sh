@@ -14,7 +14,9 @@ OUT=${OUT:-$HERE/../apkg-mainline}
 # The build id is the hash of the sources: a binary cannot hash itself while
 # being built, and this is reproducible. Every run report carries it, so a
 # result can never be attributed to the wrong build.
-BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h "$HERE"/pkg/main.c \
+CC="$TC/x86_64-aros-gcc"; AR="$TC/x86_64-aros-ar"; TAG=abiv1-x86_64
+. "$HERE/tls/tls.sh"
+BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h $TLS_SRC "$HERE"/pkg/main.c \
            | shasum -a 256 | cut -c1-16)
 echo "build id $BUILD_ID  (ABIv1 / mainline, additional)"
 
@@ -24,8 +26,8 @@ echo "build id $BUILD_ID  (ABIv1 / mainline, additional)"
     -DPKG_ABI='"v1"' \
     -DPKG_SDK='"'"$SDK"'"' \
     -DPKG_CC="\"$("$TC/x86_64-aros-gcc" -dumpversion)\"" \
-    -I"$SDK/include" \
-    "$HERE"/libpkg/*.c "$HERE"/pkg/main.c \
-    "$SDK/lib/libz.static.a" -lssl -lcrypto \
+    -I"$SDK/include" $TLS_CFLAGS -DPKG_TLS='"'"$TLS"'"' \
+    "$HERE"/libpkg/*.c "$HERE"/pkg/main.c $TLS_SRC \
+    "$SDK/lib/libz.static.a" $TLS_LIBS \
     -o "$OUT"
 ls -l "$OUT"

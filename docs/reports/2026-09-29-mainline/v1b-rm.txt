@@ -1,0 +1,2 @@
+removed ghostscript
+nothing installed

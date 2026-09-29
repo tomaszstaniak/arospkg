@@ -1,0 +1,7 @@
+Tuesday 29-Sep-26 19:22:26
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: SYS:MlT/db/index.json
+apkg: wrong ABI for this system
+     zaphod
+     It is built for ABIv11; this system is ABIv1. It would install correctly and then fail to start. Use the ABIv11 build of pkg, or a package for ABIv1.
+Tuesday 29-Sep-26 19:22:41
