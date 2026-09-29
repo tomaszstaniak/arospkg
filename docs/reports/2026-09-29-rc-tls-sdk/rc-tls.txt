@@ -1,0 +1,39 @@
+== expired
+fetching https://expired.badssl.com/
+apkg: the index could not be fetched
+     https://expired.badssl.com/
+     certificate for expired.badssl.com rejected: The certificate validity has expired
+== untrusted root
+fetching https://untrusted-root.badssl.com/
+apkg: the index could not be fetched
+     https://untrusted-root.badssl.com/
+     certificate for untrusted-root.badssl.com rejected: The certificate is not correctly signed by the trusted CA
+== self-signed
+fetching https://self-signed.badssl.com/
+apkg: the index could not be fetched
+     https://self-signed.badssl.com/
+     certificate for self-signed.badssl.com rejected: The certificate is not correctly signed by the trusted CA
+== wrong host
+fetching https://wrong.host.badssl.com/
+apkg: the index could not be fetched
+     https://wrong.host.badssl.com/
+     certificate for wrong.host.badssl.com rejected: The certificate Common Name (CN) does not match with the expected CN
+== plain http
+fetching http://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+apkg: the index could not be fetched
+     http://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     not an https URL: http://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+== https redirecting to http
+fetching https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F
+  redirect -> http://example.com/
+apkg: the index could not be fetched
+     https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F
+     not an https URL: http://example.com/
+== forced entropy failure
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+apkg: the index could not be fetched
+     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     no good randomness on this machine; refusing to connect
+== good
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+index updated: SYS:RcN/db/index.json
