@@ -80,15 +80,14 @@ MBEDTLS_NO_PLATFORM_ENTROPY, which means: your program must provide
     int mbedtls_hardware_poll(void *data, unsigned char *output,
                               size_t len, size_t *olen);
 
-and the link fails without it. AROS One and the other ABIv11 systems have
-no system entropy source today (no getentropy(), no entropy.resource). The
-companion package JitterEntropy-3.7.0-aros2 provides this function from the
-jitterentropy CPU-jitter source: link its libjitterentropy_mbedtls.a and
+and the link fails without it. The companion package
+JitterEntropy-3.7.0-aros2 provides this function from the jitterentropy
+CPU-jitter source: link its libjitterentropy_mbedtls.a and
 libjitterentropy.a.
 
-On a system that has a source (mainline AROS: getentropy() in posixc,
-answered by entropy.resource), use that instead; do not use both, and do
-not fall back from one to the other.
+A program may instead provide its own suitable entropy backend, such as a
+system interface where the target provides one. Use one source, and do not
+fall back from one to another. Source failures are reported to the caller.
 
 Linking the libraries does not by itself make a program's TLS sound. Check
 the return value of mbedtls_ctr_drbg_seed() and psa_crypto_init(): if the

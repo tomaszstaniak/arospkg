@@ -2,10 +2,10 @@ jitterentropy-library 3.7.0 for AROS x86_64 (ABIv11), port revision aros2
 =========================================================================
 
 Static libraries of jitterentropy-library, a CPU-jitter entropy source, for
-programs built for AROS x86_64 with ABIv11 (AROS One and the other current
-distributions), which have no system entropy source. Not for mainline AROS
-(ABIv1), i386 or aarch64: a library built for one ABI does not work with
-another.
+programs built for AROS x86_64 with ABIv11, such as AROS One. With the
+optional adapter it supplies the entropy that the companion Mbed TLS package
+needs. These binaries are not for mainline AROS (ABIv1), i386 or aarch64: a
+library built for one ABI does not work with another.
 
 Upstream:  https://github.com/smuellerDD/jitterentropy-library, release
            3.7.0, v3.7.0.tar.gz, SHA-256
@@ -105,9 +105,9 @@ program to free the collector. The declarations are:
     int  aros_jent_status(void);
     void aros_jent_shutdown(void);
 
-On a system that has a system source (mainline AROS: getentropy() in
-posixc), use that instead; do not use both, and do not fall back from one to
-the other.
+A program may instead connect another suitable entropy source, such as a
+system interface where the target provides one. Use one source, and do not
+fall back from one to another.
 
 
 Using the library directly
