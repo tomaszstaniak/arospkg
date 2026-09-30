@@ -148,7 +148,8 @@ Tested on AROS One 1.3 x86_64 under QEMU (TCG):
 
   - the examples of both packages, built only from the unpacked packages:
     jent_read returned data; the Mbed TLS example made a TLS 1.3 connection
-    with a verified certificate and refused an expired one;
+    with a verified certificate and refused expired, wrong-host, untrusted
+    and self-signed ones;
   - the arospkg package manager, which uses the same libraries and adapter;
   - a raw-noise measurement with upstream's own procedure
     (tests/raw-entropy in the release; 1,000,000 samples, NIST SP 800-90B
@@ -167,4 +168,4 @@ Not established:
 
 This is a port and a build, not a certification. The reports are in
 docs/reports/ of the port's repository at the commit in BUILD.txt
-(2026-09-29-jitterentropy and 2026-09-29-rc-tls-sdk).
+(2026-09-29-jitterentropy, 2026-09-30-sdk-aros2 and 2026-09-29-rc-tls-sdk).

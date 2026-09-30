@@ -1,0 +1,16 @@
+== good: raw.githubusercontent.com
+connected: TLSv1.3, TLS1-3-CHACHA20-POLY1305-SHA256
+HTTP/1.1 301 Moved Permanently
+rc=0
+== expired
+handshake failed: X509 - Certificate verification failed, e.g. CRL, CA or signature check failed (verify flags 0x1)
+rc=10
+== wrong host
+handshake failed: X509 - Certificate verification failed, e.g. CRL, CA or signature check failed (verify flags 0x4)
+rc=10
+== untrusted root
+handshake failed: X509 - Certificate verification failed, e.g. CRL, CA or signature check failed (verify flags 0x8)
+rc=10
+== self-signed
+handshake failed: X509 - Certificate verification failed, e.g. CRL, CA or signature check failed (verify flags 0x8)
+rc=10

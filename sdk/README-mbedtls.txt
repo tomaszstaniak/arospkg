@@ -173,14 +173,15 @@ LICENSE of the release named above). The ZIP files appear in dist/sdk/.
 What was tested, and what is not claimed
 ----------------------------------------
 
-Tested on AROS One 1.3 x86_64 under QEMU (TCG), with the example built only
-from the unpacked packages: a TLS 1.3 connection with a verified
-certificate, and refusal of an expired one. The arospkg package manager,
-which uses the same libraries and configuration, was also tested against
-untrusted, self-signed and wrong-host certificates, plain HTTP, a redirect
-to HTTP and a failed entropy source; each was refused. The reports are in
-docs/reports/ of the port's repository at the commit in BUILD.txt
-(2026-09-29-rc-tls-sdk and 2026-09-30-rc1-regression).
+Tested on AROS One 1.3 x86_64 under QEMU (TCG), with this revision's
+example built only from the unpacked packages: a TLS 1.3 connection with a
+verified certificate (exit 0), and refusal of an expired certificate, a
+wrong host name, an untrusted root and a self-signed certificate (exit 10
+each). The arospkg package manager, which uses the same libraries and
+configuration, was also tested against plain HTTP, a redirect to HTTP and a
+failed entropy source; each was refused. The reports are in docs/reports/
+of the port's repository at the commit in BUILD.txt (2026-09-30-sdk-aros2,
+2026-09-29-rc-tls-sdk and 2026-09-30-rc1-regression).
 
 Not tested: other ABIv11 systems, real hardware, TLS servers other than
 those in the reports. This is a build and a working example, not an audit

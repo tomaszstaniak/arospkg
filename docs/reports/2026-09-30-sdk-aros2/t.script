@@ -1,0 +1,23 @@
+FAILAT 1000
+Copy RAM:rxt/#? RAM:
+Protect RAM:https_get +e
+Protect RAM:jent_read +e
+Version >RESULTS:sdk2-system.txt
+RAM:jent_read >RESULTS:sdk2-jent.txt
+Echo "rc=$RC" >>RESULTS:sdk2-jent.txt
+Echo "== good: raw.githubusercontent.com" >RESULTS:sdk2-https.txt
+RAM:https_get raw.githubusercontent.com / >>RESULTS:sdk2-https.txt
+Echo "rc=$RC" >>RESULTS:sdk2-https.txt
+Echo "== expired" >>RESULTS:sdk2-https.txt
+RAM:https_get expired.badssl.com / >>RESULTS:sdk2-https.txt
+Echo "rc=$RC" >>RESULTS:sdk2-https.txt
+Echo "== wrong host" >>RESULTS:sdk2-https.txt
+RAM:https_get wrong.host.badssl.com / >>RESULTS:sdk2-https.txt
+Echo "rc=$RC" >>RESULTS:sdk2-https.txt
+Echo "== untrusted root" >>RESULTS:sdk2-https.txt
+RAM:https_get untrusted-root.badssl.com / >>RESULTS:sdk2-https.txt
+Echo "rc=$RC" >>RESULTS:sdk2-https.txt
+Echo "== self-signed" >>RESULTS:sdk2-https.txt
+RAM:https_get self-signed.badssl.com / >>RESULTS:sdk2-https.txt
+Echo "rc=$RC" >>RESULTS:sdk2-https.txt
+Echo "SDK2 DONE" >RESULTS:sdk2-done.txt
