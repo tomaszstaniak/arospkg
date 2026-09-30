@@ -1,4 +1,4 @@
-Mbed TLS 3.6.7 for AROS x86_64 (ABIv11), port revision aros1
+Mbed TLS 3.6.7 for AROS x86_64 (ABIv11), port revision aros2
 ============================================================
 
 Static libraries of Mbed TLS 3.6.7 (the long-term support branch) for
@@ -10,10 +10,23 @@ Upstream:  https://github.com/Mbed-TLS/mbedtls, release 3.6.7,
            mbedtls-3.6.7.tar.bz2, SHA-256
            a7e8bcbec0e6f761b4af24f25677626b35f762f68eef79c08677a363212d11f6
            The library sources are unchanged.
-Licence:   Apache-2.0 OR GPL-2.0-or-later (LICENSE). Copyright The Mbed TLS
-           Contributors.
-Build:     BUILD.txt names the compiler, the C library and the hash of each
-           library file; src/make-packages.sh rebuilds both packages.
+Port:      https://github.com/tomaszstaniak/arospkg (sdk/, src/tls/,
+           third_party/mbedtls/); BUILD.txt names the commit.
+Licences:  Mbed TLS: Apache-2.0 OR GPL-2.0-or-later (LICENSE), copyright The
+           Mbed TLS Contributors.
+           The AROS platform file, the configuration header, the example and
+           the build script: MIT, copyright Tomasz Staniak (LICENSE.port).
+
+
+Maintenance
+-----------
+
+These packages make the AROS ports developed for arospkg, a package manager
+for AROS, available to other developers. Source changes, build scripts and
+examples are included. No regular update schedule is promised;
+contributions and upstream integration are welcome. Applications linking
+these libraries remain responsible for tracking relevant upstream security
+updates and rebuilding when necessary.
 
 
 What is in it
@@ -69,7 +82,7 @@ MBEDTLS_NO_PLATFORM_ENTROPY, which means: your program must provide
 
 and the link fails without it. AROS One and the other ABIv11 systems have
 no system entropy source today (no getentropy(), no entropy.resource). The
-companion package JitterEntropy-3.7.0-aros1 provides this function from the
+companion package JitterEntropy-3.7.0-aros2 provides this function from the
 jitterentropy CPU-jitter source: link its libjitterentropy_mbedtls.a and
 libjitterentropy.a.
 
@@ -105,11 +118,24 @@ The example
 
     https_get <host> [path]
 
-It checks the entropy source first and stops with exit code 20 if it is
-unusable; loads the CA bundle from ENV:SYS/Certificates/ca-bundle.crt and
-refuses to connect without it; requires the certificate to be valid for
-<host>; and prints the negotiated protocol and the response's status line.
-It needs a running TCP/IP stack.
+What it shows, in order:
+
+  1. entropy: psa_crypto_init() and mbedtls_ctr_drbg_seed() are checked
+     before anything else; if the source is unusable it stops with exit
+     code 20 and makes no connection;
+  2. trust: it loads the CA bundle from ENV:SYS/Certificates/ca-bundle.crt
+     (present on AROS One 1.3; on another system install a PEM bundle
+     there) and refuses to connect if no certificate in it parses;
+  3. verification: MBEDTLS_SSL_VERIFY_REQUIRED, and
+     mbedtls_ssl_set_hostname() so the certificate must be valid for <host>;
+     a failed handshake prints mbedtls_ssl_get_verify_result() and the
+     error text, and exits 10; so does a failure of any other TLS call
+     (set-up, host name, write, read);
+  4. it prints the negotiated protocol and the response's status line,
+     sends close_notify, and frees every context, including the entropy
+     collector (aros_jent_shutdown()).
+
+It needs a running TCP/IP stack (bsdsocket.library).
 
 
 Errors your program has to handle
@@ -124,9 +150,39 @@ Errors your program has to handle
 None of these should be retried with verification turned off.
 
 
-Not covered by this package
----------------------------
+Toolchain and rebuilding
+------------------------
 
-It is a build and a working example, not an audit. It was tested on AROS
-One 1.3 under QEMU; see the port's test reports. Tested: the example's
-connections and the arospkg package manager, which uses the same libraries.
+Built with GCC 10.5.0, the x86_64-aros cross toolchain made with
+"make crosstools" from deadwood2/AROS (commit 5376f09bc1ed, 2026-08-17), and
+the ABIv11 SDK's headers and link libraries. BUILD.txt has the details, the
+source commit and the hash of each library file. The Mbed TLS sources used
+are listed in src/mbedtls-sources.txt.
+
+To rebuild both packages from source:
+
+    git clone https://github.com/tomaszstaniak/arospkg
+    cd arospkg
+    git checkout <commit from BUILD.txt>
+    TC=<directory of x86_64-aros-gcc> SDK=<ABIv11 SDK> sh sdk/make-packages.sh
+
+The upstream sources are in third_party/mbedtls/ (library/, include/ and
+LICENSE of the release named above). The ZIP files appear in dist/sdk/.
+
+
+What was tested, and what is not claimed
+----------------------------------------
+
+Tested on AROS One 1.3 x86_64 under QEMU (TCG), with the example built only
+from the unpacked packages: a TLS 1.3 connection with a verified
+certificate, and refusal of an expired one. The arospkg package manager,
+which uses the same libraries and configuration, was also tested against
+untrusted, self-signed and wrong-host certificates, plain HTTP, a redirect
+to HTTP and a failed entropy source; each was refused. The reports are in
+docs/reports/ of the port's repository at the commit in BUILD.txt
+(2026-09-29-rc-tls-sdk and 2026-09-30-rc1-regression).
+
+Not tested: other ABIv11 systems, real hardware, TLS servers other than
+those in the reports. This is a build and a working example, not an audit
+or a certification. For the limits of the entropy source, see the
+JitterEntropy package's README.

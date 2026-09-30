@@ -93,14 +93,16 @@ int main(int argc, char **argv)
     if (sock < 0 || connect(sock, (struct sockaddr *)&sa, sizeof sa) < 0) {
         printf("cannot connect to %s:443\n", host); goto out;
     }
-    /* 3. TLS with required verification against <host>. */
-    mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM,
-                                MBEDTLS_SSL_PRESET_DEFAULT);
+    /* 3. TLS with required verification against <host>. Without the host
+       name the certificate would be checked against nothing, so a failure
+       to set it ends the program like any other. */
+    if ((r = mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM,
+                                         MBEDTLS_SSL_PRESET_DEFAULT)) != 0) goto tlserr;
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_REQUIRED);
     mbedtls_ssl_conf_ca_chain(&conf, &ca, NULL);
     mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &drbg);
-    mbedtls_ssl_setup(&ssl, &conf);
-    mbedtls_ssl_set_hostname(&ssl, host);
+    if ((r = mbedtls_ssl_setup(&ssl, &conf)) != 0) goto tlserr;
+    if ((r = mbedtls_ssl_set_hostname(&ssl, host)) != 0) goto tlserr;
     mbedtls_ssl_set_bio(&ssl, NULL, net_send, net_recv, NULL);
     while ((r = mbedtls_ssl_handshake(&ssl)) != 0) {
         if (r == MBEDTLS_ERR_SSL_WANT_READ || r == MBEDTLS_ERR_SSL_WANT_WRITE) continue;
@@ -112,11 +114,18 @@ int main(int argc, char **argv)
     printf("connected: %s, %s\n", mbedtls_ssl_get_version(&ssl), mbedtls_ssl_get_ciphersuite(&ssl));
     /* 4. One request, the status line of the answer. */
     snprintf(req, sizeof req, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", path, host);
-    mbedtls_ssl_write(&ssl, (const unsigned char *)req, strlen(req));
+    do r = mbedtls_ssl_write(&ssl, (const unsigned char *)req, strlen(req));
+    while (r == MBEDTLS_ERR_SSL_WANT_READ || r == MBEDTLS_ERR_SSL_WANT_WRITE);
+    if (r < 0) goto tlserr;
     do r = mbedtls_ssl_read(&ssl, buf, sizeof buf - 1);
     while (r == MBEDTLS_ERR_SSL_WANT_READ || r == MBEDTLS_ERR_SSL_RECEIVED_NEW_SESSION_TICKET);
+    if (r < 0) goto tlserr;
     if (r > 0) { buf[r] = 0; buf[strcspn((char *)buf, "\r\n")] = 0; printf("%s\n", buf); rc = 0; }
     mbedtls_ssl_close_notify(&ssl);
+    goto out;
+tlserr:
+    mbedtls_strerror(r, err, sizeof err);
+    printf("TLS error: %s\n", err);
 out:
     if (sock >= 0) CloseSocket(sock);
     if (SocketBase) CloseLibrary(SocketBase);
