@@ -6,6 +6,30 @@ a cached archive, so the window's worker never used the network. This run
 covers that, the TLS and entropy failures as the window meets them, and the
 ARexx suite on the rc1 binary.
 
+## For the agent running this
+
+- **Goal:** run `tests/rc1net/run-all.sh` once on one reserved ABIv11 AROS
+  One machine of this host's pool, and hand back its graded results as a
+  report. Nothing else.
+- **Do not** change product code (`src/`), rebuild any binary, change the
+  published index, releases or tags, or use a machine that the index build
+  or the GCC 16 tests use.
+- **If a phase fails, first decide whose fault it is:**
+  - the program's (a wrong answer from PkgManager): record it as FAIL, with
+    the phase file, the screenshot and the window log;
+  - the test script's (`tests/rc1net/nettest.rexx` has not run on AROS
+    before this run): fix only files in `tests/rc1net/`, commit that on
+    `mbedtls` separately, and run the network pass again with a new run id
+    (see "A pass that did not finish"). Say in the report what was fixed and
+    why.
+  - When unsure, report it as found and do not fix it.
+- **If the environment is at fault** (no network, a boot that hangs, the
+  Shell not answering), power-cycle and run the pass again with a new run
+  id; do not count it as a product failure. Two failed attempts of the same
+  pass: stop and report.
+- **Finish** by releasing the machine, then writing the report (see "The
+  report"), committing it on `mbedtls` and pushing it.
+
 It uses the existing pool harness (`tests/arexx/pool-lib.sh`: `vm.sh`
 reservation, staging, `vmctl.py` typing and screenshots, collection). Nothing
 here manages virtual machines.
@@ -65,7 +89,7 @@ extra entry. The published index is not changed. The test depends on
 ```sh
 git clone https://github.com/tomaszstaniak/arospkg   # or fetch
 cd arospkg
-git checkout <the mbedtls commit named in the report>
+git checkout mbedtls && git pull   # tests from 252b589 on; RUN.txt records the exact commit
 
 cd "$AROS"
 AROS_VM_OWNER=<owner> ./vm.sh acquire --abi v11 --project arospkg-rc1-gui
@@ -119,9 +143,17 @@ python3 tests/rc1net/grade.py rc1gRETRY1n <work>/res-net-2 <work>/stage-net.sha2
 Only this run's files go into a report, by run id, with a manifest:
 
 ```sh
-sh tools/report-add.sh <run>n <work>/res-net docs/reports/<date>-rc1-gui-tls
+D=docs/reports/<date>-rc1-gui-tls
+sh tools/report-add.sh <run>a <work>/res-arexx $D
+sh tools/report-add.sh <run>e <work>/res-examples $D
+sh tools/report-add.sh <run>n <work>/res-net $D
+cp <work>/RUN.txt <work>/grade-*.md $D/
+cp <work>/shots-net/0[4-6]-*.png $D/            # TLS refusal, recovery, entropy failure as the window shows them
+(cd $D && ls | grep -vx -e MANIFEST.sha256 -e README.md | xargs shasum -a 256 > MANIFEST.sha256)
 python3 tools/check-reports.py
 ```
+
+Then write `$D/README.md`.
 
 The report names the host, the machine and its base image, the test commit,
 the binaries' hashes, which phases passed, failed or did not run and why, and
