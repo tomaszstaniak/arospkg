@@ -87,8 +87,34 @@ rx collide 10
 c 111 53; sleep 4        # close the second (front) window
 
 # --- the close gadget during an install started from ARexx
-rx closestart 4
-c 111 53; sleep 2; shot 10-closing
+# The phase removes cls first and only then starts the install the click is
+# for; how long the removal takes depends on the machine, so the click waits
+# until the window shows the install running, on two screens in a row: the
+# window with the port in front (its title tab "PkgManager", nothing right of
+# it), the list filled (cls in the first row, soliton in the second), Update
+# index ghosted (a job runs) and the State of cls empty (removed, not yet
+# installed again). A removal still shows cls installed; a refill shows no
+# rows. If that never shows, the click still happens, to collect what the
+# window does, but the run is marked as not synchronised and grade.py fails it.
+installing() {
+  mon "screendump $SHOTS/.close.ppm" && python3 -c "
+import sys
+d=open('$SHOTS/.close.ppm','rb').read().split(b'\n',3); w=int(d[1].split()[0]); px=d[3]
+dark=lambda x0,y0,x1,y1: sum(1 for y in range(y0,y1) for x in range(x0,x1) if min(px[3*(y*w+x):3*(y*w+x)+3])<90)
+ok = (150 <= dark(120,44,235,60) <= 175 and dark(235,44,420,60) == 0
+      and 33 <= dark(116,115,168,129) <= 43 and 85 <= dark(116,130,168,144) <= 100
+      and dark(760,71,850,86) == 0 and dark(223,115,271,129) < 20)
+sys.exit(0 if ok else 1)" 2>/dev/null
+}
+t "rx RAM:rxt/rxtest.rexx $R closestart" 0
+n=0; seen=0; SYNC=no
+while [ $n -lt 150 ]; do
+  if installing; then seen=$((seen + 1)); else seen=0; fi
+  [ $seen -lt 2 ] || { SYNC=yes; break; }
+  n=$((n + 1)); sleep 0.2
+done
+[ $SYNC = yes ] || echo "closestart: the install never showed in the window $(date +%T); clicking anyway, the run will fail"
+c 111 53; echo "close clicked $(date +%T)"; sleep 2; shot 10-closing
 sleep 20
 rx gone2 30
 
@@ -119,3 +145,4 @@ t "List SYS:PkgRx ALL >RESULTS:$R-final-root.txt" 5
 shot 14-end
 
 stop_collect "$OUT"
+echo "closestart click synchronised with the install: $SYNC" > "$OUT/$R-host-closestart.txt"

@@ -120,7 +120,6 @@ logchecks = [
     (pm1, "arexx< rc=0 len=7 closing", "pm1: QUIT answered"),
     (pm1, "\nquit", "pm1: the first window quit"),
     (pm3, "no ARexx port: PKGMANAGER is already in use", "pm3: the second window went without a port"),
-    (pm2, "close requested during", "pm2: the close gadget during an install"),
     (pm2, "\nquit", "pm2: that window quit"),
     (pm4, "no ARexx port: nosuch.library cannot be opened", "pm4: no rexxsyslib, no port"),
     (pm4, "remove pressed for cls", "pm4: the window still works"),
@@ -137,6 +136,13 @@ for text, needle, what in logchecks:
     note(needle in text, what)
 note("--yes" not in pm1, "pm1: no automatic confirmation")
 note("update pressed" not in pm1, "pm1: Update index did nothing while a plan waited")
+# the close gadget: it must reach the window while the install runs (not
+# during the removal before it), and the install must end before the window
+m = re.search(r"\njob \d+ install cls from arexx\n(.*?)\ndone install cls", pm2, re.S)
+note(m is not None and "close requested during" in m.group(1), "pm2: the close gadget during an install")
+note("synchronised with the install: yes" in (read(f"{run}-host-closestart.txt") or ""),
+     "driver: the close click waited for the install to show")
+host_total += 2
 # the close gadget: the install must end before the window does
 if "close requested during" in pm2:
     tail = pm2.split("close requested during", 1)[1]
