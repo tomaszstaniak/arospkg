@@ -5,7 +5,12 @@ test. Primary target: AROS One x86_64/ABIv11, Limpet inside AROS XTerm with
 operation 13. Do not replace the installed release: deploy the development
 binary under a distinct name and choose a fresh test root.
 
-Build and hash are in `../reports/2026-10-01-responsive-presentation/README.md`.
+Binary for this test (2026-10-02, with XTY_COLOR_PENS): built from commit
+`57018a8` with `OUT=local/pens/apkg sh src/build.sh`, SHA-256
+`6f9ee12c3811f43bba4cf13e7583a60aef042f153bcc26eb4b1b3a2064e37196`. It
+supersedes the binary in `../reports/2026-10-01-responsive-presentation/README.md`.
+Accept it together with the named terminal build that reports the pens
+interpretation; a result with another terminal build does not carry over.
 Rebuild with `OUT=<separate-file> sh src/build.sh` if the local artifact is gone;
 record the new hash and do not reuse another binary's acceptance.
 
@@ -30,7 +35,12 @@ record the new hash and do not reuse another binary's acceptance.
 7. Repeat `show`/`search` with `--plain`, `--color=never`, and JSON where supported.
    Redirected auto/plain output must match; compare redirected output with the
    earlier baseline after normalizing only the deliberately different root.
-8. Check ordinary CON: and an unsupported presentation query. A successful
+8. Colours with the pens interpretation: the verdict words green, yellow and
+   red on a light and a dark theme, and the Limpet prompt after each command
+   (success, failure, cancel) in its usual colours. Once with
+   `--color=always` on a terminal answering without bold, where SGR 39 ends
+   the colour.
+9. Check ordinary CON: and an unsupported presentation query. A successful
    capability reply on the parent terminal does not authorize decoration of
    a redirected output handle.
 
