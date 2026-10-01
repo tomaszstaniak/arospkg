@@ -1,0 +1,37 @@
+run rc1g10010102a2 phase rollbackstart
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > ROLLBACK soliton
+  < 21
+PASS rollback-accepted
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < preview
+  > JOB 21 FIELD state
+  < confirm
+PASS rollback-waits-for-confirmation
+SUMMARY rollbackstart pass 2 fail 0

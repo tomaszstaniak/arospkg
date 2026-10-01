@@ -1,0 +1,20 @@
+run rc1g10010102a phase quitstart
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > REMOVE cls
+  < 23
+PASS remove-cls
+  > WAIT 23 FIELD state
+  < done
+PASS remove-cls-wait
+  > INSTALL cls
+  < 24
+PASS install-before-quit
+  > QUIT
+  < closing
+PASS quit-accepted
+  > INSTALL soliton
+  ! CLOSING PkgManager is closing
+PASS refused-while-closing
+SUMMARY quitstart pass 5 fail 0

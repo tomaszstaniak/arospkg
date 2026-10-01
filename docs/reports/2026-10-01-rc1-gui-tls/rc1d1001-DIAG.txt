@@ -1,0 +1,41 @@
+Diagnostic runs of the ARexx suite, 2026-10-01, same stage as rc1g10010102a
+(same PkgManager and apkg hashes), with two changes made outside the
+repository: rxtest.rexx logs the guest time around each step of
+closestart, and the driver waits CLOSE_DELAY seconds after starting
+closestart before the close click (the committed driver waits 4).
+
+rc1d1001A machine v11-1 CLOSE_DELAY=4 host close click 09:11:14.534641289
+rc1d1001B machine v11-2 CLOSE_DELAY=20 host close click 09:11:30.816912914
+rc1d1001C machine v11-1 CLOSE_DELAY=6 host close click 09:38:57.553563638
+rc1d1001E machine v11-2 CLOSE_DELAY=8 host close click 09:38:59.572307321
+
+Changes, against tests/arexx at 2a715e5:
+
+--- tests/arexx/rxtest.rexx	2026-09-29 16:52:39.161819954 +0200
++++ tests/arexx/rxtest.rexx	2026-10-01 08:51:22.048945842 +0200
+@@ -458,9 +458,13 @@
+ 
+ /* Close gadget during an install started from ARexx. */
+ p_closestart:
++  CALL say1 'T' TIME('L') 'before-remove'
+   CALL expect 'REMOVE cls', 'OK', 'remove-cls-2'
++  CALL say1 'T' TIME('L') 'before-wait'
+   CALL expect 'WAIT' answer 'FIELD state', 'OK', 'remove-cls-2-wait'
++  CALL say1 'T' TIME('L') 'before-install'
+   CALL expect 'INSTALL cls', 'OK', 'install-before-close'
++  CALL say1 'T' TIME('L') 'after-install'
+   id = answer
+   CALL writefile 'RAM:rxt-job', id
+   ADDRESS COMMAND 'Run >NIL: rx RAM:rxt/rxtest.rexx' run 'waitjob' id
+--- tests/arexx/run-on-pool.sh	2026-09-29 16:52:39.161819954 +0200
++++ tests/arexx/run-on-pool.sh	2026-10-01 08:51:22.049005733 +0200
+@@ -87,7 +87,8 @@
+ c 111 53; sleep 4        # close the second (front) window
+ 
+ # --- the close gadget during an install started from ARexx
+-rx closestart 4
++rx closestart "${CLOSE_DELAY:-4}"
++shot 10a-before-close; echo "close click $(date +%T.%N)"
+ c 111 53; sleep 2; shot 10-closing
+ sleep 20
+ rx gone2 30

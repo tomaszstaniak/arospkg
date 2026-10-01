@@ -1,0 +1,14 @@
+run rc1g10010102a2 phase closestart
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > REMOVE cls
+  < 1
+PASS remove-cls-2
+  > WAIT 1 FIELD state
+  < done
+PASS remove-cls-2-wait
+  > INSTALL cls
+  ! NOPORT PKGMANAGER is not there
+FAIL install-before-close : sent [INSTALL cls] wanted OK got NOPORT [NOPORT PKGMANAGER is not there]
+SUMMARY closestart pass 2 fail 1

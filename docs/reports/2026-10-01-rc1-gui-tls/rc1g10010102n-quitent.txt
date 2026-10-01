@@ -1,0 +1,9 @@
+run rc1g10010102n phase quitent root SYS:RcEnt
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 f81b0e9c1ea3b622d3c1b5cef3fbe9448755b027f446c0d72c39bfcac9a4bba5
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 f81b0e9c1ea3b622d3c1b5cef3fbe9448755b027f446c0d72c39bfcac9a4bba5
+  > QUIT
+  < closing
+PASS quit-accepted
+PASS quit-closing
+SUMMARY quitent pass 2 fail 0

@@ -1,0 +1,37 @@
+run rc1g10010102a2 phase queries0
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > LIST
+  < cls soliton xrick
+PASS list
+PASS list-ids
+  > LIST INSTALLED
+  < 
+PASS list-installed-empty
+PASS list-installed-empty-value
+  > LIST MATCH card
+  < soliton
+PASS list-match
+PASS list-match-value
+  > LIST MATCH "no such thing"
+  < 
+PASS list-match-none
+PASS list-match-none-value
+  > INFO soliton
+  < id soliton|version 2.2|revision 0|state available|installedversion |installedrevision |summary Klondike & Freecell card game|category game/card|arch x86_64|abi 
+PASS info-all-fields
+PASS info-lines
+PASS info-not-installed
+  > REQUIREMENTS soliton
+  < crt.library: satisfied (already open, version 5)|stdlib.library: satisfied (already open, version 3)
+PASS requirements
+PASS requirements-probed
+  > REQUIREMENTS nosuch
+  ! NOTFOUND nosuch is not in the catalogue
+PASS requirements-unknown
+  > INFO nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+PASS info-unknown
+PASS queries-change-nothing
+SUMMARY queries0 pass 16 fail 0

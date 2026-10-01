@@ -1,0 +1,32 @@
+start PkgManager 0.3.1-rc1 sha256 f81b0e9c1ea3b622d3c1b5cef3fbe9448755b027f446c0d72c39bfcac9a4bba5 root SYS:RcEnt: ARexx port PKGMANAGER
+refill (start): no index
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 f81b0e9c1ea3b622d3c1b5cef3fbe944875...
+arexx> UPDATE
+job 1 update - from arexx
+arexx< rc=0 len=1 1
+arexx> WAIT 1
+arexx wait for job 1 (running)
+done update  status=12 the index could not be fetched
+job 1 update - failed NETWORK: the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json) -- no good randomness on this machine; refusing to connect
+arexx< rc=0 len=275 id 1|op update|package |origin arexx|state failed|phase |done 0|total 0...
+refill (done): no index
+arexx> LIST
+arexx< rc=10 NOINDEX there is no catalogue yet; UPDATE fetches it
+arexx> LASTERROR
+arexx< rc=0 lasterror NOINDEX there is no catalogue yet; UPDATE fetches it
+arexx> UPDATE
+job 2 update - from arexx
+arexx< rc=0 len=1 2
+arexx> WAIT 2 FIELD state
+arexx wait for job 2 (running)
+done update  status=12 the index could not be fetched
+job 2 update - failed NETWORK: the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json) -- no good randomness on this machine; refusing to connect
+arexx< rc=0 len=6 failed
+refill (done): no index
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 f81b0e9c1ea3b622d3c1b5cef3fbe944875...
+arexx> QUIT
+arexx< rc=0 len=7 closing
+worker task gone 0 ms after done
+quit

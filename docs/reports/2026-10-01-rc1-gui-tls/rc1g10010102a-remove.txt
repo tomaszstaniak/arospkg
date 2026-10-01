@@ -1,0 +1,31 @@
+run rc1g10010102a phase remove
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > REMOVE soliton
+  < 3
+PASS remove-accepted
+  > WAIT 3
+  < id 3|op remove|package soliton|origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message removed soliton
+PASS remove-wait
+PASS remove-done
+  > INFO soliton FIELD state
+  < available
+PASS info-after-remove
+PASS state-available
+PASS drawer-and-registry-gone
+  > LIST INSTALLED
+  < 
+PASS list-installed-after-remove
+PASS list-installed-empty-again
+  > REMOVE soliton
+  < 4
+PASS remove-again-accepted
+  > WAIT 4 FIELD error
+  < NOTFOUND
+PASS remove-again-result
+PASS remove-again-notfound
+  > REMOVE nosuch
+  ! NOTFOUND nosuch is neither in the catalogue nor installed
+PASS remove-unknown
+SUMMARY remove pass 12 fail 0

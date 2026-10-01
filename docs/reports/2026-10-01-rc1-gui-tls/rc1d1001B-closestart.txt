@@ -1,0 +1,18 @@
+run rc1d1001B phase closestart
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+T 09:11:09.129897 before-remove
+  > REMOVE cls
+  < 1
+PASS remove-cls-2
+T 09:11:09.132775 before-wait
+  > WAIT 1 FIELD state
+  < done
+PASS remove-cls-2-wait
+T 09:11:12.145048 before-install
+  > INSTALL cls
+  < 2
+PASS install-before-close
+T 09:11:12.157592 after-install
+SUMMARY closestart pass 3 fail 0

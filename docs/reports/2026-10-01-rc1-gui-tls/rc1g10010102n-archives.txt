@@ -1,0 +1,22 @@
+run rc1g10010102n phase archives root SYS:RcNet
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+PASS cold-cache-gmore
+  > INSTALL gmore
+  < 2
+PASS install-gmore-accepted
+  > WAIT 2
+  < id 2|op install|package gmore|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed gmore
+PASS install-gmore-wait
+PASS install-gmore-done
+  > INFO gmore FIELD state
+  < installed
+PASS info-gmore
+PASS state-installed-gmore
+PASS downloaded-gmore
+PASS drawer-and-registry-gmore
+verify: gmore: 6 as installed, 0 changed locally, 0 missing, 0 not the package's; drawer icon ours|ok                 Readme|ok                 Readme.info|ok                 gmore|ok                 gmore.info|ok                 install|ok                 install.info
+PASS verify-gmore
+cache: Directory "SYS:RcNet/cache" on Thursday 10/01/26:|gmore.zip                  35787 ---rwed Today       01:45:47|1 file - 70 blocks used
+SUMMARY archives pass 9 fail 0

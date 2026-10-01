@@ -1,0 +1,6 @@
+run rc1g10010102n phase gonenet root SYS:RcNet
+PASS port-gone
+status: Process 2 Loaded as command: « IPrefs »|Process 3 Loaded as command: ConClip|Process 4 Loaded as command: C:RexxMast|Process 5 Loaded as command: Decorator|Process 6 Loaded as command: AROSTCP|Process 8 Loaded as command: AROSTCP DHCP client|Process 7 Loaded as command: WANDERER:Wanderer|Process 1 Loaded as command: rx|Process 9 Loaded as command: AROS:C/RexxMast|Process 12 Loaded as command: New Process|Process 10 Loaded as command: Status
+PASS no-window-process-left
+PASS no-lock-left
+SUMMARY gonenet pass 3 fail 0

@@ -1,0 +1,189 @@
+Directory "SYS:RcNet" on Thursday 10/01/26:
+micropolis.info             1822 ---rwed Today       01:47:53
+micropolis                   Dir ---rwed Today       01:47:53
+tmp                          Dir ---rwed Today       01:47:53
+gmore.info                  7463 ---rwed Today       01:45:47
+gmore                        Dir ---rwed Today       01:45:47
+cache                        Dir ---rwed Today       01:47:53
+db                           Dir ---rwed Today       01:47:53
+2 files - 5 directories - 24 blocks used
+Directory "SYS:RcNet/micropolis" on Thursday 10/01/26:
+tiles.bmp                 246838 ---rwed Today       01:47:53
+startup                      Dir ---rwed Today       01:47:53
+sprites                      Dir ---rwed Today       01:47:53
+sounds                       Dir ---rwed Today       01:47:53
+icons                        Dir ---rwed Today       01:47:53
+cities                       Dir ---rwed Today       01:47:53
+SHA256SUMS                 13260 ---rwed Today       01:47:53
+ReadMe.txt                  2469 ---rwed Today       01:47:53
+Micropolis.info             1790 ---rwed Today       01:47:53
+Micropolis               3214864 ---rwed Today       01:47:53
+Licenses                     Dir ---rwed Today       01:47:53
+CITY.CTY.info                823 ---rwed Today       01:47:53
+CITY.CTY                   27120 ---rwed Today       01:47:53
+BUILD.txt                    235 ---rwed Today       01:47:53
+8 files - 6 directories - 6860 blocks used
+Directory "SYS:RcNet/micropolis/startup" on Thursday 10/01/26:
+scenario8hilite.bmp        40934 ---rwed Today       01:47:53
+scenario7hilite.bmp        40934 ---rwed Today       01:47:53
+scenario6hilite.bmp        40934 ---rwed Today       01:47:53
+scenario5hilite.bmp        40934 ---rwed Today       01:47:53
+scenario4hilite.bmp        40934 ---rwed Today       01:47:53
+scenario3hilite.bmp        40934 ---rwed Today       01:47:53
+scenario2hilite.bmp        40934 ---rwed Today       01:47:53
+scenario1hilite.bmp        40934 ---rwed Today       01:47:53
+righthilite.bmp             3678 ---rwed Today       01:47:53
+rightdisabled.bmp           3678 ---rwed Today       01:47:53
+playhilite.bmp             10078 ---rwed Today       01:47:53
+lefthilite.bmp              3678 ---rwed Today       01:47:53
+leftdisabled.bmp            3678 ---rwed Today       01:47:53
+checkbox3hilitechecked.bmp   14518 ---rwed Today       01:47:53
+checkbox3hilite.bmp        14518 ---rwed Today       01:47:53
+checkbox3checked.bmp       14518 ---rwed Today       01:47:53
+checkbox2hilitechecked.bmp   14518 ---rwed Today       01:47:53
+checkbox2hilite.bmp        14518 ---rwed Today       01:47:53
+checkbox2checked.bmp       14518 ---rwed Today       01:47:53
+checkbox1hilitechecked.bmp   14518 ---rwed Today       01:47:53
+checkbox1hilite.bmp        14518 ---rwed Today       01:47:53
+checkbox1checked.bmp       14518 ---rwed Today       01:47:53
+button4hilite.bmp          15478 ---rwed Today       01:47:53
+button3hilite.bmp          15478 ---rwed Today       01:47:53
+button2hilite.bmp          15478 ---rwed Today       01:47:53
+button1hilite.bmp          15478 ---rwed Today       01:47:53
+background-micropolis.bmp 1081078 ---rwed Today       01:47:53
+27 files - 3189 blocks used
+Directory "SYS:RcNet/micropolis/sprites" on Thursday 10/01/26:
+sprite_8_3.png              3029 ---rwed Today       01:47:53
+sprite_8_2.png              3040 ---rwed Today       01:47:53
+sprite_8_1.png              2978 ---rwed Today       01:47:53
+sprite_8_0.png              2977 ---rwed Today       01:47:53
+sprite_7_5.png              3156 ---rwed Today       01:47:53
+sprite_7_4.png              3459 ---rwed Today       01:47:53
+sprite_7_3.png              3527 ---rwed Today       01:47:53
+sprite_7_2.png              3437 ---rwed Today       01:47:53
+sprite_7_1.png              3152 ---rwed Today       01:47:53
+sprite_7_0.png              2983 ---rwed Today       01:47:53
+sprite_6_2.png              3397 ---rwed Today       01:47:53
+sprite_6_1.png              3384 ---rwed Today       01:47:53
+sprite_6_0.png              3410 ---rwed Today       01:47:53
+sprite_5_9.png              3299 ---rwed Today       01:47:53
+sprite_5_8.png              3265 ---rwed Today       01:47:53
+sprite_5_7.png              3280 ---rwed Today       01:47:53
+sprite_5_6.png              3289 ---rwed Today       01:47:53
+sprite_5_5.png              3260 ---rwed Today       01:47:53
+sprite_5_4.png              3278 ---rwed Today       01:47:53
+sprite_5_3.png              3303 ---rwed Today       01:47:53
+sprite_5_2.png              3264 ---rwed Today       01:47:53
+sprite_5_15.png             3204 ---rwed Today       01:47:53
+sprite_5_14.png             3209 ---rwed Today       01:47:53
+sprite_5_13.png             3202 ---rwed Today       01:47:53
+sprite_5_12.png             3284 ---rwed Today       01:47:53
+sprite_5_11.png             3297 ---rwed Today       01:47:53
+sprite_5_10.png             3323 ---rwed Today       01:47:53
+sprite_5_1.png              3217 ---rwed Today       01:47:53
+sprite_5_0.png              3266 ---rwed Today       01:47:53
+sprite_4_7.png              3422 ---rwed Today       01:47:53
+sprite_4_6.png              3235 ---rwed Today       01:47:53
+sprite_4_5.png              3419 ---rwed Today       01:47:53
+sprite_4_4.png              3373 ---rwed Today       01:47:53
+sprite_4_3.png              3420 ---rwed Today       01:47:53
+sprite_4_2.png              3288 ---rwed Today       01:47:53
+sprite_4_1.png              3449 ---rwed Today       01:47:53
+sprite_4_0.png              3331 ---rwed Today       01:47:53
+sprite_3_9.png              3176 ---rwed Today       01:47:53
+sprite_3_8.png              3210 ---rwed Today       01:47:53
+sprite_3_7.png              3257 ---rwed Today       01:47:53
+sprite_3_6.png              3192 ---rwed Today       01:47:53
+sprite_3_5.png              3259 ---rwed Today       01:47:53
+sprite_3_4.png              3256 ---rwed Today       01:47:53
+sprite_3_3.png              3256 ---rwed Today       01:47:53
+sprite_3_2.png              3192 ---rwed Today       01:47:53
+sprite_3_10.png             3119 ---rwed Today       01:47:53
+sprite_3_1.png              3271 ---rwed Today       01:47:53
+sprite_3_0.png              3230 ---rwed Today       01:47:53
+sprite_2_7.png              3184 ---rwed Today       01:47:53
+sprite_2_6.png              3090 ---rwed Today       01:47:53
+sprite_2_5.png              3155 ---rwed Today       01:47:53
+sprite_2_4.png              3145 ---rwed Today       01:47:53
+sprite_2_3.png              3177 ---rwed Today       01:47:53
+sprite_2_2.png              3058 ---rwed Today       01:47:53
+sprite_2_1.png              3175 ---rwed Today       01:47:53
+sprite_2_0.png              3135 ---rwed Today       01:47:53
+sprite_1_4.png              2822 ---rwed Today       01:47:53
+sprite_1_3.png              3034 ---rwed Today       01:47:53
+sprite_1_2.png              3049 ---rwed Today       01:47:53
+sprite_1_1.png              2974 ---rwed Today       01:47:53
+sprite_1_0.png              2980 ---rwed Today       01:47:53
+61 files - 416 blocks used
+Directory "SYS:RcNet/micropolis/sounds" on Thursday 10/01/26:
+UhUh.wav                   16564 ---rwed Today       01:47:53
+Sorry.wav                  16696 ---rwed Today       01:47:53
+Siren.wav                 103232 ---rwed Today       01:47:53
+SOURCE.json                 3091 ---rwed Today       01:47:53
+Monster.wav                32666 ---rwed Today       01:47:53
+HonkHonkMed.wav            35334 ---rwed Today       01:47:53
+HonkHonkLow.wav            41954 ---rwed Today       01:47:53
+HonkHonkHigh.wav           29200 ---rwed Today       01:47:53
+HeavyTraffic.wav           91640 ---rwed Today       01:47:53
+FogHornLow.wav             41954 ---rwed Today       01:47:53
+ExplosionLow.wav          226900 ---rwed Today       01:47:53
+ExplosionHigh.wav         226900 ---rwed Today       01:47:53
+12 files - 1698 blocks used
+Directory "SYS:RcNet/micropolis/icons" on Thursday 10/01/26:
+def_city.info                823 ---rwed Today       01:47:53
+1 file - 2 blocks used
+Directory "SYS:RcNet/micropolis/cities" on Thursday 10/01/26:
+scenario_tokyo.cty         27120 ---rwed Today       01:47:53
+scenario_san_francisco.cty   27120 ---rwed Today       01:47:53
+scenario_rio_de_janeiro.cty   27120 ---rwed Today       01:47:53
+scenario_hamburg.cty       27120 ---rwed Today       01:47:53
+scenario_dullsville.cty    27120 ---rwed Today       01:47:53
+scenario_detroit.cty       27120 ---rwed Today       01:47:53
+scenario_boston.cty        27120 ---rwed Today       01:47:53
+scenario_bern.cty          27120 ---rwed Today       01:47:53
+about.cty.info               825 ---rwed Today       01:47:53
+about.cty                  27120 ---rwed Today       01:47:53
+10 files - 479 blocks used
+Directory "SYS:RcNet/micropolis/Licenses" on Thursday 10/01/26:
+MicropolisPublicNameLicense.md    5408 ---rwed Today       01:47:53
+MicropolisGPLLicenseNotice.md    3365 ---rwed Today       01:47:53
+LICENSE                    44930 ---rwed Today       01:47:53
+ClassicTools-NOTICE.txt     3590 ---rwed Today       01:47:53
+ClassicTools-COPYING       35147 ---rwed Today       01:47:53
+ClassicStartup-NOTICE.txt    3636 ---rwed Today       01:47:53
+ClassicStartup-COPYING     35147 ---rwed Today       01:47:53
+ClassicOverview-NOTICE.txt     285 ---rwed Today       01:47:53
+ClassicOverview-COPYING    35147 ---rwed Today       01:47:53
+ClassicGraphs-NOTICE.txt    3590 ---rwed Today       01:47:53
+ClassicGraphs-COPYING      35147 ---rwed Today       01:47:53
+11 files - 407 blocks used
+Directory "SYS:RcNet/tmp" on Thursday 10/01/26:
+6abdbbc9-micropolis          Dir ---rwed Today       01:47:53
+1 directory - 1 block used
+Directory "SYS:RcNet/tmp/6abdbbc9-micropolis" is empty
+Directory "SYS:RcNet/gmore" on Thursday 10/01/26:
+Readme.info                 1092 ---rwed Today       01:45:47
+Readme                      2983 ---rwed Today       01:45:47
+install.info                 966 ---rwed Today       01:45:47
+install                      496 ---rwed Today       01:45:47
+gmore.info                  1078 ---rwed Today       01:45:47
+gmore                     116464 ---rwed Today       01:45:47
+6 files - 243 blocks used
+Directory "SYS:RcNet/cache" on Thursday 10/01/26:
+micropolis.lha           2593505 ---rwed Today       01:47:53
+gmore.zip                  35787 ---rwed Today       01:45:47
+2 files - 5136 blocks used
+Directory "SYS:RcNet/db" on Thursday 10/01/26:
+index.json                 96735 ---rwed Today       01:43:42
+doctor                       Dir ---rwed Today       01:43:29
+transactions                 Dir ---rwed Today       01:47:53
+installed                    Dir ---rwed Today       01:47:53
+1 file - 3 directories - 192 blocks used
+Directory "SYS:RcNet/db/doctor" is empty
+Directory "SYS:RcNet/db/transactions" is empty
+Directory "SYS:RcNet/db/installed" on Thursday 10/01/26:
+micropolis.json            18389 ---rwed Today       01:47:53
+gmore.json                  1639 ---rwed Today       01:45:47
+2 files - 40 blocks used
+
+TOTAL: 143 files - 15 directories - 18687 blocks used

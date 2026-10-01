@@ -1,0 +1,30 @@
+run rc1g10010102a2 phase installcheck
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > WAIT 1
+  < id 1|op install|package soliton|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed soliton
+PASS wait-after-new-client
+PASS install-done
+  > INFO soliton FIELD state
+  < installed
+PASS info-after-install
+PASS state-installed
+  > LIST INSTALLED
+  < soliton
+PASS list-installed
+PASS list-installed-value
+PASS drawer-and-registry
+PASS cli-installed-nothing
+PASS cli-list-agrees
+  > CANCEL 1
+  ! FINISHED job 1 is already done
+PASS cancel-after-finish
+  > INSTALL soliton
+  < 2
+PASS install-again-accepted
+  > WAIT 2 FIELD error
+  < EXISTS
+PASS install-again-result
+PASS install-again-exists
+SUMMARY installcheck pass 13 fail 0

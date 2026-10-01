@@ -1,0 +1,27 @@
+run rc1g10010102n phase entfail root SYS:RcEnt
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 f81b0e9c1ea3b622d3c1b5cef3fbe9448755b027f446c0d72c39bfcac9a4bba5
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 f81b0e9c1ea3b622d3c1b5cef3fbe9448755b027f446c0d72c39bfcac9a4bba5
+PASS no-index-before
+  > UPDATE
+  < 1
+PASS update-accepted
+  > WAIT 1
+  < id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubuser
+PASS update-wait
+job: id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json) -- no good randomness on this machine; refusing to connect
+PASS update-failed
+PASS says-no-randomness
+PASS nothing-written
+PASS lock-released
+  > LIST
+  ! NOINDEX there is no catalogue yet; UPDATE fetches it
+PASS still-no-catalogue
+  > UPDATE
+  < 2
+PASS second-update-accepted
+  > WAIT 2 FIELD state
+  < failed
+PASS second-update-wait
+PASS second-update-failed
+SUMMARY entfail pass 11 fail 0

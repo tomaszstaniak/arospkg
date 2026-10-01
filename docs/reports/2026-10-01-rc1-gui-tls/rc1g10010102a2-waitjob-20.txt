@@ -1,0 +1,9 @@
+run rc1g10010102a2 phase waitjob
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > WAIT 20
+  < id 20|op upgrade|package soliton|origin arexx|state done|phase publish|done 2|total 2|cancancel 0|error |message upgraded soliton
+PASS wait-parked
+PASS wait-returned-final
+SUMMARY waitjob pass 2 fail 0

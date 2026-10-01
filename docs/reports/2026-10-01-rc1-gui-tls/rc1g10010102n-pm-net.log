@@ -1,0 +1,243 @@
+start PkgManager 0.3.1-rc1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff root SYS:RcNet: ARexx port PKGMANAGER
+refill (start): no index
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> UPDATE
+job 1 update - from arexx
+arexx< rc=0 len=1 1
+arexx> WAIT 1
+arexx wait for job 1 (running)
+done update  status=0
+job 1 update - done: index updated 
+arexx< rc=0 len=111 id 1|op update|package |origin arexx|state done|phase |done 0|total 0|c...
+refill (done) term="" rows=108 shown=108 installed=0 keep=-
+arexx> LIST
+arexx< rc=0 len=1003 ab3dhd alac amiberry antiword apotris arrakis badapple bin2iso blips bo...
+arexx> INFO gmore FIELD state
+arexx< rc=0 len=9 available
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> INSTALL gmore
+job 2 install gmore from arexx
+arexx< rc=0 len=1 2
+arexx> WAIT 2
+arexx wait for job 2 (running)
+event gmore download 0/35787 can_cancel=1 cancel_button=enabled
+event gmore download 0/35787 can_cancel=1 cancel_button=enabled
+event gmore download 10240/35787 can_cancel=1 cancel_button=enabled
+event gmore download 20480/35787 can_cancel=1 cancel_button=enabled
+event gmore download 30720/35787 can_cancel=1 cancel_button=enabled
+event gmore download 35787/35787 can_cancel=1 cancel_button=enabled
+event gmore verify 1/1 can_cancel=1 cancel_button=enabled
+event gmore extract 0/35787 can_cancel=0 cancel_button=disabled
+event gmore extract 1/1 can_cancel=0 cancel_button=disabled
+event gmore publish 0/1 can_cancel=0 cancel_button=disabled
+event gmore publish 1/1 can_cancel=0 cancel_button=disabled
+done install gmore status=0
+job 2 install gmore done: installed gmore
+arexx< rc=0 len=125 id 2|op install|package gmore|origin arexx|state done|phase publish|don...
+refill (done) term="" rows=108 shown=108 installed=1 keep=gmore
+detail gmore: installed 1.2, index 1.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail gmore: installed 1.2, index 1.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> INFO gmore FIELD state
+arexx< rc=0 len=9 installed
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> INSTALL micropolis
+job 3 install micropolis from arexx
+arexx< rc=0 len=1 3
+arexx> WAIT 3
+arexx wait for job 3 (running)
+event micropolis download 0/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 0/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1378/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2756/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 4134/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 5512/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 6890/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 8268/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 9646/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 11024/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 12402/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 13780/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 15158/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 16384/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 32768/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 49152/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 65522/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 81906/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 98290/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 114674/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 131058/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 147442/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 163826/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 180210/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 196594/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 212978/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 229362/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 245746/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 262130/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 278514/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 294898/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 311282/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 327666/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 344050/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 360434/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 376818/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 393202/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 409586/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 425970/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 442354/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 458738/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 475122/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 491506/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 507890/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 524274/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 540658/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 557042/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 573426/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 589810/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 606194/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 622578/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 638962/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 655346/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 671730/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 688114/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 704498/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 720882/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 737266/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 753650/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 770034/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 786418/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 802802/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 819186/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 835570/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 851954/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 868338/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 884722/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 901106/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 917490/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 933874/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 950258/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 966642/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 983026/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 999410/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1015794/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1032178/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1048562/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1064946/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1081330/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1097714/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1114098/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1130482/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1146866/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1163250/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1179634/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1196018/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1212402/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1228786/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1245170/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1261554/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1277938/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1294322/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1310706/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1327090/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1343474/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1359858/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1376242/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1392626/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1409010/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1425394/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1441778/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1458162/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1474546/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1490930/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1507314/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1523698/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1540082/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1556466/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1572850/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1589234/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1605618/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1622002/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1638386/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1654770/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1671154/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1687538/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1703922/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1720306/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1736690/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1753074/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1769458/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1785842/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1802226/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1818610/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1834994/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1851378/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1867762/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1884146/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1900530/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1916914/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1933298/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1949682/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1966066/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1982450/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 1998834/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2015218/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2031602/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2047986/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2064370/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2080754/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2097138/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2113522/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2129906/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2146290/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2162674/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2179058/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2195442/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2211826/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2228210/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2244594/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2260978/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2277362/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2293746/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2310130/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2326514/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2342898/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2359282/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2375666/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2392050/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2408434/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2424818/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2441202/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2457586/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2473970/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2490354/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2506738/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2523122/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2539506/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2555890/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2572274/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2588658/2593505 can_cancel=1 cancel_button=enabled
+event micropolis download 2593505/2593505 can_cancel=1 cancel_button=enabled
+event micropolis verify 1/1 can_cancel=1 cancel_button=enabled
+event micropolis extract 0/2593505 can_cancel=0 cancel_button=disabled
+event micropolis extract 1/1 can_cancel=0 cancel_button=disabled
+event micropolis publish 0/1 can_cancel=0 cancel_button=disabled
+event micropolis publish 1/1 can_cancel=0 cancel_button=disabled
+done install micropolis status=0
+job 3 install micropolis done: installed micropolis
+arexx< rc=0 len=135 id 3|op install|package micropolis|origin arexx|state done|phase publis...
+detail gmore: installed 1.2, index 1.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+refill (done) term="" rows=108 shown=108 installed=2 keep=micropolis
+detail micropolis: installed 0.1.0-rc3-aros1, index 0.1.0-rc3-aros1, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail micropolis: installed 0.1.0-rc3-aros1, index 0.1.0-rc3-aros1, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> INFO micropolis FIELD state
+arexx< rc=0 len=9 installed
+detail micropolis: installed 0.1.0-rc3-aros1, index 0.1.0-rc3-aros1, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> QUIT
+arexx< rc=0 len=7 closing
+worker task gone 0 ms after done
+quit

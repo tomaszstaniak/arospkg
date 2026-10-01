@@ -1,0 +1,5 @@
+run rc1d1001A phase gone2
+PASS port-gone-after-quit
+FAIL wait-got-final-before-quit : 
+FAIL job-finished-despite-quit : soliton
+SUMMARY gone2 pass 1 fail 2

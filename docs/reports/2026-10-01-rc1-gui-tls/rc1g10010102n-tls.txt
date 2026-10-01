@@ -1,0 +1,29 @@
+run rc1g10010102n phase tls root SYS:RcTls
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+PASS tls-index-present
+  > INSTALL tlsbad
+  < 1
+PASS tlsbad-accepted
+  > WAIT 1
+  < id 1|op install|package tlsbad|origin arexx|state failed|phase download|done 0|total 35787|cancancel 0|error NETWORK|message cannot fetch the archive (https://e
+PASS tlsbad-wait
+job: id 1|op install|package tlsbad|origin arexx|state failed|phase download|done 0|total 35787|cancancel 0|error NETWORK|message cannot fetch the archive (https://expired.badssl.com/tlsbad.x86_64-aros-v11.zip) -- certificate for expired.badssl.com rejected: The certificate validity has expired
+PASS tlsbad-failed
+PASS tlsbad-says-certificate-expired
+  > INFO tlsbad FIELD state
+  < available
+PASS tlsbad-info
+PASS tlsbad-not-installed
+PASS no-drawer-no-registry
+PASS no-download-left
+PASS lock-released
+  > INSTALL tlsbad
+  < 2
+PASS tlsbad-again-accepted
+  > WAIT 2 FIELD state
+  < failed
+PASS tlsbad-again-wait
+PASS tlsbad-again-failed
+SUMMARY tls pass 13 fail 0

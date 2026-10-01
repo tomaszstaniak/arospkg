@@ -1,0 +1,35 @@
+Directory "SYS:RcTls" on Thursday 10/01/26:
+gmore.info                  7463 ---rwed Today       01:57:40
+gmore                        Dir ---rwed Today       01:57:40
+tmp                          Dir ---rwed Today       01:57:40
+cache                        Dir ---rwed Today       01:57:40
+db                           Dir ---rwed Today       01:57:40
+1 file - 4 directories - 19 blocks used
+Directory "SYS:RcTls/gmore" on Thursday 10/01/26:
+Readme.info                 1092 ---rwed Today       01:57:40
+Readme                      2983 ---rwed Today       01:57:40
+install.info                 966 ---rwed Today       01:57:40
+install                      496 ---rwed Today       01:57:40
+gmore.info                  1078 ---rwed Today       01:57:40
+gmore                     116464 ---rwed Today       01:57:40
+6 files - 243 blocks used
+Directory "SYS:RcTls/tmp" on Thursday 10/01/26:
+6abdbe14-gmore               Dir ---rwed Today       01:57:40
+1 directory - 1 block used
+Directory "SYS:RcTls/tmp/6abdbe14-gmore" is empty
+Directory "SYS:RcTls/cache" on Thursday 10/01/26:
+gmore.zip                  35787 ---rwed Today       01:57:40
+1 file - 70 blocks used
+Directory "SYS:RcTls/db" on Thursday 10/01/26:
+doctor                       Dir ---rwed Today       01:54:22
+transactions                 Dir ---rwed Today       01:57:40
+installed                    Dir ---rwed Today       01:57:40
+index.json                  1598 ---rw-d Today       01:43:04
+1 file - 3 directories - 7 blocks used
+Directory "SYS:RcTls/db/doctor" is empty
+Directory "SYS:RcTls/db/transactions" is empty
+Directory "SYS:RcTls/db/installed" on Thursday 10/01/26:
+gmore.json                  1639 ---rwed Today       01:57:40
+1 file - 4 blocks used
+
+TOTAL: 10 files - 8 directories - 344 blocks used

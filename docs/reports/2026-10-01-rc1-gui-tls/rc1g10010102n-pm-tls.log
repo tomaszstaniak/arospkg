@@ -1,0 +1,59 @@
+start PkgManager 0.3.1-rc1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff root SYS:RcTls: ARexx port PKGMANAGER
+refill (start) term="" rows=2 shown=2 installed=0 keep=-
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> INSTALL tlsbad
+job 1 install tlsbad from arexx
+arexx< rc=0 len=1 1
+arexx> WAIT 1
+arexx wait for job 1 (running)
+event tlsbad download 0/35787 can_cancel=1 cancel_button=enabled
+done install tlsbad status=12 cannot fetch the archive
+job 1 install tlsbad failed NETWORK: cannot fetch the archive (https://expired.badssl.com/tlsbad.x86_64-aros-v11.zip) -- certificate for expired.badssl.com rejected: The certificate validity has expired
+arexx< rc=0 len=290 id 1|op install|package tlsbad|origin arexx|state failed|phase download...
+refill (done) term="" rows=2 shown=2 installed=0 keep=tlsbad
+arexx> INFO tlsbad FIELD state
+arexx< rc=0 len=9 available
+arexx> INSTALL tlsbad
+job 2 install tlsbad from arexx
+arexx< rc=0 len=1 2
+arexx> WAIT 2 FIELD state
+arexx wait for job 2 (running)
+event tlsbad download 0/35787 can_cancel=1 cancel_button=enabled
+done install tlsbad status=12 cannot fetch the archive
+job 2 install tlsbad failed NETWORK: cannot fetch the archive (https://expired.badssl.com/tlsbad.x86_64-aros-v11.zip) -- certificate for expired.badssl.com rejected: The certificate validity has expired
+arexx< rc=0 len=6 failed
+refill (done) term="" rows=2 shown=2 installed=0 keep=tlsbad
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> INSTALL gmore
+job 3 install gmore from arexx
+arexx< rc=0 len=1 3
+arexx> WAIT 3
+arexx wait for job 3 (running)
+event gmore download 0/35787 can_cancel=1 cancel_button=enabled
+event gmore download 0/35787 can_cancel=1 cancel_button=enabled
+event gmore download 10240/35787 can_cancel=1 cancel_button=enabled
+event gmore download 20480/35787 can_cancel=1 cancel_button=enabled
+event gmore download 30720/35787 can_cancel=1 cancel_button=enabled
+event gmore download 35787/35787 can_cancel=1 cancel_button=enabled
+event gmore verify 1/1 can_cancel=1 cancel_button=enabled
+event gmore extract 0/35787 can_cancel=0 cancel_button=disabled
+event gmore extract 1/1 can_cancel=0 cancel_button=disabled
+event gmore publish 0/1 can_cancel=0 cancel_button=disabled
+event gmore publish 1/1 can_cancel=0 cancel_button=disabled
+done install gmore status=0
+job 3 install gmore done: installed gmore
+arexx< rc=0 len=125 id 3|op install|package gmore|origin arexx|state done|phase publish|don...
+refill (done) term="" rows=2 shown=2 installed=1 keep=gmore
+detail gmore: installed 1.2, index 1.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail gmore: installed 1.2, index 1.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> INFO gmore FIELD state
+arexx< rc=0 len=9 installed
+detail gmore: installed 1.2, index 1.2, can_upgrade=0 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> QUIT
+arexx< rc=0 len=7 closing
+worker task gone 0 ms after done
+quit
