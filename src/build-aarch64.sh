@@ -25,7 +25,7 @@ if [ ! -f "$ZOBJ/libz.a" ]; then
     done
     $AR rcs "$ZOBJ/libz.a" "$ZOBJ"/*.o
 fi
-BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h $TLS_SRC "$HERE"/pkg/main.c \
+BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h $TLS_SRC "$HERE"/pkg/*.c "$HERE"/../third_party/aros-xterm/aros_tty_client.c \
            | shasum -a 256 | cut -c1-16)
 echo "build id $BUILD_ID  (aarch64, not released)"
 $CC -O2 -std=gnu11 -Wall -Wextra \
@@ -34,7 +34,7 @@ $CC -O2 -std=gnu11 -Wall -Wextra \
     -I"$ZSRC" $TLS_CFLAGS -DPKG_TLS='"'"$TLS"'"' \
     -nostartfiles -nodefaultlibs -L"$DEV/lib" -L"$XT/lib/generic" \
     "$DEV/lib/startup.o" \
-    "$HERE"/libpkg/*.c "$HERE"/pkg/main.c $TLS_SRC \
+    "$HERE"/libpkg/*.c "$HERE"/pkg/*.c "$HERE"/../third_party/aros-xterm/aros_tty_client.c $TLS_SRC \
     "$ZOBJ/libz.a" $TLS_LIBS \
     -o "$OUT" \
     -Wl,--allow-multiple-definition -Wl,--start-group \

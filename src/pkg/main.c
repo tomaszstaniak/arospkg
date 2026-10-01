@@ -6,6 +6,8 @@
 #include "../libpkg/tls.h"
 #include "../libpkg/sha256.h"
 #include "../libpkg/verify.h"
+#include "../libpkg/entries.h"
+#include "present.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,13 +18,23 @@ static const char *VERSION = "apkg 0.3.1-rc1";
 /* `show`: the library's account of one package, laid out for a person. The
  * facts come from pkg_details_get and the probes behind the window's panel;
  * nothing is decided here. */
+/* A verdict's colour; the word itself is printed in every mode. */
+static void verdict(const char *w)
+{
+    int c = -1;
+    if (!strcmp(w, "native") || !strcmp(w, "satisfied")) c = PR_GREEN;
+    else if (!strcmp(w, "undetermined")) c = PR_YELLOW;
+    else if (!strcmp(w, "incompatible") || !strcmp(w, "missing")) c = PR_RED;
+    if (c < 0) fputs(w, stdout); else pr_word(c, w);
+}
+
 static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pkg_err *e)
 {
     pkg_details d; pkg_status st; char a[80], b[80], why[240];
     st = pkg_details_get(c, index, id, &d, e);
     if (st != PKG_OK) return st;
     rev_label(a, sizeof a, d.e.version, d.e.revision);
-    printf("%s %s\n", d.e.id, a);
+    printf("%s%s %s%s\n", pr_bold(), d.e.id, a, pr_off());
     if (d.e.summary[0]) printf("  %s\n", d.e.summary);
     if (d.index_missing) printf("  index:        none on this machine -- apkg update fetches it\n");
     else if (!d.in_index) printf("  index:        does not list it any more\n");
@@ -33,7 +45,7 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
         if (d.nvariants > 1) printf(" (the index lists: %s)", d.variants);
         printf("\n");
     }
-    printf("  compatibility: %s -- %s\n", pkg_compat_word(d.compat), d.compat_why);
+    printf("  compatibility: "); verdict(pkg_compat_word(d.compat)); printf(" -- %s\n", d.compat_why);
     if (d.in_index) {
         if (d.e.size >= 0) printf("  download:     %ld KB from %s\n", (d.e.size + 1023) / 1024, d.url);
         else printf("  download:     %s\n", d.url);
@@ -50,10 +62,19 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
             char reqs[1024]; pkg_err e2; memset(&e2, 0, sizeof e2);
             if (pkg_requirements(c, index, id, reqs, sizeof reqs, &e2) == PKG_OK) {
                 char *line = reqs, *nl;
-                printf("  requirements: %s, probed now:\n", d.requirements);
+                printf("  requirements: "); verdict(d.requirements); printf(", probed now:\n");
                 while (line && *line) {
+                    char *colon, *sp;
                     nl = strchr(line, '\n'); if (nl) *nl = 0;
-                    printf("    %s\n", line);
+                    /* "crt.library: satisfied (...)": the verdict in colour */
+                    colon = strstr(line, ": ");
+                    sp = colon ? strchr(colon + 2, ' ') : NULL;
+                    if (colon && sp) {
+                        *sp = 0;
+                        printf("    %.*s: ", (int)(colon - line), line); verdict(colon + 2); printf(" %s\n", sp + 1);
+                    } else if (colon) {
+                        printf("    %.*s: ", (int)(colon - line), line); verdict(colon + 2); printf("\n");
+                    } else printf("    %s\n", line);
                     line = nl ? nl + 1 : NULL;
                 }
             } else printf("  requirements: %s (%s)\n", d.e.requires, e2.summary);
@@ -62,7 +83,7 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
     if (!d.e.installed) printf("  installed:    no\n");
     else {
         rev_label(b, sizeof b, d.e.installed_version, d.e.installed_revision);
-        printf("  installed:    %s%s%s%s, in %s%s%s\n", b,
+        printf("  installed:    %s%s%s%s%s%s, in %s%s%s\n", pr_color(PR_GREEN), b, pr_off(),
                d.installed_arch[0] ? " (" : "", d.installed_arch, d.installed_arch[0] ? ")" : "",
                d.installed_dir, d.installed_when[0] ? ", since " : "", d.installed_when);
         if (d.in_index) {
@@ -73,6 +94,41 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
         else printf("  roll back:    no -- %s\n", why);
     }
     return PKG_OK;
+}
+
+/* search on a terminal that answered: the id column as wide as the longest
+ * id, the summary cut at the window's width so each package keeps one line;
+ * two lines each below 40 columns. The same rows and words as the plain
+ * table, from pkg_query, as --json gets them. */
+static void search_table(const pkg_entries *es, int hidden)
+{
+    int i, idw = 7, cols = pr_cols(), room;
+    for (i = 0; i < es->n; i++) if ((int)strlen(es->v[i].id) > idw) idw = (int)strlen(es->v[i].id);
+    if (!es->n) { printf("nothing matches\n"); return; }
+    if (cols && cols < 40) {
+        for (i = 0; i < es->n; i++) {
+            const pkg_entry *p = &es->v[i];
+            printf("%s%s%s %s\n    %.*s\n", pr_bold(), p->id, pr_off(), p->version, cols - 5, p->summary);
+        }
+    } else {
+        printf("%s%-*s  %-10s  %-9s  %s%s\n", pr_bold(), idw, "package", "version", "target", "summary", pr_off());
+        for (i = 0; i < es->n; i++) {
+            const pkg_entry *p = &es->v[i];
+            const char *tag = p->ours ? ""
+                : (*pkg_arch() && p->arch[0] && strcmp(p->arch, pkg_arch())) ? "[other CPU]"
+                : !pkg_abi_known(p->abi) ? "[unknown ABI]" : "[other ABI]";
+            printf("%-*s  %-10s  %-9s  ", idw, p->id, p->version, p->arch);
+            room = cols ? cols - idw - 26 - 1 : 1000;
+            if (*tag) { pr_word(PR_YELLOW, tag); printf(" "); room -= (int)strlen(tag) + 1; }
+            if (room < 4) room = 4;
+            if ((int)strlen(p->summary) > room) printf("%.*s...\n", room - 3, p->summary);
+            else printf("%s\n", p->summary);
+        }
+    }
+    if (hidden)
+        printf("\n%d package(s) hidden: built for another CPU or ABI, or for one this\n"
+               "client cannot judge, so not known to run here. apkg show <id> says\n"
+               "why; --all-abi lists them.\n", hidden);
 }
 
 static void usage(void)
@@ -120,6 +176,11 @@ static void usage(void)
     printf("  requires <id>         each system requirement, probed here and now\n");
     printf("  --slow <ms>           slow the download and the extract, for testing\n");
     printf("  --progress            print each progress callback, for testing\n");
+    printf("  --plain               no colour, bold or progress line, even in a\n");
+    printf("                        terminal that can show them\n");
+    printf("  --color=auto|always|never\n");
+    printf("                        colour only; auto: when the terminal says it\n");
+    printf("                        can. Output to a file is never decorated\n");
     printf("  --cancel-at <phase>   cancel from the callback in that phase, for\n");
     printf("                        testing: download, download-mid (once bytes\n");
     printf("                        flow), verify, extract, publish\n");
@@ -146,6 +207,7 @@ static void cli_progress(void *u, const pkg_progress_ev *ev, int *cancel)
     if (show_progress)
         printf("progress %s %s %lu/%lu cancel=%s\n", ev->id, ev->phase, ev->done, ev->total,
                ev->can_cancel ? "yes" : "no");
+    else pr_progress(ev->id, ev->phase, ev->done, ev->total);
     /* Set regardless of can_cancel on purpose: the test is that the LIBRARY
        ignores it where it said it would, not that this caller is polite. */
     if (cancel_at && strcmp(ev->phase, cancel_at) == 0) *cancel = 1;
@@ -221,7 +283,8 @@ static void write_report(const char *path, const char *run_id, const char *machi
 
 static void show(const pkg_err *e)
 {
-    printf("apkg: %s\n", e->summary);
+    pr_end_line();
+    printf("%sapkg: %s%s\n", pr_color(PR_RED), e->summary, pr_off());
     if (e->subject[0]) printf("     %s\n", e->subject);
     if (e->detail[0])  printf("     %s\n", e->detail);
 }
@@ -238,7 +301,7 @@ static int real_main(int argc, char **argv)
     const char *index_url =
         "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json";
     const char *arg2 = NULL;
-    int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0;
+    int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO;
     pkg_ctx *c = NULL;
     pkg_err e;
     pkg_status st;
@@ -262,6 +325,10 @@ static int real_main(int argc, char **argv)
             pkg_set_verify_name(argv[++i]);
         else if (!strcmp(argv[i], "--all-abi")) pkg_set_abi_show_all(1);
         else if (!strcmp(argv[i], "--json")) json = 1;
+        else if (!strcmp(argv[i], "--plain")) plain = 1;
+        else if (!strcmp(argv[i], "--color=auto")) color = PR_COLOR_AUTO;
+        else if (!strcmp(argv[i], "--color=always")) color = PR_COLOR_ALWAYS;
+        else if (!strcmp(argv[i], "--color=never")) color = PR_COLOR_NEVER;
         else if (!strcmp(argv[i], "--dry-run")) dry = 1;
         else if (!strcmp(argv[i], "--fetch")) fetch = 1;
         else if (!strcmp(argv[i], "--progress")) show_progress = 1;
@@ -291,6 +358,8 @@ static int real_main(int argc, char **argv)
         else if (!arg2) arg2 = argv[i];
     }
     if (!cmd) { usage(); return 5; }
+    /* Once, before the first line this command prints. */
+    pr_init(json, plain, color);
 
     if (!index) {
         snprintf(indexbuf, sizeof indexbuf, "%s/db/index.json", root);
@@ -341,7 +410,7 @@ static int real_main(int argc, char **argv)
         return 10;
     }
 
-    if (show_progress || cancel_at) pkg_set_progress(c, cli_progress, NULL);
+    if (show_progress || cancel_at || pr_wants_progress()) pkg_set_progress(c, cli_progress, NULL);
 
     {
         int r = 0, u = 0, pending;
@@ -379,6 +448,11 @@ static int real_main(int argc, char **argv)
         pkg_entries es; int hidden = 0;
         st = pkg_query(c, index, arg, &es, &hidden, &e);
         if (st == PKG_OK) print_rows(&es, hidden);
+        pkg_entries_free(&es);
+    } else if (!strcmp(cmd, "search") && pr_rich()) {
+        pkg_entries es; int hidden = 0;
+        st = pkg_query(c, index, arg, &es, &hidden, &e);
+        if (st == PKG_OK) search_table(&es, hidden);
         pkg_entries_free(&es);
     } else if (!strcmp(cmd, "search")) {
         char *out = NULL;
@@ -420,19 +494,23 @@ static int real_main(int argc, char **argv)
     } else if (!strcmp(cmd, "install")) {
         if (!arg) { printf("apkg install: which package?\n"); pkg_close(c); return 5; }
         st = pkg_install(c, index, arg, stop, &e);
-        if (st == PKG_OK) printf("installed %s\n", arg);
+        pr_end_line();
+        if (st == PKG_OK) { pr_word(PR_GREEN, "installed"); printf(" %s\n", arg); }
     } else if (!strcmp(cmd, "remove")) {
         if (!arg) { printf("apkg remove: which package?\n"); pkg_close(c); return 5; }
         st = pkg_remove(c, arg, stop, &e);
-        if (st == PKG_OK) printf("removed %s\n", arg);
+        pr_end_line();
+        if (st == PKG_OK) { pr_word(PR_GREEN, "removed"); printf(" %s\n", arg); }
     } else if (!strcmp(cmd, "upgrade")) {
         if (!arg) { printf("apkg upgrade: which package?\n"); pkg_close(c); return 5; }
         st = pkg_upgrade(c, index, arg, stop, &e);
-        if (st == PKG_OK) printf("upgraded %s\n", arg);
+        pr_end_line();
+        if (st == PKG_OK) { pr_word(PR_GREEN, "upgraded"); printf(" %s\n", arg); }
     } else if (!strcmp(cmd, "rollback")) {
         if (!arg) { printf("apkg rollback: which package?\n"); pkg_close(c); return 5; }
         st = pkg_rollback(c, arg, stop, &e);
-        if (st == PKG_OK) printf("rolled back %s\n", arg);
+        pr_end_line();
+        if (st == PKG_OK) { pr_word(PR_GREEN, "rolled back"); printf(" %s\n", arg); }
     } else {
         printf("apkg: unknown command '%s'\n", cmd);
         pkg_close(c);

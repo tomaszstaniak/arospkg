@@ -1,0 +1,14 @@
+The terminal-control client of AROS XTerm, for asking the window apkg writes
+to what it can display (operation 13, XTY_GET_PRESENTATION). The contract is
+aros-xterm/docs/apkg-integration.md.
+
+Copied unchanged from the aros-xterm source tree on 2026-10-01, before that
+project had a commit to name. Replace with a named commit when it has one.
+
+  tty_control.h       b00903a8a59bbc39b60ed5133a29e93c3e97ce70c7015f1846cece6490410ba1
+  aros_tty_client.h   88dd20bbbd68c948b7276f2bd51064b110faed4dde842f342570a0b09d70ac54
+  aros_tty_client.c   ca07193b610a40d9cb065c5a2ce1a9d3c4287692547ee3f0f3b99834aac91f65
+
+Licence: MIT (LICENSE), copyright Tomasz Staniak.
+apkg uses only aros_tty_control(), on its own Output() handle, when that
+handle is interactive; see src/pkg/present.c.
