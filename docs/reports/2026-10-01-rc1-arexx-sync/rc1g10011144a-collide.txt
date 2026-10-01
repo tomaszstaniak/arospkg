@@ -1,0 +1,7 @@
+run rc1g10011144a phase collide
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+PASS first-still-answers
+PASS second-says-port-in-use
+SUMMARY collide pass 2 fail 0

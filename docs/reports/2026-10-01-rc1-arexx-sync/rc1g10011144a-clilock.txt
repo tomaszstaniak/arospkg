@@ -1,0 +1,18 @@
+run rc1g10011144a phase clilock
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > REMOVE soliton
+  < 18
+PASS remove-while-cli-holds
+  > WAIT 18
+  < id 18|op remove|package soliton|origin arexx|state failed|phase |done 0|total 0|cancancel 0|error LOCKED|message another instance is running (SYS:PkgRx/db/lock.
+PASS wait-locked
+PASS failed-locked
+PASS soliton-kept
+PASS cli-install-finished
+  > INFO cls FIELD state
+  < installed
+PASS arexx-sees-cli-install
+PASS arexx-sees-cli-install-value
+SUMMARY clilock pass 7 fail 0

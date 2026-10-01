@@ -1,0 +1,22 @@
+start PkgManager 0.3.1-rc1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff root SYS:PkgRx: ARexx port PKGMANAGER
+refill (start) term="" rows=3 shown=3 installed=1 keep=-
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b...
+arexx> INSTALL cls
+arexx< rc=10 NOMEM no memory for the answer; nothing was started
+arexx> LASTERROR
+arexx< rc=0 lasterror NOMEM no memory for the answer; nothing was started
+arexx> JOB
+arexx< rc=10 NOJOB no job has been started
+arexx> LASTERROR
+arexx< rc=0 lasterror NOJOB no job has been started
+arexx> INFO cls FIELD state
+arexx< rc=0 len=9 available
+arexx> QUIT
+arexx< rc=10 NOMEM no memory for the answer; nothing was done
+arexx> LASTERROR
+arexx< rc=0 lasterror NOMEM no memory for the answer; nothing was done
+arexx> INFO soliton FIELD state
+arexx< rc=0 len=9 installed
+worker task gone 0 ms after done
+quit

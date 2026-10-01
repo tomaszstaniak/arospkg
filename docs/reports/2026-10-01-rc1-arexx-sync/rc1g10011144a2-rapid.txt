@@ -1,0 +1,166 @@
+run rc1g10011144a2 phase rapid
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > INSTALL cls
+  < 5
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase |done 0|total 0|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 5
+  < id 5|op install|package cls|origin arexx|state running|phase publish|done 1|total 1|cancancel 0|error |message 
+  > JOB 5 FIELD state
+  < done
+  > WAIT 5
+  < id 5|op install|package cls|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed cls
+  > WAIT 6
+  < id 6|op remove|package cls|origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message removed cls
+round 1 install 5 (seen in publish) -> done install cls | remove 6 -> done remove cls | busy replies 3 | install state when remove accepted: done
+  > INSTALL cls
+  < 7
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase |done 0|total 0|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 7
+  < id 7|op install|package cls|origin arexx|state running|phase publish|done 1|total 1|cancancel 0|error |message 
+  > JOB 7 FIELD state
+  < done
+  > WAIT 7
+  < id 7|op install|package cls|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed cls
+  > WAIT 8
+  < id 8|op remove|package cls|origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message removed cls
+round 2 install 7 (seen in publish) -> done install cls | remove 8 -> done remove cls | busy replies 3 | install state when remove accepted: done
+  > INSTALL cls
+  < 9
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase |done 0|total 0|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 9
+  < id 9|op install|package cls|origin arexx|state running|phase publish|done 1|total 1|cancancel 0|error |message 
+  > JOB 9 FIELD state
+  < done
+  > WAIT 9
+  < id 9|op install|package cls|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed cls
+  > WAIT 10
+  < id 10|op remove|package cls|origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message removed cls
+round 3 install 9 (seen in publish) -> done install cls | remove 10 -> done remove cls | busy replies 3 | install state when remove accepted: done
+  > INSTALL cls
+  < 11
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase |done 0|total 0|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 11
+  < id 11|op install|package cls|origin arexx|state running|phase publish|done 1|total 1|cancancel 0|error |message 
+  > JOB 11 FIELD state
+  < done
+  > WAIT 11
+  < id 11|op install|package cls|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed cls
+  > WAIT 12
+  < id 12|op remove|package cls|origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message removed cls
+round 4 install 11 (seen in publish) -> done install cls | remove 12 -> done remove cls | busy replies 3 | install state when remove accepted: done
+  > INSTALL cls
+  < 13
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase |done 0|total 0|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase extract|done 0|total 41871|cancancel 0|error |message 
+  > JOB 13
+  < id 13|op install|package cls|origin arexx|state running|phase publish|done 1|total 1|cancancel 0|error |message 
+  > JOB 13 FIELD state
+  < done
+  > WAIT 13
+  < id 13|op install|package cls|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed cls
+  > WAIT 14
+  < id 14|op remove|package cls|origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message removed cls
+round 5 install 13 (seen in publish) -> done install cls | remove 14 -> done remove cls | busy replies 3 | install state when remove accepted: done
+PASS rapid-jobs-keep-their-outcomes
+  > INFO cls FIELD state
+  < available
+PASS rapid-end-state
+PASS rapid-cls-removed
+PASS rapid-files-agree
+SUMMARY rapid pass 4 fail 0

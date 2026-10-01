@@ -1,0 +1,12 @@
+run rc1g10011144a phase env
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+PASS version-interface
+PASS version-sha256
+  > HELP
+  < VERSION HELP LIST INFO REQUIREMENTS SHOW UPDATE INSTALL REMOVE UPGRADE ROLLBACK JOB WAIT CANCEL QUIT LASTERROR
+PASS help
+exists dir 1 file 1 none 0
+PASS helper-exists
+SUMMARY env pass 4 fail 0

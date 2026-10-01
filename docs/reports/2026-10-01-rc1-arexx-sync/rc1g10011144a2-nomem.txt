@@ -1,0 +1,29 @@
+run rc1g10011144a2 phase nomem
+  > VERSION
+  ! NOMEM no memory for the answer
+  > VERSION
+  ! NOMEM no memory for the answer
+PASS long-answer-fails
+PASS long-answer-says-why
+  > INFO soliton FIELD state
+  < installed
+PASS short-answer-goes-out
+  > INSTALL cls
+  ! CANNOTSTART could not start the worker process
+PASS no-final-message-no-job
+  > JOB FIELD state
+  < failed
+PASS refused-job-state
+PASS refused-job-failed
+  > JOB FIELD error
+  < CANNOTSTART
+PASS refused-job-error
+PASS refused-job-error-value
+  > INFO cls FIELD state
+  < available
+PASS nothing-installed-without-memory
+PASS nothing-installed-value
+  > INSTALL cls
+  ! CANNOTSTART could not start the worker process
+PASS still-refused-not-stuck
+SUMMARY nomem pass 11 fail 0

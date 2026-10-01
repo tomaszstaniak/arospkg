@@ -1,0 +1,25 @@
+run rc1g10011144a phase update
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > UPDATE
+  < 1
+PASS update-accepted
+  > WAIT 1
+  < id 1|op update|package |origin arexx|state done|phase |done 0|total 0|cancancel 0|error |message index updated 
+PASS update-wait
+PASS update-done
+  > LIST
+  < ab3dhd alac amiberry antiword apotris arrakis badapple bin2iso blips boy breakhack cabextract ccd2cue ccd2iso davegnukem daysleeper delugem demac demoeffects de
+PASS list-after-update
+catalogue ab3dhd alac amiberry antiword apotris arrakis badapple bin2iso blips boy breakhack cabextract ccd2cue ccd2iso davegnukem daysleeper delugem demac demoeffects devilutionx dirtree diskusage dosbox dose2 fallout fallout2 fheroes2 finder fireoftheapes flx_play folio ft2clone gicriptofilex giddy3 giocodel15 gisplita gmore gnurobbo grafx2 grep hexen2 hivelyreplay hocoslamfy hostile-takeover hydracastle iconmake isomaker isomaker-gui isotool isotools-gui keen4 lbreakouthd ledblur mcamiga metemp3 micropolis minislug mplayer nano nomarch ominoarcade ominostage openloco opentyrian openxcom pekkakana2 pkg-54321 pkg-7mezzoplus pkg-7zdec planethively potrace prboom-plus protrekkr qlview rescode residualvm rtf-riddle scopagame screentest sdllopan sdlpop sfsobject shooterspace siddump skandalfoclock sokobangp2x soliton sploiner stercus stratagus super-haxagon super_trevor_land tbftss tiltnroll timeless tinysid tinytris tressette unlzx unrar unshield untangle untarka wildmidi xrick zaphod zgloom zunecalc
+PASS public-catalogue-listed
+  > INFO grafx2 FIELD version
+  < 2.9
+PASS info-from-new-catalogue
+PASS grafx2-version
+  > INFO soliton FIELD state
+  < installed
+PASS installed-survives-update
+PASS installed-survives-update-value
+SUMMARY update pass 9 fail 0

@@ -1,0 +1,23 @@
+run rc1g10011144a2 phase nomem2
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
+  > INSTALL cls
+  ! NOMEM no memory for the answer; nothing was started
+PASS job-answer-unallocatable
+PASS says-nothing-started
+  > JOB
+  ! NOJOB no job has been started
+PASS no-job-was-started
+  > INFO cls FIELD state
+  < available
+PASS nomem2-info
+PASS nothing-installed
+  > QUIT
+  ! NOMEM no memory for the answer; nothing was done
+PASS quit-answer-unallocatable
+PASS window-did-not-quit
+  > INFO soliton FIELD state
+  < installed
+PASS still-answering
+SUMMARY nomem2 pass 8 fail 0
