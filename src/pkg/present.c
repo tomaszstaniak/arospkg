@@ -10,6 +10,10 @@
 #include <time.h>
 
 static int interactive, plain_mode, rich, color, bold, inplace, cols;
+/* The window reads SGR 30-37 as screen pens (XTY_COLOR_PENS): colours then
+   go as 38;5;n, which keeps the palette meaning. It changes how a colour is
+   written, never whether one is. */
+static int pens;
 static int line_open, last_tenth;
 static char last_phase[16];
 static time_t geometry_at;
@@ -34,7 +38,7 @@ void pr_init(int json, int plain, int color_mode)
 {
     XtyControl q;
     BPTR out = Output();
-    rich = color = bold = inplace = cols = line_open = last_tenth = 0;
+    rich = color = bold = inplace = cols = line_open = last_tenth = pens = 0;
     last_phase[0] = 0;
     unknown_reported = 0;
     last_unknown_mib = 0;
@@ -54,6 +58,10 @@ void pr_init(int json, int plain, int color_mode)
             rich = 1;
             if ((known & XTY_PRESENT_KNOWN_COLORS) && q.values[1] >= XTY_COLOR_ANSI16) color = 1;
             if ((known & XTY_PRESENT_KNOWN_STYLES) && (q.values[2] & XTY_STYLE_BOLD_RESET)) bold = 1;
+            /* Only a known interpretation counts; an unknown one keeps the
+               basic codes, which every terminal before this field meant as
+               ANSI. */
+            if ((known & XTY_PRESENT_KNOWN_INTERPRETATION) && (q.values[6] & XTY_COLOR_PENS)) pens = 1;
             if ((known & XTY_PRESENT_KNOWN_LINES) &&
                 (q.values[3] & (XTY_LINE_CR | XTY_LINE_ERASE_EOL)) == (XTY_LINE_CR | XTY_LINE_ERASE_EOL))
                 inplace = 1;
@@ -74,10 +82,12 @@ const char *pr_bold(void) { return bold ? "\033[1m" : ""; }
 const char *pr_color(int c)
 {
     if (!color) return "";
+    if (pens) return c == PR_GREEN ? "\033[38;5;2m" : c == PR_YELLOW ? "\033[38;5;3m" : "\033[38;5;1m";
     return c == PR_GREEN ? "\033[32m" : c == PR_YELLOW ? "\033[33m" : "\033[31m";
 }
 /* SGR 0 ends bold and colour alike; with colour only, 39 is the promised
-   reset for the foreground. */
+   reset for the foreground. 39 returns to the theme's default foreground,
+   not to whatever pen was in use before; in pens mode too. */
 const char *pr_off(void) { return bold ? "\033[0m" : color ? "\033[39m" : ""; }
 
 void pr_word(int c, const char *s)

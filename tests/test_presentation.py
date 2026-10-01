@@ -87,5 +87,49 @@ class Presentation(unittest.TestCase):
         self.assertIn("\nverified and cached test.zip\n", text)
         self.assertNotIn("%", text)
 
+    # Capability replies for the colour encoding (aros-xterm operation 13).
+    # known: colours, styles, lines, geometry = 15; + interpretation = 31.
+    def colors(self, known, interp, styles=1, how="auto"):
+        return subprocess.check_output([str(self.exe), "colors", str(known), str(interp),
+                                        str(styles), how]).decode()
+
+    def test_known_ansi_keeps_basic_sgr(self):
+        t = self.colors(31, 0)
+        for code in ("\x1b[32m", "\x1b[33m", "\x1b[31m"):
+            self.assertIn(code, t)
+        self.assertNotIn("38;5", t)
+
+    def test_known_pens_use_indexed_colours_at_ansi16(self):
+        t = self.colors(31, 1)       # the driver reports level ANSI16
+        for code in ("\x1b[38;5;2m", "\x1b[38;5;3m", "\x1b[38;5;1m"):
+            self.assertIn(code, t)
+        self.assertIsNone(re.search(r"\x1b\[3[0-7]m", t))
+        self.assertIn("\x1b[0m", t)  # bold available: SGR 0 ends the colour
+
+    def test_unknown_interpretation_keeps_basic_sgr(self):
+        t = self.colors(15, 0)
+        self.assertIn("\x1b[32m", t)
+        self.assertNotIn("38;5", t)
+
+    def test_pens_without_known_bit_is_ignored(self):
+        t = self.colors(15, 1)
+        self.assertIn("\x1b[32m", t)
+        self.assertNotIn("38;5", t)
+
+    def test_colour_without_bold_resets_with_39(self):
+        for interp in (0, 1):
+            with self.subTest(pens=interp):
+                t = self.colors(31, interp, styles=0)
+                self.assertIn("\x1b[39m", t)
+                self.assertNotIn("\x1b[0m", t)
+                self.assertNotIn("\x1b[1m", t)
+
+    def test_no_colour_when_turned_off_or_not_a_window(self):
+        for how in ("never", "plain", "json", "redirect"):
+            for interp in (0, 1):
+                with self.subTest(how=how, pens=interp):
+                    t = self.colors(31, interp, how=how)
+                    self.assertEqual(t, "native undetermined missing\n")
+
 if __name__ == "__main__":
     unittest.main()

@@ -6,7 +6,7 @@
 #include <time.h>
 #include <stdio.h>
 #include "../src/libpkg/slow.h"
-static int width = 80, tty = 1, known = 15, query_ok = 1;
+static int width = 80, tty = 1, known = 15, query_ok = 1, interp = 0, styles = 1;
 static time_t tick = 100;
 time_t time(time_t *out) { if (out) *out = tick; return tick; }
 BPTR Output(void) { return 1; }
@@ -15,7 +15,7 @@ LONG aros_tty_control(BPTR h, XtyControl *q)
 {
     (void)h;
     if (!query_ok) return DOSFALSE;
-    q->values[0] = known; q->values[1] = 1; q->values[2] = 1;
+    q->values[0] = known; q->values[1] = 1; q->values[2] = styles; q->values[6] = interp;
     q->values[3] = 3; q->values[4] = 24; q->values[5] = width;
     return DOSTRUE;
 }
@@ -26,6 +26,20 @@ int main(int argc, char **argv)
     if (!strcmp(mode, "slow")) { printf("%lu\n", pkg_slow_ticks(width)); return 0; }
     if (!strcmp(mode, "con")) query_ok = 0;
     if (!strcmp(mode, "unknown")) known = 0;
+    /* colors KNOWN INTERP STYLES HOW: the three verdict colours as the window
+       would get them, for a capability reply the test describes; HOW is
+       auto, never, always, plain, json or redirect. Level is ANSI16. */
+    if (!strcmp(mode, "colors")) {
+        const char *how = argc > 5 ? argv[5] : "auto";
+        known = atoi(argv[2]); interp = atoi(argv[3]); styles = atoi(argv[4]);
+        if (!strcmp(how, "redirect")) tty = 0;
+        pr_init(!strcmp(how, "json"), !strcmp(how, "plain"),
+                !strcmp(how, "never") ? PR_COLOR_NEVER : !strcmp(how, "always") ? PR_COLOR_ALWAYS : PR_COLOR_AUTO);
+        pr_word(PR_GREEN, "native"); putchar(' ');
+        pr_word(PR_YELLOW, "undetermined"); putchar(' ');
+        pr_word(PR_RED, "missing"); putchar('\n');
+        return 0;
+    }
     pr_init(0, 0, PR_COLOR_AUTO);
     if (!strcmp(mode, "plain")) pr_init(0, 1, PR_COLOR_AUTO);
     if (!strcmp(mode, "redirect")) { tty = 0; pr_init(0, 0, PR_COLOR_AUTO); }

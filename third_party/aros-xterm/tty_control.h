@@ -24,12 +24,22 @@ enum { XTY_CAPS=1, XTY_GET_CONFIG, XTY_SET_CONFIG, XTY_GET_GEOMETRY,
        XTY_GET_PRESENTATION };
 /* Operation 13: renderer-owned snapshot on the actual output FileHandle.
    Request: reserved and values all zero. Reply values: [0] known mask,
-   [1] color level, [2] styles, [3] line controls, [4] rows, [5] columns;
-   [6..11] zero. Clear known bits mean unknown, not unsupported.
+   [1] color level, [2] styles, [3] line controls, [4] rows, [5] columns,
+   [6] color interpretation (known bit 4); [7..11] zero. Clear known bits
+   mean unknown, not unsupported.
    All promises refer to 7-bit ESC [ (0x1b,0x5b) sequences.
    ANSI16: SGR 30..37,90..97,39 (foreground), 40..47,100..107,49
    (background). INDEXED256 adds 38;5;n and 48;5;n; RGB adds
    38;2;r;g;b and 48;2;r;g;b. Semicolon forms only.
+   COLOR_PENS in [6], valid only with KNOWN_INTERPRETATION in [0]: SGR
+   30..37 and 40..47 select Amiga screen pens 0..7, as in the AROS
+   console, not ANSI colours. With it, 38;5;n and 48;5;n for n 0..15 are
+   guaranteed from level ANSI16 up and keep their ANSI palette meaning.
+   SGR 39 restores the theme's default foreground and drops a foreground
+   pen; it does not restore an earlier pen and leaves background and bold
+   alone (49 likewise for the background). A Shell prompt sets its own
+   pens with its own sequences. PENS without the known bit is no claim;
+   unknown interpretation leaves the client's ANSI behaviour unchanged.
    BOLD_RESET: SGR 1 and 0. CR: byte 0x0d. ERASE_EOL: CSI K / CSI 0 K.
    Generic PTYs do not imply presentation support. This query neither
    reads keyboard input nor changes terminal modes. No response deadline. */
@@ -37,6 +47,8 @@ enum { XTY_CAPS=1, XTY_GET_CONFIG, XTY_SET_CONFIG, XTY_GET_GEOMETRY,
 #define XTY_PRESENT_KNOWN_STYLES 2u
 #define XTY_PRESENT_KNOWN_LINES 4u
 #define XTY_PRESENT_KNOWN_GEOMETRY 8u
+#define XTY_PRESENT_KNOWN_INTERPRETATION 16u
+#define XTY_COLOR_PENS 1u
 #define XTY_COLOR_NONE 0u
 #define XTY_COLOR_ANSI16 1u
 #define XTY_COLOR_INDEXED256 2u
