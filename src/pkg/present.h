@@ -19,8 +19,15 @@ const char *pr_color(int c);
 const char *pr_off(void);  /* ends whatever pr_bold or pr_color started */
 /* A word with its colour; the word is always printed. */
 void pr_word(int c, const char *s);
-/* Install progress: one line rewritten in place on a terminal that can, a
- * line every 10% on another interactive window, nothing elsewhere. */
+void pr_heading(const char *s);
+void pr_text(const char *s, int indent);
+void pr_field(const char *label, const char *value, int color);
+void pr_search_heading(void);
+void pr_search_row(const char *id, const char *version, const char *state,
+                   const char *summary, const char *target_note);
+/* Known-length download: one updating line where supported, complete 10%
+ * milestone lines on CON:, nothing in plain/JSON/redirected output. Stage
+ * labels and unknown-length byte reports never invent a percentage. */
 void pr_progress(const char *id, const char *phase, unsigned long done, unsigned long total);
 void pr_end_line(void);    /* before anything else is printed */
 

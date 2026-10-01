@@ -28,11 +28,83 @@ static void verdict(const char *w)
     if (c < 0) fputs(w, stdout); else pr_word(c, w);
 }
 
+static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_details *d)
+{
+    char version[80], text[1200], why[240];
+    rev_label(version, sizeof version, d->e.version, d->e.revision);
+    snprintf(text, sizeof text, "%s %s", d->e.id, version);
+    pr_heading(text);
+    if (*d->e.summary) pr_text(d->e.summary, 2);
+    putchar('\n');
+    if (d->e.installed) {
+        rev_label(version, sizeof version, d->e.installed_version, d->e.installed_revision);
+        snprintf(text, sizeof text, "installed (%s)", version);
+        pr_field("State", text, PR_GREEN);
+        pr_field("Location", d->installed_dir, -1);
+        if (*d->installed_when) pr_field("Installed on", d->installed_when, -1);
+        if (*d->installed_arch) {
+            snprintf(text, sizeof text, "%s / %s", d->installed_arch,
+                     *d->installed_abi ? d->installed_abi : "ABI not recorded");
+            pr_field("Installed target", text, -1);
+        }
+    } else pr_field("State", "not installed", -1);
+    if (d->index_missing) pr_field("Catalogue", "missing -- run apkg update", PR_YELLOW);
+    else if (!d->in_index) pr_field("Catalogue", "no longer lists this package", PR_YELLOW);
+    if (d->ambiguous) pr_field("Selection", "multiple matching builds; installation refused", PR_RED);
+    if (*d->e.category) pr_field("Category", d->e.category, -1);
+
+    putchar('\n'); pr_heading("Compatibility and requirements");
+    if (d->in_index) {
+        snprintf(text, sizeof text, "%s / %s", d->e.arch, d->e.abi);
+        pr_field("Target", text, -1);
+        if (d->nvariants > 1) pr_field("Other builds", d->variants, -1);
+    }
+    snprintf(text, sizeof text, "%s -- %s", pkg_compat_word(d->compat), d->compat_why);
+    pr_field("Compatibility", text, d->compat == PKG_COMPAT_NATIVE ? PR_GREEN :
+             d->compat == PKG_COMPAT_INCOMPATIBLE ? PR_RED : PR_YELLOW);
+    if (d->in_index) {
+        if (d->compat != PKG_COMPAT_NATIVE)
+            pr_field("Requirements", "not checked for this target", PR_YELLOW);
+        else if (!*d->e.requires) pr_field("Requirements", "none stated", -1);
+        else {
+            pkg_err err; memset(&err, 0, sizeof err);
+            pr_field("Requirements", d->requirements, !strcmp(d->requirements, "satisfied") ? PR_GREEN :
+                     !strcmp(d->requirements, "missing") ? PR_RED : PR_YELLOW);
+            if (pkg_requirements(c, index, id, text, sizeof text, &err) == PKG_OK)
+                pr_text(text, 4);
+            else { pr_text(d->e.requires, 4); pr_text(err.summary, 4); }
+        }
+    }
+    if (d->e.installed) {
+        putchar('\n'); pr_heading("Installed package actions");
+        if (d->in_index) {
+            int yes = pkg_can_upgrade(&d->e, why, sizeof why);
+            pr_field("Upgrade", yes ? "available" : why, yes ? PR_GREEN : -1);
+        }
+        {
+            int yes = pkg_can_rollback(c, id, why, sizeof why);
+            pr_field("Roll back", yes ? "available" : why, yes ? PR_GREEN : -1);
+        }
+    }
+    putchar('\n'); pr_heading("Download and provenance");
+    if (d->in_index) {
+        if (d->e.size >= 0) {
+            snprintf(text, sizeof text, "%ld KiB (%ld bytes)", d->e.size / 1024, d->e.size);
+            pr_field("Download", text, -1);
+        }
+        pr_field("URL", d->url, -1);
+        if (*d->sha256) pr_field("SHA-256", d->sha256, -1);
+    }
+    if (*d->source) pr_field("Source", d->source, -1);
+    if (*d->license) pr_field("License", d->license, -1);
+}
+
 static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pkg_err *e)
 {
     pkg_details d; pkg_status st; char a[80], b[80], why[240];
     st = pkg_details_get(c, index, id, &d, e);
     if (st != PKG_OK) return st;
+    if (pr_rich()) { show_rich(c, index, id, &d); return PKG_OK; }
     rev_label(a, sizeof a, d.e.version, d.e.revision);
     printf("%s%s %s%s\n", pr_bold(), d.e.id, a, pr_off());
     if (d.e.summary[0]) printf("  %s\n", d.e.summary);
@@ -96,39 +168,33 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
     return PKG_OK;
 }
 
-/* search on a terminal that answered: the id column as wide as the longest
- * id, the summary cut at the window's width so each package keeps one line;
- * two lines each below 40 columns. The same rows and words as the plain
- * table, from pkg_query, as --json gets them. */
+/* Rich search consumes the same rows as JSON. The renderer wraps all fields
+ * and switches to blocks when the table cannot fit; no description is lost. */
 static void search_table(const pkg_entries *es, int hidden)
 {
-    int i, idw = 7, cols = pr_cols(), room;
-    for (i = 0; i < es->n; i++) if ((int)strlen(es->v[i].id) > idw) idw = (int)strlen(es->v[i].id);
-    if (!es->n) { printf("nothing matches\n"); return; }
-    if (cols && cols < 40) {
-        for (i = 0; i < es->n; i++) {
-            const pkg_entry *p = &es->v[i];
-            printf("%s%s%s %s\n    %.*s\n", pr_bold(), p->id, pr_off(), p->version, cols - 5, p->summary);
+    int i;
+    char text[160];
+    snprintf(text, sizeof text, "%d package%s", es->n, es->n == 1 ? "" : "s");
+    pr_heading(text);
+    if (!es->n) pr_text("Nothing matches this search.", 0);
+    else pr_search_heading();
+    for (i = 0; i < es->n; i++) {
+        const pkg_entry *p = &es->v[i];
+        char version[80], note[100];
+        snprintf(note, sizeof note, "%s/%s", p->arch, p->abi);
+        if (!p->ours) {
+            const char *why = (*pkg_arch() && *p->arch && strcmp(p->arch, pkg_arch())) ? "other CPU" :
+                              !pkg_abi_known(p->abi) ? "unknown ABI" : "other ABI";
+            snprintf(note, sizeof note, "%s: %s/%s", why, p->arch, p->abi);
         }
-    } else {
-        printf("%s%-*s  %-10s  %-9s  %s%s\n", pr_bold(), idw, "package", "version", "target", "summary", pr_off());
-        for (i = 0; i < es->n; i++) {
-            const pkg_entry *p = &es->v[i];
-            const char *tag = p->ours ? ""
-                : (*pkg_arch() && p->arch[0] && strcmp(p->arch, pkg_arch())) ? "[other CPU]"
-                : !pkg_abi_known(p->abi) ? "[unknown ABI]" : "[other ABI]";
-            printf("%-*s  %-10s  %-9s  ", idw, p->id, p->version, p->arch);
-            room = cols ? cols - idw - 26 - 1 : 1000;
-            if (*tag) { pr_word(PR_YELLOW, tag); printf(" "); room -= (int)strlen(tag) + 1; }
-            if (room < 4) room = 4;
-            if ((int)strlen(p->summary) > room) printf("%.*s...\n", room - 3, p->summary);
-            else printf("%s\n", p->summary);
-        }
+        rev_label(version, sizeof version, p->version, p->revision);
+        pr_search_row(p->id, version, p->installed ? "installed" : "not installed", p->summary, note);
     }
-    if (hidden)
-        printf("\n%d package(s) hidden: built for another CPU or ABI, or for one this\n"
-               "client cannot judge, so not known to run here. apkg show <id> says\n"
-               "why; --all-abi lists them.\n", hidden);
+    if (hidden) {
+        snprintf(text, sizeof text, "%d hidden: other CPU/ABI or unknown compatibility. Use --all-abi to list them.", hidden);
+        pr_text(text, 0);
+    }
+    pr_text("Details: apkg show <id>", 0);
 }
 
 static void usage(void)
@@ -284,6 +350,12 @@ static void write_report(const char *path, const char *run_id, const char *machi
 static void show(const pkg_err *e)
 {
     pr_end_line();
+    if (pr_rich()) {
+        pr_field("apkg", e->summary, PR_RED);
+        if (*e->subject) pr_field("Subject", e->subject, -1);
+        if (*e->detail) pr_text(e->detail, 2);
+        return;
+    }
     printf("%sapkg: %s%s\n", pr_color(PR_RED), e->summary, pr_off());
     if (e->subject[0]) printf("     %s\n", e->subject);
     if (e->detail[0])  printf("     %s\n", e->detail);
@@ -493,6 +565,14 @@ static int real_main(int argc, char **argv)
         free(out);
     } else if (!strcmp(cmd, "install")) {
         if (!arg) { printf("apkg install: which package?\n"); pkg_close(c); return 5; }
+        if (pr_rich()) {
+            char heading[100], dest[PKG_MAXPATH + PKG_MAXID + 2];
+            snprintf(heading, sizeof heading, "Installing %s", arg);
+            pr_heading(heading);
+            snprintf(dest, sizeof dest, "%s/%s", root, arg);
+            pr_field("Destination", dest, -1);
+            putchar('\n');
+        }
         st = pkg_install(c, index, arg, stop, &e);
         pr_end_line();
         if (st == PKG_OK) { pr_word(PR_GREEN, "installed"); printf(" %s\n", arg); }

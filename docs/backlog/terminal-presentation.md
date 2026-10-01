@@ -1,16 +1,18 @@
 ---
 title: "Richer output for show, search and install"
-status: design, waiting for the terminal's query (operation 13)
+status: implemented on presentation; revised layout awaits joint guest acceptance
 created: 2026-10-01
 ---
 
 # Richer output for show, search and install
 
 The terminal side and the shared contract are in
-`aros-xterm/docs/apkg-integration.md` (operation 13, `XTY_GET_PRESENTATION`,
-proposed and not yet implemented). This page is what apkg prints. Nothing
-here is implemented, and no apkg code depends on operation 13 until the
-terminal ships it. The new options are features, so this comes after 0.3.1.
+`aros-xterm/docs/apkg-integration.md` (operation 13, `XTY_GET_PRESENTATION`).
+Both sides implement the query. The initial joint guest run is recorded in
+`aros-xterm/docs/apkg-joint-20261001.md`; it predates the responsive layout
+below. The primary user journey is Limpet launching apkg inside AROS XTerm.
+There is no check for a shell name. These changes are on `presentation`,
+not part of the frozen TLS release candidate.
 
 ## Three modes, chosen once per command
 
@@ -20,8 +22,11 @@ terminal ships it. The new options are features, so this comes after 0.3.1.
 | **plain interactive** | interactive output that does not answer the query (CON:, AUX:), or `--plain` | the current text; `install` adds a progress line every 10% (`--plain`: none) |
 | **rich** | interactive output whose terminal answers operation 13 | bold headings, coloured verdicts, width from the terminal, one updating progress line |
 
-The query is made on the handle `Output()` returns, once, before anything is
-printed; a failure of any kind means plain. `--color=never` removes colour
+The query is made on the handle `Output()` returns before anything is
+printed; a failure means plain. During in-place progress geometry is refreshed
+at most once per wall-clock second, on the next callback. This is not a resize
+subscription: without callbacks there is no redraw. The synchronous DOS query
+has no timeout guarantee if its handler hangs. `--color=never` removes colour
 but keeps bold and the progress line; `--plain` removes all of it.
 `--color=always` adds colour even on a plain interactive handle, never on a
 non-interactive one (no escape sequence ever goes into a file).
@@ -47,13 +52,13 @@ isomaker 1.0
   installed:    no
 ```
 
-Rich: the same lines, in the same order, with
-
-- the first line (`isomaker 1.0`) in bold;
-- the verdict word in colour: `native` and `satisfied` green; `undetermined`
-  yellow; `incompatible` and `missing` red; `installed: yes` green;
-- long values wrapped at the terminal's width, continuation lines indented
-  under the value instead of breaking the column.
+Rich: package/version and description first, then installation state and
+location. Separate sections show compatibility and requirements, installed
+package actions, and finally download/provenance. A compatible target is not
+a promise that the application starts. Verdicts remain textual without colour.
+Values, paths and identifiers wrap without losing content. Wrapping currently
+counts bytes (the current catalogue is ASCII), not Unicode display cells.
+Previously printed text is not reflowed on resize.
 
 ## search
 
@@ -63,13 +68,13 @@ version 10, arch 9, summary to the end of the line), as in
 
 Rich:
 
-- a bold header line `package  version  target  summary`;
-- the id column as wide as the longest id in the result, not a fixed 20;
-- the summary cut at the terminal's width with `...`, so each package stays
-  on one line; with a width below 40 columns, two lines per package (id and
-  version, then the summary indented);
-- the tags that exist today (`[other CPU]`, `[unknown ABI]`, `[other ABI]`)
-  in yellow, still as words.
+- a package count, then package/version/state/description columns at 80 or
+  more columns; descriptions wrap into the remaining width;
+- below 80 columns, or for identifiers/versions too long for the table,
+  package blocks with full version, textual installation state and description;
+- no discarded description text; unknown width uses readable blocks;
+- CPU/ABI on a separate line, with mismatch reasons in yellow when relevant;
+- a final hint pointing to `apkg show`.
 
 ## install
 
@@ -88,14 +93,23 @@ Rich: one line, rewritten in place with CR and erase-to-end-of-line, never
 wider than the terminal:
 
 ```
-  soliton  downloading  [#########...........]  45%  98 KB of 219 KB
+Downloading [#########-----------]  45%  98 KiB / 219 KiB
 ```
 
-then replaced by `verified and cached ...` and `installed soliton` in
-green, or by the failure text in red with its word (`failed: ...`).
-Extraction gets the same line (`extracting 12 of 30 files`). On Ctrl-C the
-line is ended before the `cancelled` message, so the next output starts on
-a clean line.
+The command first names the package and intended destination. At smaller
+widths the bar disappears, then byte counters, retaining the download stage
+and percentage where they fit. The bar never wraps into the next line.
+Unknown-length downloads use complete byte-count lines, initially and at
+each new MiB, because the transport has no final progress event in that case.
+
+The existing verify callback reports completion only: `Archive verified`.
+Extraction/publication show stage names, not invented percentages. The engine
+does not emit per-file extraction progress. Completion clears the live line
+before the ordinary result; rich errors wrap too. Existing engine messages
+(fetching, redirects and cache verification) remain unchanged.
+
+`--slow` uses the same milliseconds-to-50-Hz-ticks conversion for transfer and
+extraction, rounded up. This is a testing aid, not a progress timer.
 
 ## Acceptance (from the shared contract)
 
@@ -103,3 +117,10 @@ On native v11, mainline, the PTY preview, CON:, redirected output, `--json`,
 a narrow window and a terminal that refuses the query: each command in each
 mode. A redirected run must be byte-identical to today's, and contain no
 escape sequence. The existing suites must pass unchanged.
+
+Host renderer checks: `python3 tests/test_presentation.py`, also included in
+`tests/run-host-tests.sh`. They execute production `present.c`, substituting
+only DOS handle/capability calls and time. Widths 12/24/40/80/120, a live
+80-to-24 resize, plain/JSON/redirected silence, unknown capabilities, large
+byte counters and delay conversion are exercised. They do not prove Limpet,
+terminal rendering or guest scheduling; the new guest acceptance is pending.

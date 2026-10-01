@@ -1,0 +1,91 @@
+"""Exercise production presentation; fake only the native DOS capability query."""
+import os
+import pathlib
+import re
+import subprocess
+import tempfile
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+class Presentation(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory(prefix="apkg-presentation-")
+        cls.exe = pathlib.Path(cls.tmp.name) / "driver"
+        subprocess.run([os.environ.get("CC", "cc"), "-std=c99", "-Wall", "-Wextra", "-Werror",
+                        "-I" + str(ROOT / "tests/presentation-stubs"),
+                        str(ROOT / "tests/presentation-driver.c"),
+                        str(ROOT / "src/pkg/present.c"), "-o", str(cls.exe)], check=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def output(self, mode, width=80):
+        return subprocess.check_output([str(self.exe), mode, str(width)]).decode()
+
+    def test_plain_redirect_json_never_emit_progress(self):
+        for mode in ("plain", "redirect", "json"):
+            with self.subTest(mode=mode):
+                self.assertEqual(self.output(mode), "")
+
+    def test_narrow_progress_keeps_percentage_not_package_prefix(self):
+        text = self.output("progress", 24)
+        self.assertIn("58%", text)
+        for line in text.split("\r"):
+            self.assertLessEqual(len(re.sub(r"\x1b\[[0-9;]*[mK]", "", line).rstrip("\n")), 23)
+
+    def test_phases_are_visible_without_fabricated_percentages(self):
+        text = self.output("progress")
+        self.assertIn("Archive verified", text)
+        self.assertIn("Extracting", text)
+        self.assertNotIn("100%", text)
+
+    def test_progress_adapts_after_resize(self):
+        text = self.output("resize")
+        frame = next(x for x in text.split("\r") if "58%" in x)
+        self.assertLessEqual(len(re.sub(r"\x1b\[[0-9;]*[mK]", "", frame)), 23)
+
+    def test_layout_preserves_details_and_fits_width(self):
+        for width in (12, 24, 40, 80, 120):
+            with self.subTest(width=width):
+                text = re.sub(r"\x1b\[[0-9;]*[mK]", "", self.output("layout", width))
+                for line in text.splitlines():
+                    self.assertLessEqual(len(line), width - 1, repr(line))
+                compact = re.sub(r"\s+", "", text)
+                for item in ("Work:Applications/Micropolis", "0.1.0-rc3-aros2", "installed",
+                             "a-very-long-package-identifier", "12345678901234567890",
+                             "otherCPU:i386/v0", "savedcities."):
+                    self.assertIn(item, compact)
+
+    def test_slow_milliseconds_are_converted_to_50hz_ticks(self):
+        for ms, ticks in ((-1, 0), (0, 0), (1, 1), (20, 1), (21, 2), (1000, 50), (5000, 250), (2147483647, 107374183)):
+            with self.subTest(ms=ms):
+                self.assertEqual(self.output("slow", ms), str(ticks) + "\n")
+
+    def test_unknown_capabilities_do_not_authorize_escape_sequences(self):
+        self.assertEqual(self.output("unknown"), "")
+        con = self.output("con")
+        self.assertIn("58%", con)
+        self.assertNotIn("\x1b", con)
+        self.assertNotIn("\r", con)
+
+    def test_byte_counters_do_not_overflow_or_exceed_100_percent(self):
+        text = self.output("overflow")
+        self.assertRegex(text, r"(49|50)%")
+        self.assertIn("100%", text)
+        self.assertNotIn("200%", text)
+
+    def test_progress_leaves_no_stale_line(self):
+        text = self.output("progress")
+        self.assertTrue(text.endswith("\r\x1b[K"))
+        self.assertIn("\r\x1b[KArchive verified\n", text)
+
+    def test_unknown_length_does_not_collide_with_engine_status(self):
+        text = self.output("unknown-length")
+        self.assertIn("\nverified and cached test.zip\n", text)
+        self.assertNotIn("%", text)
+
+if __name__ == "__main__":
+    unittest.main()

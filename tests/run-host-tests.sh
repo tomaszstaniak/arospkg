@@ -62,4 +62,6 @@ echo "== test_mkindex"
 python3 "$HERE/test_mkindex.py" || fail=1
 echo "== test_doc_examples"
 python3 "$HERE/test_doc_examples.py" || fail=1
+echo "== test_presentation"
+python3 "$HERE/test_presentation.py" || fail=1
 [ $fail -eq 0 ] && echo "ALL HOST TESTS PASS" || { echo "HOST TESTS FAILED"; exit 1; }

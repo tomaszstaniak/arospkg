@@ -16,6 +16,7 @@
 #include "net.h"
 #include "pkg.h"
 #include "util.h"
+#include "slow.h"
 
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -154,7 +155,7 @@ static int fetch_once(const char *host, const char *path, str *body,
             snprintf(why, 240, "response from %s exceeds %ld bytes", host, max_bytes);
             goto out;
         }
-        if (slow_ms) Delay((ULONG)(slow_ms / 20 ? slow_ms / 20 : 1));   /* ticks are 1/50 s */
+        if (slow_ms > 0) Delay(pkg_slow_ticks(slow_ms));
         if (prog_cb) {
             /* The headers arrive in the same stream; once they are complete
                the body count and the declared length are both known, and

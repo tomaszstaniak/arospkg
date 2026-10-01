@@ -10,6 +10,7 @@ static void net_prog_shim(void *user, unsigned long done, unsigned long total, i
 #include "req.h"
 #include "icon.h"
 #include "listing.h"
+#include "slow.h"
 
 #include <proto/dos.h>
 #include <stdio.h>
@@ -364,7 +365,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
         }
     }
     prog(c, "extract", 0, want_size > 0 ? (unsigned long)want_size : 0, 0);
-    if (pkg_slow_ms) Delay((ULONG)(pkg_slow_ms * 20 / 20));   /* testing only, see pkg.h */
+    if (pkg_slow_ms > 0) Delay(pkg_slow_ticks(pkg_slow_ms)); /* testing only */
     if (arc_extract(archive, staging, subdir, 64L*1024*1024, 256L*1024*1024,
                     NULL, NULL, why) != 0) {
         st = pkg_fail(e, PKG_E_ARCHIVE, "the archive was rejected", why, archive);
