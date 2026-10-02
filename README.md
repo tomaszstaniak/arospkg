@@ -4,13 +4,14 @@ Find, install and remove AROS software from a window or the Shell.
 **PkgManager** is the graphical interface; **apkg** is the command-line tool.
 Both use the same catalogue and installed packages.
 
-**[Download 0.3.1 for AROS One (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.x86_64-aros-v11.zip)**
+**[Download 0.3.1 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.x86_64-aros-v11.zip)**
 · [Other builds and release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
 
-## Install on AROS One
+## Install
 
-1. Download the ZIP above. These instructions are for **AROS One x86_64**;
-   choose **v11**, not mainline v1. Other builds are experimental.
+1. Download the ZIP matching your CPU and ABI. The example below uses
+   **x86_64 ABIv11**; for another build, substitute its archive and drawer
+   names. Other builds are experimental; see the release notes.
 2. Open a Shell and use `CD` to enter the drawer containing the ZIP.
 3. Run these commands to unpack it, put `apkg` on the command path and
    fetch the software catalogue:
@@ -23,11 +24,12 @@ apkg --version
 apkg update
 ```
 
-`apkg --version` should report **0.3.1** and **abi v11**.
+`apkg --version` should report **0.3.1** and the ABI you selected.
 No compiler, Installer script or separate TLS libraries are needed.
 
-Keep the extracted drawer somewhere permanent, not `RAM:`: it contains
-PkgManager. Installing packages requires a working network connection.
+Keep the extracted drawer somewhere permanent, not `RAM:`, if using
+PkgManager (included in the ABIv11 archive). Installing packages requires
+a working network connection.
 
 **Updating an older arospkg?** Close PkgManager and finish running apkg
 operations before copying the new programs. Keep `SYS:Packages` and its
@@ -89,8 +91,8 @@ This selects a separate package root; it does not move existing installs.
 ### If a download fails
 
 Check that the system has a working network connection and that
-`ENV:SYS/Certificates/ca-bundle.crt` exists. AROS One supplies this
-certificate bundle. Certificate checks are required; do not disable them.
+`ENV:SYS/Certificates/ca-bundle.crt` exists. Certificate checks are
+required; do not disable them.
 If `show` reports a CPU or ABI mismatch, choose a build for your system.
 
 ## What it looks like
