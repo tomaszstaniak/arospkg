@@ -1,0 +1,7 @@
+fetching https://archives.arosworld.org/share/utility/text/gmore.x86_64-aros-v11.zip
+DIAG host=archives.arosworld.org end_n=0 tls_ret=-30848 (-0x7880) sock_errno=0 recv0=0 raw=641 body=363 content_length=363 slow_ms=200
+  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/text/gmore.x86_64-aros-v11.zip
+DIAG host=arosarchives.os4depot.net end_n=0 tls_ret=-30848 (-0x7880) sock_errno=0 recv0=0 raw=36163 body=35787 content_length=35787 slow_ms=200
+verified and cached SYS:Dg5/cache/gmore.zip
+installed gmore
+rc=0
