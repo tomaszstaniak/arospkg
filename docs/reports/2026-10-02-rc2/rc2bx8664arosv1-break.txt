@@ -1,0 +1,5 @@
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+apkg: the index could not be fetched
+     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     cannot resolve raw.githubusercontent.com
+rc=10

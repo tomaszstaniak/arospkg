@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define PM_VERSION "0.3.1-rc1"
+#define PM_VERSION "0.3.1-rc2"
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
        ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE };
@@ -986,6 +986,10 @@ static int real_main(int argc, char **argv)
         if (!strcmp(argv[i], "--log") && i + 1 < argc) logf = fopen(argv[++i], "w");
         else if (!strcmp(argv[i], "--root") && i + 1 < argc) snprintf(root, sizeof root, "%s", argv[++i]);
         else if (!strcmp(argv[i], "--slow") && i + 1 < argc) job_set_slow(atoi(argv[++i]));
+        else if (!strcmp(argv[i], "--break-download-at") && i + 1 < argc)   /* tests */
+            pkg_test_break_download(atol(argv[++i]), 1);
+        else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc) /* tests */
+            pkg_test_break_download(atol(argv[++i]), 2);
         else if (!strcmp(argv[i], "--yes")) auto_yes = 1;        /* tests: no requester to click */
         else if (!strcmp(argv[i], "--rexxlib") && i + 1 < argc) rexxlib = argv[++i];  /* tests: a machine without ARexx */
         else if (!strcmp(argv[i], "--test-nomem") && i + 1 < argc) {                   /* tests: allocation failures */
@@ -1010,7 +1014,7 @@ static int real_main(int argc, char **argv)
 
     app = ApplicationObject,
         MUIA_Application_Title,       (IPTR)"PkgManager",
-        MUIA_Application_Version,     (IPTR)"$VER: PkgManager 0.3.1-rc1 (29.9.2026)",
+        MUIA_Application_Version,     (IPTR)"$VER: PkgManager 0.3.1-rc2 (2.10.2026)",
         MUIA_Application_Description, (IPTR)"Install software from AROS Archives",
         MUIA_Application_Base,        (IPTR)"PKGMANAGER",
         SubWindow, (win = WindowObject,

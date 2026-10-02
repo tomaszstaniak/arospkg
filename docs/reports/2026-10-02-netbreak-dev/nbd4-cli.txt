@@ -1,0 +1,36 @@
+run nbd4 phase cli
+$ apkg --version
+apkg 0.3.1-rc1|  abi     v11|  binary  b358b87df00b986d46598bd267b38de368ea81c245b3e0343b5f9584587f40eb|  source  d8f590a4381d9ecf|  cc      10.5.0|  tc      /Users/tumash/Work/AROS/toolchain|  sdk     /Users/tumash/Work/AROS/sdk|  tls     Mbed TLS 3.6.7
+$ apkg --root SYS:NbCli update
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json|index updated: SYS:NbCli/db/index.json
+PASS index-fetched
+$ apkg --root SYS:NbCli --break-download-at 100000 install micropolis
+fetching https://github.com/tomaszstaniak/aros-micropolis/releases/download/v0.1.0-rc3/micropolis.x86_64-aros-v11.lha|  redirect -> https://release-assets.githubusercontent.com/github-production-release-asset/1382479469/a401c89e-a461-42e7-a2f4-030f71753373?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-10-02T10%3A20%3A10Z&rscd=attachment%3B+filename%3Dmicropolis.x86_64-aros-v11.lha&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-10-02T09%3A19%3A23Z&ske=2026-10-02T10%3A20%3A10Z&sks=b&skv=2018-11-09&sig=GpuFnwO2r4tekrgy916vM2%2BjAKiDmfS1NlXvu38Www0%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5MDkzMzkzMiwibmJmIjoxNzkwOTMzNjMyLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.0iRUoT0EzgyU47eIAMeR3-xsKPMct4NFm2mmy-uCubM&response-content-disposition=attachment%3B%20filename%3Dmicropolis.x86_64-aros-v11.lha&response-content-type=application%2Foctet-stream|apkg: cannot fetch the archive|     https://github.com/tomaszstaniak/aros-micropolis/releases/download/v0.1.0-rc3/micropolis.x86_64-aros-v11.lha|     the connection to release-assets.githubusercontent.com broke after 114674 of 2593505 bytes: connection reset
+PASS break-reported-as-fetch-failure
+PASS break-says-bytes-of-total
+PASS break-says-connection-reset
+PASS not-reported-as-wrong-size
+PASS nothing-in-cache
+PASS not-installed
+PASS lock-released
+$ apkg --root SYS:NbCli --corrupt-download-at 100000 install micropolis
+fetching https://github.com/tomaszstaniak/aros-micropolis/releases/download/v0.1.0-rc3/micropolis.x86_64-aros-v11.lha|  redirect -> https://release-assets.githubusercontent.com/github-production-release-asset/1382479469/a401c89e-a461-42e7-a2f4-030f71753373?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-10-02T10%3A20%3A10Z&rscd=attachment%3B+filename%3Dmicropolis.x86_64-aros-v11.lha&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-10-02T09%3A19%3A23Z&ske=2026-10-02T10%3A20%3A10Z&sks=b&skv=2018-11-09&sig=GpuFnwO2r4tekrgy916vM2%2BjAKiDmfS1NlXvu38Www0%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5MDkzMzkzMiwibmJmIjoxNzkwOTMzNjMyLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.0iRUoT0EzgyU47eIAMeR3-xsKPMct4NFm2mmy-uCubM&response-content-disposition=attachment%3B%20filename%3Dmicropolis.x86_64-aros-v11.lha&response-content-type=application%2Foctet-stream|apkg: cannot fetch the archive|     https://github.com/tomaszstaniak/aros-micropolis/releases/download/v0.1.0-rc3/micropolis.x86_64-aros-v11.lha|     the connection to release-assets.githubusercontent.com broke after 114688 of 2593505 bytes: TLS error -0x7200: SSL - An invalid SSL record was received
+PASS corrupt-says-tls-error
+PASS corrupt-not-a-socket-error
+PASS corrupt-nothing-kept
+PASS corrupt-lock-released
+$ apkg --root SYS:NbCli install micropolis
+fetching https://github.com/tomaszstaniak/aros-micropolis/releases/download/v0.1.0-rc3/micropolis.x86_64-aros-v11.lha|  redirect -> https://release-assets.githubusercontent.com/github-production-release-asset/1382479469/a401c89e-a461-42e7-a2f4-030f71753373?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-10-02T10%3A20%3A10Z&rscd=attachment%3B+filename%3Dmicropolis.x86_64-aros-v11.lha&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-10-02T09%3A19%3A23Z&ske=2026-10-02T10%3A20%3A10Z&sks=b&skv=2018-11-09&sig=GpuFnwO2r4tekrgy916vM2%2BjAKiDmfS1NlXvu38Www0%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5MDkzMzkzMiwibmJmIjoxNzkwOTMzNjMyLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.0iRUoT0EzgyU47eIAMeR3-xsKPMct4NFm2mmy-uCubM&response-content-disposition=attachment%3B%20filename%3Dmicropolis.x86_64-aros-v11.lha&response-content-type=application%2Foctet-stream|verified and cached SYS:NbCli/cache/micropolis.lha|installed micropolis
+PASS retry-installs
+PASS retry-cached
+$ apkg --root SYS:NbCli --break-download-at 1000 update
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json|apkg: the index could not be fetched|     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json|     the connection to raw.githubusercontent.com broke after 1378 of 96735 bytes: connection reset
+PASS index-break-reported
+PASS index-unchanged
+index sizes: index.json 96735|nb-index-before 96735
+PASS no-partial-index
+$ apkg --root SYS:NbCli --slow 100 --cancel-at download-mid install folio
+fetching https://github.com/tomaszstaniak/aros-foliopdf/releases/download/v0.4/Folio-0.4.x86_64-aros-v11.lha|  redirect -> https://release-assets.githubusercontent.com/github-production-release-asset/1381300564/2052d33f-0d7f-45ff-be1f-6a0de28b8acf?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-10-02T10%3A28%3A24Z&rscd=attachment%3B+filename%3DFolio-0.4.x86_64-aros-v11.lha&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-10-02T09%3A28%3A14Z&ske=2026-10-02T10%3A28%3A24Z&sks=b&skv=2018-11-09&sig=RpR5LzxCybuCc6r%2FmxC7Jf2NqnQmB6oqW7HBdZVXYTk%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5MDkzNTQ1MCwibmJmIjoxNzkwOTMzNjUwLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.DZ0qUfQjHBgf8Uo7xCIK47ETT6ywk3yoRUBOko-1-_Q&response-content-disposition=attachment%3B%20filename%3DFolio-0.4.x86_64-aros-v11.lha&response-content-type=application%2Foctet-stream|apkg: download cancelled|     folio|     Nothing was written; the cache has no partial file.
+PASS cancel-still-cancel
+PASS cancel-nothing-cached
+SUMMARY cli pass 19 fail 0

@@ -353,3 +353,4 @@ pkg_fault pkg_injected_fault = PKG_FAIL_NONE;
 void pkg_test_fault(pkg_fault f) { pkg_injected_fault = f; }
 int  pkg_slow_ms;
 void pkg_test_slow(int ms) { pkg_slow_ms = ms < 0 ? 0 : ms; net_set_slow(pkg_slow_ms); }
+void pkg_test_break_download(long body_bytes, int how) { net_set_break(body_bytes, how); }

@@ -1,0 +1,15 @@
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+apkg: the index could not be fetched
+     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     cannot resolve raw.githubusercontent.com
+apkg: no index -- run apkg update first
+     RAM:RcTest/db/index.json
+apkg: no index, and no such package installed -- run apkg update first
+     zaphod
+apkg: cannot read the index
+     RAM:RcTest/db/index.json
+     Run pkg update to fetch one.
+nothing installed
+apkg: not installed
+     zaphod
+nothing installed

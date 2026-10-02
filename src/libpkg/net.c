@@ -44,8 +44,42 @@ static void        *prog_user;
 void net_set_progress(net_progress cb, void *user) { prog_cb = cb; prog_user = user; }
 static int slow_ms;
 void net_set_slow(int ms) { slow_ms = ms; }
+static long break_at = -1;
+static int  break_how;
+void net_set_break(long b, int how) { break_at = b; break_how = how; }
 
 typedef struct { char *p; size_t len, cap; } str;
+
+/* What has arrived of a response: the body's length once the headers are
+   complete (-1 before), and the declared Content-Length (-1 if none). Both
+   count body bytes only, never the headers. */
+static void resp_lengths(const str *raw, long *body, long *declared)
+{
+    char *he = raw->p ? strstr(raw->p, "\r\n\r\n") : NULL, *cl;
+    *body = *declared = -1;
+    if (!he) return;
+    *body = (long)(raw->len - (size_t)(he + 4 - raw->p));
+    cl = strstr(raw->p, "\nContent-Length:");
+    if (!cl) cl = strstr(raw->p, "\ncontent-length:");
+    if (cl && cl < he) *declared = atol(cl + 16);
+}
+
+/* A stream that ended with an error: say so, with what had arrived. A
+   partial response is never passed on as if it were complete. */
+static void broken(char why[240], const char *host, const str *raw, const char *reason)
+{
+    long body, declared;
+    resp_lengths(raw, &body, &declared);
+    if (body < 0)
+        snprintf(why, 240, "the connection to %s broke before the response headers arrived: %s",
+                 host, reason);
+    else if (declared >= 0)
+        snprintf(why, 240, "the connection to %s broke after %ld of %ld bytes: %s",
+                 host, body, declared, reason);
+    else
+        snprintf(why, 240, "the connection to %s broke after %ld bytes of the response: %s",
+                 host, body, reason);
+}
 
 static int str_add(str *s, const char *d, size_t n, long cap_max)
 {
@@ -150,7 +184,8 @@ static int fetch_once(const char *host, const char *path, str *body,
     for (;;) {
         char chunk[16384];
         n = tls_read(t, chunk, sizeof chunk);
-        if (n <= 0) break;
+        if (n < 0) { broken(why, host, &raw, tls_error(t)); goto out; }
+        if (n == 0) break;
         if (!str_add(&raw, chunk, (size_t)n, max_bytes)) {
             snprintf(why, 240, "response from %s exceeds %ld bytes", host, max_bytes);
             goto out;
@@ -174,6 +209,14 @@ static int fetch_once(const char *host, const char *path, str *body,
                 prog_cb(prog_user, done, total, &cancel);
                 if (cancel) { snprintf(why, 240, "cancelled"); goto out; }
             }
+        }
+        /* Testing only. Decided here, where the body is counted, and done in
+           the TLS adapter, so the failure comes back through the same path
+           as a real one. Only a 2xx answer counts: a redirect never uses it. */
+        if (break_at >= 0 && raw.len > 12 && raw.p[9] == '2') {
+            long body, declared;
+            resp_lengths(&raw, &body, &declared);
+            if (body >= break_at) { break_at = -1; tls_test_fail_next_recv(t, break_how); }
         }
     }
     if (!raw.len) { snprintf(why, 240, "empty response from %s", host); goto out; }

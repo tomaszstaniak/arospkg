@@ -43,11 +43,13 @@ import sys
 d=open('$SHOTS/.boot.ppm','rb').read().split(b'\n',3); w,h=map(int,d[1].split()); px=d[3]
 row=6*w*3; xs=range(w//3,2*w//3,20)
 sys.exit(0 if (w,h)==(1024,768) and sum(1 for x in xs if min(px[row+3*x:row+3*x+3])>225)>len(xs)*0.8 else 1)" 2>/dev/null; do
-    # GRUB's menu (800x600) sometimes waits instead of counting down
+    # GRUB's menu (800x600) sometimes waits instead of counting down, and once
+    # it stood in the entry editor, where Return only adds a line: Esc leaves
+    # the editor (and does nothing in the menu), then Return boots.
     python3 -c "
 import sys
 d=open('$SHOTS/.boot.ppm','rb').read().split(b'\n',3); w,h=map(int,d[1].split())
-sys.exit(0 if (w,h)==(800,600) else 1)" 2>/dev/null && mon "sendkey ret"
+sys.exit(0 if (w,h)==(800,600) else 1)" 2>/dev/null && { mon "sendkey esc"; sleep 1; mon "sendkey ret"; }
     sleep 5
   done
   sleep 25

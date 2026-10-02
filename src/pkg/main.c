@@ -13,7 +13,7 @@
 #include <string.h>
 #include <time.h>
 
-static const char *VERSION = "apkg 0.3.1-rc1";
+static const char *VERSION = "apkg 0.3.1-rc2";
 
 /* `show`: the library's account of one package, laid out for a person. The
  * facts come from pkg_details_get and the probes behind the window's panel;
@@ -247,6 +247,10 @@ static void usage(void)
     printf("  --color=auto|always|never\n");
     printf("                        colour only; auto: when the terminal says it\n");
     printf("                        can. Output to a file is never decorated\n");
+    printf("  --break-download-at N   testing only: reset the connection of the next\n");
+    printf("                        download after N bytes of its body\n");
+    printf("  --corrupt-download-at N testing only: corrupt the next download's data\n");
+    printf("                        after N bytes of its body\n");
     printf("  --cancel-at <phase>   cancel from the callback in that phase, for\n");
     printf("                        testing: download, download-mid (once bytes\n");
     printf("                        flow), verify, extract, publish\n");
@@ -405,6 +409,10 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--fetch")) fetch = 1;
         else if (!strcmp(argv[i], "--progress")) show_progress = 1;
         else if (!strcmp(argv[i], "--slow") && i + 1 < argc) pkg_test_slow(atoi(argv[++i]));
+        else if (!strcmp(argv[i], "--break-download-at") && i + 1 < argc)
+            pkg_test_break_download(atol(argv[++i]), 1);
+        else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc)
+            pkg_test_break_download(atol(argv[++i]), 2);
         else if (!strcmp(argv[i], "--cancel-at") && i + 1 < argc) cancel_at = argv[++i];
         else if (!strcmp(argv[i], "--abi") && i + 1 < argc)
             pkg_set_abi_override(argv[++i]);

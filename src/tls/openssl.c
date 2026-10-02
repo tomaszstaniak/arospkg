@@ -62,6 +62,10 @@ int tls_read(tls *t, void *b, size_t n)
     int r = SSL_read(t->ssl, b, (int)n);
     return r < 0 ? -1 : r;
 }
+/* The comparison backend says only that it failed. */
+const char *tls_error(tls *t) { (void)t; return "TLS or socket error (OpenSSL backend)"; }
+/* Not provided by the comparison backend: its tests do not cover breaks. */
+void tls_test_fail_next_recv(tls *t, int how) { (void)t; (void)how; }
 void tls_end(tls *t)
 {
     if (!t) return;
