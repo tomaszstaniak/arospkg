@@ -1,0 +1,4 @@
+fetching https://expired.badssl.com/
+apkg: the index could not be fetched
+     https://expired.badssl.com/
+     certificate for expired.badssl.com rejected: The certificate validity has expired

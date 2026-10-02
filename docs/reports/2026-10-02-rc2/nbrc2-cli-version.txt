@@ -1,0 +1,8 @@
+apkg 0.3.1-rc2
+  abi     v11
+  binary  977f52aded5f2139adaab5cde1f330d6426b4dc9c329b961825056a36a7e31fc
+  source  40c14d9176867163
+  cc      10.5.0
+  tc      /Users/tumash/Work/AROS/toolchain
+  sdk     /Users/tumash/Work/AROS/sdk
+  tls     Mbed TLS 3.6.7

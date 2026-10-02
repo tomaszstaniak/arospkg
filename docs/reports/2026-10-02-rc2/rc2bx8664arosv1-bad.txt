@@ -1,0 +1,4 @@
+fetching https://expired.badssl.com/
+apkg: the index could not be fetched
+     https://expired.badssl.com/
+     cannot resolve expired.badssl.com

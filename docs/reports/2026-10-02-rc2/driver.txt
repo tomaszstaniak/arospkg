@@ -1,0 +1,60 @@
+booted 11:55:19
+  booted, network proved 11:58:07
+shot stack-cli 11:58:15
+== S/UPGRADE (11:58:15)
+   done 11:58:51
+== S/SOLUP (11:58:55)
+   done 12:02:16
+== S/VERIFY (12:02:16)
+   done 12:02:52
+== S/JSONTEST (12:02:52)
+   done 12:03:48
+== R/REL1 (12:03:48)
+   done 12:04:48
+booted 12:05:42
+  booted, network proved 12:08:30
+== R/REL2 (12:08:30)
+   done 12:09:20
+== R/REL1G (12:09:20)
+   done 12:09:55
+== R/LHATEST (12:09:55)
+   done 12:12:07
+shot lha-micropolis 12:12:07
+shot lha-after-esc 12:12:17
+== R/TRIALA (12:12:17)
+shot no-shell-before-R-TRIALA 12:14:17
+   the Shell did not answer; power-cycling before R/TRIALA
+booted 12:15:10
+  booted, network proved 12:17:57
+   done 12:22:06
+== R/TRIALB (12:22:06)
+shot during-R-TRIALB-60 12:27:22
+   done 12:28:12
+shot trialb 12:28:12
+shot trialb-workbench 12:28:22
+== R/TRIALC (12:28:22)
+   done 12:30:00
+== R/TRIALD (12:30:00)
+   done 12:31:45
+booted 12:32:39
+  booted, network proved 12:35:25
+== R/ACCEPT (12:35:25)
+   done 12:37:21
+CLI DONE 12:37:21
+booted 12:38:14
+  booted, network proved 12:41:02
+shot g0 12:41:18
+shot g1 12:41:22
+shot g2 12:41:39
+shot run1 12:42:00
+shot g3 12:42:43
+shot g4 12:43:11
+shot run2 12:43:32
+shot g5 12:44:09
+shot run3 12:44:30
+shot g6 12:45:27
+shot g7 12:46:07
+shot g8 12:46:26
+shot g9 12:46:32
+ALL DONE 12:48:04
+/Users/tumash/Work/AROS-dev/arospkg/tests/run-regression-on-pool.sh: line 196:  6017 Terminated: 15          python3 "$HERE/tests/tools/recv.py" "$EV" 8765 > "$SHOTS/recv.log" 2>&1
