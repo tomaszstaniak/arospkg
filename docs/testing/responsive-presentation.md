@@ -5,14 +5,19 @@ test. Primary target: AROS One x86_64/ABIv11, Limpet inside AROS XTerm with
 operation 13. Do not replace the installed release: deploy the development
 binary under a distinct name and choose a fresh test root.
 
-Binary for this test (2026-10-02, with XTY_COLOR_PENS): built from commit
-`57018a8` with `OUT=local/pens/apkg sh src/build.sh`, SHA-256
-`6f9ee12c3811f43bba4cf13e7583a60aef042f153bcc26eb4b1b3a2064e37196`. It
-supersedes the binary in `../reports/2026-10-01-responsive-presentation/README.md`.
-Accept it together with the named terminal build that reports the pens
-interpretation; a result with another terminal build does not carry over.
-Rebuild with `OUT=<separate-file> sh src/build.sh` if the local artifact is gone;
-record the new hash and do not reuse another binary's acceptance.
+Binary for this test (2026-10-02, after merging 0.3.1-rc2): built from
+commit `696ed0c` on `presentation` with `OUT=local/pres-rc2/apkg sh
+src/build.sh`, SHA-256
+`b170ca11463f1abd79b5268a59a15d607c0e5b1fe21081033a1d82e89ccf6e4c`. It has
+the presentation with XTY_COLOR_PENS and rc2's transport fix. It supersedes
+`6f9ee12c...` and the binary in
+`../reports/2026-10-01-responsive-presentation/README.md`: results with
+those do not carry over, and no other terminal build's results do either.
+
+Still open from the run with `6f9ee12c...`: the yellow verdict (for
+example `show` of a package whose requirement is `undetermined`, or a
+search tag such as `[other CPU]` with `--all-abi`), and a cancel on the
+light theme. No full TLS regression is needed for this run.
 
 ## User-visible acceptance
 
