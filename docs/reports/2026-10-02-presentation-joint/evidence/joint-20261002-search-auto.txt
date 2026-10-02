@@ -1,0 +1,108 @@
+ab3dhd               v0.9.0b1   x86_64    Alien Breed 3D HD Remaster
+alac                 0.1.3      x86_64    Apple Lossless Audio Codec decoder
+amiberry             6.3.4      x86_64    Amiberry preview v6.3.4 x86_64 abiv11
+antiword             0.37       x86_64    Convert Word documents to TXT/PDF/PS
+apotris              4.2.0a     x86_64    Tetris-style block-stacking game
+arrakis              1.0        x86_64    Arrakis demo x86_64 by Kakiarts/trbl
+badapple             20250122   x86_64    The famous Bad Apple animation with player and xm
+bin2iso              1.1        x86_64    convert Bin File to ISO 9660
+blips                1.0        x86_64    a sokoban style puzzle
+boy                  1.1        x86_64    Port of OpenGL demo from Icons '08
+breakhack            4.0.3      x86_64    A casual coffee-break roguelike
+cabextract           1.11       x86_64    Utility to extract from CAB files
+ccd2cue              0.1        x86_64    Converts CloneCD CCD to CUE format
+ccd2iso              0.3        x86_64    Convert CloneCD (.ccd) to ISO Images
+davegnukem           1.0.2      x86_64    2D scrolling platform shooter
+daysleeper           0.9r2      x86_64    Shutdown/Reboot at a selected time
+delugem              1.1        x86_64    puzzle game
+demac                0.1        x86_64    Decoder for .ape files
+demoeffects          20250131   x86_64    Many Demo Effects
+devilutionx          1.6.0-dev  x86_64    Diablo build for modern operating systems
+dirtree              40.8       x86_64    Shell command displaying directory trees
+diskusage            40.8       x86_64    Estimates file space usage
+dosbox               0.74       x86_64    Dosbox x86_64
+dose2                1.1        x86_64    Pulsating demo with bawdy humor from Assembly '01.
+fallout              1.1        x86_64    Fallout for modern operating systems
+fallout2             1.3        x86_64    Fallout 2 for modern operating systems
+fheroes2             1.1.16     x86_64    Heroes of the Might and Magic II engine
+finder               3.1        x86_64    MUI File Search Tool
+fireoftheapes        1.3        x86_64    Atypical FPS/survival horror game
+flx_play             0.3        x86_64    Simple FLI/FLC/FLX Animation Player
+folio                0.4        x86_64    PDF reader with thumbnails, search and highlighting, on MuPDF
+ft2clone             2.19       x86_64    FastTracker II Clone is a music tracker program
+gicriptofilex        1.0        x86_64    Encrypt files using 128 bit algorithm
+giddy3               1.5        x86_64    OpenGL puzzle-solving platform game.
+giocodel15           1.0        x86_64    a classic puzzle game
+gisplita             1.5        x86_64    little program to split large files
+gmore                1.2        x86_64    Text viewer similar to MORE
+gnurobbo             0.68       x86_64    open source reimplementation of Robbo
+grafx2               2.9        x86_64    256-colour indexed paint program for AROS
+grep                 2.0        x86_64    GNU Grep
+hexen2               1.5.10     x86_64    Hexen II: Hammer of Thyrion (uHexen2)
+hivelyreplay         0.2        x86_64    Replayer from HivelyTracker (AHI)
+hocoslamfy           2026       x86_64    SDL Flappy Bird clone.
+hostile-takeover     1.6.0      x86_64    RTS game freeware/opensource
+hydracastle          02/2024    x86_64    metroidvania-style action platformer
+iconmake             1.2        x86_64    The DualPNG Icon Creator for AROS
+isomaker             1.0        x86_64    Create an ISO CD from DOS
+isomaker-gui         1.1        x86_64    A GUI that lets you create ISO files bootable
+isotool              1.0        x86_64    Boot Extraction ISO And Rename Volume
+isotools-gui         1.0        x86_64    Boot Extraction ISO And Rename Volume
+keen4                1.0        x86_64    Port of the famous DOS game Commander Keen IV.
+lbreakouthd          1.2.2      x86_64    Breakout/Arkanoid-style game
+ledblur              20260904   x86_64    Port of oldskool GP32 Demo from '06.
+mcamiga              1.0        x86_64    File Manager
+metemp3              1.5        x86_64    a Mp3,Flac,Wav Player
+micropolis           0.1.0-rc3  x86_64    Classic city-building simulation for AROS
+minislug             2.0.0.04   x86_64    a metal slug game
+mplayer              1.0-v6     x86_64    Multimedia player with MUI user interface
+nano                 1.2        x86_64    nano demo x86_64 by Kakiarts
+nomarch              1.4        x86_64    extract old .arc and .ark archives
+ominoarcade          1.0        x86_64    recover all the coins while avoiding the enemies
+ominostage           1.1        x86_64    collect all the coins and avoid the enemies
+openloco             0.1.0-rc1  x86_64    Open-source re-implementation of Chris Sawyer's Locomotion
+opentyrian           2.1.x-AROS x86_64    open-source port of the DOS game Tyrian
+openxcom             1.0        x86_64    Open-source clone of UFO: Enemy Unknown
+pekkakana2           1.5.2      x86_64    platformer game where you control a rooster
+pkg-54321            1.0        x86_64    Five common 2d puzzles in multiple dimensions
+pkg-7mezzoplus       1.0        x86_64    Popular Italian Christmas game
+pkg-7zdec            9.13beta   x86_64    Unarchive 7zip files (.7z)
+planethively         1.0        x86_64    A musicdisk about HivelyTracker
+potrace              1.16       x86_64    Transforming bitmaps into vector graphics
+prboom-plus          2.6.66     x86_64    a version of the classic 3D shoot'em'up game Doom
+protrekkr            2.8.3PRE   x86_64    Tracker Synth hybrid Program
+qlview               25.09      x86_64    Sinclair QL Screen viewer
+rescode              1.2        x86_64    Calculates resistor values (4 and 5 band)
+residualvm           0.3.1-1    x86_64    ResidualVM x86_64 abiv11
+rtf-riddle           3.97b      x86_64    Rich Text Format to HTML5 converter
+scopagame            1.0        x86_64    Italian card game
+screentest           1          x86_64    Tests the stability of your screen
+sdllopan             1.0        x86_64    Lopan - MahJong clone
+sdlpop               1.23       x86_64    SDLPoP, an open-source port of Prince of Persia
+sfsobject            1.6        x86_64    Sets SFS object attributes
+shooterspace         1.0        x86_64    Avoid asteroids and deal with threatening UFOs
+siddump              1.08       x86_64    C64 music debug output utility
+skandalfoclock       1.1        x86_64    Advanced Analog Clock
+sokobangp2x          08032025   x86_64    a Sokoban engine
+soliton              2.2        x86_64    Klondike & Freecell card game
+sploiner             1.01       x86_64    split, join and recover files + AROS build
+stercus              1.1        x86_64    Port of Amiga Demo from MI '06.
+stratagus            3.3.2      x86_64    Warcraft and Warcraft 2 game engine
+super-haxagon        3.9.1      x86_64    Open source Super Hexagon clone
+super_trevor_land    1.0        x86_64    Super Trevor Land (x64, ABIv11)
+tbftss               1.5.1      x86_64    The Battle for the Solar System: the Pandora War
+tiltnroll            1.2.0      x86_64    OpenGL and SDL ball-rolling game
+timeless             1.0.2      x86_64    SDL port of Tran's Timeless MS-DOS demo.
+tinysid              0.94       x86_64    A small, multiplatform SID player
+tinytris             2.3        x86_64    a clone of the classic game Tetris
+tressette            1.0        x86_64    Is a popular Italian card game
+unlzx                2.16       x86_64    Unpack lzx files
+unrar                6.11       x86_64    UnRAR for AROS 64 v11
+unshield             1.6.2      x86_64    Utility to extract files from InstallShield CAB
+untangle             1.2        x86_64    Untangle set of dots joined by lines
+untarka              0.34       x86_64    unpack tar file
+wildmidi             0.4.6      x86_64    Midi Player
+xrick                050500     x86_64    a clone of Rick Dangerous
+zaphod               1.3        x86_64    A simple binary file editor
+zgloom               052026v2   x86_64    port of the Amiga FPS Gloom
+zunecalc             1.0        x86_64    Simple Calculator
