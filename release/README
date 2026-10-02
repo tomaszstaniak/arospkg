@@ -293,9 +293,10 @@ disk cannot be accounted for, apkg leaves it where it is and says so.
 CHECKSUMS
 ---------
 
-SHA256SUMS in this archive lists the SHA-256 of every file in it.
-`apkg --version` prints the SHA-256 of the running binary, which must match
-the line for apkg.
+BUILD.txt in this archive names the source commit and the SHA-256 of the
+programs in it; `apkg --version` prints the SHA-256 of the running binary,
+which must match the line for apkg. The SHA-256 of each archive is in
+SHA256SUMS on the release page.
 
 
 LICENCES
