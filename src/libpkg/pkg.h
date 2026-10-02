@@ -162,6 +162,12 @@ void pkg_test_fault(pkg_fault);
  * gives the non-cancellable phase a duration a close-during-it test needs.
  * 0 restores normal speed. */
 void pkg_test_slow(int ms);
+/* Testing only: in the next download whose answer is a 2xx, once that many
+ * bytes of its body have arrived, the following receive fails in the TLS
+ * adapter: as a reset socket (how = 1) or with corrupted bytes (how = 2).
+ * It fires once, so a following attempt in the same process succeeds. A
+ * negative byte count turns it off. */
+void pkg_test_break_download(long body_bytes, int how);
 
 /* Testing only: make recovery abort part-way through, so the next run has to
  * finish a rollback that was itself interrupted. Recovery claims to be

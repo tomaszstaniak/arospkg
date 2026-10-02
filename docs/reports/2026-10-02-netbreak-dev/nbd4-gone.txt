@@ -1,0 +1,4 @@
+run nbd4 phase gone
+PASS port-gone
+PASS no-lock-left
+SUMMARY gone pass 2 fail 0

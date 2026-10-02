@@ -1,0 +1,28 @@
+run nbd3 phase gui
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 c7606691af788839bc8b325d3cd9ec8094e809ca2d8b173552f4b05f48c4ae04
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 c7606691af788839bc8b325d3cd9ec8094e809ca2d8b173552f4b05f48c4ae04
+  > UPDATE
+  < 1
+  > WAIT 1
+  < id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/
+FAIL gui-update : id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json) -- the connection to raw.githubusercontent.com broke after 64586 of 96735 bytes: connection reset
+  > INSTALL soliton
+  < 
+  > WAIT 
+  < id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/
+job: id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json) -- the connection to raw.githubusercontent.com broke after 64586 of 96735 bytes: connection reset seconds 0.0
+PASS gui-break-failed
+PASS gui-break-message
+PASS gui-nothing-in-cache
+PASS gui-lock-released
+  > INSTALL soliton
+  < 
+  > WAIT 
+  < id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/
+retry seconds 0.1
+FAIL gui-retry-done : id 1|op update|package |origin arexx|state failed|phase |done 0|total 0|cancancel 0|error NETWORK|message the index could not be fetched (https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json) -- the connection to raw.githubusercontent.com broke after 64586 of 96735 bytes: connection reset
+  > QUIT
+  < closing
+PASS gui-quit
+SUMMARY gui pass 5 fail 2

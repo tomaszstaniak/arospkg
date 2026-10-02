@@ -1,0 +1,27 @@
+run nbd4 phase gui
+  > VERSION
+  < PkgManager 0.3.1-rc1 ARexx 1 sha256 c7606691af788839bc8b325d3cd9ec8094e809ca2d8b173552f4b05f48c4ae04
+version PkgManager 0.3.1-rc1 ARexx 1 sha256 c7606691af788839bc8b325d3cd9ec8094e809ca2d8b173552f4b05f48c4ae04
+PASS gui-index-present
+  > INSTALL soliton
+  < 1
+PASS gui-install-accepted
+  > WAIT 1
+  < id 1|op install|package soliton|origin arexx|state failed|phase download|done 51200|total 223945|cancancel 0|error NETWORK|message cannot fetch the archive (https://archives.arosworld.org/share/game/c
+job: id 1|op install|package soliton|origin arexx|state failed|phase download|done 51200|total 223945|cancancel 0|error NETWORK|message cannot fetch the archive (https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip) -- the connection to arosarchives.os4depot.net broke after 51200 of 223945 bytes: connection reset seconds 2.6
+PASS gui-break-failed
+PASS gui-break-message
+PASS gui-nothing-in-cache
+PASS gui-lock-released
+  > INSTALL soliton
+  < 2
+PASS gui-retry-accepted
+  > WAIT 2
+  < id 2|op install|package soliton|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed soliton
+retry: id 2|op install|package soliton|origin arexx|state done|phase publish|done 1|total 1|cancancel 0|error |message installed soliton seconds 1.9
+PASS gui-retry-done
+PASS gui-retry-installed
+  > QUIT
+  < closing
+PASS gui-quit
+SUMMARY gui pass 10 fail 0

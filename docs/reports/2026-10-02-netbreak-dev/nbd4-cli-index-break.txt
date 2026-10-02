@@ -1,0 +1,4 @@
+fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+apkg: the index could not be fetched
+     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
+     the connection to raw.githubusercontent.com broke after 1378 of 96735 bytes: connection reset

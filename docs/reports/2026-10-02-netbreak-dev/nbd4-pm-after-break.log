@@ -1,0 +1,19 @@
+start PkgManager 0.3.1-rc1 sha256 c7606691af788839bc8b325d3cd9ec8094e809ca2d8b173552f4b05f48c4ae04 root SYS:NbGui: ARexx port PKGMANAGER
+refill (start) term="" rows=108 shown=108 installed=0 keep=-
+arexx> VERSION
+arexx< rc=0 len=100 PkgManager 0.3.1-rc1 ARexx 1 sha256 c7606691af788839bc8b325d3cd9ec8094e...
+arexx> INSTALL soliton
+job 1 install soliton from arexx
+arexx< rc=0 len=1 1
+arexx> WAIT 1
+arexx wait for job 1 (running)
+event soliton download 0/223945 can_cancel=1 cancel_button=enabled
+event soliton download 0/223945 can_cancel=1 cancel_button=enabled
+event soliton download 10240/223945 can_cancel=1 cancel_button=enabled
+event soliton download 20480/223945 can_cancel=1 cancel_button=enabled
+event soliton download 30720/223945 can_cancel=1 cancel_button=enabled
+event soliton download 40960/223945 can_cancel=1 cancel_button=enabled
+event soliton download 51200/223945 can_cancel=1 cancel_button=enabled
+done install soliton status=12 cannot fetch the archive
+job 1 install soliton failed NETWORK: cannot fetch the archive (https://archives.arosworld.org/share/game/card/soliton.x86_64-aros-v11.zip) -- the connection to arosarchives.os4depot.net broke after 51200 of 223945 bytes: connection reset
+arexx< rc=0 len=331 id 1|op install|package soliton|origin arexx|state failed|phase downloa...

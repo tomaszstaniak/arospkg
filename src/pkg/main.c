@@ -120,6 +120,10 @@ static void usage(void)
     printf("  requires <id>         each system requirement, probed here and now\n");
     printf("  --slow <ms>           slow the download and the extract, for testing\n");
     printf("  --progress            print each progress callback, for testing\n");
+    printf("  --break-download-at N   testing only: reset the connection of the next\n");
+    printf("                        download after N bytes of its body\n");
+    printf("  --corrupt-download-at N testing only: corrupt the next download's data\n");
+    printf("                        after N bytes of its body\n");
     printf("  --cancel-at <phase>   cancel from the callback in that phase, for\n");
     printf("                        testing: download, download-mid (once bytes\n");
     printf("                        flow), verify, extract, publish\n");
@@ -266,6 +270,10 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--fetch")) fetch = 1;
         else if (!strcmp(argv[i], "--progress")) show_progress = 1;
         else if (!strcmp(argv[i], "--slow") && i + 1 < argc) pkg_test_slow(atoi(argv[++i]));
+        else if (!strcmp(argv[i], "--break-download-at") && i + 1 < argc)
+            pkg_test_break_download(atol(argv[++i]), 1);
+        else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc)
+            pkg_test_break_download(atol(argv[++i]), 2);
         else if (!strcmp(argv[i], "--cancel-at") && i + 1 < argc) cancel_at = argv[++i];
         else if (!strcmp(argv[i], "--abi") && i + 1 < argc)
             pkg_set_abi_override(argv[++i]);

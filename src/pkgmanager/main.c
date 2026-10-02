@@ -986,6 +986,10 @@ static int real_main(int argc, char **argv)
         if (!strcmp(argv[i], "--log") && i + 1 < argc) logf = fopen(argv[++i], "w");
         else if (!strcmp(argv[i], "--root") && i + 1 < argc) snprintf(root, sizeof root, "%s", argv[++i]);
         else if (!strcmp(argv[i], "--slow") && i + 1 < argc) job_set_slow(atoi(argv[++i]));
+        else if (!strcmp(argv[i], "--break-download-at") && i + 1 < argc)   /* tests */
+            pkg_test_break_download(atol(argv[++i]), 1);
+        else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc) /* tests */
+            pkg_test_break_download(atol(argv[++i]), 2);
         else if (!strcmp(argv[i], "--yes")) auto_yes = 1;        /* tests: no requester to click */
         else if (!strcmp(argv[i], "--rexxlib") && i + 1 < argc) rexxlib = argv[++i];  /* tests: a machine without ARexx */
         else if (!strcmp(argv[i], "--test-nomem") && i + 1 < argc) {                   /* tests: allocation failures */

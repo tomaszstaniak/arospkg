@@ -27,6 +27,8 @@ typedef void (*net_progress)(void *user, unsigned long done,
 void net_set_progress(net_progress, void *user);
 /* Testing only; see pkg_test_slow. */
 void net_set_slow(int ms_per_chunk);
+/* Testing only; see pkg_test_break_download. */
+void net_set_break(long body_bytes, int how);
 
 /* Where the trust store lives. "Only the binary" is not quite true: this file
  * belongs to the system and pkg refuses to download without it. */

@@ -13,6 +13,8 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/version.h>
+#include <mbedtls/error.h>
+#include <errno.h>
 #include <psa/crypto.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,20 +27,40 @@ struct tls {
     mbedtls_x509_crt ca;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context drbg;
+    int sock_errno;     /* Errno() at the last failed send or recv, else 0 */
+    int ssl_err;        /* the last error tls_read or tls_write returned */
+    int trap;           /* testing only: tls_test_fail_next_recv */
+    char err[160];
 };
 
 const char *tls_name(void) { return "Mbed TLS " MBEDTLS_VERSION_STRING; }
 
 static int bio_send(void *ctx, const unsigned char *b, size_t n)
 {
-    int r = send(((tls *)ctx)->sock, (void *)b, (int)n, 0);
-    return r < 0 ? MBEDTLS_ERR_SSL_INTERNAL_ERROR : r;
+    tls *t = (tls *)ctx;
+    int r = send(t->sock, (void *)b, (int)n, 0);
+    /* Errno() is read here, at the failed call: by the time Mbed TLS hands
+       its own code back, another call may have changed it. */
+    if (r < 0) { t->sock_errno = Errno(); return MBEDTLS_ERR_SSL_INTERNAL_ERROR; }
+    return r;
 }
 
 static int bio_recv(void *ctx, unsigned char *b, size_t n)
 {
-    int r = recv(((tls *)ctx)->sock, b, (int)n, 0);
-    return r < 0 ? MBEDTLS_ERR_SSL_INTERNAL_ERROR : r;
+    tls *t = (tls *)ctx;
+    int r, i;
+    if (t->trap == TLS_TEST_RESET) {
+        t->trap = 0;
+        t->sock_errno = ECONNRESET;
+        return MBEDTLS_ERR_SSL_INTERNAL_ERROR;
+    }
+    r = recv(t->sock, b, (int)n, 0);
+    if (r < 0) { t->sock_errno = Errno(); return MBEDTLS_ERR_SSL_INTERNAL_ERROR; }
+    if (t->trap == TLS_TEST_CORRUPT && r > 0) {
+        t->trap = 0;
+        for (i = 0; i < r; i++) b[i] ^= 0x5a;
+    }
+    return r;
 }
 
 /* The bundle is read here rather than through Mbed TLS's file layer, which
@@ -144,14 +166,38 @@ fail:
 int tls_write(tls *t, const void *b, size_t n)
 {
     int r;
+    t->sock_errno = t->ssl_err = 0;
     do r = mbedtls_ssl_write(&t->ssl, b, n);
     while (r == MBEDTLS_ERR_SSL_WANT_READ || r == MBEDTLS_ERR_SSL_WANT_WRITE);
-    return r < 0 ? -1 : r;
+    if (r < 0) { t->ssl_err = r; return -1; }
+    return r;
+}
+
+void tls_test_fail_next_recv(tls *t, int how) { if (t) t->trap = how; }
+
+/* The socket's error when there was one: that is what failed, and Mbed TLS
+   only reports it as an internal error. Otherwise the TLS library's. */
+const char *tls_error(tls *t)
+{
+    char m[100];
+    if (!t) return "";
+    if (t->sock_errno == ECONNRESET)
+        snprintf(t->err, sizeof t->err, "connection reset");
+    else if (t->sock_errno == ETIMEDOUT)
+        snprintf(t->err, sizeof t->err, "connection timed out");
+    else if (t->sock_errno)
+        snprintf(t->err, sizeof t->err, "socket error %d", t->sock_errno);
+    else if (t->ssl_err) {
+        mbedtls_strerror(t->ssl_err, m, sizeof m);
+        snprintf(t->err, sizeof t->err, "TLS error -0x%04x: %s", (unsigned)-t->ssl_err, m);
+    } else t->err[0] = 0;
+    return t->err;
 }
 
 int tls_read(tls *t, void *b, size_t n)
 {
     int r;
+    t->sock_errno = t->ssl_err = 0;
     for (;;) {
         r = mbedtls_ssl_read(&t->ssl, b, n);
         if (r == MBEDTLS_ERR_SSL_WANT_READ || r == MBEDTLS_ERR_SSL_WANT_WRITE) continue;
@@ -162,7 +208,8 @@ int tls_read(tls *t, void *b, size_t n)
     /* A server that closes without close_notify ends the stream too; the
        HTTP layer checks lengths and the caller checks the hash. */
     if (r == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY || r == 0) return 0;
-    return r < 0 ? -1 : r;
+    if (r < 0) { t->ssl_err = r; return -1; }
+    return r;
 }
 
 void tls_end(tls *t)
