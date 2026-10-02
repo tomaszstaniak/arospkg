@@ -14,10 +14,10 @@ the presentation with XTY_COLOR_PENS and rc2's transport fix. It supersedes
 `../reports/2026-10-01-responsive-presentation/README.md`: results with
 those do not carry over, and no other terminal build's results do either.
 
-Still open from the run with `6f9ee12c...`: the yellow verdict (for
-example `show` of a package whose requirement is `undetermined`, or a
-search tag such as `[other CPU]` with `--all-abi`), and a cancel on the
-light theme. No full TLS regression is needed for this run.
+Still open from the run with `6f9ee12c...`: the yellow verdict and a
+cancel on the light theme. Yellow appears with `apkg --root <empty root>
+show micropolis` ("Catalogue: missing") and with `apkg --root <root>
+--all-abi search dirtree` (the i386 build's "other CPU" note). No full TLS regression is needed for this run.
 
 ## User-visible acceptance
 
