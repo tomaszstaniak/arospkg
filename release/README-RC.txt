@@ -1,9 +1,18 @@
-arospkg 0.3.1-rc1 -- RELEASE CANDIDATE, for testing
+arospkg 0.3.1-rc2 -- RELEASE CANDIDATE, for testing
 ===================================================
 
 This is a test build, not a release. It is published so that it can be
 tried on more systems than ours. Do not replace a working arospkg 0.3 with
 it; test it on its own, as described below.
+
+What changed from 0.3.1-rc1
+---------------------------
+
+A download whose connection breaks is now reported as such: "the
+connection to <host> broke after N of M bytes: connection reset" (or the
+TLS error), instead of "the download is the wrong size". The partial
+download is still discarded and nothing reaches the cache; only the
+message changed.
 
 What changed from 0.3
 ---------------------
@@ -24,25 +33,16 @@ Targets
 -------
 
 Each archive is for one CPU and ABI; a binary for one does not run on
-another. What was checked for each archive is in the table below: "built"
-means compiled only; "runs" means started on that system; "TLS" means it
-fetched over HTTPS and refused bad certificates; "full" means the whole
-package cycle (install, start, remove) was done with it.
+another. Which archive was run on which system, and what was checked, is
+in the release notes on GitHub: this file is written before the tests and
+does not claim any. An archive the notes do not list as run is
+experimental and not runtime-tested.
 
-  archive                    runs   TLS   full cycle   notes
-  -------------------------  -----  ----  -----------  -----------------------------
-  x86_64-aros-v11  apkg       yes    yes   yes          AROS One 1.3 (QEMU); also
-                                                        started on ABIv11 2026.09
-  x86_64-aros-v11  PkgManager no     no    no           built only: not yet run
-  x86_64-aros-v1   apkg       yes    yes   no           mainline (QEMU); the catalogue
-                                                        has no mainline package
-  i386-aros-v0     apkg       yes    yes   yes          ABIv0 20250313 (QEMU), with
-                                                        a test index (no i386 packages
-                                                        in the public catalogue)
-  aarch64-aros     apkg       yes    no    no           EXPERIMENTAL: started only on
-                                                        hosted Macaros with a
-                                                        posixc.library built for it;
-                                                        stock Macaros lacks it
+  x86_64-aros-v11   apkg and PkgManager   AROS One and other ABIv11 systems
+  x86_64-aros-v1    apkg                  mainline AROS
+  i386-aros-v0      apkg                  the i386 ABIv0 line
+  aarch64-aros      apkg                  hosted aarch64 (Macaros); needs a
+                                          posixc.library built for it
 
 Testing it without touching your installation
 ---------------------------------------------
@@ -60,7 +60,9 @@ Shell in that drawer:
 
 --root keeps everything (index, cache, installed programs) in RAM:RcTest,
 away from SYS:Packages and from an installed arospkg 0.3. Nothing is
-written to C:, LIBS: or SYS:Packages. Delete RAM:RcTest when done.
+written to C:, LIBS: or SYS:Packages. Delete RAM:RcTest when done. RAM:
+is empty after a reboot; to test anything across a reboot, use a drawer
+on a disk instead (for example --root SYS:RcTest).
 
 It needs a running TCP/IP stack and the certificate bundle
 ENV:SYS/Certificates/ca-bundle.crt. The catalogue offers x86_64 ABIv11
