@@ -37,9 +37,14 @@ record the new hash and do not reuse another binary's acceptance.
    earlier baseline after normalizing only the deliberately different root.
 8. Colours with the pens interpretation: the verdict words green, yellow and
    red on a light and a dark theme, and the Limpet prompt after each command
-   (success, failure, cancel) in its usual colours. Once with
-   `--color=always` on a terminal answering without bold, where SGR 39 ends
-   the colour.
+   (success, failure, cancel) in its usual colours. First record that the
+   terminal's reply on apkg's own output has KNOWN_INTERPRETATION and
+   COLOR_PENS set, and the terminal build's hash. Do item 4 (live bar,
+   resize) with the same install, not as a separate run. The variant without
+   bold (SGR 39 ends the colour) needs a reply without BOLD_RESET; if the
+   terminal does not give one in a normal session, it stays covered by the
+   host test `test_colour_without_bold_resets_with_39` only, and the report
+   says so.
 9. Check ordinary CON: and an unsupported presentation query. A successful
    capability reply on the parent terminal does not authorize decoration of
    a redirected output handle.
