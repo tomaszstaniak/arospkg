@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define PM_VERSION "0.3.1-rc2"
+#define PM_VERSION "0.3.1"
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
        ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE };
@@ -1014,7 +1014,7 @@ static int real_main(int argc, char **argv)
 
     app = ApplicationObject,
         MUIA_Application_Title,       (IPTR)"PkgManager",
-        MUIA_Application_Version,     (IPTR)"$VER: PkgManager 0.3.1-rc2 (2.10.2026)",
+        MUIA_Application_Version,     (IPTR)"$VER: PkgManager 0.3.1 (2.10.2026)",
         MUIA_Application_Description, (IPTR)"Install software from AROS Archives",
         MUIA_Application_Base,        (IPTR)"PKGMANAGER",
         SubWindow, (win = WindowObject,

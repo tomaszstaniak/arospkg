@@ -1,5 +1,5 @@
-arospkg 0.3 -- a package manager for AROS One x86_64
-=====================================================
+arospkg 0.3.1 -- a package manager for AROS One x86_64
+=======================================================
 
 Two programs, one package database:
 
@@ -9,10 +9,46 @@ Two programs, one package database:
 
 Both install programs from AROS Archives, check every download against a
 small public index, and remove them again without deleting files you have
-changed. New in 0.3: `apkg show`, which describes a package and whether it
-is compatible with this machine, and an ARexx port in PkgManager, so scripts
-can ask about packages and start and follow operations. 0.2 brought upgrade
-and rollback, verify, dry runs and the window.
+changed.
+
+New in 0.3.1:
+
+  * TLS through Mbed TLS 3.6.7 (TLS 1.2 and 1.3), compiled in, instead of
+    the SDK's OpenSSL 1.1.0h; the programs are about a quarter of the size.
+    The randomness for TLS comes from jitterentropy-library 3.7.0 on AROS
+    One; if it is unusable on a machine, apkg refuses to connect and never
+    falls back to anything weaker.
+  * A download whose connection breaks says so ("the connection to HOST
+    broke after N of M bytes: connection reset") instead of "the download
+    is the wrong size". Nothing partial ever reaches the cache.
+  * In a terminal that says what it can display (AROS XTerm and Limpet),
+    `show`, `search` and `install` use bold, coloured verdicts, the
+    window's width and a progress line that updates in place. In an
+    ordinary Shell window apkg prints as before, with a progress line every
+    10% of a download. Output redirected to a file and --json are
+    unchanged.
+
+0.3 brought `apkg show` and the ARexx port in PkgManager; 0.2 upgrade and
+rollback, verify, dry runs and the window.
+
+
+WHICH ARCHIVE
+-------------
+
+Each archive is for one CPU and ABI; a program built for one does not start
+on another.
+
+  arospkg-0.3.1.x86_64-aros-v11.zip   AROS One and other ABIv11 systems:
+                                      apkg and PkgManager. This README is
+                                      written for it.
+  arospkg-0.3.1.x86_64-aros-v1.zip    mainline AROS (ABIv1): apkg only
+  arospkg-0.3.1.i386-aros-v0.zip      the i386 ABIv0 line: apkg only
+  arospkg-0.3.1.aarch64-aros.zip      hosted aarch64 (Macaros): apkg only
+
+Only the AROS One archive is fully tested. The others are experimental; the
+release notes on GitHub say what was checked for each. The catalogue offers
+x86_64 ABIv11 packages only, so on the other targets search hides them and
+install refuses them.
 
 
 WHAT YOU NEED
@@ -36,10 +72,10 @@ INSTALLING apkg
 
   1. Unpack this archive anywhere. AROS One ships UnZip:
 
-         UnZip arospkg.x86_64-aros-v11.zip
+         UnZip arospkg-0.3.1.x86_64-aros-v11.zip
   2. Copy apkg to C: so the Shell can find it:
 
-         Copy arospkg.x86_64-aros-v11/apkg C:
+         Copy arospkg-0.3.1.x86_64-aros-v11/apkg C:
 
      PkgManager can stay where you unpacked it, or go to SYS:Utilities;
      start it from Wanderer or from the Shell. It looks for apkg's records
@@ -86,6 +122,10 @@ USING IT
                         when the archive is not in the cache yet; --fetch
                         allows the download and nothing else.
   --json                search, list and verify print rows for programs
+  --plain               no colour, bold or progress line, even in a
+                        terminal that can show them
+  --color=auto|always|never
+                        colour only. Output to a file is never decorated
 
 For example:
 
@@ -199,6 +239,12 @@ concurrent operations, cancelling, closing the window during an operation and
 running out of memory. The run reports are in the source repository under
 docs/reports/.
 
+For 0.3.1 the whole regression was run again on AROS One with the new TLS,
+together with downloads whose connection was made to break (reported as a
+broken connection, nothing cached, the next attempt succeeding, also in
+the same PkgManager window), and the new output was checked in Limpet on a
+dark and a light theme, including resizing the window during a download.
+
 
 LIMITS -- READ THESE
 --------------------
@@ -222,7 +268,8 @@ LIMITS -- READ THESE
   * Nothing is installed into LIBS:, FONTS: or other system directories.
     Optional extras some programs describe in their own documentation (extra
     fonts, catalogs) are not installed.
-  * ABIv11 and x86_64 only. No aarch64, no mainline build in this release.
+  * The AROS One archive is the tested one; the mainline, i386 and aarch64
+    archives are experimental (see WHICH ARCHIVE).
   * No 32-bit (ABIv0) programs. AROS One ships the EmuV0 emulator, but on
     the machine these were tested on it did not start any program, so
     apkg treats such packages as not compatible here.
@@ -258,12 +305,13 @@ arospkg is (c) 2026 Tomasz Staniak. See LICENSE.
 
 apkg and PkgManager contain statically linked third-party code:
 
-  * OpenSSL 1.1.0h, under the OpenSSL License and the original SSLeay
-    License. See licenses/OpenSSL-1.1.0h-LICENSE.
-    This product includes software developed by the OpenSSL Project for use
-    in the OpenSSL Toolkit (http://www.openssl.org/).
-    This product includes cryptographic software written by Eric Young
-    (eay@cryptsoft.com).
+  * Mbed TLS 3.6.7, (c) The Mbed TLS Contributors, under the Apache License
+    2.0. See licenses/MbedTLS-3.6.7-LICENSE.
+  * jitterentropy-library 3.7.0, (c) Stephan Mueller, under the BSD
+    licence. See licenses/jitterentropy-3.7.0-LICENSE*. (Not in the
+    mainline archive, which uses the system's getentropy().)
+  * The terminal-control client of AROS XTerm, (c) Tomasz Staniak, MIT.
+    See licenses/aros-xterm-client-LICENSE.
   * zlib 1.3.1, (c) 1995-2024 Jean-loup Gailly and Mark Adler. See
     licenses/zlib-LICENSE.
 

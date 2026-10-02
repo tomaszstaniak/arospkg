@@ -2,6 +2,7 @@
 # Build and package a release candidate for every target from the current
 # commit, one archive per CPU/ABI, into dist/rc/. Nothing is uploaded.
 #   tools/make-rc.sh 0.3.1-rc1
+# A release proper uses the full README: README=release/README tools/make-rc.sh 0.3.1
 set -e
 V=${1:?usage: make-rc.sh VERSION}
 HERE=$(cd "$(dirname "$0")/.." && pwd)
@@ -21,10 +22,11 @@ mkdir -p $B/aarch64-aros;     OUT=$B/aarch64-aros/apkg     sh "$HERE/src/build-a
 for t in x86_64-aros-v11 x86_64-aros-v1 i386-aros-v0 aarch64-aros; do
     D="$B/pkg/arospkg-$V.$t"; mkdir -p "$D/licenses"
     cp "$B/$t"/* "$D/"
-    cp "$HERE/release/README-RC.txt" "$D/README.txt"
+    cp "$HERE/${README:-release/README-RC.txt}" "$D/README.txt"
     cp "$HERE/release/LICENSE" "$D/"
     cp "$HERE/release/licenses/zlib-LICENSE" "$D/licenses/"
     cp "$HERE/third_party/mbedtls/LICENSE" "$D/licenses/MbedTLS-3.6.7-LICENSE"
+    cp "$HERE/third_party/aros-xterm/LICENSE" "$D/licenses/aros-xterm-client-LICENSE"
     if [ "$t" != x86_64-aros-v1 ]; then
         cp "$HERE/third_party/jitterentropy/LICENSE" "$D/licenses/jitterentropy-3.7.0-LICENSE"
         cp "$HERE/third_party/jitterentropy/LICENSE.bsd" "$D/licenses/jitterentropy-3.7.0-LICENSE.bsd"
