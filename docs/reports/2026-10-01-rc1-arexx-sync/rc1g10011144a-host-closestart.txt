@@ -1,1 +1,0 @@
-closestart click synchronised with the install: yes

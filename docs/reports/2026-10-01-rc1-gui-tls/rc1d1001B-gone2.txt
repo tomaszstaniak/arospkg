@@ -1,5 +1,0 @@
-run rc1d1001B phase gone2
-PASS port-gone-after-quit
-PASS wait-got-final-before-quit
-PASS job-finished-despite-quit
-SUMMARY gone2 pass 3 fail 0

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The examples in the documentation, checked against the real validator.
 
-Every fenced ```toml or ```json block in docs/guide/ and docs/reference/ must
+Every fenced ```toml or ```json block in docs/guide/ must
 be preceded by a marker saying what it is, and is checked accordingly:
 
   <!-- validate: manifest -->     a complete index manifest: tools/mkindex.py
@@ -15,7 +15,7 @@ be preceded by a marker saying what it is, and is checked accordingly:
                                    the guide's manifest
   <!-- validate: registry -->     must match the registry entry the client
                                    wrote in the documented walk
-                                   (docs/reports/2026-09-29-docs-walk/)
+                                   (tests/fixtures/docs-walk-registry.json)
   <!-- validate: none -->         shown for reading only (output, layouts)
 
 Every ```toml block in docs/rfc/ must be marked `<!-- proposal -->`, must
@@ -89,10 +89,10 @@ if base_text is None:
     sys.exit("docs/guide/packaging.md has no <!-- validate: manifest --> block")
 base = tomllib.loads(base_text)
 
-walk = HERE / "docs/reports/2026-09-29-docs-walk/w3-info.txt"
+walk = HERE / "tests/fixtures/docs-walk-registry.json"
 real_registry = json.loads(walk.read_text())
 
-current = sorted((HERE / "docs/guide").glob("*.md")) + sorted((HERE / "docs/reference").glob("*.md"))
+current = sorted((HERE / "docs/guide").glob("*.md"))
 checked = 0
 for path in current:
     rel = path.relative_to(HERE)

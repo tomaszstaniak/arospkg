@@ -1,7 +1,0 @@
-Directory "SYS:Walk" on Tuesday 09/29/26:
-micropolis.info             1822 ---rwed Today       09:38:48
-micropolis                   Dir ---rwed Today       09:38:47
-tmp                          Dir ---rwed Today       09:38:44
-cache                        Dir ---rwed Today       09:38:44
-db                           Dir ---rwed Today       09:38:48
-1 file - 4 directories - 8 blocks used

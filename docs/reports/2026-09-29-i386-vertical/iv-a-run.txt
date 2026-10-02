@@ -1,9 +1,0 @@
-Directory tree "SYS:IvA/dirtree" on Tuesday 29-Sep-26
-
-dirtree
-+--C
-+--Docs
-`--Source
-
-
-rc=0

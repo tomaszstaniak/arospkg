@@ -1,9 +1,0 @@
-sdlpop 1.23
-  SDLPoP, an open-source port of Prince of Persia
-  category:     game/platform
-  target:       x86_64, ABI v11
-  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
-  download:     1381 KB from https://archives.arosworld.org/share/game/platform/sdlpop.x86_64-aros-v11.zip
-  sha256:       e841a0936330d7d4944bc10169fe4f9b7c2713cb4fe2757cc4d4c277a51ffe51
-  requirements: none stated
-  installed:    no

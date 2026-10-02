@@ -1,3 +1,0 @@
-apkg: no network
-     https://expired.badssl.com/
-     cannot open bsdsocket.library -- is the network stack running? Try: Execute SYS:System/Network/AROSTCP/S/startnet

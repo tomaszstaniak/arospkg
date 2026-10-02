@@ -1,8 +1,0 @@
-run rc1g10011144a phase select
-  > VERSION
-  < PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
-version PkgManager 0.3.1-rc1 ARexx 1 sha256 732ecd9b356c200e3436e5f3bf49240c30b5698050e9aea3c6464eed360070ff
-  > SHOW soliton
-  < 
-PASS select
-SUMMARY select pass 1 fail 0

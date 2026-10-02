@@ -1,8 +1,0 @@
-run AX4 phase select
-  > VERSION
-  < PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
-version PkgManager 0.3 ARexx 1 sha256 13b4c7954a242d71de21a508aa4987b626356dc729d47f347ef15ffa5a2fb849
-  > SHOW soliton
-  < 
-PASS select
-SUMMARY select pass 1 fail 0

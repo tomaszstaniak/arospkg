@@ -1,7 +1,0 @@
-run SH6 phase noindex
-  > LIST < ERROR NOINDEX there is no catalogue yet; UPDATE fetches it
-PASS list-without-index
-  > LIST < ERROR TOOLONG the list does not fit in one ARexx result; narrow it with MATCH   
-PASS list-too-long
-PASS list-narrowed-fits
-SUMMARY noindex pass 3 fail 0

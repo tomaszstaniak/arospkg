@@ -1,4 +1,0 @@
-fetching https://archives.arosworld.org/share/utility/text/gmore.x86_64-aros-v11.zip
-  redirect -> https://arosarchives.os4depot.net/download.php?file=utility/text/gmore.x86_64-aros-v11.zip
-verified and cached SYS:PresA/cache/gmore.zip
-installed gmore

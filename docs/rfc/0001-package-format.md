@@ -4,7 +4,7 @@ status: draft
 schema: 0
 created: 2026-09-06
 updated: 2026-09-29
-replaces: docs/backlog/package-standard-proposal.md (as the definition; that file keeps the reasoning)
+replaces: the earlier package-standard proposal (retained in Git history)
 ---
 
 # RFC 0001: package format and embedded manifest
@@ -14,7 +14,7 @@ replaces: docs/backlog/package-standard-proposal.md (as the definition; that fil
 | **Status** | Draft. **Not implemented**: no released client reads an embedded manifest. |
 | **Schema version** | `0`: draft, may change incompatibly. |
 | **Companion** | [RFC 0002](0002-application-folder.md), the application folder format |
-| **Current format** | [metadata reference](../reference/metadata.md): what the client reads today |
+| **Current format** | [metadata reference](../guide/metadata.md): what the client reads today |
 
 Each field below has one of three statuses:
 
@@ -48,7 +48,7 @@ writes outside the package's drawer (deferred, section 7); signing.
 ## 3. The archive
 
 An ordinary ZIP or LHA archive, in the formats and within the limits the
-[reference](../reference/metadata.md) and the
+[reference](../guide/metadata.md) and the
 [guide](../guide/packaging.md#1-the-archive) give. No new container.
 
 ```

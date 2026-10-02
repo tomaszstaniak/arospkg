@@ -1,5 +1,0 @@
-fetching https://github.com/tomaszstaniak/aros-foliopdf/releases/download/v0.4/Folio-0.4.x86_64-aros-v11.lha
-  redirect -> https://release-assets.githubusercontent.com/github-production-release-asset/1381300564/2052d33f-0d7f-45ff-be1f-6a0de28b8acf?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-10-02T11%3A36%3A13Z&rscd=attachment%3B+filename%3DFolio-0.4.x86_64-aros-v11.lha&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-10-02T10%3A35%3A26Z&ske=2026-10-02T11%3A36%3A13Z&sks=b&skv=2018-11-09&sig=SHwUNY4aRsCEUZHGYUZK5smF2QRVeHeRTiJv%2Bt7wAYI%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5MDk0MDEzNiwibmJmIjoxNzkwOTM4MzM2LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.LCsKKc5zSjnr-ZT9J8UL7JGXZEbdnN9McqJOBiZcO2Q&response-content-disposition=attachment%3B%20filename%3DFolio-0.4.x86_64-aros-v11.lha&response-content-type=application%2Foctet-stream
-apkg: download cancelled
-     folio
-     Nothing was written; the cache has no partial file.

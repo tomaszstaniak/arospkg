@@ -1,4 +1,0 @@
-fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
-apkg: the index could not be fetched
-     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
-     cannot load the CA bundle ENV:SYS/Certificates/ca-bundle.crt -- refusing to download

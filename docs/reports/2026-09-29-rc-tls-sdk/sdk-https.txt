@@ -1,5 +1,0 @@
-connected: TLSv1.3, TLS1-3-CHACHA20-POLY1305-SHA256
-HTTP/1.1 301 Moved Permanently
-rc=0
-handshake failed: X509 - Certificate verification failed, e.g. CRL, CA or signature check failed (verify flags 0x1)
-rc=10

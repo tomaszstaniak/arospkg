@@ -1,2 +1,0 @@
-init with the internal timer forced: 1 (refused, as it must be)
-rc=0

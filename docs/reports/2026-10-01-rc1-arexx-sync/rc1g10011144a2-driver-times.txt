@@ -1,3 +1,0 @@
-booted 11:44:39
-close clicked 12:03:56
-collected res-a2 12:11:06

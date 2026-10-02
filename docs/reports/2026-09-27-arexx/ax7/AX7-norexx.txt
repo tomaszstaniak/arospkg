@@ -1,4 +1,0 @@
-run AX7 phase norexx
-PASS no-port-without-rexxsyslib
-PASS window-says-no-port
-SUMMARY norexx pass 2 fail 0

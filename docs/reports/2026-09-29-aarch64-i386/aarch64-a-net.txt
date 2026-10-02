@@ -1,3 +1,0 @@
-apkg: no network
-     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
-     cannot open bsdsocket.library -- is the network stack running? Try: Execute SYS:System/Network/AROSTCP/S/startnet

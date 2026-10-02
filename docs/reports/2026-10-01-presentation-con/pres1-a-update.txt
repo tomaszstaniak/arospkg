@@ -1,2 +1,0 @@
-fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
-index updated: SYS:PresA/db/index.json

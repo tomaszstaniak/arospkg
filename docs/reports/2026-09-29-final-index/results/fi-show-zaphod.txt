@@ -1,9 +1,0 @@
-zaphod 1.3
-  A simple binary file editor
-  category:     development/edit
-  target:       x86_64, ABI v11
-  compatibility: native -- built for this machine: x86_64, ABIv11, current distributions such as AROS One
-  download:     214 KB from https://archives.arosworld.org/share/development/edit/zaphod-v1.3-.x86_64-aros-v11.zip
-  sha256:       603e292457c3439f32709380bdd1d9c72b06536d013eebc01541a0bf0fa75448
-  requirements: none stated
-  installed:    no

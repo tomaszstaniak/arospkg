@@ -1,5 +1,0 @@
-run AX7 phase gone
-PASS port-gone-after-quit
-PASS wait-got-final-before-quit
-PASS job-finished-despite-quit
-SUMMARY gone pass 3 fail 0

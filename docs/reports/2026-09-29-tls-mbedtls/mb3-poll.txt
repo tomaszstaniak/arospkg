@@ -1,3 +1,0 @@
-poll PASS, 64 bytes: 4142c0962ca6f12cf789906aead0ac1f
-poll PASS, 64 bytes: 42c9c742b6194abed803aca4051fc52e
-poll PASS, 64 bytes: dbd28cf71064f48dc3320da57d0d5ec0

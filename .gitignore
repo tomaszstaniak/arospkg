@@ -18,3 +18,19 @@ __pycache__/
 /docs/spikes/dos-lock/renlock
 
 /build/
+
+# Local working records; retained on disk and in earlier Git revisions.
+/local/
+/docs/reports/
+/docs/spikes/
+/docs/backlog/
+/docs/testing/
+/docs/reference/
+/docs/release/
+/docs/adr/
+/docs/STATUS.md
+/docs/SCREENSHOTS.md
+/docs/manifest-guide.md
+/docs/zune-frontend-brief.md
+/release/UPLOAD.txt
+/release/archives-*/

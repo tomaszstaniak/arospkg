@@ -1,5 +1,0 @@
-fetching https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
-  (test) requiring the certificate to match wrong.example.com
-apkg: the index could not be fetched
-     https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json
-     certificate for wrong.example.com rejected: The certificate Common Name (CN) does not match with the expected CN

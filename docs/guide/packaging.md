@@ -9,14 +9,14 @@ audience: application authors and index maintainers
 
 This guide covers what works today: going from a drawer holding your program
 to an archive, and from there to an approved entry in the index. Field
-meanings are in the [metadata reference](../reference/metadata.md). What is
+meanings are in the [metadata reference](metadata.md). What is
 proposed but not implemented is in the [RFCs](../rfc/). This guide describes
 neither.
 
 Every command and output below comes from one real run, on 2026-09-29, of
 Micropolis 0.1.0-rc3. The package is our own port, published as a GitHub
 release. The run's files are in
-[`reports/2026-09-29-docs-walk/`](../reports/2026-09-29-docs-walk/).
+[`reports/2026-09-29-docs-walk/`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/).
 
 ## How it works today, in one paragraph
 
@@ -95,7 +95,7 @@ installed drawer.
 
 `subdir = ""` installs the whole top level of the archive as the package, and
 that includes `.arospkg/` if it is there. Use it only for archives with no
-drawer. See [the reference](../reference/metadata.md#subdir).
+drawer. See [the reference](metadata.md#subdir).
 
 ### What the program must cope with
 
@@ -173,10 +173,11 @@ arch = "x86_64"
 abi  = "v11"
 ```
 
-- **`arch`**: `x86_64` or `aarch64`. The client refuses any other CPU than
+- **`arch`**: `x86_64`, `i386` or `aarch64` in 0.3.1. The client refuses any other CPU than
   its own.
 - **`abi`**: `v11` for AROS One and other current distributions, and `v1`
-  for mainline. It is required: the client refuses an entry whose `abi` is
+  for mainline; 0.3.1 also recognizes `v0` for the i386 ABIv0 line.
+  It is required: the client refuses an entry whose `abi` is
   missing or unknown, before downloading anything, and `mkindex.py` refuses
   the manifest. A binary for one ABI
   installs on the other and then crashes. An AROS Archives file name ending
@@ -186,8 +187,10 @@ abi  = "v11"
   differs. The client refuses to choose if it ever sees two for its own
   target.
 
-The release of the client is **ABIv11, x86_64 only**. An ABIv1 package can be
-described in the index today, but no released client can install it.
+The primary tested release is **ABIv11, x86_64**. Version 0.3.1 also ships
+experimental mainline, i386 and aarch64 builds; see its release notes for
+their coverage. Recognizing a target is not a claim that every package for
+it has been tested.
 
 <!-- validate: fragment -->
 ```toml
@@ -352,7 +355,7 @@ the index uses. If the archive is not in the cache, `mkindex.py` prints
 `warning: … subdir and icon unchecked` and goes on without that check.
 
 What it checks, and what it leaves to a person, is in
-[the reference](../reference/metadata.md#what-is-checked-where).
+[the reference](metadata.md#what-is-checked-where).
 
 ## 5. Testing on AROS
 
@@ -420,7 +423,7 @@ db                           Dir ---rwed Today       09:38:48
 
 The drawer is `micropolis`, named by the `id`, and its icon lies beside it.
 `apkg info micropolis` prints the registry entry the client wrote. The
-[reference](../reference/metadata.md#the-local-registry) describes it; it
+[reference](metadata.md#the-local-registry) describes it; it
 listed 130 files here.
 
 ### 5.3 Start
@@ -434,7 +437,7 @@ the ReadMe says so. The walk started it from a Shell:
 ```
 
 The city window opened with the map drawn
-([`s3-running.png`](../reports/2026-09-29-docs-walk/s3-running.png)).
+([`s3-running.png`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/s3-running.png)).
 "Started" means it opened and ran. It does not mean every feature was tried.
 
 ### 5.4 Save something
@@ -443,11 +446,11 @@ Save the way a user would, and where a user would, including the program's
 own drawer if it offers that. In the walk, S opened the save requester on
 `SYS:Micropolis`, a drawer the port has built in and which does not exist
 when arospkg installs the game
-([`s4-save-requester.png`](../reports/2026-09-29-docs-walk/s4-save-requester.png)).
+([`s4-save-requester.png`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/s4-save-requester.png)).
 The drawer field was changed by hand to `SYS:Walk/micropolis`, and the city
 saved as `MyTown.cty`. The game wrote `MyTown.cty.info` beside it, and its
 title bar confirmed the save
-([`s7-saved.png`](../reports/2026-09-29-docs-walk/s7-saved.png)). A default
+([`s7-saved.png`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/s7-saved.png)). A default
 like that is worth reporting to the program's author. To show
 how removal treats an installed file that has changed, a line was also
 added to `ReadMe.txt`:

@@ -1,1 +1,0 @@
-PkgManager shows cls

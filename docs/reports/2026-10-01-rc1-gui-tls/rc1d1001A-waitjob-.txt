@@ -1,3 +1,0 @@
-run rc1d1001A phase waitjob
-FAIL port-present : no public port PKGMANAGER
-SUMMARY waitjob pass 0 fail 1

@@ -1,4 +1,0 @@
-start PkgManager 0.3 sha256 8345cec7d65a7fb9889974cd7a92d1cbbc58936f217c21f668fadc900d2d594b root SYS:PkgRx: no ARexx port: PKGMANAGER is already in use
-refill (start) term="" rows=3 shown=3 installed=2 keep=-
-worker task gone 0 ms after done
-quit
