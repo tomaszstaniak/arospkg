@@ -15,9 +15,15 @@ the presentation with XTY_COLOR_PENS and rc2's transport fix. It supersedes
 those do not carry over, and no other terminal build's results do either.
 
 Still open from the run with `6f9ee12c...`: the yellow verdict and a
-cancel on the light theme. Yellow appears with `apkg --root <empty root>
-show micropolis` ("Catalogue: missing") and with `apkg --root <root>
---all-abi search dirtree` (the i386 build's "other CPU" note). No full TLS regression is needed for this run.
+cancel on the light theme. The public catalogue has no build for another
+CPU, and `show` on a root without a catalogue ends with "no index, and no
+such package installed", so yellow needs the controlled index
+`tests/fixtures/dirtree-two-targets.json` (dirtree for i386/v0 and for
+x86_64/v11), staged with the binary:
+
+    apkg --root <root> --index <staged copy> --all-abi search dirtree
+
+On x86_64 the i386 row carries the yellow "other CPU" note. No full TLS regression is needed for this run.
 
 ## User-visible acceptance
 
