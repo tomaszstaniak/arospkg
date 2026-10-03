@@ -7,25 +7,24 @@
 #include <proto/dos.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 static int interactive, plain_mode, rich, color, bold, inplace, cols;
 /* The window reads SGR 30-37 as screen pens (XTY_COLOR_PENS): colours then
    go as 38;5;n, which keeps the palette meaning. It changes how a colour is
    written, never whether one is. */
 static int pens;
-static int line_open, last_tenth;
+static int last_tenth;
 static char last_phase[16];
-static time_t geometry_at;
 static unsigned long last_unknown_mib;
 static int unknown_reported;
 
 static void refresh_geometry(void)
 {
     XtyControl q;
-    time_t now = time(NULL);
-    if (!rich || now == geometry_at) return;
-    geometry_at = now;
+    if (!rich) return;
+    /* Called only for a report we will actually print. A time-based cache
+       misses a resize between two milestones in the same second. */
+    cols = 0;
     memset(&q, 0, sizeof q);
     q.version = XTY_CONTROL_VERSION;
     q.operation = XTY_GET_PRESENTATION;
@@ -38,11 +37,10 @@ void pr_init(int json, int plain, int color_mode)
 {
     XtyControl q;
     BPTR out = Output();
-    rich = color = bold = inplace = cols = line_open = last_tenth = pens = 0;
+    rich = color = bold = inplace = cols = last_tenth = pens = 0;
     last_phase[0] = 0;
     unknown_reported = 0;
     last_unknown_mib = 0;
-    geometry_at = 0;
     interactive = out && IsInteractive(out);
     plain_mode = plain || json;
     if (json || !interactive) return;     /* as today, byte for byte */
@@ -170,8 +168,8 @@ static void kb(char *b, size_t n, unsigned long v)
 
 void pr_progress(const char *id, const char *phase, unsigned long done, unsigned long total)
 {
-    char a[32], b[32], bar[24], line[160];
-    int w, filled, i, pct, limit;
+    char a[32], b[32], line[160];
+    int pct, limit;
     const char *label;
     (void)id; /* The command heading identifies the package, not every frame. */
     if (!interactive || plain_mode) return;
@@ -180,9 +178,6 @@ void pr_progress(const char *id, const char *phase, unsigned long done, unsigned
             !strcmp(phase, "extract") ? "Extracting files" :
             !strcmp(phase, "publish") ? "Publishing" : NULL;
     if (!label) return;
-    if (inplace) refresh_geometry();
-    limit = cols ? cols - 1 : 79;
-    if (limit < 1) return;
     if (strcmp(phase, last_phase)) {
         pr_end_line();
         snprintf(last_phase, sizeof last_phase, "%s", phase);
@@ -206,17 +201,15 @@ void pr_progress(const char *id, const char *phase, unsigned long done, unsigned
     }
     if (!strcmp(phase, "download")) {
         if (!done) return; /* fetching/redirect messages precede the first byte */
+        if (total && pct / 10 == last_tenth) return;
+        last_tenth = pct / 10;
+        refresh_geometry();
+        limit = cols ? cols - 1 : 79;
+        if (limit < 1) return;
         kb(a, sizeof a, done); kb(b, sizeof b, total);
         if (total) {
             snprintf(line, sizeof line, "Downloading %3d%%  %s / %s", pct, a, b);
-            w = limit - (int)strlen(line) - 4;
-            if (w > 20) w = 20;
-            if (w >= 8) {
-                filled = w * pct / 100;
-                for (i = 0; i < w; i++) bar[i] = i < filled ? '#' : '-';
-                bar[w] = 0;
-                snprintf(line, sizeof line, "Downloading [%s] %3d%%  %s / %s", bar, pct, a, b);
-            } else if ((int)strlen(line) > limit) {
+            if ((int)strlen(line) > limit) {
                 snprintf(line, sizeof line, "Downloading %d%%", pct);
                 if ((int)strlen(line) > limit) snprintf(line, sizeof line, "%d%%", pct);
             }
@@ -229,29 +222,33 @@ void pr_progress(const char *id, const char *phase, unsigned long done, unsigned
             last_unknown_mib = mib;
             pr_end_line();
             snprintf(line, sizeof line, "Downloading %s (total unknown)", a);
-            pr_text(line, 0);
+            if ((int)strlen(line) > limit) snprintf(line, sizeof line, "%s", a);
+            printf("%.*s\n", limit, line);
             fflush(stdout);
             return;
         }
     } else {
+        refresh_geometry();
+        limit = cols ? cols - 1 : 79;
+        if (limit < 1) return;
         if (done) {
             pr_end_line();
-            if (!strcmp(phase, "verify")) { pr_text("Archive verified", 0); fflush(stdout); }
+            if (!strcmp(phase, "verify")) { printf("%.*s\n", limit, "Archive verified"); fflush(stdout); }
             return;
         }
         snprintf(line, sizeof line, "%s...", label);
     }
     if (limit < (int)sizeof line && (int)strlen(line) > limit) line[limit] = 0;
-    printf("\r%s\033[K", line);
+    /* Operation 13 promises CR and erase-to-EOL, not a resize-stable
+       cursor anchor or erasure of a previous wrapped logical line. Even a
+       fresh width can race a resize. Complete milestone lines need neither:
+       wrapped output remains history, never a half-erased transient frame. */
+    printf("%s\n", line);
     fflush(stdout);
-    line_open = 1;
-    if (total && done >= total) pr_end_line();
 }
 
 void pr_end_line(void)
 {
-    if (!line_open) return;
-    printf("\r\033[K");
-    fflush(stdout);
-    line_open = 0;
+    /* Progress reports are complete lines, including before error/cancel.
+       Keep the boundary API so callers need not know the rendering mode. */
 }

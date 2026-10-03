@@ -33,7 +33,7 @@ class Presentation(unittest.TestCase):
     def test_narrow_progress_keeps_percentage_not_package_prefix(self):
         text = self.output("progress", 24)
         self.assertIn("58%", text)
-        for line in text.split("\r"):
+        for line in text.splitlines():
             self.assertLessEqual(len(re.sub(r"\x1b\[[0-9;]*[mK]", "", line).rstrip("\n")), 23)
 
     def test_phases_are_visible_without_fabricated_percentages(self):
@@ -44,8 +44,25 @@ class Presentation(unittest.TestCase):
 
     def test_progress_adapts_after_resize(self):
         text = self.output("resize")
-        frame = next(x for x in text.split("\r") if "58%" in x)
+        frame = next(x for x in text.splitlines() if "58%" in x)
         self.assertLessEqual(len(re.sub(r"\x1b\[[0-9;]*[mK]", "", frame)), 23)
+
+    def test_resize_does_not_rewrite_a_possibly_wrapped_previous_frame(self):
+        for result in ("success", "cancel", "error"):
+            with self.subTest(result=result):
+                text = self.output("resize-cycle-" + result)
+                self.assertNotIn("\r", text)
+                self.assertNotIn("\x1b", text)
+                narrow = text.split("<narrow>\n")[1].split("<wide>\n")[0]
+                self.assertIn("20%", narrow)
+                self.assertIn("30%", narrow)
+                self.assertNotIn("21%", narrow)  # no per-callback scrolling
+                for line in narrow.splitlines():
+                    self.assertLessEqual(len(line), 11)
+                self.assertIn("Downloading", text.split("<wide>\n")[1])
+                ending = {"success": "installed", "cancel": "cancelled",
+                          "error": "connection reset"}[result]
+                self.assertTrue(text.endswith("\n" + ending + "\n"))
 
     def test_layout_preserves_details_and_fits_width(self):
         for width in (12, 24, 40, 80, 120):
@@ -79,8 +96,10 @@ class Presentation(unittest.TestCase):
 
     def test_progress_leaves_no_stale_line(self):
         text = self.output("progress")
-        self.assertTrue(text.endswith("\r\x1b[K"))
-        self.assertIn("\r\x1b[KArchive verified\n", text)
+        self.assertTrue(text.endswith("\n"))
+        self.assertNotIn("\r", text)
+        self.assertNotIn("\x1b[K", text)
+        self.assertIn("\nArchive verified\n", text)
 
     def test_unknown_length_does_not_collide_with_engine_status(self):
         text = self.output("unknown-length")

@@ -25,8 +25,9 @@ void pr_field(const char *label, const char *value, int color);
 void pr_search_heading(void);
 void pr_search_row(const char *id, const char *version, const char *state,
                    const char *summary, const char *target_note);
-/* Known-length download: one updating line where supported, complete 10%
- * milestone lines on CON:, nothing in plain/JSON/redirected output. Stage
+/* Known-length download: complete 10% milestone lines, fitted to current
+ * geometry where known. CR/erase-EOL cannot safely replace a line after
+ * resize has wrapped it. Nothing in plain/JSON/redirected output. Stage
  * labels and unknown-length byte reports never invent a percentage. */
 void pr_progress(const char *id, const char *phase, unsigned long done, unsigned long total);
 void pr_end_line(void);    /* before anything else is printed */

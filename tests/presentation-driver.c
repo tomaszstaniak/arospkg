@@ -73,6 +73,24 @@ int main(int argc, char **argv)
         width = 24;
         tick++;
     }
+    if (!strncmp(mode, "resize-cycle", 12)) {
+        width = 80;
+        pr_progress("p", "download", 100, 1000);
+        puts("<narrow>");
+        width = 12; /* Same clock tick: geometry must not be time-cached. */
+        pr_progress("p", "download", 200, 1000);
+        pr_progress("p", "download", 210, 1000);
+        pr_progress("p", "download", 300, 1000);
+        puts("<wide>");
+        width = 100;
+        pr_progress("p", "download", 400, 1000);
+        if (!strcmp(mode, "resize-cycle-success"))
+            pr_progress("p", "download", 1000, 1000);
+        pr_end_line();
+        puts(!strcmp(mode, "resize-cycle-cancel") ? "cancelled" :
+             !strcmp(mode, "resize-cycle-error") ? "connection reset" : "installed");
+        return 0;
+    }
     pr_progress("long-package-name", "download", 580, 1000);
     pr_progress("long-package-name", "verify", 1, 1);
     pr_progress("long-package-name", "extract", 0, 1000);
