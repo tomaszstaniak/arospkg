@@ -13,7 +13,7 @@
 #include <string.h>
 #include <time.h>
 
-static const char *VERSION = "apkg 0.3.1";
+static const char *VERSION = "apkg 0.3.2";
 
 /* `show`: the library's account of one package, laid out for a person. The
  * facts come from pkg_details_get and the probes behind the window's panel;

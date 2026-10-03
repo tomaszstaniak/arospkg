@@ -4,8 +4,12 @@ Find, install and remove AROS software from a window or the Shell.
 **PkgManager** is the graphical interface; **apkg** is the command-line tool.
 Both use the same catalogue and installed packages.
 
-**[Download 0.3.1 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.x86_64-aros-v11.zip)**
-· [Other builds and release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
+**[Download 0.3.2 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.2/arospkg-0.3.2.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.2)
+· [Other builds (0.3.1, experimental)](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
+
+0.3.2 fixes CLI progress during window resizing: complete progress lines
+replace the live redraw bar. PkgManager is unchanged from 0.3.1.
 
 ## Install
 
@@ -17,14 +21,15 @@ Both use the same catalogue and installed packages.
    fetch the software catalogue:
 
 ```text
-UnZip arospkg-0.3.1.x86_64-aros-v11.zip
-CD arospkg-0.3.1.x86_64-aros-v11
+UnZip arospkg-0.3.2.x86_64-aros-v11.zip
+CD arospkg-0.3.2.x86_64-aros-v11
 Copy apkg C:
 apkg --version
 apkg update
 ```
 
-`apkg --version` should report **0.3.1** and the ABI you selected.
+`apkg --version` should report **0.3.2** for this build (0.3.1 for the
+experimental builds) and the ABI you selected.
 No compiler, Installer script or separate TLS libraries are needed.
 
 Keep the extracted drawer somewhere permanent, not `RAM:`, if using
