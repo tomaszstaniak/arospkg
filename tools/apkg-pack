@@ -5,7 +5,7 @@ its catalogue entry from the uploaded archive.
     apkg-pack init   DRAWER [options]        write DRAWER.arospkg.toml beside it
     apkg-pack check  DRAWER | ARCHIVE        the catalogue's own rules
     apkg-pack build  DRAWER --output X.zip   the archive, checked after writing
-    apkg-pack submit URL [--index DIR] [--dry-run] [--pr]
+    apkg-pack submit URL [--index DIR] [--dry-run] | --pr [--repo OWNER/NAME]
 
 The manifest is the one the catalogue uses today (docs/guide/metadata.md),
 without the fields that come from the uploaded file: url, size, sha256 and
@@ -359,8 +359,9 @@ def fetch(url, local):
 
 def index_manifest(url, data, index_dir):
     """The arospkg-index manifest for an uploaded archive: the author's
-    description, the publication data measured on the file, and the
-    maintainer's overrides, in that order of precedence (last wins)."""
+    description and the publication data measured on the file. Returns the
+    file it belongs in, the manifest, and the effective entry with the
+    maintainer's overrides applied, as the generator will apply them."""
     text, names = read_embedded(data)
     if text is None:
         fail(f"{url}: the archive has no .arospkg/manifest.toml. Packages without one are "
@@ -371,49 +372,66 @@ def index_manifest(url, data, index_dir):
         fail("not submitted")
     m = {"status": "approved", **author,
          "url": url, "size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
-    name = f"{author['id']}.{author['arch']}.toml"
-    ov_path = index_dir / "overrides" / name
-    overrides = {}
-    if ov_path.is_file():
-        overrides = tomllib.loads(ov_path.read_text(encoding="utf-8"))
-        bad = set(overrides) & {"url", "size", "sha256", "id", "arch"}
-        if bad:
-            fail(f"{ov_path}: may not override {', '.join(sorted(bad))}")
-        m.update(overrides)
-    problems = mkindex.check(m)
-    if report(problems, name):
+    mdir = index_dir / "manifests"
+    # A file from before the ABI was in the name stays where it is, if it is
+    # this variant.
+    legacy = mdir / f"{m['id']}.{m['arch']}.toml"
+    target = legacy if legacy.is_file() and tomllib.loads(legacy.read_text(encoding="utf-8")).get("abi") == m["abi"] \
+        else mdir / mkindex.variant_file(m)
+    ov = mkindex.overrides_for(target)
+    if isinstance(ov, str):
+        fail(ov)
+    effective = {**m, **(ov or {})}
+    if report(mkindex.check(effective), target.name):
         fail("not submitted")
-    return name, m, overrides
+    return target, m, effective, ov or {}
+
+
+def published_release(index_dir, m):
+    """version, revision and sha256 of this variant in any manifest, or None."""
+    for f in (index_dir / "manifests").glob("*.toml"):
+        try:
+            p = tomllib.loads(f.read_text(encoding="utf-8"))
+        except tomllib.TOMLDecodeError:
+            continue
+        if (p.get("id"), p.get("arch"), p.get("abi")) == (m["id"], m["arch"], m["abi"]) and p.get("sha256"):
+            return p.get("version"), p.get("revision", 0), p["sha256"]
+    return None
 
 
 def cmd_submit(a):
-    index_dir = Path(a.index).resolve()
-    if not (index_dir / "manifests").is_dir():
-        fail(f"{index_dir}: not an arospkg-index checkout (no manifests/)")
     if not a.url.startswith("https://"):
         fail("the URL must be https://; the client fetches nothing else")
     data = fetch(a.url, a.use_local_copy)
-    name, m, overrides = index_manifest(a.url, data, index_dir)
-    target = index_dir / "manifests" / name
+    if a.pr:
+        import publish_github
+        # A fresh clone of the catalogue: nothing else staged or changed in a
+        # checkout of the author's can end up in the pull request.
+        work = publish_github.checkout(a.repo)
+        index_dir = work
+    else:
+        index_dir = Path(a.index).resolve()
+    if not (index_dir / "manifests").is_dir():
+        fail(f"{index_dir}: not an arospkg-index checkout (no manifests/)")
+    target, m, effective, ov = index_manifest(a.url, data, index_dir)
+    name = target.name
     new = write_toml(m, GENERATED.format(name=name))
     old = target.read_text(encoding="utf-8") if target.exists() else None
     if old == new:
         print(f"{name}: already up to date; nothing to submit")
         return
-    if old is not None:
-        prev = tomllib.loads(old)
-        same_release = (prev.get("version") == m["version"] and prev.get("revision", 0) == m.get("revision", 0))
-        if same_release and prev.get("sha256") != m["sha256"]:
-            fail(f"{name}: version {m['version']} revision {m.get('revision', 0)} is already "
-                 f"published with sha256 {prev.get('sha256')}, and this file has {m['sha256']}. "
-                 "Different bytes need a new revision (or version) and, normally, a new URL. "
-                 "apkg-pack does not renumber a release for you.")
-        if not old.startswith(GENERATED.splitlines()[0]):
-            print(f"note: {name} was written by a maintainer; this replaces it with the "
-                  "author's description. Anything the maintainer meant to keep belongs in "
-                  f"overrides/{name}.")
-    if overrides:
-        print(f"applied overrides/{name}: {', '.join(sorted(overrides))}")
+    was = published_release(index_dir, m)
+    if was and was[0] == m["version"] and was[1] == m.get("revision", 0) and was[2] != m["sha256"]:
+        fail(f"{name}: version {m['version']} revision {m.get('revision', 0)} is already "
+             f"published with sha256 {was[2]}, and this file has {m['sha256']}. "
+             "Different bytes need a new revision (or version) and, normally, a new URL. "
+             "apkg-pack does not renumber a release for you.")
+    if old is not None and not old.startswith(GENERATED.splitlines()[0]):
+        print(f"note: {name} was written by a maintainer; this replaces it with the "
+              "author's description. Anything the maintainer meant to keep belongs in "
+              f"overrides/{name}.")
+    if ov:
+        print(f"overrides/{name} changes {', '.join(sorted(ov))} when the catalogue is made")
     diff = difflib.unified_diff((old or "").splitlines(True), new.splitlines(True),
                                 f"a/manifests/{name}", f"b/manifests/{name}")
     sys.stdout.writelines(diff)
@@ -423,8 +441,7 @@ def cmd_submit(a):
     target.write_text(new, encoding="utf-8")
     print(f"\nwritten {target}")
     if a.pr:
-        import publish_github
-        publish_github.open_pr(index_dir, target, m)
+        publish_github.open_pr(work, a.repo, target, m)
 
 
 def main():
@@ -452,7 +469,9 @@ def main():
     s.add_argument("url")
     s.add_argument("--index", default=str(HERE.parent.parent / "arospkg-index"))
     s.add_argument("--dry-run", action="store_true", help="show the change; write nothing")
-    s.add_argument("--pr", action="store_true", help="commit it on a branch and open a pull request")
+    s.add_argument("--pr", action="store_true",
+                   help="open a pull request (through your fork if you cannot push to --repo)")
+    s.add_argument("--repo", default="tomaszstaniak/arospkg-index", help="the catalogue repository (OWNER/NAME)")
     s.add_argument("--use-local-copy", metavar="FILE", help=argparse.SUPPRESS)
     a = ap.parse_args()
     {"init": cmd_init, "check": cmd_check, "build": cmd_build, "submit": cmd_submit}[a.cmd](a)

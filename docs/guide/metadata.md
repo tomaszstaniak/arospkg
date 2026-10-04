@@ -16,7 +16,7 @@ code is what runs, and this file needs fixing.
 
 | | **manifest** | **index** | **registry** |
 |---|---|---|---|
-| file | `manifests/<id>.<arch>.toml` in arospkg-index | `index.json` in arospkg-index | `<root>/db/installed/<id>.json` |
+| file | `manifests/<id>.<arch>.<abi>.toml` in arospkg-index (older ones `<id>.<arch>.toml`), corrections in `overrides/` under the same name | `index.json` in arospkg-index | `<root>/db/installed/<id>.json` |
 | format | TOML | JSON, `schema: 1` | JSON, `schema: 1` |
 | written by | the index maintainer (the author may draft it) | `tools/mkindex.py`, never by hand | the client, when it installs or upgrades |
 | read by | `mkindex.py` | `apkg`, `PkgManager` | `apkg`, `PkgManager` |
@@ -391,10 +391,9 @@ limits of the 0.3 client or the tools, and are left as they are.
    strings out of the index. Decoding needs a decision on characters beyond
    ASCII (the index is UTF-8, the AROS console Latin-1), and belongs to a
    later client.
-7. **Only one manifest per (`id`, `arch`).** The client can choose between
-   ABIs, but the generator and the file name `<id>.<arch>.toml` cannot hold
-   a `v1` and a `v11` build of one id. This must change before such a pair is
-   published.
+7. **A variant is (`id`, `arch`, `abi`).** Since the generator after 0.3.2,
+   a `v1` and a `v11` build of one id can both be published; `index.json`
+   for older clients still holds one per (`id`, `arch`).
 8. **`icon` is checked for existence, not role.** A file inside the drawer
    can be named by mistake. It can also be a deliberate choice, so the
    location alone is not treated as an error.

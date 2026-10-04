@@ -182,10 +182,12 @@ abi  = "v11"
   the manifest. A binary for one ABI
   installs on the other and then crashes. An AROS Archives file name ending
   in `-v11` is ABIv11. Without the marker, it is ABIv1.
-- **One build per `id` and `arch` in the index today.** The generator refuses
-  a second manifest with the same `id` and `arch`, even when the `abi`
-  differs. The client refuses to choose if it ever sees two for its own
-  target.
+- **One build per `id`, `arch` and `abi`.** A v1 and a v11 build of one
+  program are two manifests, `<id>.<arch>.v1.toml` and `<id>.<arch>.v11.toml`,
+  and the client picks the one for its own target; it refuses to choose if it
+  ever sees two for the same target. `index.json`, for clients up to 0.3.2,
+  keeps one build per `id` and `arch`: a second ABI goes to `index-v2.json`
+  only.
 
 The primary tested release is **ABIv11, x86_64**. Version 0.3.1 also ships
 experimental mainline, i386 and aarch64 builds; see its release notes for

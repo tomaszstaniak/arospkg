@@ -295,6 +295,33 @@ def archive_names(path):
 MEMBER_MAX, PKGPATH_MAX, FILES_MAX = 511, 255, 2048
 
 
+# Fields an override may not change: they identify the entry or come from the
+# uploaded file.
+OVERRIDE_FIXED = ("id", "arch", "abi", "url", "size", "sha256")
+
+
+def overrides_for(manifest_file):
+    """overrides/<same file name> beside manifests/: a dict, None when there
+    is none, or a string saying why it cannot be used."""
+    p = manifest_file.parent.parent / "overrides" / manifest_file.name
+    if not p.is_file():
+        return None
+    try:
+        ov = tomllib.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return f"overrides/{p.name}: unparseable: {exc}"
+    bad = sorted(set(ov) & set(OVERRIDE_FIXED))
+    if bad:
+        return f"overrides/{p.name}: may not change {', '.join(bad)}"
+    return ov
+
+
+def variant_file(m):
+    """The manifest file name of a variant: <id>.<arch>.<abi>.toml. Files named
+    <id>.<arch>.toml, from before the ABI was part of the name, are still read."""
+    return f"{m['id']}.{m['arch']}.{m['abi']}.toml"
+
+
 def check_members(m, names, where="the archive"):
     """The member names of an archive, or of a drawer about to be packed,
     against the client's rules and the manifest's subdir and icon."""
@@ -348,6 +375,8 @@ def main():
                     help="writes index-v2.json (every package) and index.json "
                          "(for clients up to 0.3.2) here")
     ap.add_argument("--out", help=argparse.SUPPRESS)
+    ap.add_argument("--no-archive-check", action="store_true",
+                    help="skip subdir/icon against cached archives (ci_check_index.py checks them itself)")
     ap.add_argument("--verbose", action="store_true", help="list every rejection")
     ap.add_argument("--cache", default=".cache/archives",
                     help="downloaded archives, to check subdir and icon against")
@@ -371,10 +400,18 @@ def main():
             if re.search(r'(?m)^\s*status\s*=\s*"approved"', f.read_text(encoding="utf-8", errors="replace")):
                 failed.add(f.name)
             continue
+        # A maintainer's deliberate correction to an author's entry, kept apart
+        # so the author's next submission does not erase it, and applied here,
+        # where every catalogue file is made.
+        ov = overrides_for(f)
+        if ov is not None:
+            if isinstance(ov, str):
+                rejected.append((f.name, [ov])); failed.add(f.name); continue
+            m = {**m, **ov}
         approved = m.get("status") == "approved" and not m.get("excluded")
 
         problems = check(m)
-        if not problems:
+        if not problems and not args.no_archive_check:
             more, warn = check_archive(m, args.cache)
             problems += more
             for w in warn:
@@ -384,9 +421,11 @@ def main():
             if approved: failed.add(f.name)
             continue
 
-        key = (m["id"].lower(), m["arch"])
+        # A variant is its id, CPU and ABI: x86_64/v1 and x86_64/v11 builds of
+        # one program are two entries, and the client picks its own.
+        key = (m["id"].lower(), m["arch"], m["abi"])
         if key in seen:
-            rejected.append((f.name, [f"duplicate (id, arch) with {seen[key]}"]))
+            rejected.append((f.name, [f"duplicate (id, arch, abi) with {seen[key]}"]))
             failed.add(f.name)
             continue
         seen[key] = f.name
@@ -450,8 +489,11 @@ def main():
     # new since then go to index-v2.json only. Nothing is shortened to fit.
     if old_path.exists():
         prev = json.loads(old_path.read_text(encoding="utf-8"))
-        keep = {(p["id"], p["arch"]) for p in prev.get("packages", [])}
-        old_packages = [p for p in packages if (p["id"], p["arch"]) in keep]
+        # By (id, arch, abi): a build for another ABI of a package it lists is
+        # new, so it stays out, and index.json keeps one entry per (id, arch),
+        # which is all clients up to 0.3.2 were tested with.
+        keep = {(p["id"], p["arch"], p.get("abi")) for p in prev.get("packages", [])}
+        old_packages = [p for p in packages if (p["id"], p["arch"], p["abi"]) in keep]
     else:
         old_packages = packages
     texts = {}

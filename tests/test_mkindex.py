@@ -75,7 +75,7 @@ def toml(m):
     return "\n".join(lines) + "\n"
 
 
-def run(manifests, old_ids=None):
+def run(manifests, old_ids=None, overrides=None):
     """Returns exit code, index-v2.json, stdout, index.json. With old_ids, an
     index.json listing those ids is there before; without, none is."""
     global last_old
@@ -83,12 +83,19 @@ def run(manifests, old_ids=None):
         d = Path(d); (d / "m").mkdir()
         for name, text in manifests.items():
             (d / "m" / name).write_text(text)
+        if overrides:
+            (d / "overrides").mkdir()
+            for name, text in overrides.items():
+                (d / "overrides" / name).write_text(text)
         v2, old = d / "index-v2.json", d / "index.json"
         v2.write_text("PREVIOUS\n")
         if old_ids is not None:
             old.write_text(json.dumps({"schema": 1, "packages": [
-                {"id": i, "arch": "x86_64", "sha256": "0" * 64} for i in old_ids]}))
-        r = subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(d / "m"),
+                {"id": i, "arch": "x86_64", "abi": "v11", "sha256": "0" * 64} for i in old_ids]}))
+        if overrides:
+            (d / "m").rename(d / "manifests")
+        mdir = d / ("manifests" if overrides else "m")
+        r = subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(mdir),
                             "--out-dir", str(d), "--cache", str(d / "nocache")], capture_output=True, text=True)
         last_old = old.read_text() if old.exists() else None
         return r.returncode, v2.read_text(), r.stdout
@@ -127,6 +134,23 @@ elif old[0]["sha256"] != "a" * 64:
 code, text, out = run(many, [f"p{i:03}" for i in range(260)])
 if code == 0 or text != "PREVIOUS\n" or "decide which to drop" not in out:
     fails.append(f"index.json outgrown by its own packages: exit {code}")
+
+# Two ABIs of one program for one CPU are two variants, both in index-v2.json;
+# index.json, which listed only the v11 one, keeps only that.
+v1 = toml({**GOOD, "abi": "v1", "url": "https://example.invalid/demo-v1.lha"})
+code, text, out = run({"demo.x86_64.v11.toml": toml(GOOD), "demo.x86_64.v1.toml": v1}, ["demo"])
+abis = sorted(p["abi"] for p in json.loads(text)["packages"]) if code == 0 else []
+olds = [p["abi"] for p in json.loads(last_old)["packages"]] if code == 0 else []
+if abis != ["v1", "v11"] or olds != ["v11"]:
+    fails.append(f"two ABI variants: exit {code}, v2 {abis}, index.json {olds}: {out}")
+
+# An override is applied when the catalogue is made, not only on submission.
+code, text, out = run({"demo.x86_64.v11.toml": toml(GOOD)}, overrides={"demo.x86_64.v11.toml": 'category = "game/action"\n'})
+if code or json.loads(text)["packages"][0].get("category") != "game/action":
+    fails.append(f"override at generation: exit {code}: {out}")
+code, text, out = run({"demo.x86_64.v11.toml": toml(GOOD)}, overrides={"demo.x86_64.v11.toml": 'sha256 = "' + "b" * 64 + '"\n'})
+if code == 0 or "may not change sha256" not in out:
+    fails.append(f"override of sha256 must be refused: exit {code}")
 
 if fails:
     print("\n".join(fails)); print(f"MKINDEX: {len(fails)} failed"); sys.exit(1)

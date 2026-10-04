@@ -89,20 +89,28 @@ tools/apkg-pack submit <url> --pr
 ```
 
 `submit` downloads the file, checks the description inside it, measures its
-size and SHA-256, and writes the catalogue entry in a checkout of
-[arospkg-index](https://github.com/tomaszstaniak/arospkg-index) (`--index`,
-by default beside this repository). `--dry-run` shows the change and writes
-nothing. `--pr` commits it on a branch and opens a pull request with the
-`gh` command's existing login; submitting the same release again opens no
-second one. You never edit `index.json` or copy fields out of your ZIP.
+size and SHA-256, and writes the catalogue entry,
+`manifests/<id>.<arch>.<abi>.toml`. `--dry-run` shows the change against a
+checkout of [arospkg-index](https://github.com/tomaszstaniak/arospkg-index)
+(`--index`) and writes nothing. `--pr` works in a fresh clone of the
+catalogue repository, pushes a branch to your fork of it (made if you have
+none) and opens a pull request, with the `gh` command's existing login.
+Submitting the same release again opens no second one. You never edit
+`index.json` or copy fields out of your ZIP.
 
-Today a maintainer reviews the pull request and regenerates the catalogue
-after merging it.
+The pull request is checked automatically: the archive is downloaded again
+and must match, be readable and pass the same rules. A maintainer reviews
+the source and metadata before merging; the catalogue is then regenerated
+by the repository's own workflow.
 
 ## For maintainers
 
 - Packages whose archive has no `.arospkg/manifest.toml` keep their
   maintainer-written manifests in `manifests/`, as before.
-- A deliberate correction to an author's entry goes in
-  `overrides/<id>.<arch>.toml` (any field except url, size, sha256, id and
-  arch). `submit` applies it every time, and says so.
+- A deliberate correction to an author's entry goes in `overrides/`, under
+  the same file name as the manifest: any field except id, arch, abi, url,
+  size and sha256. The generator applies it whenever the catalogue is made,
+  so it takes effect without a new submission and survives the next one.
+- A variant is its id, CPU and ABI: `xrick.x86_64.v11.toml` and
+  `xrick.x86_64.v1.toml` can both be published. Older files named
+  `<id>.<arch>.toml` are still read.

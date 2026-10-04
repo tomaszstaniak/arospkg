@@ -86,10 +86,10 @@ with tempfile.TemporaryDirectory() as d:
     idx = d / "arospkg-index"; (idx / "manifests").mkdir(parents=True)
     url = "https://example.invalid/releases/xrick.x86_64-aros-v11.zip"
     code, out = run("submit", url, "--index", idx, "--use-local-copy", z1, "--dry-run")
-    if code or "+sha256" not in out.replace(" ", "") or (idx / "manifests/xrick.x86_64.toml").exists():
+    if code or "+sha256" not in out.replace(" ", "") or (idx / "manifests/xrick.x86_64.v11.toml").exists():
         fails.append(f"submit --dry-run: {out}")
     code, out = run("submit", url, "--index", idx, "--use-local-copy", z1)
-    written = idx / "manifests/xrick.x86_64.toml"
+    written = idx / "manifests/xrick.x86_64.v11.toml"
     if code or not written.exists():
         fails.append(f"submit: {out}")
     else:
@@ -100,12 +100,18 @@ with tempfile.TemporaryDirectory() as d:
     code, out = run("submit", url, "--index", idx, "--use-local-copy", z1)
     if code or "already up to date" not in out:
         fails.append(f"the same release again: {out}")
-    # A maintainer's correction survives the next submission.
+    # A maintainer's correction lives beside the author's manifest, is
+    # reported on submission, and is applied when the catalogue is made.
     (idx / "overrides").mkdir()
-    (idx / "overrides/xrick.x86_64.toml").write_text('category = "game/action"\n')
+    (idx / "overrides/xrick.x86_64.v11.toml").write_text('category = "game/action"\n')
     code, out = run("submit", url, "--index", idx, "--use-local-copy", z1)
-    if code or tomllib.loads(written.read_text()).get("category") != "game/action":
-        fails.append(f"override: {out}")
+    if code or "already up to date" not in out or tomllib.loads(written.read_text()).get("category") != "game/platform":
+        fails.append(f"override must not be written into the author's manifest: {out}")
+    (idx / "overrides/xrick.x86_64.v11.toml").write_text('sha256 = "' + "b" * 64 + '"\n')
+    code, out = run("submit", url, "--index", idx, "--use-local-copy", z1, "--dry-run")
+    if code == 0 or "may not change sha256" not in out:
+        fails.append(f"an override of sha256 must be refused: {out}")
+    (idx / "overrides/xrick.x86_64.v11.toml").write_text('category = "game/action"\n')
     # Other bytes under the same version and revision: refused, not renumbered.
     (dr / "ReadMe").write_text("xRick, changed\n")
     run("build", dr, "--output", z2)
@@ -115,8 +121,9 @@ with tempfile.TemporaryDirectory() as d:
     # And the generator accepts what submit wrote.
     r = subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(idx / "manifests"),
                         "--out-dir", str(idx), "--cache", str(d / "nocache")], capture_output=True, text=True)
-    if r.returncode or '"id": "xrick"' not in (idx / "index-v2.json").read_text():
-        fails.append(f"mkindex on the submitted manifest: {r.stdout}")
+    v2 = (idx / "index-v2.json").read_text() if (idx / "index-v2.json").exists() else ""
+    if r.returncode or '"id": "xrick"' not in v2 or '"category": "game/action"' not in v2:
+        fails.append(f"mkindex on the submitted manifest, with the override: {r.stdout}")
 
 if fails:
     print("\n".join(fails)); print(f"APKG-PACK: {len(fails)} failed"); sys.exit(1)
