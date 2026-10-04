@@ -25,10 +25,15 @@ class Presentation(unittest.TestCase):
     def output(self, mode, width=80):
         return subprocess.check_output([str(self.exe), mode, str(width)]).decode()
 
-    def test_plain_redirect_json_never_emit_progress(self):
-        for mode in ("plain", "redirect", "json"):
+    def test_plain_and_redirect_get_stages_without_percentages(self):
+        for mode in ("plain", "redirect"):
             with self.subTest(mode=mode):
-                self.assertEqual(self.output(mode), "")
+                text = self.output(mode)
+                self.assertEqual(text, "Downloading 1000 B\nVerifying archive\nInstalling files\n")
+                self.assertNotIn("\x1b", text)
+
+    def test_json_gets_no_progress_at_all(self):
+        self.assertEqual(self.output("json"), "")
 
     def test_narrow_progress_keeps_percentage_not_package_prefix(self):
         text = self.output("progress", 24)
@@ -38,8 +43,9 @@ class Presentation(unittest.TestCase):
 
     def test_phases_are_visible_without_fabricated_percentages(self):
         text = self.output("progress")
-        self.assertIn("Archive verified", text)
-        self.assertIn("Extracting", text)
+        self.assertIn("\nVerifying archive\n", text)
+        self.assertIn("\nInstalling files\n", text)
+        self.assertEqual(text.count("Verifying archive"), 1)
         self.assertNotIn("100%", text)
 
     def test_progress_adapts_after_resize(self):
@@ -82,7 +88,9 @@ class Presentation(unittest.TestCase):
                 self.assertEqual(self.output("slow", ms), str(ticks) + "\n")
 
     def test_unknown_capabilities_do_not_authorize_escape_sequences(self):
-        self.assertEqual(self.output("unknown"), "")
+        unknown = self.output("unknown")
+        self.assertNotIn("\x1b", unknown)
+        self.assertNotIn("\r", unknown)
         con = self.output("con")
         self.assertIn("58%", con)
         self.assertNotIn("\x1b", con)
@@ -99,7 +107,7 @@ class Presentation(unittest.TestCase):
         self.assertTrue(text.endswith("\n"))
         self.assertNotIn("\r", text)
         self.assertNotIn("\x1b[K", text)
-        self.assertIn("\nArchive verified\n", text)
+        self.assertTrue(text.endswith("Installing files\n"))
 
     def test_unknown_length_does_not_collide_with_engine_status(self):
         text = self.output("unknown-length")

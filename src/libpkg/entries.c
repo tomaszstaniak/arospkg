@@ -230,6 +230,37 @@ int index_select_variant(const char *json, const js_tok *t, int ntok, int arr,
     return best_any;
 }
 
+int notes_from_element(const char *json, const js_tok *t, int ntok, int el,
+                       char *out, size_t n)
+{
+    int arr = js_member(json, t, ntok, el, "post_install_notes"), i, k, lines = 0;
+    size_t used = 0;
+    if (n) out[0] = 0;
+    if (arr < 0) return 0;
+    if (t[arr].type != JS_ARR) return -1;
+    for (i = 0; (k = js_elem(t, ntok, arr, i)) >= 0; i++) {
+        char line[PKG_NOTES_LINE + 2];
+        const char *p;
+        size_t ln;
+        /* The reader hands strings over as they stand in the file, escapes
+           undecoded, and an over-long one would come back cut: so the raw
+           length, then every byte, is checked before anything is kept. */
+        if (t[k].type != JS_STR || t[k].end - t[k].start > PKG_NOTES_LINE || i >= PKG_NOTES_LINES)
+            { if (n) out[0] = 0; return -1; }
+        js_str(json, t, k, line, sizeof line);
+        for (p = line; *p; p++)
+            if ((unsigned char)*p < 0x20 || (unsigned char)*p > 0x7e || *p == '\\' || *p == '"')
+                { if (n) out[0] = 0; return -1; }
+        ln = strlen(line);
+        if (used + ln + 2 > n) { if (n) out[0] = 0; return -1; }
+        if (used) out[used++] = '\n';
+        memcpy(out + used, line, ln + 1);
+        used += ln;
+        lines++;
+    }
+    return lines;
+}
+
 int details_from_index(const char *json, size_t len, const char *id,
                        const char *my_arch, const char *my_abi, pkg_details *d)
 {
@@ -281,6 +312,7 @@ int details_from_index(const char *json, size_t len, const char *id,
         member_str(json, t, ntok, el, "sha256",  d->sha256,  sizeof d->sha256);
         member_str(json, t, ntok, el, "source",  d->source,  sizeof d->source);
         member_str(json, t, ntok, el, "license", d->license, sizeof d->license);
+        if (notes_from_element(json, t, ntok, el, d->notes, sizeof d->notes) < 0) d->notes_bad = 1;
         d->compat = pkg_compat_of(e->arch, e->abi, my_arch, my_abi, d->compat_why, sizeof d->compat_why);
         e->ours = d->compat == PKG_COMPAT_NATIVE;
         d->in_index = 1;

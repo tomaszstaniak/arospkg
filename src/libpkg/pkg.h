@@ -262,6 +262,35 @@ int pkg_can_rollback(pkg_ctx *, const char *id, char *why, size_t n);
  * is one line per file, "<state>  <path>", sorted. */
 pkg_status pkg_verify(pkg_ctx *, const char *id, pkg_verify_result *, char **listing, pkg_err *);
 
+/* Open the installed package's drawer on the desktop (desktop.c). The
+ * drawer is the one its registry entry records; `where` gets its path
+ * whenever it is known, also on failure, so a front end can say where it
+ * should have been. PKG_E_NOT_FOUND: not installed, or the drawer is not
+ * there; PKG_E_IO: no desktop, or it would not open it. Changes nothing. */
+pkg_status pkg_open_folder(pkg_ctx *, const char *id, char *where, size_t n, pkg_err *);
+
+/* What the last pkg_remove left in place, for the front end to say: files
+ * of the package that were changed locally (up to 10 named; all of them in
+ * `list_file`), the drawer itself when anything is still in it, and a
+ * drawer icon that was changed after installation. */
+typedef struct {
+    int  kept;                 /* changed files kept */
+    int  named;                /* how many of them are in names[] */
+    char names[10][256];
+    int  others;               /* files in the drawer apkg did not install */
+    int  others_named;
+    char other_names[10][256];
+    char dir[PKG_MAXPATH];     /* the drawer, when it is still there */
+    char icon[PKG_MAXPATH];    /* a changed drawer icon that was kept */
+    char list_file[PKG_MAXPATH];
+} pkg_removal;
+void pkg_last_removal(pkg_ctx *, pkg_removal *);
+
+/* Diagnostic lines (URLs, redirect hosts, cache and index paths) are
+   printed only when this is set; front ends show their own progress. */
+void pkg_set_verbose(int);
+int  pkg_verbose(void);
+
 /* What an operation would do, from the same planners the operation uses,
  * with nothing changed: not the drawer, not the registry, and no recovery of
  * pending transactions (a read-only context; pkg_pending_txns says whether
@@ -330,6 +359,13 @@ const char *pkg_arch(void);
  * or downloading anything: what the catalogue offers, whether it can run
  * here, and what is installed. `apkg show`, the window's detail panel and
  * ARexx INFO read this, so they cannot disagree. */
+/* post_install_notes: at most PKG_NOTES_LINES lines of at most
+ * PKG_NOTES_LINE printable ASCII characters each, without '"' or '\\'
+ * (tools/mkindex.py refuses anything else). */
+#define PKG_NOTES_LINES 8
+#define PKG_NOTES_LINE  159
+#define PKG_NOTES_MAX   (PKG_NOTES_LINES * (PKG_NOTES_LINE + 1) + 1)
+
 typedef struct {
     pkg_entry e;              /* the variant described; installed_* from the registry */
     int  in_index;            /* 0: only the registry knows it, or there is no index */
@@ -352,6 +388,16 @@ typedef struct {
     char installed_abi[8];    /* "" in entries written before 0.3 */
     char installed_dir[PKG_MAXPATH];
     char installed_when[32];
+    /* post_install_notes: what the package's author or the index maintainer
+     * says a user should know after installing (game data to supply, a
+     * folder to choose at first start). Plain lines joined by '\n'.
+     * `notes` is the index's current text; `notes_recorded` the copy the
+     * registry kept at installation, for offline reading. notes_bad is 1
+     * when the index has notes this client will not show: not plain lines
+     * within the limits below. */
+    char notes[PKG_NOTES_MAX];
+    char notes_recorded[PKG_NOTES_MAX];
+    int  notes_bad;
 } pkg_details;
 
 /* PKG_E_NOT_FOUND when neither the index nor the registry knows `id`. */

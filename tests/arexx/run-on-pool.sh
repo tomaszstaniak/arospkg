@@ -48,7 +48,7 @@ sleep 30
 
 # --- the window starts an install; ARexx is refused while it runs
 rx select 8
-c 189 601; sleep 1
+c 175 601; sleep 1
 rx guibusy 40; shot 04-window-job-done
 
 # --- the CLI holds the root; an ARexx operation fails on the lock
@@ -122,7 +122,7 @@ rx gone2 30
 t "Run >NIL: RAM:rxt/PkgManager --root SYS:PkgRx --rexxlib nosuch.library --log RAM:rxt-pm4.log" 10
 shot 11-no-arexx
 rx norexx 10
-c 140 122; sleep 3; c 668 601; sleep 10; shot 12-removed-from-window
+c 140 122; sleep 3; c 574 601; sleep 10; shot 12-removed-from-window
 c 111 53; sleep 4
 
 # --- allocation failures: the final message, and long answers

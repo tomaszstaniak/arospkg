@@ -310,7 +310,9 @@ int net_fetch(const char *url, const char *dest, long max_bytes, char why[240])
         r = fetch_once(host, path, &body, loc, sizeof loc, max_bytes, why);
         if (r == 1) break;
         if (r != 2) goto out;
-        printf("  redirect -> %s\n", loc);
+        /* The query of a signed download URL is a credential for that
+           download: it is never printed, not even with --verbose. */
+        if (pkg_verbose()) printf("  redirected to %.*s\n", (int)strcspn(loc, "?"), loc);
         snprintf(cur, sizeof cur, "%s", loc);
         body.len = 0;
         if (hop == MAXREDIR) { snprintf(why, 240, "too many redirects"); goto out; }

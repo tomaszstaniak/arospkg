@@ -28,8 +28,8 @@ sleep 75
 ty() { python3 tools/vmctl.py type "$1" >/dev/null 2>&1; }
 k()  { python3 tools/vmctl.py key "$1" >/dev/null 2>&1; }
 d()  { python3 tools/vmctl.py drag "$1" "$2" "$3" "$4" >/dev/null 2>&1; }
-# 800x600 window at (100,40): five buttons at y=601; Soliton opens at (200,185) with its close gadget at (208,193)
-ROW1="140 122"; INSTALL="189 601"; UPGRADE="349 601"; ROLLBACK="508 601"; REMOVE="668 601"
+# 800x600 window at (100,40): six buttons at y=601 (Open folder fifth); Soliton opens at (200,185) with its close gadget at (208,193)
+ROW1="140 122"; INSTALL="175 601"; UPGRADE="308 601"; ROLLBACK="441 601"; REMOVE="574 601"
 CLOSE="111 53"; TITLE="500 53"; SHELL="50 300"; SOLCLOSE="208 193"
 # A cycle notifies only on a CHANGE: "Not installed" and back to "All" forces a refill.
 refresh() { d 620 78 630 143; sleep 2; d 620 78 630 103; sleep 2; c $ROW1; sleep 3; }

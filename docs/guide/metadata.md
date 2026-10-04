@@ -141,6 +141,31 @@ A machine short of memory can report *missing* for a library that is there.
 The values used so far are `"aros-one"` and `"mainline-x86_64"`. There is no
 fixed vocabulary, and nothing checks these claims. Write only what was done.
 
+### Notes for the user
+
+| field | type | required | default | index | client | meaning and constraints |
+|---|---|---|---|---|---|---|
+| `post_install_notes` | array of strings | no | absent | `post_install_notes` | shown after a successful install, by `show` and in PkgManager's details; copied into the registry entry at installation | Short plain text a user needs after installing, one string per line: game data to supply separately, a folder to choose at first start, where the manual is. At most 8 lines of at most 159 characters, printable ASCII without `"` or `\`. `mkindex.py` refuses anything else, and does not shorten it. |
+
+The notes are text, nothing more: no markup, no variables, nothing is run,
+and no terminal sequence can be in them. The package's author can write
+them for their own package, or the index maintainer for an existing upload,
+without repacking the archive. They do not replace structured fields: a
+library the program needs belongs in `requires_system`, where the client
+checks it.
+
+A client that does not know the key skips it. The registry's copy is a
+record of what the user was told at installation, read when the catalogue no
+longer has the package; the catalogue's text is the one maintained.
+
+<!-- validate: fragment -->
+```toml
+post_install_notes = [
+  "This port needs the data files of the original game.",
+  "Copy them into the Data drawer, or choose their folder at first start.",
+]
+```
+
 ### `[source]`
 
 Optional, recommended for anything built from source. It records where the

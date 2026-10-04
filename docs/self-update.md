@@ -5,8 +5,18 @@ apkg self-update --check
 apkg self-update
 ```
 
+## The first time
+
+arospkg 0.3.2 and earlier do not have this command. Install the first
+release that has it by hand, as before: unpack its archive and copy `apkg`
+over the old one (to `C:`, or wherever you keep it). From then on,
+`apkg self-update` updates it.
+
+## Using it
+
 `--check` shows the version you have, the file it was started from, and the
-latest stable release for this machine. It changes nothing.
+latest stable release for this machine. It needs the network to ask, and it
+changes nothing: no file is written beside apkg.
 
 `self-update` replaces the apkg you started, and only that file: if you run
 `SYS:Tools/apkg self-update`, that copy is updated and `C:apkg` is not, and
@@ -24,6 +34,13 @@ the other way round. It shows the file and the version first. It:
 4. writes the new program beside the old one as `apkg.new`, renames the old
    one to `apkg.old`, and the new one to `apkg`. If the last step fails, the
    old one is put back.
+
+The apkg that runs `self-update` finishes as the old version; the new one
+runs from the next command. What the checks prove: the archive is the one
+the release's `SHA256SUMS` names, and the program is the one its `BUILD.txt`
+names, for this CPU and ABI. Both files come from the same release as the
+archive, so they guard against a damaged or wrong download, not against a
+release that was itself replaced; the release is not signed.
 
 The previous version stays as `apkg.old` beside the new one (one previous
 version; an older `apkg.old` is replaced). Your packages, the catalogue and
@@ -60,5 +77,3 @@ Rename C:apkg.new C:apkg       ; or finish the update
 
 - A resident apkg (`Resident`) is not updated; start it from its file.
 - It needs the network and the certificate bundle, as downloads do.
-- The release's checksums come from the same place as the release; the
-  release is not signed.

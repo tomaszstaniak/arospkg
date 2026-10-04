@@ -15,6 +15,7 @@
  * <self>.new becomes <self>, and if that last step fails the first is
  * undone. */
 #include "selfupdate.h"
+#include "present.h"
 #include "../libpkg/pkg.h"
 #include "../libpkg/net.h"
 #include "../libpkg/zip.h"
@@ -111,10 +112,16 @@ static int fetch(const char *url, const char *dest, long max, char why[240])
     return 0;
 }
 
+static int checking;                     /* --check: the wording of a failure */
+
 static int fail(const char *what, const char *detail)
 {
-    printf("apkg self-update: %s\n", what);
-    if (detail && *detail) printf("     %s\n", detail);
+    char head[300];
+    snprintf(head, sizeof head, "Could not %s: %s", checking ? "check for a newer apkg" : "update apkg", what);
+    fputs(pr_color(PR_RED), stdout);
+    pr_text(head, 0);
+    fputs(pr_off(), stdout);
+    if (detail && *detail) pr_text(detail, 2);
     return 10;
 }
 
@@ -131,6 +138,7 @@ int apkg_self_update(const char *current, const char *root, int check_only)
     LONG prot = 0;
 
     fresh[0] = 0;
+    checking = check_only;
     if (!t) return fail("this build's CPU and ABI have no release archive",
                         "Update it by hand from https://github.com/tomaszstaniak/arospkg/releases");
     if (self_path(self, sizeof self) != 0)
@@ -173,14 +181,21 @@ int apkg_self_update(const char *current, const char *root, int check_only)
     }
 
     c = vercmp(current, ver);
-    printf("installed:      apkg %s, %s\n", current, self);
-    printf("latest stable:  apkg %s for %s\n", ver, t);
+    {
+        char line[600];
+        snprintf(line, sizeof line, "apkg %s", current);
+        pr_heading(line);
+        pr_field("Location", self, -1);
+        snprintf(line, sizeof line, "%s (%s)", ver, t);
+        pr_field("Latest stable release", line, -1);
+        putchar('\n');
+    }
     if (c >= 0) {
-        printf(c == 0 ? "apkg is up to date.\n"
-                      : "This apkg is newer than the latest stable release; nothing to do.\n");
+        if (c == 0) { pr_word(PR_GREEN, "Up to date"); putchar('\n'); }
+        else printf("This apkg is newer than the latest stable release.\n");
         rc = 0; goto out;
     }
-    if (check_only) { printf("apkg self-update installs it.\n"); rc = 0; goto out; }
+    if (check_only) { printf("A newer release is available. Install it with: apkg self-update\n"); rc = 0; goto out; }
 
     /* A package operation in progress may start apkg again from this file:
        leave the file alone until it has finished. */
@@ -190,10 +205,16 @@ int apkg_self_update(const char *current, const char *root, int check_only)
         goto out;
     }
 
-    printf("updating %s to apkg %s\n", self, ver);
+    {
+        char line[120];
+        snprintf(line, sizeof line, "Updating apkg %s to %s", current, ver);
+        pr_heading(line);
+    }
     snprintf(url, sizeof url, "%s%s", base, name);
-    printf("fetching %s\n", url);
+    printf("Downloading %s\n", name);
+    if (pkg_verbose()) printf("  from %s\n", url);
     if (fetch(url, zip, 16L * 1024 * 1024, why) != 0) { rc = fail("cannot fetch the release archive", why); goto out; }
+    printf("Verifying archive\n");
     if (sha256_file(zip, got) != 0 || strcmp(got, want_zip) != 0) {
         rc = fail("the archive does not match the release's checksum", got); goto out;
     }
@@ -224,6 +245,7 @@ int apkg_self_update(const char *current, const char *root, int check_only)
     }
     if (same_target(fresh, why) != 0) { u_delete(fresh); rc = fail(why, fresh); goto out; }
 
+    printf("Installing apkg\n");
     /* The new file gets the old one's protection bits, so it stays runnable. */
     if ((fib = AllocDosObject(DOS_FIB, NULL))) {
         BPTR l = Lock((CONST_STRPTR)self, SHARED_LOCK);
@@ -252,8 +274,13 @@ int apkg_self_update(const char *current, const char *root, int check_only)
     if (sha256_file(self, got) != 0 || strcmp(got, want_bin) != 0) {
         rc = fail("the installed file does not match after the update", self); goto out;
     }
-    printf("updated to apkg %s. The previous apkg is kept as %s.\n", ver, prev);
-    printf("PkgManager is not updated by this; take it from the release archive.\n");
+    putchar('\n');
+    pr_word(PR_GREEN, "Updated"); printf(" apkg to %s\n", ver);
+    pr_field("Location", self, -1);
+    pr_field("Previous version", prev, -1);
+    /* This process is still the old code; only the file has changed. */
+    pr_text("The new version runs from the next apkg command.", 2);
+    pr_text("PkgManager is updated separately, from the release archive.", 2);
     rc = 0;
 out:
     if (fresh[0]) u_delete(fresh);         /* gone already after a swap */

@@ -25,11 +25,14 @@ void pr_field(const char *label, const char *value, int color);
 void pr_search_heading(void);
 void pr_search_row(const char *id, const char *version, const char *state,
                    const char *summary, const char *target_note);
-/* Known-length download: complete 10% milestone lines, fitted to current
- * geometry where known. CR/erase-EOL cannot safely replace a line after
- * resize has wrapped it. Nothing in plain/JSON/redirected output. Stage
- * labels and unknown-length byte reports never invent a percentage. */
+/* The stages of an operation (Downloading, Verifying archive, Installing
+ * files) as complete lines in every mode but JSON; in an interactive window
+ * without --plain, also the download's percentage every 10%, fitted to the
+ * window. Nothing is redrawn in place, and no percentage is invented where
+ * there is no total. */
 void pr_progress(const char *id, const char *phase, unsigned long done, unsigned long total);
+/* A blank line and a bold heading: a section such as the package's notes. */
+void pr_section(const char *title);
 void pr_end_line(void);    /* before anything else is printed */
 
 #endif

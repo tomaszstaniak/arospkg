@@ -109,6 +109,7 @@ USING IT
                         the plan first and refuses if a file you changed
                         would have to go
   apkg rollback <id>    back to the revision the last upgrade replaced
+  apkg open <id>        open an installed package's drawer on the desktop
   apkg verify <id>      compare the installed files with apkg's record: as
                         installed, changed locally, missing, not the
                         package's. It repairs nothing.
@@ -282,6 +283,15 @@ LIMITS -- READ THESE
   * The index is metadata only. The programs themselves are downloaded from
     AROS Archives or their authors' release pages; apkg does not host or
     copy them. A hash says nothing about the quality or safety of the program.
+
+
+NOTES FROM A PACKAGE
+--------------------
+
+Some packages come with a few lines a user needs after installing, written
+by the author or the catalogue maintainer: game data to supply, a folder to
+choose at first start. apkg prints them after the install, `apkg show`
+prints them, and PkgManager shows them in the details. They are text only.
 
 
 UPDATING apkg

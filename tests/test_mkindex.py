@@ -54,6 +54,16 @@ expect("requirement not ASCII", {"requires_system": [{"type": "library", "id": "
 expect("min_version bool", {"requires_system": [{"type": "library", "id": "a.library", "min_version": True}]},
        "min_version True")
 
+expect("notes: plain lines pass", {"post_install_notes": ["Needs the original game data.", "Copy it into the drawer."]}, None)
+expect("notes: not a list", {"post_install_notes": "one line"}, "must be a list of strings")
+expect("notes: nine lines", {"post_install_notes": ["x"] * 9}, "has 9 lines")
+expect("notes: line too long", {"post_install_notes": ["a" * 160]}, "line 1 is 160 characters")
+expect("notes: line of the limit", {"post_install_notes": ["a" * 159]}, None)
+expect("notes: escape sequence", {"post_install_notes": ["\x1b[31mred"]}, "line 1 has a character")
+expect("notes: quote", {"post_install_notes": ['say "hi"']}, "line 1 has a character")
+expect("notes: empty line", {"post_install_notes": ["ok", " "]}, "line 2 is empty")
+expect("notes: non-ASCII", {"post_install_notes": ["Café"]}, "line 1 has a character")
+
 
 def toml(m):
     lines = []

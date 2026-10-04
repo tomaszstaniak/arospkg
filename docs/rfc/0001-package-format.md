@@ -15,6 +15,7 @@ replaces: the earlier package-standard proposal (retained in Git history)
 | **Schema version** | `0`: draft, may change incompatibly. |
 | **Companion** | [RFC 0002](0002-application-folder.md), the application folder format |
 | **Current format** | [metadata reference](../guide/metadata.md): what the client reads today |
+| **Notes for the user** | `post_install_notes` is supported today in the **index manifest** (see the metadata reference). An embedded manifest may later carry the same field under the same rules; this draft does not add it. |
 
 Each field below has one of three statuses:
 

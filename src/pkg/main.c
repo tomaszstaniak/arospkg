@@ -36,6 +36,8 @@ static void verdict(const char *w)
     if (c < 0) fputs(w, stdout); else pr_word(c, w);
 }
 
+static void print_notes(const pkg_details *d, int after_install);
+
 static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_details *d)
 {
     char version[80], text[1200], why[240];
@@ -49,6 +51,8 @@ static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_d
         snprintf(text, sizeof text, "installed (%s)", version);
         pr_field("State", text, PR_GREEN);
         pr_field("Location", d->installed_dir, -1);
+        snprintf(text, sizeof text, "apkg open %s", d->e.id);
+        pr_field("Open folder", text, -1);
         if (*d->installed_when) pr_field("Installed on", d->installed_when, -1);
         if (*d->installed_arch) {
             snprintf(text, sizeof text, "%s / %s", d->installed_arch,
@@ -60,6 +64,9 @@ static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_d
     else if (!d->in_index) pr_field("Catalogue", "no longer lists this package", PR_YELLOW);
     if (d->ambiguous) pr_field("Selection", "multiple matching builds; installation refused", PR_RED);
     if (*d->e.category) pr_field("Category", d->e.category, -1);
+    /* Before the technical sections: "needs the original game data" is
+       what decides whether to install at all. */
+    print_notes(d, 0);
 
     putchar('\n'); pr_heading("Compatibility and requirements");
     if (d->in_index) {
@@ -173,6 +180,7 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
         if (pkg_can_rollback(c, id, why, sizeof why)) printf("  roll back:    possible\n");
         else printf("  roll back:    no -- %s\n", why);
     }
+    print_notes(&d, 0);
     return PKG_OK;
 }
 
@@ -221,13 +229,15 @@ static void usage(void)
            "  verify <id>       Check installed files for changes\n"
            "  info <id>         Show the installed package record\n"
            "  doctor            Report installation and recovery problems\n"
+           "  open <id>         Open an installed package's drawer on the desktop\n"
            "  self-update       Replace this apkg with the latest stable release\n"
-           "  self-update --check  Only say whether there is a newer one\n\n"
+           "  self-update --check  Say whether there is a newer one\n\n"
            "Options:\n"
            "  --root <dir>      Package directory (default: SYS:Packages)\n"
            "  --plain           Disable formatting and progress output\n"
            "  --color=<mode>    Colour output: auto, always or never\n"
            "  --json            Output search and list results as JSON\n"
+           "  --verbose         Also show download addresses and file locations\n"
            "  --version         Show version and build information\n"
            "  --about           Show author, project and licence information\n"
            "  --help            Show this help\n"
@@ -366,18 +376,88 @@ static void write_report(const char *path, const char *run_id, const char *machi
     printf("report %s\n", path);
 }
 
+/* What the command was doing, for its error: "install soliton". Empty for
+   commands whose errors read on their own. */
+static char doing[96];
+static const char *doing_id;       /* the package named in `doing` */
+static const char *cancel_noun;    /* "Installation", for "Installation cancelled" */
+
+/* The error as libpkg worded it -- the cause is never replaced by a
+   generic one -- after what was being done, and the subject and detail on
+   their own lines. A cancel is said as a cancel, not as a failure. */
 static void show(const pkg_err *e)
 {
+    char head[400];
     pr_end_line();
-    if (pr_rich()) {
-        pr_field("apkg", e->summary, PR_RED);
-        if (*e->subject) pr_field("Subject", e->subject, -1);
-        if (*e->detail) pr_text(e->detail, 2);
+    if (doing[0] && e->status == PKG_E_CANCELLED)
+        /* libpkg's summary ("download cancelled") only repeats the word;
+           anything it says beyond that is in the detail line. */
+        snprintf(head, sizeof head, "%s cancelled: %s%s%s", cancel_noun ? cancel_noun : "Operation",
+                 doing_id ? doing_id : doing,
+                 strstr(e->summary, "cancel") ? "" : " -- ", strstr(e->summary, "cancel") ? "" : e->summary);
+    else if (doing[0])
+        snprintf(head, sizeof head, "Could not %s: %s", doing, e->summary);
+    else
+        snprintf(head, sizeof head, "apkg: %s", e->summary);
+    fputs(pr_color(PR_RED), stdout);
+    pr_text(head, 0);
+    fputs(pr_off(), stdout);
+    /* The subject is often the package itself, already in the first line. */
+    if (e->subject[0] && !(doing_id && !strcmp(e->subject, doing_id))) pr_text(e->subject, 2);
+    if (e->detail[0])  pr_text(e->detail, 2);
+}
+
+/* The package's notes as a section. After an install, the copy just
+   recorded; in show, the catalogue's current text, or the recorded copy
+   when the catalogue no longer has the package. */
+static void print_notes(const pkg_details *d, int after_install)
+{
+    const char *n = after_install || !d->in_index ? d->notes_recorded : d->notes;
+    if (!after_install && d->in_index && d->notes_bad) {
+        pr_section("Notes from the package");
+        pr_text("Not shown: they are not plain lines this apkg can display.", 2);
         return;
     }
-    printf("%sapkg: %s%s\n", pr_color(PR_RED), e->summary, pr_off());
-    if (e->subject[0]) printf("     %s\n", e->subject);
-    if (e->detail[0])  printf("     %s\n", e->detail);
+    if (!*n) return;
+    pr_section(after_install || d->in_index ? "Notes from the package" : "Notes recorded at installation");
+    pr_text(n, 2);
+}
+
+/* After an install, upgrade or rollback: what is installed now, where, and
+   how to get to it, from the registry entry just written. */
+static void print_installed(pkg_ctx *c, const char *index, const char *id, const char *verb)
+{
+    pkg_details d; pkg_err e2; char v[80], line[PKG_MAXID + 16];
+    memset(&e2, 0, sizeof e2);
+    putchar('\n');
+    if (pkg_details_get(c, index, id, &d, &e2) != PKG_OK || !d.e.installed) {
+        pr_word(PR_GREEN, verb); printf(" %s\n", id);
+        return;
+    }
+    rev_label(v, sizeof v, d.e.installed_version, d.e.installed_revision);
+    pr_word(PR_GREEN, verb); printf(" %s %s\n", id, v);
+    pr_field("Location", d.installed_dir, -1);
+    snprintf(line, sizeof line, "apkg open %s", id);
+    pr_field("Open folder", line, -1);
+    print_notes(&d, 1);
+}
+
+/* The version the catalogue offers, for an operation's first line. */
+static void offered(pkg_ctx *c, const char *index, const char *id, char *v, size_t n, int installed)
+{
+    pkg_details d; pkg_err e2;
+    v[0] = 0;
+    memset(&e2, 0, sizeof e2);
+    if (pkg_details_get(c, index, id, &d, &e2) != PKG_OK) return;
+    if (installed && d.e.installed) rev_label(v, n, d.e.installed_version, d.e.installed_revision);
+    else if (!installed && d.in_index) rev_label(v, n, d.e.version, d.e.revision);
+}
+
+static void heading2(const char *verb, const char *id, const char *v)
+{
+    char t[200];
+    snprintf(t, sizeof t, "%s %s%s%s", verb, id, *v ? " " : "", v);
+    pr_heading(t);
 }
 
 static int real_main(int argc, char **argv)
@@ -416,6 +496,7 @@ static int real_main(int argc, char **argv)
             pkg_set_verify_name(argv[++i]);
         else if (!strcmp(argv[i], "--all-abi")) pkg_set_abi_show_all(1);
         else if (!strcmp(argv[i], "--json")) json = 1;
+        else if (!strcmp(argv[i], "--verbose")) pkg_set_verbose(1);
         else if (!strcmp(argv[i], "--plain")) plain = 1;
         else if (!strcmp(argv[i], "--color=auto")) color = PR_COLOR_AUTO;
         else if (!strcmp(argv[i], "--color=always")) color = PR_COLOR_ALWAYS;
@@ -501,7 +582,7 @@ static int real_main(int argc, char **argv)
         pkg_mode mode = PKG_OPEN_WRITE;
         if (!strcmp(cmd, "list") || !strcmp(cmd, "info") || !strcmp(cmd, "show") ||
             !strcmp(cmd, "search") || !strcmp(cmd, "requires") ||
-            !strcmp(cmd, "verify") || dry) mode = PKG_OPEN_READ;   /* a dry run never recovers */
+            !strcmp(cmd, "verify") || !strcmp(cmd, "open") || dry) mode = PKG_OPEN_READ;   /* a dry run never recovers */
         else if (!strcmp(cmd, "doctor")) mode = retry ? PKG_OPEN_DOCTOR : PKG_OPEN_READ;
         st = pkg_open(root, mode, &c, &e);
     }
@@ -549,7 +630,24 @@ static int real_main(int argc, char **argv)
         if (st == PKG_OK) fputs(out, stdout);
         free(out);
     } else if (!strcmp(cmd, "update")) {
+        snprintf(doing, sizeof doing, "update the package catalogue");
+        cancel_noun = "Catalogue update";
+        if (!json) pr_heading("Updating the package catalogue");
         st = pkg_update(c, index_url, &e);
+        if (st == PKG_OK && !json) {
+            pkg_entries es; int hidden = 0; pkg_err e2; char line[120];
+            memset(&e2, 0, sizeof e2);
+            putchar('\n');
+            pr_word(PR_GREEN, "Updated");
+            if (pkg_query(c, index, NULL, &es, &hidden, &e2) == PKG_OK) {
+                printf(" the package catalogue: %d packages for this system\n", es.n);
+                if (hidden) {
+                    snprintf(line, sizeof line, "%d more are for other systems (apkg --all-abi search)", hidden);
+                    pr_text(line, 2);
+                }
+                pkg_entries_free(&es);
+            } else printf(" the package catalogue\n");
+        }
     } else if (!strcmp(cmd, "search") && json) {
         pkg_entries es; int hidden = 0;
         st = pkg_query(c, index, arg, &es, &hidden, &e);
@@ -598,33 +696,90 @@ static int real_main(int argc, char **argv)
         if (st == PKG_OK) fputs(out, stdout);
         free(out);
     } else if (!strcmp(cmd, "install")) {
+        char v[80];
         if (!arg) { printf("apkg install: which package?\n"); pkg_close(c); return 5; }
-        if (pr_rich()) {
-            char heading[100], dest[PKG_MAXPATH + PKG_MAXID + 2];
-            snprintf(heading, sizeof heading, "Installing %s", arg);
-            pr_heading(heading);
-            snprintf(dest, sizeof dest, "%s/%s", root, arg);
-            pr_field("Destination", dest, -1);
-            putchar('\n');
-        }
+        snprintf(doing, sizeof doing, "install %s", arg);
+        doing_id = arg;
+        cancel_noun = "Installation";
+        offered(c, index, arg, v, sizeof v, 0);
+        heading2("Installing", arg, v);
         st = pkg_install(c, index, arg, stop, &e);
         pr_end_line();
-        if (st == PKG_OK) { pr_word(PR_GREEN, "installed"); printf(" %s\n", arg); }
+        if (st == PKG_OK) print_installed(c, index, arg, "Installed");
     } else if (!strcmp(cmd, "remove")) {
+        char v[80];
+        pkg_removal rm;
         if (!arg) { printf("apkg remove: which package?\n"); pkg_close(c); return 5; }
+        snprintf(doing, sizeof doing, "remove %s", arg);
+        doing_id = arg;
+        cancel_noun = "Removal";
+        offered(c, index, arg, v, sizeof v, 1);
+        heading2("Removing", arg, v);
         st = pkg_remove(c, arg, stop, &e);
         pr_end_line();
-        if (st == PKG_OK) { pr_word(PR_GREEN, "removed"); printf(" %s\n", arg); }
+        if (st == PKG_OK) {
+            int i;
+            char line[PKG_MAXPATH + 120];
+            pkg_last_removal(c, &rm);
+            putchar('\n');
+            pr_word(PR_GREEN, "Removed"); printf(" %s%s%s\n", arg, *v ? " " : "", v);
+            /* What is still there is said as such: a user who reads only
+               "Removed" would think it gone. */
+            /* What is still there, file by file with the reason: what the
+               user changed, and what apkg never installed. Only names apkg
+               knows are listed; a longer list says how many more. */
+            if (rm.kept || rm.others) {
+                snprintf(line, sizeof line, "Kept files in %s:", rm.dir[0] ? rm.dir : "the drawer");
+                pr_text(line, 2);
+                for (i = 0; i < rm.named; i++) {
+                    snprintf(line, sizeof line, "%s (you changed it)", rm.names[i]);
+                    pr_text(line, 4);
+                }
+                if (rm.kept > rm.named) {
+                    snprintf(line, sizeof line, "and %d more you changed, listed in %s", rm.kept - rm.named, rm.list_file);
+                    pr_text(line, 4);
+                }
+                for (i = 0; i < rm.others_named; i++) {
+                    snprintf(line, sizeof line, "%s (not installed by apkg)", rm.other_names[i]);
+                    pr_text(line, 4);
+                }
+                if (rm.others > rm.others_named) {
+                    snprintf(line, sizeof line, "and %d more not installed by apkg", rm.others - rm.others_named);
+                    pr_text(line, 4);
+                }
+            } else if (rm.dir[0]) {
+                snprintf(line, sizeof line, "The drawer %s was kept; it is not empty.", rm.dir);
+                pr_text(line, 2);
+            }
+            if (rm.icon[0]) {
+                snprintf(line, sizeof line, "Kept the drawer icon %s: it was changed after installation", rm.icon);
+                pr_text(line, 2);
+            }
+        }
     } else if (!strcmp(cmd, "upgrade")) {
         if (!arg) { printf("apkg upgrade: which package?\n"); pkg_close(c); return 5; }
+        snprintf(doing, sizeof doing, "upgrade %s", arg);
+        doing_id = arg;
+        cancel_noun = "Upgrade";
         st = pkg_upgrade(c, index, arg, stop, &e);
         pr_end_line();
-        if (st == PKG_OK) { pr_word(PR_GREEN, "upgraded"); printf(" %s\n", arg); }
+        if (st == PKG_OK) print_installed(c, index, arg, "Upgraded");
     } else if (!strcmp(cmd, "rollback")) {
         if (!arg) { printf("apkg rollback: which package?\n"); pkg_close(c); return 5; }
+        snprintf(doing, sizeof doing, "roll back %s", arg);
+        doing_id = arg;
+        cancel_noun = "Rollback";
         st = pkg_rollback(c, arg, stop, &e);
         pr_end_line();
-        if (st == PKG_OK) { pr_word(PR_GREEN, "rolled back"); printf(" %s\n", arg); }
+        if (st == PKG_OK) print_installed(c, index, arg, "Rolled back");
+    } else if (!strcmp(cmd, "open")) {
+        char where[PKG_MAXPATH];
+        if (!arg) { printf("apkg open: which package?\n"); pkg_close(c); return 5; }
+        snprintf(doing, sizeof doing, "open %s", arg);
+        doing_id = arg;
+        cancel_noun = "Opening";
+        st = pkg_open_folder(c, arg, where, sizeof where, &e);
+        if (st == PKG_OK) printf("Opened %s\n", where);
     } else {
         printf("apkg: unknown command '%s'\n", cmd);
         pkg_close(c);

@@ -156,9 +156,9 @@ run R/ACCEPT accept-reports.txt
 echo "CLI DONE $(date +%T)"
 
 boot
-# 800x600 window at (100,40): five buttons at y=601; Soliton opens at
+# 800x600 window at (100,40): six buttons at y=601 (Open folder fifth); Soliton opens at
 # (200,185) with its close gadget at (208,193)
-ROW1="140 122"; INSTALL="189 601"; UPGRADE="349 601"; ROLLBACK="508 601"
+ROW1="140 122"; INSTALL="175 601"; UPGRADE="308 601"; ROLLBACK="441 601"
 CLOSE="111 53"; TITLE="500 53"; SOLCLOSE="208 193"
 refresh() { d 620 78 630 143; sleep 2; d 620 78 630 103; sleep 2; c $ROW1; sleep 3; }
 runsol() { t "CD SYS:PkgSol/soliton" 1; t "Run >NIL: <NIL: Soliton" 12; shot run$1

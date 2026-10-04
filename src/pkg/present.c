@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static int interactive, plain_mode, rich, color, bold, inplace, cols;
+static int interactive, plain_mode, json_mode, rich, color, bold, inplace, cols;
 /* The window reads SGR 30-37 as screen pens (XTY_COLOR_PENS): colours then
    go as 38;5;n, which keeps the palette meaning. It changes how a colour is
    written, never whether one is. */
@@ -43,6 +43,7 @@ void pr_init(int json, int plain, int color_mode)
     last_unknown_mib = 0;
     interactive = out && IsInteractive(out);
     plain_mode = plain || json;
+    json_mode = json;
     if (json || !interactive) return;     /* as today, byte for byte */
     if (!plain) {
         memset(&q, 0, sizeof q);
@@ -74,7 +75,7 @@ void pr_init(int json, int plain, int color_mode)
 
 int pr_rich(void) { return rich; }
 int pr_cols(void) { return cols; }
-int pr_wants_progress(void) { return interactive && !plain_mode && (inplace || !rich); }
+int pr_wants_progress(void) { return !json_mode; }
 
 const char *pr_bold(void) { return bold ? "\033[1m" : ""; }
 const char *pr_color(int c)
@@ -166,85 +167,67 @@ static void kb(char *b, size_t n, unsigned long v)
     else snprintf(b, n, "%lu KiB", v / 1024);
 }
 
+/* The stages of an operation, as complete lines in every mode but JSON:
+ * what a redirected log and a person both read. The download's percentage
+ * lines are added only in an interactive window without --plain. Lines are
+ * never redrawn in place: a terminal's promise of CR and erase-to-EOL does
+ * not survive a resize between two frames, and a complete line does. */
 void pr_progress(const char *id, const char *phase, unsigned long done, unsigned long total)
 {
     char a[32], b[32], line[160];
-    int pct, limit;
+    int pct, limit, percent = interactive && !plain_mode;
     const char *label;
-    (void)id; /* The command heading identifies the package, not every frame. */
-    if (!interactive || plain_mode) return;
+    (void)id; /* the operation's heading names the package, not every line */
+    if (json_mode) return;
     label = !strcmp(phase, "download") ? "Downloading" :
             !strcmp(phase, "verify") ? "Verifying archive" :
-            !strcmp(phase, "extract") ? "Extracting files" :
-            !strcmp(phase, "publish") ? "Publishing" : NULL;
-    if (!label) return;
+            !strcmp(phase, "extract") ? "Installing files" : NULL;
+    if (!label) return;                 /* publish: part of installing files */
+    refresh_geometry();
+    limit = cols ? cols - 1 : 79;
+    if (limit < 1) limit = 1;
     if (strcmp(phase, last_phase)) {
-        pr_end_line();
         snprintf(last_phase, sizeof last_phase, "%s", phase);
         last_tenth = 0;
         unknown_reported = 0;
-    }
-    /* Only download supplies a meaningful byte fraction. Other phases are
-       stage notifications, including extract's sentinel 1/1 completion. */
-    pct = total ? (done >= total ? 100 : (int)(100.0L * done / total)) : 0;
-    if (!inplace) {
-        /* The plain interactive path: a complete line every 10%, the first
-           at 10%; not on a terminal that answered but cannot redraw a line. */
-        if (rich || strcmp(phase, "download") || !total || done == 0 || pct / 10 == last_tenth) return;
-        last_tenth = pct / 10;
-        if (!strcmp(phase, "download")) {
-            kb(a, sizeof a, done); kb(b, sizeof b, total);
-            printf("  %s %d%% (%s of %s)\n", phase, pct, a, b);
-        } else printf("  %s %d%% (%lu of %lu)\n", phase, pct, done, total);
-        fflush(stdout);
-        return;
-    }
-    if (!strcmp(phase, "download")) {
-        if (!done) return; /* fetching/redirect messages precede the first byte */
-        if (total && pct / 10 == last_tenth) return;
-        last_tenth = pct / 10;
-        refresh_geometry();
-        limit = cols ? cols - 1 : 79;
-        if (limit < 1) return;
-        kb(a, sizeof a, done); kb(b, sizeof b, total);
-        if (total) {
-            snprintf(line, sizeof line, "Downloading %3d%%  %s / %s", pct, a, b);
-            if ((int)strlen(line) > limit) {
-                snprintf(line, sizeof line, "Downloading %d%%", pct);
-                if ((int)strlen(line) > limit) snprintf(line, sizeof line, "%d%%", pct);
-            }
-        } else {
-            /* With no total the transport has no completion callback. Leave
-               complete lines so the engine's next printf cannot collide. */
-            unsigned long mib = done / (1024UL * 1024UL);
-            if (unknown_reported && mib == last_unknown_mib) return;
-            unknown_reported = 1;
-            last_unknown_mib = mib;
-            pr_end_line();
-            snprintf(line, sizeof line, "Downloading %s (total unknown)", a);
-            if ((int)strlen(line) > limit) snprintf(line, sizeof line, "%s", a);
+        if (strcmp(phase, "download") || !percent) {
+            if (!strcmp(phase, "download") && total) {
+                kb(b, sizeof b, total);
+                snprintf(line, sizeof line, "%s %s", label, b);
+            } else snprintf(line, sizeof line, "%s", label);
             printf("%.*s\n", limit, line);
             fflush(stdout);
             return;
         }
-    } else {
-        refresh_geometry();
-        limit = cols ? cols - 1 : 79;
-        if (limit < 1) return;
-        if (done) {
-            pr_end_line();
-            if (!strcmp(phase, "verify")) { printf("%.*s\n", limit, "Archive verified"); fflush(stdout); }
-            return;
-        }
-        snprintf(line, sizeof line, "%s...", label);
     }
-    if (limit < (int)sizeof line && (int)strlen(line) > limit) line[limit] = 0;
-    /* Operation 13 promises CR and erase-to-EOL, not a resize-stable
-       cursor anchor or erasure of a previous wrapped logical line. Even a
-       fresh width can race a resize. Complete milestone lines need neither:
-       wrapped output remains history, never a half-erased transient frame. */
-    printf("%s\n", line);
+    if (strcmp(phase, "download") || !percent || !done) return;
+    kb(a, sizeof a, done);
+    if (total) {
+        pct = done >= total ? 100 : (int)(100.0L * done / total);
+        if (pct / 10 == last_tenth && pct < 100) return;
+        if (pct == 100 && last_tenth == 10) return;
+        last_tenth = pct == 100 ? 10 : pct / 10;
+        kb(b, sizeof b, total);
+        snprintf(line, sizeof line, "Downloading %3d%%  %s / %s", pct, a, b);
+        if ((int)strlen(line) > limit) snprintf(line, sizeof line, "Downloading %d%%", pct);
+        if ((int)strlen(line) > limit) snprintf(line, sizeof line, "%d%%", pct);
+    } else {
+        /* No total: a line per MiB, so the count is never mistaken for one. */
+        unsigned long mib = done / (1024UL * 1024UL);
+        if (unknown_reported && mib == last_unknown_mib) return;
+        unknown_reported = 1;
+        last_unknown_mib = mib;
+        snprintf(line, sizeof line, "Downloading %s (size unknown)", a);
+        if ((int)strlen(line) > limit) snprintf(line, sizeof line, "%s", a);
+    }
+    printf("%.*s\n", limit, line);
     fflush(stdout);
+}
+
+void pr_section(const char *title)
+{
+    putchar('\n');
+    pr_heading(title);
 }
 
 void pr_end_line(void)

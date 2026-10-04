@@ -65,6 +65,8 @@ int swap_read_registry(const char *path, rev_info *r, inv_ent *inv, int *ninv, c
     member(js, t, n, 0, "origin",  r->url,  sizeof r->url);
     member(js, t, n, 0, "archive_sha256", r->sha, sizeof r->sha);
     r->size = js_long(js, t, js_member(js, t, n, 0, "archive_size"), -1);
+    /* A rollback writes the previous revision's record again: its notes too. */
+    if (notes_from_element(js, t, n, 0, r->notes, sizeof r->notes) < 0) r->notes[0] = 0;
     ic = js_member(js, t, n, 0, "icon");
     if (ic >= 0) {
         member(js, t, n, ic, "state",  r->icon_state, sizeof r->icon_state);
@@ -115,6 +117,7 @@ pkg_status swap_read_index(const char *index_path, const char *id,
     r->size = js_long(js, t, js_member(js, t, n, found, "size"), -1);
     member(js, t, n, found, "subdir", r->subdir, sizeof r->subdir);
     member(js, t, n, found, "icon",   r->icon_member, sizeof r->icon_member);
+    if (notes_from_element(js, t, n, found, r->notes, sizeof r->notes) < 0) r->notes[0] = 0;
     if (req_parse(js, t, n, found, reqs, MAXREQ, nreq, why, sizeof why) != 0) {
         free(t); free(js);
         return pkg_fail(e, PKG_E_REQUIRES, "this package's system requirements are not readable", why, id);
@@ -423,7 +426,8 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
                         icon_managed_after ? (icon_replace ? icon_size : -1) : -1,
                         to->icon_member,
                         is_rollback ? "" : prev_reg,
-                        is_rollback ? "" : prev_arc);
+                        is_rollback ? "" : prev_arc,
+                        to->notes);
     if (!reg || u_write_atomicish(regpath, reg) != 0) { st = pkg_fail(e, PKG_E_IO, "cannot write the registry entry", "", regpath); goto out; }
     STOP(PKG_STOP_AFTER_REGISTRY);
     STOP(PKG_STOP_BEFORE_COMMIT);

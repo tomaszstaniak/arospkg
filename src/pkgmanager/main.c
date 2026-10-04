@@ -21,12 +21,12 @@
 #define PM_VERSION "0.3.1"
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
-       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE };
+       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN };
 
 static Object *app, *win, *str_search, *cyc_cat, *cyc_state, *lst, *txt_detail,
               *txt_status, *gauge, *btn_install, *btn_remove, *btn_update, *btn_cancel,
               *btn_upgrade, *btn_rollback, *win_confirm, *txt_confirm, *btn_proceed, *btn_decline,
-              *win_about, *btn_about, *btn_about_close;
+              *win_about, *btn_about, *btn_about_close, *btn_open;
 static int auto_yes;              /* --yes: confirm requesters without asking; for tests */
 static pkg_entries rows;          /* the whole query; the list shows a filtered view */
 static job cur;
@@ -282,7 +282,7 @@ static void search_acknowledged(void)
  * much comes down the wire. */
 static void show_detail(void)
 {
-    static char buf[2048];
+    static char buf[4096];
     char reqs[1024] = "";
     pkg_entry *e = selected();
     pkg_details det;
@@ -294,6 +294,7 @@ static void show_detail(void)
         SetAttrs(btn_remove,   MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_upgrade,  MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
         return;
     }
     memset(&det, 0, sizeof det);
@@ -325,6 +326,9 @@ static void show_detail(void)
         k = (size_t)snprintf(buf, sizeof buf, "\33b%s\33n %s   %s\n",
                              e->id, ver,
                              e->installed ? "\33binstalled\33n" : (e->ours ? "" : "\33bother ABI\33n"));
+        /* Where it is, from its registry entry: what Open folder opens. */
+        if (e->installed && det.installed_dir[0])
+            k += (size_t)snprintf(buf + k, sizeof buf - k, "location: %s\n", det.installed_dir);
     }
     {
         /* The two questions the buttons need, answered by the library. */
@@ -366,6 +370,20 @@ static void show_detail(void)
     k += (size_t)snprintf(buf + k, sizeof buf - k, "%s\n%s   %s/%s   %s   %ld KB download\n",
                           e->summary, e->category, e->arch, e->abi[0] ? e->abi : "?", e->kind,
                           e->size > 0 ? (e->size + 1023) / 1024 : 0L);
+    /* Right after the description: "needs the game data" is what decides
+       whether to install, and the pane shows eight lines without scrolling. */
+    k = strlen(buf);
+    /* The package's notes: the catalogue's current text, or the copy kept
+       at installation when the catalogue no longer has it. They are plain
+       printable ASCII (the parser refuses anything else), so they cannot
+       carry Floattext's escape codes. */
+    if (det.in_index && det.notes_bad)
+        snprintf(buf + k, sizeof buf - k, "\33bNotes from the package\33n\nnot shown: they are not plain lines this version can display\n");
+    else if (det.in_index ? det.notes[0] : det.notes_recorded[0])
+        snprintf(buf + k, sizeof buf - k, "\33b%s\33n\n%s\n",
+                 det.in_index ? "Notes from the package" : "Notes recorded at installation",
+                 det.in_index ? det.notes : det.notes_recorded);
+    k = strlen(buf);
     if (det.compat == PKG_COMPAT_NATIVE)
         k += (size_t)snprintf(buf + k, sizeof buf - k, "compatibility: native\n");
     else
@@ -377,8 +395,26 @@ static void show_detail(void)
     else
         snprintf(buf + k, sizeof buf - k, "requirements: none stated");
     SetAttrs(txt_detail, MUIA_Floattext_Text, (IPTR)buf, TAG_DONE);
+    SetAttrs(btn_open, MUIA_Disabled, busy_now() || !e->installed, TAG_DONE);
     SetAttrs(btn_install, MUIA_Disabled, busy_now() || e->installed || !e->ours, TAG_DONE);
     SetAttrs(btn_remove,  MUIA_Disabled, busy_now() || !e->installed, TAG_DONE);
+}
+
+/* Open folder: the drawer the registry entry records, through the same call
+   as `apkg open`. It reads only; the registry and the drawer are not touched. */
+static void open_folder(const char *id)
+{
+    char where[PKG_MAXPATH], line[PKG_MAXPATH + 200];
+    pkg_ctx *c = NULL; pkg_err err; pkg_status st;
+    memset(&err, 0, sizeof err);
+    where[0] = 0;
+    st = pkg_open(root, PKG_OPEN_READ, &c, &err);
+    if (st == PKG_OK) { st = pkg_open_folder(c, id, where, sizeof where, &err); pkg_close(c); }
+    if (st == PKG_OK) snprintf(line, sizeof line, "opened %s", where);
+    else snprintf(line, sizeof line, "could not open the folder of %s: %s%s%s", id, err.summary,
+                  where[0] ? " -- " : "", where);
+    logline("open folder %s: %s", id, line);
+    status(line);
 }
 
 /* ------------------------------------------------------------------ jobs */
@@ -393,6 +429,7 @@ static void busy(int on)
         SetAttrs(btn_remove,   MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_upgrade,  MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
     } else show_detail();
 }
 
@@ -1060,6 +1097,7 @@ static int real_main(int argc, char **argv)
                     Child, (btn_upgrade  = SimpleButton("Upgrade")),
                     Child, (btn_rollback = SimpleButton("Roll back")),
                     Child, (btn_remove   = SimpleButton("Remove")),
+                    Child, (btn_open     = SimpleButton("Open folder")),
                     Child, (btn_cancel   = SimpleButton("Cancel")),
                 End),
                 Child, (gauge = GaugeObject,
@@ -1120,6 +1158,7 @@ static int real_main(int argc, char **argv)
     DoMethod(win_about, MUIM_Notify, MUIA_Window_CloseRequest, TRUE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT_CLOSE);
     DoMethod(btn_install, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_INSTALL);
     DoMethod(btn_remove,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_REMOVE);
+    DoMethod(btn_open,    MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_OPEN);
     DoMethod(btn_cancel,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_CANCEL);
     DoMethod(btn_upgrade, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_UPGRADE);
     DoMethod(btn_rollback,MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ROLLBACK);
@@ -1166,6 +1205,7 @@ static int real_main(int argc, char **argv)
         case ID_UPDATE:  logline("update pressed"); begin(JOB_UPDATE, NULL, "window"); break;
         case ID_INSTALL: { pkg_entry *e = selected(); if (e) { logline("install pressed for %s", e->id); begin(JOB_INSTALL, e->id, "window"); } } break;
         case ID_REMOVE:  { pkg_entry *e = selected(); if (e) { logline("remove pressed for %s", e->id); begin(JOB_REMOVE, e->id, "window"); } } break;
+        case ID_OPEN:    { pkg_entry *e = selected(); if (e) open_folder(e->id); } break;
         case ID_UPGRADE: { pkg_entry *e = selected(); if (e) { logline("upgrade pressed for %s", e->id); begin(JOB_PREVIEW_UPGRADE, e->id, "window"); } } break;
         case ID_ROLLBACK:{ pkg_entry *e = selected(); if (e) { logline("rollback pressed for %s", e->id); begin(JOB_PREVIEW_ROLLBACK, e->id, "window"); } } break;
         case ID_CANCEL:  if (in_flight) { cur.cancel = 1; if (active) active->cancel_asked = 1; status("cancelling..."); logline("cancel pressed for %s", cur.id); } break;

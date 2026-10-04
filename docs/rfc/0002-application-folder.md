@@ -13,6 +13,7 @@ updated: 2026-09-29
 | **Status** | Draft. **Not implemented**: nothing reads it, and no package ships one. |
 | **Schema version** | `0`: draft, may change incompatibly. |
 | **Companion** | [RFC 0001](0001-package-format.md), the package format |
+| **What exists today** | `apkg open <id>` and PkgManager's Open folder open the installed drawer the registry records. Nothing starts a program: a Run action needs the unambiguous entry point this draft describes, and is not implemented. |
 
 Statuses are used as in RFC 0001: **proposed**, **deferred**, and **shared**,
 which means the field is defined in RFC 0001 and used here with that exact

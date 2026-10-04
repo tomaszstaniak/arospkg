@@ -85,6 +85,9 @@ PLAIN = re.compile(r'^[\x20-\x21\x23-\x5b\x5d-\x7e]*$')
 CLIENT_MAXTOK = 8192
 CLIENT_MAXBYTES = 4 * 1024 * 1024
 REVISION_MAX = 2**31 - 1
+# post_install_notes: what the client holds (src/libpkg/pkg.h PKG_NOTES_*).
+# Refused, not shortened, past these: a cut sentence can say the opposite.
+NOTES_LINES, NOTES_LINE = 8, 159
 
 
 def check(m):
@@ -123,6 +126,28 @@ def check(m):
             problems.append(f"revision {r!r} is not an integer from 1 to {REVISION_MAX}")
     problems += check_strings(m)
     problems += check_requires(m.get("requires_system", []))
+    problems += check_notes(m.get("post_install_notes"))
+    return problems
+
+
+def check_notes(v):
+    """post_install_notes: optional plain lines a user reads after installing."""
+    if v is None:
+        return []
+    if not isinstance(v, list) or not all(isinstance(x, str) for x in v):
+        return ["post_install_notes must be a list of strings, one per line"]
+    problems = []
+    if len(v) > NOTES_LINES:
+        problems.append(f"post_install_notes has {len(v)} lines; the client shows {NOTES_LINES}")
+    for i, line in enumerate(v, 1):
+        if not line.strip():
+            problems.append(f"post_install_notes line {i} is empty")
+        elif not PLAIN.match(line):
+            problems.append(f"post_install_notes line {i} has a character the client would read "
+                            "differently: use printable ASCII without '\"' or '\\'")
+        elif len(line) > NOTES_LINE:
+            problems.append(f"post_install_notes line {i} is {len(line)} characters; "
+                            f"the client shows {NOTES_LINE}")
     return problems
 
 
@@ -338,6 +363,9 @@ def main():
             **({"source": m["source"]["repository"]}
                if isinstance(m.get("source"), dict) and m["source"].get("repository") else {}),
             **({"license": m["license"]} if m.get("license") else {}),
+            # Shown after installing, by show and in the window. Older
+            # clients skip unknown keys (tests/fixtures: checked with 0.3.2).
+            **({"post_install_notes": m["post_install_notes"]} if m.get("post_install_notes") else {}),
         })
 
     # Closure. An approved manifest may name a dependency that does not exist;

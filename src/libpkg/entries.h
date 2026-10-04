@@ -14,6 +14,13 @@
  * guessed; see abi_check() in ops.c for why. */
 int pkg_abi_known(const char *abi);
 
+/* post_install_notes of an index element (or a registry object), joined by
+ * '\n' into out. Returns the number of lines, 0 when there are none, or -1
+ * when the member is not an array of plain lines within PKG_NOTES_LINES and
+ * PKG_NOTES_LINE: then out is empty, never a shortened or odd reading. */
+int notes_from_element(const char *json, const js_tok *t, int ntok, int el,
+                       char *out, size_t n);
+
 /* Rows from the index text. `term` filters as pkg_match does (NULL or empty
  * matches everything). Rows for another ABI are kept only with `show_all`;
  * otherwise they are counted in *hidden (if non-NULL) and dropped. Rows come

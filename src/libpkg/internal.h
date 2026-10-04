@@ -19,6 +19,7 @@ struct pkg_ctx {
     pkg_progress progress;
     void *progress_user;
     const char *progress_id;   /* the package an event is about, during install */
+    pkg_removal removal;       /* what the last remove left in place */
 };
 
 typedef struct { char rel[256]; char sha[65]; long size; } inv_ent;
@@ -62,7 +63,8 @@ char *registry_text(const char *id, const char *version, long revision,
                     inv_ent *inv, int n, req_ent *reqs, int nreq,
                     const char *icon_state, const char *icon_sha, long icon_size,
                     const char *icon_member,
-                    const char *prev_registry, const char *prev_archive);
+                    const char *prev_registry, const char *prev_archive,
+                    const char *notes);
 /* What upgrade, rollback, verify and a dry run need to know about a revision,
  * read from a registry entry or from an index entry (swap.c). */
 typedef struct {
@@ -74,6 +76,7 @@ typedef struct {
     char subdir[128];
     char icon_member[128];
     char icon_state[24], icon_sha[65];
+    char notes[PKG_NOTES_MAX];   /* post_install_notes, '\n'-joined */
     char prev_registry[PKG_MAXPATH], prev_archive[PKG_MAXPATH];
 } rev_info;
 int        swap_read_registry(const char *path, rev_info *, inv_ent *, int *ninv, char **text_out);

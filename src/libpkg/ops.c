@@ -46,9 +46,10 @@ char *registry_text(const char *id, const char *version, long revision,
                     inv_ent *inv, int n, req_ent *reqs, int nreq,
                     const char *icon_state, const char *icon_sha, long icon_size,
                     const char *icon_member,
-                    const char *prev_registry, const char *prev_archive)
+                    const char *prev_registry, const char *prev_archive,
+                    const char *notes)
 {
-    size_t cap = 4096 + (size_t)n * 400 + (size_t)nreq * 400;
+    size_t cap = 4096 + PKG_NOTES_MAX * 2 + (size_t)n * 400 + (size_t)nreq * 400;
     char *buf = (char *)malloc(cap);
     js_out o; char when[32]; int i;
     if (!buf) return NULL;
@@ -94,6 +95,20 @@ char *registry_text(const char *id, const char *version, long revision,
     js_key(&o, "registry"); js_vstr(&o, prev_registry ? prev_registry : ""); js_raw(&o, ", ");
     js_key(&o, "archive");  js_vstr(&o, prev_archive ? prev_archive : "");
     js_raw(&o, " }");
+    /* The notes as the index had them when this was installed: what the
+       user was told, readable later without the index. Not a second place
+       to maintain them; the index's current text is shown beside it. */
+    if (notes && *notes) {
+        const char *p = notes;
+        js_raw(&o, ",\n  "); js_key(&o, "post_install_notes"); js_raw(&o, " [");
+        for (i = 0; *p; i++) {
+            char line[PKG_NOTES_LINE + 1]; size_t k = strcspn(p, "\n");
+            snprintf(line, sizeof line, "%.*s", (int)k, p);
+            js_raw(&o, i ? ", " : ""); js_vstr(&o, line);
+            p += k; if (*p) p++;
+        }
+        js_raw(&o, "]");
+    }
     js_raw(&o, ",\n  "); js_key(&o, "contents"); js_raw(&o, " [");
     for (i = 0; i < n; i++) {
         js_raw(&o, i ? ",\n    { " : "\n    { ");
@@ -137,7 +152,7 @@ pkg_status fetch_verified(pkg_ctx *c, const char *id, const char *url,
             size_ok = want_size < 0 || u_size(archive) == want_size;
         }
         if (pkg_cache_decision(present, hash_ok, size_ok) == CACHE_DISCARD_AND_FETCH) {
-            printf("the cached copy does not match the index; fetching it again\n");
+            printf("The cached archive does not match the catalogue; downloading it again.\n");
             if (u_delete(archive) != 0) {
                 return pkg_fail(e, PKG_E_IO, "cannot discard the stale cached copy",
                               "Delete it and try again.", archive);
@@ -151,7 +166,7 @@ pkg_status fetch_verified(pkg_ctx *c, const char *id, const char *url,
         if (net_open(why) != 0) {
             st = pkg_fail(e, PKG_E_NETWORK, "no network", why, url); return st;
         }
-        printf("fetching %s\n", url);
+        if (pkg_verbose()) printf("  from %s\n", url);
         if (prog(c, "download", 0, want_size > 0 ? (unsigned long)want_size : 0, 1)) {
             net_close();
             st = pkg_fail(e, PKG_E_CANCELLED, "cancelled before the download", "", id); return st;
@@ -183,7 +198,7 @@ pkg_status fetch_verified(pkg_ctx *c, const char *id, const char *url,
             st = pkg_fail(e, PKG_E_IO, "cannot move the download into the cache",
                           "", archive); return st;
         }
-        printf("verified and cached %s\n", archive);
+        if (pkg_verbose()) printf("  verified and cached %s\n", archive);
     }
     {
         char got[65];
@@ -214,6 +229,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     int ntok, arr, i, found = -1;
     char version[64] = "", arch[16] = "", url[512] = "", want_sha[65] = "", want_abi[16] = "";
     char subdir[128] = "", archive[PKG_MAXPATH], staging[PKG_MAXPATH];
+    char notes[PKG_NOTES_MAX] = "";
     char dest[PKG_MAXPATH], regpath[PKG_MAXPATH], tid[64], why[160];
     long want_size = 0, revision = 0;
     inv_ent *inv = NULL;
@@ -229,7 +245,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
 
     registry_path(c, id, regpath, sizeof regpath);
     if (u_exists(regpath))
-        return pkg_fail(e, PKG_E_EXISTS, "already installed", "use pkg remove first", id);
+        return pkg_fail(e, PKG_E_EXISTS, "already installed", "Remove it first if you want to install it again.", id);
 
     /* A directory of this name with no registry entry is refused BEFORE the
      * download. The usual way to get one is a removal that kept files the user
@@ -384,6 +400,8 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
      * index that names an icon the archive does not contain is refused: the
      * metadata is wrong, and installing without the icon would hide that. */
     js_str(idx, t, js_member(idx, t, ntok, found, "icon"), icon_src, sizeof icon_src);
+    /* Notes the client cannot show as written are not recorded either. */
+    if (notes_from_element(idx, t, ntok, found, notes, sizeof notes) < 0) notes[0] = 0;
     if (icon_src[0]) {
         snprintf(icon_dst, sizeof icon_dst, "%s/%s.info", c->root, id);
         snprintf(icon_stage, sizeof icon_stage, "%s/%s/%s.info", c->tmp, tid, id);
@@ -494,7 +512,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
                         icon_src[0] ? (icon_managed ? "installed" : "kept-existing")
                                     : "none",
                         icon_managed ? icon_sha : "", icon_managed ? icon_size : -1,
-                        icon_src, "", "");
+                        icon_src, "", "", notes);
     if (!reg || u_write_atomicish(regpath, reg) != 0) {
         st = pkg_fail(e, PKG_E_IO, "cannot write the registry entry", "", regpath); goto out;
     }
@@ -570,6 +588,7 @@ pkg_status pkg_remove(pkg_ctx *c, const char *id, pkg_stop stop, pkg_err *e)
     size_t len;
     pkg_status st = PKG_E_IO;
 
+    memset(&c->removal, 0, sizeof c->removal);
     registry_path(c, id, regpath, sizeof regpath);
     if (!u_exists(regpath))
         return pkg_fail(e, PKG_E_NOT_FOUND, "not installed", "", id);
@@ -649,10 +668,7 @@ pkg_status pkg_remove(pkg_ctx *c, const char *id, pkg_stop stop, pkg_err *e)
         case ICON_DELETE:       u_delete(icon_dst); break;
         case ICON_KEEP_CHANGED:
             icon_kept = 1;
-            printf("note: %s has changed since it was installed -- Workbench\n"
-                   "      rewrites a drawer icon when its window is snapshotted --\n"
-                   "      so it is kept. Delete it yourself if you do not want it.\n",
-                   icon_dst);
+            snprintf(c->removal.icon, sizeof c->removal.icon, "%s", icon_dst);
             break;
         default: break;
         }
@@ -660,16 +676,36 @@ pkg_status pkg_remove(pkg_ctx *c, const char *id, pkg_stop stop, pkg_err *e)
     /* Said on the console too, not only in the report: a user who kept a
        file and reads "removed" alone would think it gone. */
     if (kept) {
-        int i, shown = 0;
-        printf("note: %d file(s) changed locally were kept in %s:\n", kept, dest);
-        for (i = 0; i < ninv && shown < 10; i++) {
+        int i;
+        c->removal.kept = kept;
+        snprintf(c->removal.list_file, sizeof c->removal.list_file, "%s", c->doctor);
+        for (i = 0; i < ninv && c->removal.named < 10; i++) {
             char p[PKG_MAXPATH], sha[65];
             u_join(p, sizeof p, dest, inv[i].rel);
             if (!u_exists(p)) continue;
             if (sha256_file(p, sha) == 0 && strcmp(sha, inv[i].sha) == 0) continue;
-            printf("      %s\n", inv[i].rel); shown++;
+            snprintf(c->removal.names[c->removal.named++], sizeof c->removal.names[0], "%s", inv[i].rel);
         }
-        if (kept > shown) printf("      ... and %d more; the list is in %s\n", kept - shown, c->doctor);
+    }
+    if (u_exists(dest)) {
+        /* What else is still in the drawer: files that are not the
+           package's at all. Named, not classified -- apkg does not know
+           what they are, only that it did not put them there. */
+        inv_ent *left = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV);
+        int nleft = 0, i, j;
+        snprintf(c->removal.dir, sizeof c->removal.dir, "%s", dest);
+        if (left && inv_of_tree(dest, "", left, &nleft, MAXINV) >= 0) {
+            for (i = 0; i < nleft; i++) {
+                int ours = 0;
+                for (j = 0; j < ninv && !ours; j++) ours = !strcmp(left[i].rel, inv[j].rel);
+                if (ours) continue;
+                c->removal.others++;
+                if (c->removal.others_named < 10)
+                    snprintf(c->removal.other_names[c->removal.others_named++],
+                             sizeof c->removal.other_names[0], "%s", left[i].rel);
+            }
+        }
+        free(left);
     }
     STOP(PKG_STOP_AFTER_REMOVE_FILES);
     txn_marker(c, tid, "002-contents-done");   /* audit only */
@@ -942,7 +978,7 @@ pkg_status pkg_update(pkg_ctx *c, const char *index_url, pkg_err *e)
         return pkg_fail(e, PKG_E_NETWORK, "no network", why, index_url);
 
     snprintf(dest, sizeof dest, "%s/db/index.json", c->root);
-    printf("fetching %s\n", index_url);
+    if (pkg_verbose()) printf("  from %s\n", index_url);
     if (net_fetch(index_url, dest, INDEX_MAX, why) != 0) {
         net_close();
         return pkg_fail(e, PKG_E_NETWORK, "the index could not be fetched", why, index_url);
@@ -968,7 +1004,7 @@ pkg_status pkg_update(pkg_ctx *c, const char *index_url, pkg_err *e)
     }
     if (u_publish(part, dest) != 0)
         return pkg_fail(e, PKG_E_IO, "cannot install the downloaded index", "", dest);
-    printf("index updated: %s\n", dest);
+    if (pkg_verbose()) printf("  saved %s\n", dest);
     return PKG_OK;
 }
 
@@ -1122,6 +1158,7 @@ pkg_status pkg_details_get(pkg_ctx *c, const char *index_path, const char *id,
                     js_str(txt, t, js_member(txt, t, ntok, 0, "dir"), dir, sizeof dir);
                     js_str(txt, t, js_member(txt, t, ntok, 0, "installed"), d->installed_when, sizeof d->installed_when);
                     js_str(txt, t, js_member(txt, t, ntok, 0, "abi"), rabi, sizeof rabi);
+                    notes_from_element(txt, t, ntok, 0, d->notes_recorded, sizeof d->notes_recorded);
                 }
                 free(t);
             }

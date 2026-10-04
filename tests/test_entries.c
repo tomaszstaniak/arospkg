@@ -210,6 +210,45 @@ int main(void)
         }
     }
 
+    /* post_install_notes: plain lines within limits, or nothing at all. */
+    {
+        static const struct { const char *j; int want; const char *out; const char *what; } c[] = {
+            { "{\"post_install_notes\": [\"Needs the original game data.\", \"Copy it to the drawer.\"]}", 2,
+              "Needs the original game data.\nCopy it to the drawer.", "two plain lines, joined by a newline" },
+            { "{\"id\": \"x\"}", 0, "", "absent: no notes, not an error" },
+            { "{\"post_install_notes\": []}", 0, "", "an empty list: no notes" },
+            { "{\"post_install_notes\": \"one string\"}", -1, "", "not a list: refused" },
+            { "{\"post_install_notes\": [\"a\",\"b\",\"c\",\"d\",\"e\",\"f\",\"g\",\"h\",\"i\"]}", -1, "",
+              "nine lines: refused, not cut to eight" },
+            { "{\"post_install_notes\": [\"tab\there\"]}", -1, "", "an escape sequence: refused, not shown undecoded" },
+            { "{\"post_install_notes\": [\"bell \a\x1b[31m red\"]}", -1, "", "control characters (a terminal sequence): refused" },
+            { "{\"post_install_notes\": [1, 2]}", -1, "", "not strings: refused" },
+        };
+        size_t i;
+        char longline[300];
+        for (i = 0; i < sizeof c / sizeof c[0]; i++) {
+            js_tok t[64]; char out[PKG_NOTES_MAX] = "x";
+            int ntok = js_parse(c[i].j, strlen(c[i].j), t, 64);
+            int r = ntok > 0 ? notes_from_element(c[i].j, t, ntok, 0, out, sizeof out) : -9;
+            ok(r == c[i].want && !strcmp(out, c[i].out), c[i].what);
+        }
+        memset(longline, 0, sizeof longline);
+        strcpy(longline, "{\"post_install_notes\": [\"");
+        memset(longline + strlen(longline), 'a', PKG_NOTES_LINE + 1);
+        strcat(longline, "\"]}");
+        {
+            js_tok t[16]; char out[PKG_NOTES_MAX] = "x";
+            int ntok = js_parse(longline, strlen(longline), t, 16);
+            ok(notes_from_element(longline, t, ntok, 0, out, sizeof out) == -1 && out[0] == 0,
+               "a line one character over the limit: refused, not cut");
+            longline[strlen("{\"post_install_notes\": [\"") + PKG_NOTES_LINE] = '"';
+            strcpy(longline + strlen("{\"post_install_notes\": [\"") + PKG_NOTES_LINE + 1, "]}");
+            ntok = js_parse(longline, strlen(longline), t, 16);
+            ok(notes_from_element(longline, t, ntok, 0, out, sizeof out) == 1 && strlen(out) == PKG_NOTES_LINE,
+               "a line of exactly the limit: kept whole");
+        }
+    }
+
     printf(bad ? "\nFAIL %d\n" : "\nPASS all checks\n", bad);
     return bad != 0;
 }
