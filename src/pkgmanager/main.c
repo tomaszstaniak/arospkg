@@ -18,7 +18,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define PM_VERSION "0.3.1"
+#define PM_VERSION "0.4.0"
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
        ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN };

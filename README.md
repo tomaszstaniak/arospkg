@@ -4,32 +4,32 @@ Find, install and remove AROS software from a window or the Shell.
 **PkgManager** is the graphical interface; **apkg** is the command-line tool.
 Both use the same catalogue and installed packages.
 
-**[Download 0.3.2 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.2/arospkg-0.3.2.x86_64-aros-v11.zip)**
-· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.2)
+**[Download 0.4.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0)
 · [Other builds (0.3.1, experimental)](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
 
-0.3.2 fixes CLI progress during window resizing: complete progress lines
-replace the live redraw bar. PkgManager is unchanged from 0.3.1.
+0.4.0 tells you where a program was installed and opens its drawer, shows
+notes from the package's author, explains each step and error more clearly,
+updates itself with `apkg self-update`, and reads a catalogue of any size.
 
 ## Install
 
-1. Download the ZIP matching your CPU and ABI. The example below uses
-   **x86_64 ABIv11**; for another build, substitute its archive and drawer
-   names. Other builds are experimental; see the release notes.
+1. Download the ZIP. 0.4.0 is for **x86_64 ABIv11** (AROS One and other
+   current distributions); experimental builds for other targets are at
+   0.3.1.
 2. Open a Shell and use `CD` to enter the drawer containing the ZIP.
 3. Run these commands to unpack it, put `apkg` on the command path and
    fetch the software catalogue:
 
 ```text
-UnZip arospkg-0.3.2.x86_64-aros-v11.zip
-CD arospkg-0.3.2.x86_64-aros-v11
+UnZip arospkg-0.4.0.x86_64-aros-v11.zip
+CD arospkg-0.4.0.x86_64-aros-v11
 Copy apkg C:
 apkg --version
 apkg update
 ```
 
-`apkg --version` should report **0.3.2** for this build (0.3.1 for the
-experimental builds) and the ABI you selected.
+`apkg --version` should report **0.4.0** and `abi v11`.
 No compiler, Installer script or separate TLS libraries are needed.
 
 Keep the extracted drawer somewhere permanent, not `RAM:`, if using
@@ -97,8 +97,8 @@ apkg open <id>       opens the drawer of an installed package
 | `apkg open soliton` | Open the package's drawer in Wanderer. |
 | `apkg self-update` | Replace this apkg with the latest stable release; `--check` only reports. |
 
-`self-update` first appears after 0.3.2, so the first release that has it is
-installed by hand as above; later ones update with `apkg self-update`.
+`self-update` first appears in 0.4.0, so 0.4.0 is installed by hand as
+above; later releases update with `apkg self-update`.
 PkgManager is not updated by it: take it from the release archive.
 
 Both interfaces use `SYS:Packages` by default. For another location, pass
@@ -185,10 +185,11 @@ build other targets with their matching SDKs and toolchains. Mainline
 uses system `getentropy()`. Check the release notes for each target's
 test coverage.
 
-The published archives were made from the release commit with
-`README=release/README sh tools/make-rc.sh 0.3.1`. Despite its name, this
-script packages stable releases too; it requires all four toolchains.
-`tools/make-release.sh` is the older packaging path, not the 0.3.1 recipe.
+The 0.4.0 archive was made from the release commit with
+`README=release/README TARGETS=x86_64-aros-v11 sh tools/make-rc.sh 0.4.0`.
+Despite its name, this script packages stable releases too; without
+`TARGETS` it builds all four targets and needs all four toolchains.
+`tools/make-release.sh` is the older packaging path, not the release recipe.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,
 SHA-256, the upgrade planner, the ARexx parser, the index generator and the
@@ -203,6 +204,6 @@ the current public tree.
 
 ## Licence
 
-MIT, see [`LICENSE`](LICENSE). The 0.3.1 archives include the licences for
+MIT, see [`LICENSE`](LICENSE). The archives include the licences for
 Mbed TLS, jitterentropy (except mainline), zlib and the AROS XTerm
 terminal-control client.

@@ -7,8 +7,8 @@ apkg self-update
 
 ## The first time
 
-arospkg 0.3.2 and earlier do not have this command. Install the first
-release that has it by hand, as before: unpack its archive and copy `apkg`
+arospkg 0.3.2 and earlier do not have this command. Install 0.4.0, the
+first release that has it, by hand, as before: unpack its archive and copy `apkg`
 over the old one (to `C:`, or wherever you keep it). From then on,
 `apkg self-update` updates it.
 

@@ -8,14 +8,14 @@ Unpack the release archive for your CPU and ABI, copy `apkg` to `C:` and
 fetch the catalogue:
 
 ```text
-UnZip arospkg-<version>.x86_64-aros-v11.zip
-CD arospkg-<version>.x86_64-aros-v11
+UnZip arospkg-0.4.0.x86_64-aros-v11.zip
+CD arospkg-0.4.0.x86_64-aros-v11
 Copy apkg C:
 apkg update
 ```
 
-0.3.2 and earlier cannot update themselves: install a release that has
-`self-update` this way once. PkgManager is in the same archive; keep its
+0.3.2 and earlier cannot update themselves: install 0.4.0 this way once;
+later releases come with `apkg self-update`. PkgManager is in the same archive; keep its
 drawer somewhere permanent.
 
 ## Find and install a program
