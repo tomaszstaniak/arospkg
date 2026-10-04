@@ -53,6 +53,7 @@ def main():
     ap.add_argument("--base", help="check only manifests changed since this git ref")
     ap.add_argument("--out-dir", default=None, help="where the trial catalogue goes (default: a temporary directory)")
     ap.add_argument("--cache", default=".cache/ci-archives")
+    ap.add_argument("--use-local-copies", metavar="DIR", help=argparse.SUPPRESS)
     a = ap.parse_args()
     index_dir = Path(a.index_dir).resolve()
     base_ok = a.base and subprocess.run(["git", "rev-parse", "--verify", "--quiet", a.base + "^{commit}"],
@@ -70,7 +71,13 @@ def main():
         if not url.startswith("https://"):
             print(f"{f.name}: url is not https://"); problems += 1; continue
         try:
-            data = download(url, cache / url.rsplit("/", 1)[-1])
+            name = url.rsplit("/", 1)[-1]
+            if a.use_local_copies:          # tests: the bytes "at" the url
+                data = (Path(a.use_local_copies) / name).read_bytes()
+                (cache / name).parent.mkdir(parents=True, exist_ok=True)
+                (cache / name).write_bytes(data)
+            else:
+                data = download(url, cache / name)
         except Exception as exc:
             print(f"{f.name}: cannot download {url}: {exc}"); problems += 1; continue
         sha = hashlib.sha256(data).hexdigest()
