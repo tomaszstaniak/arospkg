@@ -37,14 +37,20 @@ rollback, verify, dry runs and the window.
 WHICH ARCHIVE
 -------------
 
-This release is one archive, for AROS One and other ABIv11 systems on
-x86_64:
+Each archive is for one CPU and ABI; a program built for one does not start
+on another.
 
-  arospkg-0.4.0.x86_64-aros-v11.zip   apkg and PkgManager
+  arospkg-0.4.0.x86_64-aros-v11.zip   AROS One and other ABIv11 systems on
+                                      x86_64: apkg and PkgManager. This
+                                      README is written for it.
+  arospkg-0.4.0.i386-aros-v0.zip      the i386 ABIv0 line: apkg only. Its
+                                      archive was run on an i386 ABIv0
+                                      system: update, search, install,
+                                      open, remove. It was tested less
+                                      than the x86_64 build.
 
-Builds for mainline AROS (ABIv1), i386 and hosted aarch64 remain at 0.3.1,
-experimental, on its release page. A program built for one CPU or ABI does
-not start on another.
+Builds for mainline AROS (ABIv1) and hosted aarch64 remain at 0.3.1,
+experimental, on its release page.
 
 
 WHAT YOU NEED
