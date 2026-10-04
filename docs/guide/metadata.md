@@ -254,9 +254,13 @@ it matches `mkindex.py`'s output exactly:
   not valid JSON*. Later clients allocate what the file needs, and refuse
   only past 1048576 values or 16 MiB, a guard against a broken file rather
   than a size the catalogue is meant to reach (5000 packages are about 4 MB
-  and 241000 values). `mkindex.py` prints the share of both limits, and
-  refuses to write past the older one unless given `--beyond-old-clients`,
-  since those clients fetch the same file.
+  and 241000 values); they are guards, not a promise that every machine has
+  the memory for that much. Later clients fetch `index-v2.json`, with every
+  package; `index.json` beside it keeps the packages it already listed,
+  updated from the same manifests, within the old limits. `mkindex.py` writes
+  both and prints the share of each limit; when the packages of `index.json`
+  outgrow it, it writes neither and asks for a decision, and never shortens
+  anything to fit.
 
 ## The local registry
 
@@ -338,7 +342,7 @@ Other things under the root, all the client's:
 | `requires_system` is complete and correct | none | probes what is listed | derives it from the binary |
 | `depends` exist in the index | ✔ | not read | |
 | strings readable by the client, operational lengths | ✔ | reads them as they stand | |
-| the index fits clients up to 0.3.2 (8192 values, 4 MiB) | ✔ unless `--beyond-old-clients` | 0.3.2 reports invalid JSON past it; later clients read up to 1048576 values, 16 MiB | |
+| index.json fits clients up to 0.3.2 (8192 values, 4 MiB); index-v2.json fits later ones | ✔ both files | 0.3.2 reports invalid JSON past it; later clients read up to 1048576 values, 16 MiB | |
 | `version`, `revision`, `summary`, `license`, `[source]` | `revision` range | display only | all of it |
 | `installs_on`, `runs_on`, `does_not_run_on` | none | none | only claims that were tested |
 | the program starts and keeps user data | none | none | ✔ |

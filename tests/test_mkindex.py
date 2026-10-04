@@ -5,7 +5,7 @@ Each case changes one field of a manifest that passes, and names the reason
 that must appear. The publication cases run the tool itself and check its
 exit status and that a previous index survives a failed run.
 """
-import subprocess, sys, tempfile
+import json, subprocess, sys, tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent.parent
@@ -75,16 +75,23 @@ def toml(m):
     return "\n".join(lines) + "\n"
 
 
-def run(manifests, *extra):
+def run(manifests, old_ids=None):
+    """Returns exit code, index-v2.json, stdout, index.json. With old_ids, an
+    index.json listing those ids is there before; without, none is."""
+    global last_old
     with tempfile.TemporaryDirectory() as d:
         d = Path(d); (d / "m").mkdir()
         for name, text in manifests.items():
             (d / "m" / name).write_text(text)
-        out = d / "index.json"
-        out.write_text("PREVIOUS\n")
+        v2, old = d / "index-v2.json", d / "index.json"
+        v2.write_text("PREVIOUS\n")
+        if old_ids is not None:
+            old.write_text(json.dumps({"schema": 1, "packages": [
+                {"id": i, "arch": "x86_64", "sha256": "0" * 64} for i in old_ids]}))
         r = subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(d / "m"),
-                            "--out", str(out), "--cache", str(d / "nocache"), *extra], capture_output=True, text=True)
-        return r.returncode, out.read_text(), r.stdout
+                            "--out-dir", str(d), "--cache", str(d / "nocache")], capture_output=True, text=True)
+        last_old = old.read_text() if old.exists() else None
+        return r.returncode, v2.read_text(), r.stdout
 
 
 skel = toml({**GOOD, "id": "sk", "status": "skeleton", "sha256": ""})
@@ -103,13 +110,23 @@ if code == 0 or text != "PREVIOUS\n":
     fails.append(f"an unmet dependency: exit {code}")
 
 many = {f"p{i:03}.x86_64.toml": toml({**GOOD, "id": f"p{i:03}"}) for i in range(260)}
+# Without an index.json yet, both files take everything, so both must fit.
 code, text, out = run(many)
-if code == 0 or text != "PREVIOUS\n" or "larger than clients up to 0.3.2 can read" not in out:
-    fails.append(f"an index past the old clients' capacity: exit {code}")
-# The same index for a file old clients do not fetch: written whole.
-code, text, out = run(many, "--beyond-old-clients")
-if code != 0 or text.count('"id"') != 260:
-    fails.append(f"--beyond-old-clients: exit {code}")
+if code == 0 or text != "PREVIOUS\n" or "index.json is larger than clients up to 0.3.2" not in out:
+    fails.append(f"a first index.json past the old clients' capacity: exit {code}")
+# index.json keeps the one package it listed; the other 259 go to v2 only.
+code, text, out = run(many, ["p000"])
+old = json.loads(last_old or "{}").get("packages", [])
+if code != 0 or text.count('"id"') != 260 or [p["id"] for p in old] != ["p000"]:
+    fails.append(f"v2 past the old limit, index.json kept to its packages: exit {code}")
+# ...with its metadata brought up to date, not frozen at the old hash.
+elif old[0]["sha256"] != "a" * 64:
+    fails.append("index.json kept an old sha256 instead of the manifest's")
+# If the packages index.json already lists outgrow it, nothing is written
+# and nothing is dropped by the tool.
+code, text, out = run(many, [f"p{i:03}" for i in range(260)])
+if code == 0 or text != "PREVIOUS\n" or "decide which to drop" not in out:
+    fails.append(f"index.json outgrown by its own packages: exit {code}")
 
 if fails:
     print("\n".join(fails)); print(f"MKINDEX: {len(fails)} failed"); sys.exit(1)

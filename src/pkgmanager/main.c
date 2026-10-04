@@ -33,8 +33,7 @@ static job cur;
 static struct MsgPort *port;      /* the worker's messages arrive here */
 static char root[PKG_MAXPATH] = "SYS:Packages";
 static char index_path[PKG_MAXPATH];
-static const char *index_url =
-    "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json";
+static const char *index_url = PKG_INDEX_URL;
 static int quit_pending;          /* close asked for while a job ran */
 static char last_phase[16]; static int last_can_cancel;
 static int confirming;            /* a plan is shown and the window waits for the user */

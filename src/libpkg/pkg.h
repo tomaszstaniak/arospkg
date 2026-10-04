@@ -12,6 +12,12 @@
 #include <stddef.h>
 
 #define PKG_MAXPATH 512
+
+/* The catalogue apkg update fetches. index-v2.json is the generation of the
+   file this client reads: every package, of any size. index.json beside it
+   stays within what clients up to 0.3.2 read (8192 values), for them. */
+#define PKG_INDEX_URL \
+    "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v2.json"
 #define PKG_MAXID    64
 
 typedef enum {

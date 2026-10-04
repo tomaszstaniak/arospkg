@@ -472,8 +472,7 @@ static int real_main(int argc, char **argv)
     int i;
     const char *cmd = NULL, *arg = NULL;
     const char *report = NULL, *run_id = NULL, *machine = "unspecified";
-    const char *index_url =
-        "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json";
+    const char *index_url = PKG_INDEX_URL;
     const char *arg2 = NULL;
     int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0;
     pkg_ctx *c = NULL;

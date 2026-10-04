@@ -305,6 +305,11 @@ $ python3 tools/mkindex.py --manifests draft/manifests --cache draft/cache \
       --out draft/index.json --verbose
 ```
 
+That run used the generator of 0.3.1. The current one takes `--out-dir
+draft` instead of `--out`, writes `draft/index-v2.json` and
+`draft/index.json`, and prints one size line for each in place of `client
+capacity`; the rest of the output below is unchanged.
+
 With `status = "skeleton"` it leaves the manifest out, which is normal,
 and exits 0:
 
@@ -355,9 +360,11 @@ the index uses. The generator after 0.3.2 prints `index size` instead, with
 two shares: of what clients up to 0.3.2 read (8192 JSON values, 4 MiB, a
 fixed array in those clients) and of what later clients read (they allocate
 what the file needs, up to 1048576 values and 16 MiB as a guard against a
-broken file). It refuses to write past the older limit unless told
-`--beyond-old-clients`, because those clients fetch the same file. Nothing
-is shortened to fit: notes and descriptions are published whole or refused. If the archive is not in the cache, `mkindex.py` prints
+broken file). `index.json` keeps only the packages it already listed, with
+their metadata brought up to date; new packages go to `index-v2.json` only.
+If the packages `index.json` lists outgrow the old limit, the generator
+writes neither file and says so; it never drops entries or shortens text to
+fit. If the archive is not in the cache, `mkindex.py` prints
 `warning: … subdir and icon unchecked` and goes on without that check.
 
 What it checks, and what it leaves to a person, is in
@@ -588,9 +595,12 @@ skeleton ──review, test──▶ approved manifest ──mkindex.py──▶
   catalogue.
 - With both repositories checked out side by side, `python3 tools/mkindex.py`
   reads `../arospkg-index/manifests/`, drops any whose `depends` cannot be
-  met in the same architecture, and writes `../arospkg-index/index.json`.
+  met in the same architecture, and writes `../arospkg-index/index-v2.json`
+  (every package) and `../arospkg-index/index.json` (the packages it already
+  listed, within what clients up to 0.3.2 read; see the metadata reference).
 - **Publishing** means committing the manifest and the regenerated index in
   arospkg-index, optionally with a report under `reports/`, and pushing.
-  Clients fetch
-  `https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json`
-  with `apkg update`.
+  Clients after 0.3.2 fetch
+  `https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v2.json`
+  with `apkg update`; 0.3.2 and earlier fetch `index.json` at the same place.
+  `--index-url` still chooses another.

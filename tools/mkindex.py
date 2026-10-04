@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Build arospkg-index/index.json from APPROVED manifests.
+"""Build arospkg-index/index-v2.json and index.json from APPROVED manifests.
+
+index-v2.json holds every published package and is what clients after 0.3.2
+fetch. index.json is the same data restricted to the packages it already
+listed, within what clients up to 0.3.2 can read (OLD_CLIENT_MAXTOK).
 
 The approved manifests and the index live in the arospkg-index repository,
 beside this one; that is the only copy. Unreviewed candidates stay here, in
@@ -12,7 +16,7 @@ coded, so a dependency written into a manifest by hand could never reach the
 index. It was a catalogue importer wearing the name of an index generator.
 
     catalogue  --import_catalogue.py-->  candidates.json + skeletons
-    manifests  --mkindex.py---------->   index.json
+    manifests  --mkindex.py---------->   index-v2.json, index.json
 
 A manifest enters the index only if it is approved AND complete. "Complete"
 is checked, not assumed:
@@ -302,13 +306,16 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--manifests", default="../arospkg-index/manifests")
-    ap.add_argument("--out", default="../arospkg-index/index.json")
+    ap.add_argument("--out-dir", default="../arospkg-index",
+                    help="writes index-v2.json (every package) and index.json "
+                         "(for clients up to 0.3.2) here")
+    ap.add_argument("--out", help=argparse.SUPPRESS)
     ap.add_argument("--verbose", action="store_true", help="list every rejection")
-    ap.add_argument("--beyond-old-clients", action="store_true",
-                    help="write an index larger than clients up to 0.3.2 read")
     ap.add_argument("--cache", default=".cache/archives",
                     help="downloaded archives, to check subdir and icon against")
     args = ap.parse_args()
+    if args.out:
+        sys.exit("--out is gone: use --out-dir DIR, which gets index-v2.json and index.json")
 
     files = sorted(Path(args.manifests).glob("*.toml"))
     published, rejected, seen = [], [], {}
@@ -395,12 +402,24 @@ def main():
                              [f"depends on {', '.join(missing)}, not in the index "
                               f"for {p['arch']}"]))
 
-    out = Path(args.out)
-    text = json.dumps(
-        {"schema": 1, "source": cat.CATALOGUE,
-         "packages": sorted(published, key=lambda p: (p["id"], p["arch"]))},
-        indent=2) + "\n"
-    ntok, nbytes = json_values(json.loads(text)), len(text.encode())
+    packages = sorted(published, key=lambda p: (p["id"], p["arch"]))
+    outdir = Path(args.out_dir)
+    v2_path, old_path = outdir / "index-v2.json", outdir / "index.json"
+    # Clients up to 0.3.2 fetch index.json and read at most OLD_CLIENT_MAXTOK
+    # values. It keeps the packages it already lists, with their metadata
+    # brought up to date from the same manifests (Archives replaces files
+    # under the same URL, so an old hash would fail the download); packages
+    # new since then go to index-v2.json only. Nothing is shortened to fit.
+    if old_path.exists():
+        prev = json.loads(old_path.read_text(encoding="utf-8"))
+        keep = {(p["id"], p["arch"]) for p in prev.get("packages", [])}
+        old_packages = [p for p in packages if (p["id"], p["arch"]) in keep]
+    else:
+        old_packages = packages
+    texts = {}
+    for path, pkgs in ((v2_path, packages), (old_path, old_packages)):
+        texts[path] = json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": pkgs},
+                                 indent=2) + "\n"
 
     print(f"manifests read         {len(files)}")
     print(f"published              {len(published)}")
@@ -415,32 +434,33 @@ def main():
             print()
             for name, probs in rejected:
                 print(f"  {name}: {'; '.join(probs)}")
-    print(f"index size             {ntok} JSON values, {nbytes} bytes")
-    print(f"  clients up to 0.3.2  {100 * ntok // OLD_CLIENT_MAXTOK}% of {OLD_CLIENT_MAXTOK} values, "
-          f"{100 * nbytes // OLD_CLIENT_MAXBYTES}% of {OLD_CLIENT_MAXBYTES} bytes")
-    print(f"  later clients        {100 * ntok // CLIENT_MAXTOK}% of {CLIENT_MAXTOK} values, "
-          f"{100 * nbytes // CLIENT_MAXBYTES}% of {CLIENT_MAXBYTES} bytes")
     stop = []
     if failed:
         stop.append(f"{len(failed)} approved manifest(s) not published: {', '.join(sorted(failed))}")
-    if ntok > CLIENT_MAXTOK or nbytes > CLIENT_MAXBYTES:
-        stop.append("the index is larger than any client reads")
-    elif (ntok > OLD_CLIENT_MAXTOK or nbytes > OLD_CLIENT_MAXBYTES) and not args.beyond_old_clients:
-        stop.append("the index is larger than clients up to 0.3.2 can read; they would report "
-                    "'the index is not valid JSON'. Pass --beyond-old-clients to write it "
-                    "anyway, for a file those clients do not fetch")
+    for path, maxtok, maxbytes, who in ((v2_path, CLIENT_MAXTOK, CLIENT_MAXBYTES, "later clients"),
+                                        (old_path, OLD_CLIENT_MAXTOK, OLD_CLIENT_MAXBYTES, "clients up to 0.3.2")):
+        ntok, nbytes = json_values(json.loads(texts[path])), len(texts[path].encode())
+        npk = len(packages if path == v2_path else old_packages)
+        print(f"{path.name:<16} {npk} packages, {ntok} JSON values ({100 * ntok // maxtok}% of {maxtok}), "
+              f"{nbytes} bytes ({100 * nbytes // maxbytes}% of {maxbytes}); for {who}")
+        if ntok > maxtok or nbytes > maxbytes:
+            stop.append(f"{path.name} is larger than {who} read. Its packages are kept and "
+                        f"nothing is shortened: decide which to drop from it by hand")
+    if len(old_packages) < len(packages):
+        print(f"  {len(packages) - len(old_packages)} package(s) only in index-v2.json")
     if stop:
         for why in stop:
             print(f"\nNOT WRITTEN: {why}")
-        print(f"{out} is unchanged.")
+        print(f"{v2_path} and {old_path} are unchanged.")
         sys.exit(1)
-    # Written beside and renamed over, so a failure half-way cannot leave a
-    # truncated index where a good one was.
-    out.parent.mkdir(parents=True, exist_ok=True)
-    tmp = out.with_name(out.name + ".part")
-    tmp.write_text(text, encoding="utf-8")
-    tmp.replace(out)
-    print(f"\nwritten {out}")
+    # Each written beside and renamed over, so a failure half-way cannot leave
+    # a truncated index where a good one was.
+    outdir.mkdir(parents=True, exist_ok=True)
+    for path, text in texts.items():
+        tmp = path.with_name(path.name + ".part")
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(path)
+        print(f"written {path}")
 
 
 def json_values(v):

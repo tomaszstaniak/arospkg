@@ -77,9 +77,9 @@ def generated_entry(manifest_text):
         (d / "m").mkdir()
         (d / "m/example.toml").write_text(manifest_text)
         subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(d / "m"),
-                        "--out", str(d / "index.json"), "--cache", str(HERE / ".cache/archives")],
+                        "--out-dir", str(d), "--cache", str(HERE / ".cache/archives")],
                        check=True, capture_output=True)
-        pk = json.loads((d / "index.json").read_text())["packages"]
+        pk = json.loads((d / "index-v2.json").read_text())["packages"]
         return pk[0] if pk else None
 
 
