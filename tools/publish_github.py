@@ -33,7 +33,27 @@ def checkout(repo):
     tmp = Path(tempfile.mkdtemp(prefix="apkg-pack-"))
     atexit.register(shutil.rmtree, tmp, True)
     run(None, "gh", "repo", "clone", repo, str(tmp / "index"), "--", "-q", "--depth", "1")
+    # Commits made here carry the user's own git identity, as any commit would.
     return tmp / "index"
+
+
+def ensure_fork(work, repo, me):
+    """The clone URL of me's fork of repo: the existing one, or a new one.
+    A repository of the same name that is not a fork of repo is not used."""
+    name = repo.split("/")[1]
+    r = run(work, "gh", "api", f"repos/{me}/{name}", check=False)
+    if r.returncode == 0:
+        info = json.loads(r.stdout)
+        parent = (info.get("parent") or {}).get("full_name", "")
+        if not info.get("fork") or parent.lower() != repo.lower():
+            print(f"{me}/{name} exists and is not a fork of {repo}; rename it or fork by hand",
+                  file=sys.stderr)
+            sys.exit(1)
+        print(f"using your fork {me}/{name}")
+        return info["clone_url"]
+    run(work, "gh", "repo", "fork", repo, "--clone=false", "--remote=false")
+    print(f"forked {repo} to {me}/{name}")
+    return json.loads(run(work, "gh", "api", f"repos/{me}/{name}").stdout)["clone_url"]
 
 
 def open_pr(work, repo, manifest, m):
@@ -57,12 +77,13 @@ def open_pr(work, repo, manifest, m):
     if can_push:
         remote, head = "origin", branch
     else:
-        name = repo.split("/")[1]
-        run(work, "gh", "repo", "fork", repo, "--clone=false", "--remote=false")
+        fork = ensure_fork(work, repo, me)
         remote, head = "fork", f"{me}:{branch}"
-        run(work, "git", "remote", "add", "fork", f"https://github.com/{me}/{name}.git")
-    run(work, "git", "push", "-q", "-u", remote, branch)
-    url = run(work, "gh", "pr", "create", "--repo", repo, "--head", head, "--title", title, "--body",
+        run(work, "git", "remote", "add", "fork", fork)
+    # Only this branch, only to the chosen remote.
+    run(work, "git", "push", "-q", remote, f"refs/heads/{branch}:refs/heads/{branch}")
+    url = run(work, "gh", "pr", "create", "--repo", repo, "--base", info.get("default_branch", "main"),
+              "--head", head, "--title", title, "--body",
               f"Archive: {m['url']}\n\nsha256 `{m['sha256']}`, {m['size']} bytes.\n\n"
               "Prepared by apkg-pack submit from the archive's own manifest. The check on "
               "this pull request downloads the archive again and applies the catalogue's rules.").stdout.strip()
