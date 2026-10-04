@@ -179,6 +179,10 @@ Despite its name, this script packages stable releases too; without
 `TARGETS` it builds all four targets and needs all four toolchains.
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
+The published 0.4.0 release description is kept in
+[`release/notes-0.4.0.md`](release/notes-0.4.0.md). Update that file when adding
+builds, then use it for the GitHub release notes.
+
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,
 SHA-256, the upgrade planner, the ARexx parser, the index generator and the
 documentation examples. It needs a C compiler, Python 3 and `lha` (lhasa).
