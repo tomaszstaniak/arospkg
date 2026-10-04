@@ -1,6 +1,9 @@
 # arospkg documentation
 
-Current release: **0.4.0**, for x86_64 ABIv11.
+Current release: **0.4.0**, for x86_64 ABIv11, i386 ABIv0 and native
+Raspberry Pi aarch64 ABIv1. PkgManager is included in the x86_64 ABIv11
+archive. Experimental mainline x86_64 and hosted Macaros builds remain
+available in 0.3.1. See the downloads for each target's test coverage.
 
 ## Install and use
 

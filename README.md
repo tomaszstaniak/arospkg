@@ -4,6 +4,8 @@ Find, install and remove AROS software from a window or the Shell.
 **PkgManager** is the graphical interface; **apkg** is the command-line tool.
 Both use the same catalogue and installed packages.
 
+## Downloads
+
 **[Download 0.4.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.x86_64-aros-v11.zip)**
 · [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0)
 · [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.i386-aros-v0.zip)
@@ -15,21 +17,19 @@ itself and use larger catalogues. Tested with 5,000 package entries.
 
 ## Install
 
-1. Download the ZIP for **x86_64 ABIv11**. If upgrading, close PkgManager
+1. Download and unpack the ZIP for **your CPU and ABI**. If upgrading, close PkgManager
    and wait for any apkg operation to finish.
-2. Open a Shell and use `CD` to enter the drawer containing the ZIP.
-3. Run these commands to unpack it, put `apkg` on the command path and
+2. Open a Shell and use `CD` to enter the unpacked drawer.
+3. Run these commands to put `apkg` on the command path and
    fetch the software catalogue:
 
 ```text
-UnZip arospkg-0.4.0.x86_64-aros-v11.zip
-CD arospkg-0.4.0.x86_64-aros-v11
 Copy apkg C:
 apkg --version
 apkg update
 ```
 
-`apkg --version` should report **0.4.0** and `abi v11`.
+`apkg --version` should report the version and ABI of your chosen archive.
 No compiler, Installer script or separate TLS libraries are needed.
 
 Keep the extracted drawer somewhere permanent, not `RAM:`, if using

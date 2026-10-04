@@ -1,25 +1,27 @@
 # Using arospkg
 
 Install programs with apkg in the Shell or PkgManager on the desktop.
-[Download 0.4.0 for x86_64 ABIv11](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0).
+[Choose the archive for your CPU and ABI](../../README.md#downloads).
+0.4.0 is available for x86_64 ABIv11, i386 ABIv0 and native Raspberry Pi
+aarch64 ABIv1. The older experimental builds are also linked there.
 
 ## Install apkg
 
-Close PkgManager and wait for any apkg operation to finish. From the
-folder containing the downloaded ZIP, run:
+Unpack the archive for your target. Close PkgManager and wait for any
+apkg operation to finish. Enter the unpacked drawer in the Shell, then run:
 
 ```text
-UnZip arospkg-0.4.0.x86_64-aros-v11.zip
-CD arospkg-0.4.0.x86_64-aros-v11
 Copy apkg C:
 apkg --version
 apkg update
 ```
 
-The version should be 0.4.0, ABI v11. Keep your existing `SYS:Packages`.
-Versions 0.3.x require this manual upgrade.
+Check that the version and ABI match the archive you downloaded.
+Keep your existing `SYS:Packages`. Versions 0.3.x require this manual
+upgrade to 0.4.
 
-Keep the unpacked folder on disk. To use the graphical interface, run
+PkgManager is included only in the x86_64 ABIv11 archive.
+Keep its unpacked folder on disk. To use the graphical interface, run
 `Run PkgManager` from that folder. Click **Update index**, select a package
 and click **Install**.
 

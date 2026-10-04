@@ -1,365 +1,156 @@
-arospkg 0.4.0 -- a package manager for AROS One x86_64
-=======================================================
-
-Two programs, one package database:
-
-  apkg         the command-line client, used from the Shell
-  PkgManager   a Zune window over the same library: browse, install, upgrade,
-               roll back, remove
+arospkg 0.4.0
+=============
 
-Both install programs from AROS Archives, check every download against a
-small public index, and remove them again without deleting files you have
-changed.
+Install software with apkg in the Shell or PkgManager on the desktop.
 
-New in 0.4.0:
-
-  * After an install apkg says where the program is and how to open its
-    drawer: `apkg open <id>`, and an Open folder button in PkgManager. With
-    --root the printed command carries the same root.
-  * Packages can carry short notes from their author (game data to supply,
-    a first-start choice). They are shown after installing, by `show` and in
-    PkgManager, and kept with the installed package.
-  * Clearer output for install, update, remove and errors: what is being
-    done, each stage on its own line, the result, and what to do next.
-    Removal names the files it kept and why. --verbose shows URLs and cache
-    paths; --json is unchanged.
-  * `apkg self-update` replaces the apkg you started with the latest stable
-    release for its CPU and ABI (`--check` only reports). See UPDATING apkg.
-  * The catalogue can grow to the whole AROS software collection: apkg reads
-    an index of any size it needs (tested with 5000 packages) instead of at
-    most 8192 values. It fetches index-v2.json; index.json stays for 0.3.x.
-
-0.3.1 brought Mbed TLS and broken-connection reports; 0.3 `apkg show` and
-the ARexx port in PkgManager; 0.2 upgrade and
-rollback, verify, dry runs and the window.
-
-
-WHICH ARCHIVE
--------------
-
-Each archive is for one CPU and ABI; a program built for one does not start
-on another.
-
-  arospkg-0.4.0.x86_64-aros-v11.zip   AROS One and other ABIv11 systems on
-                                      x86_64: apkg and PkgManager. This
-                                      README is written for it.
-  arospkg-0.4.0.i386-aros-v0.zip      the i386 ABIv0 line: apkg only. Its
-                                      archive was run on an i386 ABIv0
-                                      system: update, search, install,
-                                      open, remove. It was tested less
-                                      than the x86_64 build.
-  arospkg-0.4.0.aarch64-aros-raspi.zip
-                                      native AROS on the Raspberry Pi
-                                      (aarch64, ABIv1): apkg only. Run on
-                                      AROS for the Pi under QEMU (raspi3b):
-                                      install, show, open and remove from a
-                                      local catalogue. That machine had no
-                                      network, so update and downloads are
-                                      untested on the Pi.
-
-Builds for mainline AROS (ABIv1) and hosted aarch64 remain at 0.3.1,
-experimental, on its release page.
-
-
-WHAT YOU NEED
--------------
-
-  * AROS One 1.3, x86_64. This binary is built for ABIv11, the ABI used by
-    AROS One. It does NOT run on mainline AROS (ABIv1): a program built for
-    one ABI does not start on the other.
-  * crt.library and stdlib.library. Both ship with AROS One. PkgManager
-    also needs muimaster.library (Zune), which AROS One ships.
-  * A working TCP/IP stack (AROSTCP) for `apkg update` and for downloads.
-    Searching, listing, removing and recovery work offline.
-  * The certificate bundle ENV:SYS/Certificates/ca-bundle.crt. AROS One ships
-    it. Without it apkg refuses to download anything -- an unverified download
-    is exactly what it exists to prevent.
-  * Room on SYS: for the packages you install, in SYS:Packages.
-
-
-INSTALLING apkg
---------------
-
-  1. Unpack this archive anywhere. AROS One ships UnZip:
-
-         UnZip arospkg-0.4.0.x86_64-aros-v11.zip
-  2. Copy apkg to C: so the Shell can find it:
-
-         Copy arospkg-0.4.0.x86_64-aros-v11/apkg C:
-
-     PkgManager can stay where you unpacked it, or go to SYS:Utilities;
-     start it from Wanderer or from the Shell. It looks for apkg's records
-     in SYS:Packages, so both programs see the same installed packages.
-
-  3. Check it starts and reports the right ABI:
-
-         apkg --version
-
-     The line "abi v11" must be there.
-  4. Fetch the index:
-
-         apkg update
-
-apkg creates SYS:Packages itself on first use. Nothing else on your system is
-changed by installing apkg.
-
-
-USING IT
---------
-
-  apkg search [word]    what the index offers; matches name, summary, category
-  apkg install <id>     download, verify, install
-  apkg list             what is installed
-  apkg show <id>        what a package is, whether it is compatible with this
-                        machine, what it needs, what is installed. Changes
-                        nothing and downloads nothing.
-  apkg info <id>        the record of one installed package
-  apkg remove <id>      uninstall, keeping anything you changed
-  apkg upgrade <id>     to the index's newer revision of the package; prints
-                        the plan first and refuses if a file you changed
-                        would have to go
-  apkg rollback <id>    back to the revision the last upgrade replaced
-  apkg open <id>        open an installed package's drawer on the desktop
-  apkg verify <id>      compare the installed files with apkg's record: as
-                        installed, changed locally, missing, not the
-                        package's. It repairs nothing.
-  apkg requires <id>    what the package needs from the system, probed now
-  apkg doctor           say what is unresolved after an interruption, and why
-  apkg doctor --retry   finish or undo an interrupted operation
-  apkg --help           everything, including the testing options
-
-  --dry-run             with install, remove, upgrade or rollback: print the
-                        plan and change nothing. The plan may be incomplete
-                        when the archive is not in the cache yet; --fetch
-                        allows the download and nothing else.
-  --json                search, list and verify print rows for programs
-  --plain               no colour, bold or progress line, even in a
-                        terminal that can show them
-  --color=auto|always|never
-                        colour only. Output to a file is never decorated
-
-For example:
-
-  apkg search game
-  apkg install soliton
-  apkg --dry-run upgrade soliton
-  apkg upgrade soliton
-  apkg rollback soliton
-  apkg remove soliton
-
-Close a program before you upgrade, roll back or remove it. apkg replaces
-the drawer underneath a running program and the program will not notice.
-
-PkgManager shows the same packages as a list with a category cycle, a search
-field and a details pane. The buttons at the bottom do what the commands
-above do; before an upgrade or a rollback it shows the plan in a window of
-its own and asks.
-Closing during an operation requests cancellation when it is allowed;
-otherwise the window waits for the worker to finish before exiting.
-Concurrent changes against the same root are refused.
-
-
-COMPATIBILITY
--------------
-
-`apkg show` and the details pane say whether a package is compatible with
-this machine: "native" when it is built for this CPU and ABI, "incompatible"
-when it is built for another, "undetermined" when the index does not say
-enough. That is a judgement from the index, not a test that the program
-runs. The requirements it needs from the system are a separate line, probed
-on the machine when you ask. apkg refuses to install a package that is not
-native here, before downloading it. When the index lists more than one build
-of a program for this machine, it refuses to pick one. An upgrade stays on
-the build that is installed.
-
-`apkg search` and the window list only packages that are native here, and
-say how many they left out.
-
-
-SCRIPTING PkgManager WITH AREXX
--------------------------------
-
-While PkgManager runs it has an ARexx port, PKGMANAGER. A script can check
-whether a program is installed, open its details in the window, install or
-remove it and read the real outcome, follow the progress, and ask for an
-upgrade or a rollback. Those two still wait for you to confirm them in the
-window. Five examples are in Examples/ARexx:
-
-  rx Examples/ARexx/IsInstalled.rexx soliton
-  rx Examples/ARexx/Install.rexx soliton
-
-The commands, their answers and their errors are described in
-docs/arexx.md in the source repository.
-
-One thing to know: the ARexx interpreter in AROS One puts a command's result
-text into RC, so a script cannot tell success from RC there. The examples
-show the way that works: RESULT is set after success, and LASTERROR says why
-a command failed.
-
-
-WHERE THINGS GO
----------------
-
-  SYS:Packages/<id>/        the program's drawer
-  SYS:Packages/<id>.info    its drawer icon, when the package has one
-  SYS:Packages/db/          apkg's own records -- do not edit
-  SYS:Packages/cache/       downloaded archives; the previous revision of an
-                            upgraded package stays in cache/previous/ so it
-                            can be rolled back
-
-Open SYS:Packages in Wanderer and start a program from its drawer. Some
-programs look for their data relative to the current directory, so from a
-Shell, CD into the drawer first:
-
-  CD SYS:Packages/<id>
-
-
-ARCHIVE FORMATS
----------------
-
-apkg installs from ZIP and from LHA, the Amiga's own format, and decides which
-is which by looking inside the file rather than at its name. An archive that is
-neither is refused and says so.
-
-Whatever the format, every member is checked before anything is written: a path
-that is absolute (including the AROS way, a ':' anywhere, which names a volume),
-one that escapes with '..', or one over the size limit rejects the whole
-archive. One upload in AROS Archives really does carry paths like ram:thing/,
-and apkg refuses it rather than writing into RAM:.
-
-
-WHAT HAS BEEN TESTED
---------------------
-
-The earlier catalogue acceptance covered 27 packages, installed by apkg,
-started and removed on AROS One 1.3 x86_64 under QEMU. The catalogue has
-since grown independently of this release; use update/search for its current
-contents. That earlier test does not establish coverage of later additions.
-"Started" means the program
-opened its window or printed its output and was running; it is not a claim
-that every feature of every program works.
-
-apkg itself was tested on the same machine, on a persistent disk: interruption
-at every point an operation can be stopped, including inside an upgrade and a
-rollback, write failures, recovery that is itself interrupted, a real reboot in
-the middle of an install, and downloads that must be refused (wrong
-certificate, plain http, no certificate bundle). Upgrade and rollback were run
-on a real program (Soliton), which started before, between and after them.
-Both programs were also run from a plain Shell with its default 40960-byte
-stack: apkg asks the system for a larger one itself, so no `stack` command
-is needed before it.
-PkgManager was driven through install, upgrade, rollback, a refused upgrade and
-removal on the same machine, and its ARexx port through every command,
-concurrent operations, cancelling, closing the window during an operation and
-running out of memory. The run reports are in the source repository under
-docs/reports/.
-
-For 0.4.0 the new parts were run on AROS One under QEMU: install, Open
-folder (also after restarting PkgManager, and with a root whose path has
-spaces), notes, removal keeping changed files, self-update from a test copy
-and its failure path, Limpet dark and light themes, a 5000-package index in
-apkg and PkgManager, and a package taken from its author's description to
-the catalogue and installed and upgraded. The release archive itself was
-started, updated, used to install, open and remove a package, and checked
-for a newer apkg.
-
-For 0.3.1 the whole regression was run again on AROS One with the new TLS,
-together with downloads whose connection was made to break (reported as a
-broken connection, nothing cached, the next attempt succeeding, also in
-the same PkgManager window), and the new output was checked in Limpet on a
-dark and a light theme, including resizing the window during a download.
-
-
-LIMITS -- READ THESE
---------------------
-
-  * `apkg upgrade` moves between revisions of the SAME upstream version: a
-    release of the port or its packaging, marked "-aros2" and so on. A new upstream
-    version is a different package build; when the index carries one, remove
-    the old and install the new. No version strings are compared.
-  * Rollback goes back exactly one step, to the revision the last upgrade
-    replaced, and only while that archive is still in cache/previous/.
-  * Remove and install again is NOT an upgrade. Removal keeps files you have
-    changed, in the package's drawer, and lists them in
-    SYS:Packages/db/doctor/. While that drawer exists, installing the same
-    package again is refused, with a message saying why. Move the drawer away
-    (keeping what you need from it), then install again.
-  * A drawer icon you changed -- Workbench rewrites one when you snapshot the
-    drawer's window -- is kept on removal for the same reason, and reported.
-  * No dependencies between packages are resolved. apkg does check that the
-    libraries a package needs from the system are present (for example
-    SDL.library) and refuses before downloading if they are not.
-  * Nothing is installed into LIBS:, FONTS: or other system directories.
-    Optional extras some programs describe in their own documentation (extra
-    fonts, catalogs) are not installed.
-  * The AROS One archive is the tested one; the mainline, i386 and aarch64
-    archives are experimental (see WHICH ARCHIVE).
-  * No 32-bit (ABIv0) programs. AROS One ships the EmuV0 emulator, but on
-    the machine these were tested on it did not start any program, so
-    apkg treats such packages as not compatible here.
-  * The index is not signed. Its SHA-256 lines prove a download is the file
-    the index names, not who wrote the index.
-  * The index is metadata only. The programs themselves are downloaded from
-    AROS Archives or their authors' release pages; apkg does not host or
-    copy them. A hash says nothing about the quality or safety of the program.
-
-
-NOTES FROM A PACKAGE
---------------------
-
-Some packages come with a few lines a user needs after installing, written
-by the author or the catalogue maintainer: game data to supply, a folder to
-choose at first start. apkg prints them after the install, `apkg show`
-prints them, and PkgManager shows them in the details. They are text only.
-
-
-UPDATING apkg
--------------
-
-  apkg self-update --check     is there a newer stable release?
-  apkg self-update             install it, in place of this apkg
-
-It updates the file you started (not another copy), keeps the previous one
-as apkg.old beside it, and changes nothing if the download or a check
-fails. To go back: Delete C:apkg, then Rename C:apkg.old C:apkg. PkgManager
-is not updated by it. docs/self-update.md in the source repository has the
-details.
-
-
-IF SOMETHING WAS INTERRUPTED
-----------------------------
-
-Every install, removal, upgrade and rollback is journalled. If one is interrupted -- a crash, a
-reset, power loss -- the next command that changes anything finishes or undoes
-it before doing anything else. `apkg doctor` says what it found; `apkg doctor
---retry` runs that recovery on demand. There is no "force": if something on
-disk cannot be accounted for, apkg leaves it where it is and says so.
-
-
-CHECKSUMS
----------
-
-BUILD.txt in this archive names the source commit and the SHA-256 of the
-programs in it; `apkg --version` prints the SHA-256 of the running binary,
-which must match the line for apkg. The SHA-256 of each archive is in
-SHA256SUMS on the release page.
-
-
-LICENCES
---------
-
-arospkg is (c) 2026 Tomasz Staniak. See LICENSE.
-
-apkg and PkgManager contain statically linked third-party code:
-
-  * Mbed TLS 3.6.7, (c) The Mbed TLS Contributors, under the Apache License
-    2.0. See licenses/MbedTLS-3.6.7-LICENSE.
-  * jitterentropy-library 3.7.0, (c) Stephan Mueller, under the BSD
-    licence. See licenses/jitterentropy-3.7.0-LICENSE*. (Not in the
-    mainline archive, which uses the system's getentropy().)
-  * The terminal-control client of AROS XTerm, (c) Tomasz Staniak, MIT.
-    See licenses/aros-xterm-client-LICENSE.
-  * zlib 1.3.1, (c) 1995-2024 Jean-loup Gailly and Mark Adler. See
-    licenses/zlib-LICENSE.
-
-The package index: https://github.com/tomaszstaniak/arospkg-index
+INSTALL
+-------
+
+1. Unpack the archive for your CPU and ABI.
+2. Close PkgManager and let any apkg operation finish.
+3. In the Shell, enter the unpacked drawer and run:
+
+     Copy apkg C:
+     apkg --version
+     apkg update
+
+Keep your existing SYS:Packages when upgrading. Versions 0.3.x need this
+manual copy to reach 0.4.
+
+PkgManager is included in the x86_64 ABIv11 archive. Keep the unpacked
+drawer and start it from there with:
+
+     Run PkgManager
+
+Click Update index, select a package and click Install. Open folder takes
+you to the installed program. Start it from its icon.
+
+BUILDS
+------
+
+0.4.0:
+  x86_64-aros-v11    apkg and PkgManager
+  i386-aros-v0       apkg
+  aarch64-aros-raspi apkg for native AROS on Raspberry Pi, ABIv1
+
+Experimental mainline x86_64 ABIv1 and hosted Macaros aarch64 builds remain
+available in release 0.3.1. Pi and Macaros builds are separate.
+
+Downloads: https://github.com/tomaszstaniak/arospkg/releases
+
+x86_64 ABIv11 has the most test coverage, on AROS One 1.3 under QEMU.
+The i386 archive was checked through update, search, install, open and
+removal. The Pi build was checked with a local catalogue and cached
+archives under QEMU raspi3b; network operations were not tested.
+
+For online operations you need working networking and the certificate
+bundle ENV:SYS/Certificates/ca-bundle.crt. PkgManager needs Zune.
+
+START HERE
+----------
+
+  apkg search game        find packages
+  apkg show soliton       view details and requirements
+  apkg install soliton    download, verify and install
+  apkg open soliton       open the installed drawer in Wanderer
+  apkg list               list installed packages
+  apkg remove soliton     remove it, keeping changed and additional files
+
+Packages go into SYS:Packages by default. To use another root, put it
+before the command:
+
+  apkg --root "Work:Packages" install soliton
+  apkg --root "Work:Packages" open soliton
+
+Use the same root for later operations on those packages.
+
+NEW IN 0.4
+----------
+
+- Open folder in PkgManager and apkg open.
+- Package notes after installation and in the details.
+- Clearer operation stages, results and removal reports.
+- Larger catalogues: tested with 5,000 packages on x86_64 ABIv11.
+  The parser allocates as needed, within memory and size limits.
+- apkg self-update, with the previous executable kept as apkg.old.
+
+UPDATES
+-------
+
+  apkg update                refresh the catalogue
+  apkg upgrade <id>          install a newer packaging revision
+  apkg rollback <id>         restore the previous revision
+  apkg self-update --check   check for a newer stable apkg
+  apkg self-update           replace the apkg executable you started
+
+Upgrade supports revisions of the same upstream version, not a change
+to a different upstream version. Rollback needs the previous archive
+in the cache. Close the application before either operation or removal.
+
+Self-update keeps apkg.old beside the updated executable. PkgManager
+must be updated separately from the release archive. Recovery instructions:
+https://github.com/tomaszstaniak/arospkg/blob/main/docs/self-update.md
+
+FILES AND RECOVERY
+------------------
+
+  SYS:Packages/<id>/       installed program
+  SYS:Packages/db/         installation records; do not edit
+  SYS:Packages/cache/      downloaded archives
+
+Removal keeps files you changed and files apkg did not install, and lists
+them. A later install will not overwrite a drawer left behind by removal.
+Move it aside first, keeping any files you need.
+
+  apkg verify <id>         check installed files without repairing them
+  apkg doctor              report unresolved operations
+  apkg doctor --retry      retry recovery after an interruption
+
+MORE OPTIONS
+------------
+
+  apkg --help             common commands
+  apkg --help-all         full user help
+  apkg --help-testing     diagnostic and test options
+
+--plain removes decorations. --verbose shows more transport and path
+details. --json provides machine-readable output for supported commands.
+--dry-run previews install, remove, upgrade or rollback without changing
+installed files; --fetch permits downloading the archive for that preview.
+
+PkgManager provides the PKGMANAGER ARexx port while it is running.
+Examples are in Examples/ARexx. The command reference is at:
+https://github.com/tomaszstaniak/arospkg/blob/main/docs/arexx.md
+
+LIMITS
+------
+
+- CPU and ABI matching is not proof that every application works.
+- System requirements are checked, but dependencies are not installed
+  automatically. Installer scripts and shared system files are not managed.
+- Downloads use HTTPS and SHA-256 checks. The catalogue is not signed,
+  and a matching hash does not establish an application's safety.
+
+CHECKSUMS AND LICENCES
+---------------------
+
+BUILD.txt records the source commit and program hashes. apkg --version
+reports the running binary's hash. Archive hashes are in SHA256SUMS on
+the matching release page.
+
+arospkg: copyright 2026 Tomasz Staniak. See LICENSE.
+Third-party notices are in licenses/:
+- Mbed TLS: Apache License 2.0.
+- jitterentropy-library: BSD licence, where included.
+- AROS XTerm terminal-control client: MIT.
+- zlib: zlib licence.
+
+DOCUMENTATION AND SOURCE
+------------------------
+
+https://github.com/tomaszstaniak/arospkg
+
+PACKAGE CATALOGUE
+-----------------
+
+https://github.com/tomaszstaniak/arospkg-index
