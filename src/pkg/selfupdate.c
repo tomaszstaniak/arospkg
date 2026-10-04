@@ -39,6 +39,13 @@ void su_test_fail(const char *w) { fail_s = w; }
 static const char *target(void)
 {
     const char *a = pkg_arch(), *b = pkg_abi();
+#ifdef PKG_TARGET
+    /* A build that names its own archive: the native Raspberry Pi build is
+       aarch64 like the hosted one, but whether either runs on the other's
+       system is not established, so neither may take the other's. */
+    (void)a; (void)b;
+    return PKG_TARGET;
+#endif
     if (!strcmp(a, "x86_64") && !strcmp(b, "v11")) return "x86_64-aros-v11";
     if (!strcmp(a, "x86_64") && !strcmp(b, "v1"))  return "x86_64-aros-v1";
     if (!strcmp(a, "i386")   && !strcmp(b, "v0"))  return "i386-aros-v0";

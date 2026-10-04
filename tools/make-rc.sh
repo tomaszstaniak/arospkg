@@ -21,6 +21,7 @@ want() { case " $TARGETS " in *" $1 "*) return 0;; esac; return 1; }
 want x86_64-aros-v1 && { mkdir -p $B/x86_64-aros-v1; OUT=$B/x86_64-aros-v1/apkg sh "$HERE/src/build-mainline.sh" >/dev/null 2>&1; }
 want i386-aros-v0   && { mkdir -p $B/i386-aros-v0;   OUT=$B/i386-aros-v0/apkg   sh "$HERE/src/build-i386.sh"     >/dev/null 2>&1; }
 want aarch64-aros   && { mkdir -p $B/aarch64-aros;   OUT=$B/aarch64-aros/apkg   sh "$HERE/src/build-aarch64.sh"  >/dev/null 2>&1; }
+want aarch64-aros-raspi && { mkdir -p $B/aarch64-aros-raspi; OUT=$B/aarch64-aros-raspi/apkg sh "$HERE/src/build-raspi.sh" >/dev/null 2>&1; }
 
 for t in $TARGETS; do
     D="$B/pkg/arospkg-$V.$t"; mkdir -p "$D/licenses"

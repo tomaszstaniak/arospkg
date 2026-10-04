@@ -48,6 +48,14 @@ on another.
                                       system: update, search, install,
                                       open, remove. It was tested less
                                       than the x86_64 build.
+  arospkg-0.4.0.aarch64-aros-raspi.zip
+                                      native AROS on the Raspberry Pi
+                                      (aarch64, ABIv1): apkg only. Run on
+                                      AROS for the Pi under QEMU (raspi3b):
+                                      install, show, open and remove from a
+                                      local catalogue. That machine had no
+                                      network, so update and downloads are
+                                      untested on the Pi.
 
 Builds for mainline AROS (ABIv1) and hosted aarch64 remain at 0.3.1,
 experimental, on its release page.

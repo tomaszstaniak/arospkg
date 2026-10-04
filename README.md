@@ -7,6 +7,7 @@ Both use the same catalogue and installed packages.
 **[Download 0.4.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.x86_64-aros-v11.zip)**
 · [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0)
 · [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.i386-aros-v0.zip)
+· [Raspberry Pi](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip)
 · [Other builds (0.3.1, experimental)](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
 
 New in 0.4.0: open installed folders, read package setup notes, update apkg
@@ -166,8 +167,8 @@ TC=/path/to/toolchain SDK=/path/to/sdk sh src/build.sh       # apkg
 TC=/path/to/toolchain SDK=/path/to/sdk sh src/build-gui.sh   # PkgManager
 ```
 
-`src/build-mainline.sh`, `src/build-i386.sh` and `src/build-aarch64.sh`
-build other targets with their matching SDKs and toolchains. Mainline
+`src/build-mainline.sh`, `src/build-i386.sh`, `src/build-aarch64.sh` (hosted)
+and `src/build-raspi.sh` (native Raspberry Pi) build other targets with their matching SDKs and toolchains. Mainline
 uses system `getentropy()`. Check the release notes for each target's
 test coverage.
 
