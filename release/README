@@ -284,6 +284,19 @@ LIMITS -- READ THESE
     copy them. A hash says nothing about the quality or safety of the program.
 
 
+UPDATING apkg
+-------------
+
+  apkg self-update --check     is there a newer stable release?
+  apkg self-update             install it, in place of this apkg
+
+It updates the file you started (not another copy), keeps the previous one
+as apkg.old beside it, and changes nothing if the download or a check
+fails. To go back: Delete C:apkg, then Rename C:apkg.old C:apkg. PkgManager
+is not updated by it. docs/self-update.md in the source repository has the
+details.
+
+
 IF SOMETHING WAS INTERRUPTED
 ----------------------------
 

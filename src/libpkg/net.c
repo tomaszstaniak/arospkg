@@ -159,7 +159,7 @@ static int fetch_once(const char *host, const char *path, str *body,
     tls *t = NULL;
     int s = -1, rc = 0, n, code, chunked;
     str raw = {0};
-    char req[2048], *hdr_end, *stline, *b;
+    char req[4096], *hdr_end, *stline, *b;
     size_t blen;
 
     if ((s = tcp_connect(host, why)) < 0) goto out;
@@ -287,7 +287,9 @@ void net_close(void)
 
 int net_fetch(const char *url, const char *dest, long max_bytes, char why[240])
 {
-    char host[256], path[1024], cur[1024], loc[1024], part[PKG_UTIL_PATH];
+    /* GitHub's release downloads redirect to signed URLs of about 950
+       bytes, growing with the file name; 2048 leaves room. */
+    char host[256], path[2048], cur[2048], loc[2048], part[PKG_UTIL_PATH];
     str body = {0};
     int hop, rc = -1;
     FILE *f;

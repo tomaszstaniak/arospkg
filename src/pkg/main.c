@@ -8,13 +8,20 @@
 #include "../libpkg/verify.h"
 #include "../libpkg/entries.h"
 #include "present.h"
+#include "selfupdate.h"
 #include "../about.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+/* APKG_TEST_VERSION lets a self-update test build call itself older than the
+   release it updates to; a release never sets it. */
+#ifdef APKG_TEST_VERSION
+static const char *VERSION = "apkg " APKG_TEST_VERSION;
+#else
 static const char *VERSION = "apkg 0.3.2";
+#endif
 
 /* `show`: the library's account of one package, laid out for a person. The
  * facts come from pkg_details_get and the probes behind the window's panel;
@@ -213,7 +220,9 @@ static void usage(void)
            "  remove <id>       Remove a package; keep locally modified files\n"
            "  verify <id>       Check installed files for changes\n"
            "  info <id>         Show the installed package record\n"
-           "  doctor            Report installation and recovery problems\n\n"
+           "  doctor            Report installation and recovery problems\n"
+           "  self-update       Replace this apkg with the latest stable release\n"
+           "  self-update --check  Only say whether there is a newer one\n\n"
            "Options:\n"
            "  --root <dir>      Package directory (default: SYS:Packages)\n"
            "  --plain           Disable formatting and progress output\n"
@@ -244,6 +253,9 @@ static void usage_testing(void)
            "  --progress               Print progress callback events\n"
            "  --fail-at commit|doctor  Simulate a failed write\n"
            "  --break-download-at <n>  Simulate one connection reset after n bytes\n"
+           "  --self-update-from <url> Release base URL for self-update (https, ends in /)\n"
+           "  --self-update-sums <file> Use a local SHA256SUMS for self-update\n"
+           "  --self-update-fail-at <swap|stop> Fail the self-update at the swap\n"
            "  --corrupt-download-at <n> Simulate one TLS data error after n bytes\n"
            "  --cancel-at <phase>      Request cancellation in a phase\n"
            "                          download, download-mid, verify, extract, publish\n"
@@ -380,7 +392,7 @@ static int real_main(int argc, char **argv)
     const char *index_url =
         "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index.json";
     const char *arg2 = NULL;
-    int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO;
+    int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0;
     pkg_ctx *c = NULL;
     pkg_err e;
     pkg_status st;
@@ -412,6 +424,10 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--fetch")) fetch = 1;
         else if (!strcmp(argv[i], "--progress")) show_progress = 1;
         else if (!strcmp(argv[i], "--slow") && i + 1 < argc) pkg_test_slow(atoi(argv[++i]));
+        else if (!strcmp(argv[i], "--check")) check = 1;
+        else if (!strcmp(argv[i], "--self-update-from") && i + 1 < argc) su_test_from(argv[++i]);
+        else if (!strcmp(argv[i], "--self-update-sums") && i + 1 < argc) su_test_sums(argv[++i]);
+        else if (!strcmp(argv[i], "--self-update-fail-at") && i + 1 < argc) su_test_fail(argv[++i]);
         else if (!strcmp(argv[i], "--break-download-at") && i + 1 < argc)
             pkg_test_break_download(atol(argv[++i]), 1);
         else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc)
@@ -469,6 +485,10 @@ static int real_main(int argc, char **argv)
         printf("PASS assert-hash %s\n", arg);
         return 0;
     }
+
+    /* It replaces this program's file and nothing in the package root, so
+       it never opens the root: no recovery, no lock of its own. */
+    if (!strcmp(cmd, "self-update")) return apkg_self_update(VERSION + 5, root, check);
 
     if (!strcmp(cmd, "unlock")) {
         st = pkg_unlock(root, &e);
