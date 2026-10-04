@@ -8,15 +8,13 @@ Both use the same catalogue and installed packages.
 · [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0)
 · [Other builds (0.3.1, experimental)](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
 
-0.4.0 tells you where a program was installed and opens its drawer, shows
-notes from the package's author, explains each step and error more clearly,
-updates itself with `apkg self-update`, and reads a catalogue of any size.
+New in 0.4.0: open installed folders, read package setup notes, update apkg
+itself and use larger catalogues. Tested with 5,000 package entries.
 
 ## Install
 
-1. Download the ZIP. 0.4.0 is for **x86_64 ABIv11** (AROS One and other
-   current distributions); experimental builds for other targets are at
-   0.3.1.
+1. Download the ZIP for **x86_64 ABIv11**. If upgrading, close PkgManager
+   and wait for any apkg operation to finish.
 2. Open a Shell and use `CD` to enter the drawer containing the ZIP.
 3. Run these commands to unpack it, put `apkg` on the command path and
    fetch the software catalogue:
@@ -36,9 +34,8 @@ Keep the extracted drawer somewhere permanent, not `RAM:`, if using
 PkgManager (included in the ABIv11 archive). Installing packages requires
 a working network connection.
 
-**Updating an older arospkg?** Close PkgManager and finish running apkg
-operations before copying the new programs. Keep `SYS:Packages` and its
-database — they contain your installed packages and their records.
+**Upgrading from 0.3.x?** Install 0.4.0 manually using the commands above.
+Keep `SYS:Packages`; it contains your installed programs and package records.
 
 ## Use the graphical interface
 
@@ -52,9 +49,8 @@ Click **Update index** to refresh the catalogue, select an application,
 read its requirements and click **Install**. To uninstall it later, select
 it and click **Remove**.
 
-Programs are installed in `SYS:Packages/<id>/`. Open that drawer in
-Wanderer and launch the program inside. For example, after installing
-Soliton, open `SYS:Packages/soliton`.
+Select an installed package and click **Open folder**, then launch the
+program inside. The default location is `SYS:Packages/<id>/`.
 
 ![PkgManager: the catalogue, with GrafX2 selected](docs/images/pkgmanager.png)
 
@@ -76,15 +72,6 @@ is and the command that opens its drawer in Wanderer:
 apkg open soliton
 ```
 
-Four commands with similar names do different things:
-
-```text
-apkg update          refreshes the catalogue
-apkg upgrade <id>    updates an installed package
-apkg self-update     updates apkg itself
-apkg open <id>       opens the drawer of an installed package
-```
-
 | Command | What it does |
 |---|---|
 | `apkg update` | Refresh the available-software catalogue; does not upgrade installed programs. |
@@ -97,9 +84,9 @@ apkg open <id>       opens the drawer of an installed package
 | `apkg open soliton` | Open the package's drawer in Wanderer. |
 | `apkg self-update` | Replace this apkg with the latest stable release; `--check` only reports. |
 
-`self-update` first appears in 0.4.0, so 0.4.0 is installed by hand as
-above; later releases update with `apkg self-update`.
-PkgManager is not updated by it: take it from the release archive.
+From 0.4.0, use `apkg self-update --check` to check for a newer stable
+release and `apkg self-update` to install it. The previous executable is
+kept as `apkg.old`. Update PkgManager separately from the release archive.
 
 Both interfaces use `SYS:Packages` by default. For another location, pass
 the **same root to both**, every time:
@@ -112,11 +99,9 @@ Run PkgManager --root Work:Packages
 
 This selects a separate package root; it does not move existing installs.
 
-In the development version, use `apkg --help` for common commands,
-`--help-all` for the complete list,
-and `--help-testing` for test controls. `apkg --about` shows the author,
-project page and licence; PkgManager has an **About** button. Detailed build
-information remains available through `apkg --version`.
+Use `apkg --help` for common commands and `apkg --help-all` for the full
+list. `apkg --about` shows project and licence information; PkgManager has
+an **About** button.
 
 ### If a download fails
 
@@ -172,8 +157,8 @@ Start at [`docs/README.md`](docs/README.md):
 
 You need an x86_64 AROS cross toolchain for ABIv11 (GCC 10.5 was used) and
 the matching SDK with `libz.static.a`. The default build uses vendored
-Mbed TLS 3.6.7 and jitterentropy 3.7.0. `TLS=openssl` is an optional
-alternative, not the backend shipped in 0.3.1.
+Mbed TLS 3.6.7 and jitterentropy 3.7.0. `TLS=openssl` selects an alternative
+backend; the 0.4.0 release uses Mbed TLS.
 
 ```
 TC=/path/to/toolchain SDK=/path/to/sdk sh src/build.sh       # apkg

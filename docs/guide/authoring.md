@@ -1,13 +1,26 @@
 # Publishing your program with apkg-pack
 
-For an author who wants a program in the catalogue. You describe it once;
-the tool checks it with the catalogue's own rules, packs it, and prepares
-the catalogue entry from the file you uploaded. It runs on a computer with
-Python 3.11 or later (macOS, Linux); it does not run on AROS, and it does not
-run your program.
+Use `apkg-pack` to create a package and submit it to the arospkg catalogue.
+It checks the manifest, builds a ZIP and prepares a pull request from your
+uploaded archive. It does not run the application.
 
-The [packaging guide](packaging.md) explains the rules behind each step, and
-the [metadata reference](metadata.md) every field.
+## Before you start
+
+Use macOS or Linux with Python 3.11 or later and Git. For LHA archives,
+install `lha` (lhasa). To submit a pull request, install the GitHub CLI
+(`gh`) and sign in with `gh auth login`.
+
+Get the tools and run the commands below from this checkout:
+
+```text
+git clone https://github.com/tomaszstaniak/arospkg.git
+cd arospkg
+tools/apkg-pack --help
+```
+
+The tool runs on the host, not on AROS. See the
+[packaging guide](packaging.md) for archive layout and the
+[metadata reference](metadata.md) for field definitions.
 
 ## 1. Describe the drawer
 
@@ -22,12 +35,11 @@ build/xRick.info      its icon
 tools/apkg-pack init build/xRick
 ```
 
-It reads what it can: the id from the drawer name, the version from the
-program's `$VER:` string, the CPU from its executables, the icon. It asks for
-the rest. It never guesses the ABI (`v11` for AROS One and other current
-distributions, `v1` for mainline) or what the program needs, because a wrong
-answer installs something that crashes. For a release script, give every
-answer as an option and add `--non-interactive`; `--help` lists them.
+The tool reads the drawer name, `$VER:` string, executable CPU and icon
+where available, then asks for missing fields. Enter the ABI your program
+was built for and its dependencies. For release scripts, supply the fields
+as options and add `--non-interactive`. Run `tools/apkg-pack init --help`
+for the options.
 
 The result is `build/xRick.arospkg.toml`, beside the drawer. It is never
 overwritten; edit it like any text file.
@@ -59,9 +71,10 @@ tools/apkg-pack check build/xRick
 xRick.arospkg.toml: post_install_notes[1]: 184 characters; maximum is 159
 ```
 
-Each problem names the field and what to change. A clean check means the
-catalogue will accept the description. It does not mean the program works:
-test it on AROS ([packaging guide, section 5](packaging.md#5-testing-on-aros)).
+Fix reported errors before building. Passing this check validates the
+package description, not application behaviour or acceptance into the
+catalogue. Test your program on its target system; see
+[Testing on AROS](packaging.md#5-testing-on-aros).
 
 ## 4. Pack
 
@@ -70,33 +83,40 @@ tools/apkg-pack build build/xRick --output xrick.x86_64-aros-v11.zip
 ```
 
 The ZIP holds the drawer (empty drawers included), its icon, and the
-description as `.arospkg/manifest.toml`. Nothing is reorganised and junk
-such as `.DS_Store` is left out. The same drawer always packs to the same
-bytes (`SOURCE_DATE_EPOCH` sets the timestamp). The version and revision
-are yours to raise; the tool never changes them.
+description as `.arospkg/manifest.toml`. Files such as `.DS_Store` are
+excluded. The same input files, manifest and timestamp produce the same
+ZIP; `SOURCE_DATE_EPOCH` sets the timestamp.
+
+Keep the upstream version in `version`. Increase `revision` for a new
+AROS release of that version. The tool does not change either field.
 
 ## 5. Upload
 
-Put the ZIP at a URL that will not change: a GitHub release asset or an AROS
-Archives upload. New bytes need a new revision or version, and normally a new
-URL: under the same version and revision, other bytes are refused.
+Upload the ZIP to AROS Archives or a GitHub release and copy its public
+HTTPS download URL. Prefer a separate URL for each release. Archives may
+reuse a URL; changed contents still require a new version or revision and
+an updated catalogue entry.
 
 ## 6. Submit
 
 ```text
-tools/apkg-pack submit https://github.com/you/xrick/releases/download/v1.0.2/xrick.x86_64-aros-v11.zip --dry-run
-tools/apkg-pack submit <url> --pr
+tools/apkg-pack submit <download-url> --pr
 ```
 
-`submit` downloads the file, checks the description inside it, measures its
-size and SHA-256, and writes the catalogue entry,
-`manifests/<id>.<arch>.<abi>.toml`. `--dry-run` shows the change against a
-checkout of [arospkg-index](https://github.com/tomaszstaniak/arospkg-index)
-(`--index`) and writes nothing. `--pr` works in a fresh clone of the
-catalogue repository, pushes a branch to your fork of it (made if you have
-none) and opens a pull request, with the `gh` command's existing login.
-Submitting the same release again opens no second one. You never edit
-`index.json` or copy fields out of your ZIP.
+Replace `<download-url>` with the archive URL. The tool reads the embedded
+manifest, calculates the size and SHA-256, and prepares
+`manifests/<id>.<arch>.<abi>.toml`. It uses a fresh clone and your existing
+`gh` login. If you lack write access, it creates or reuses your fork.
+Re-submitting the same release does not open a duplicate PR.
+
+To preview a change locally without opening a PR:
+
+```text
+git clone https://github.com/tomaszstaniak/arospkg-index.git ../arospkg-index
+tools/apkg-pack submit <download-url> --index ../arospkg-index --dry-run
+```
+
+Do not edit `index.json` or `index-v2.json`; they are generated.
 
 The pull request is checked automatically: the archive is downloaded again
 and must match, be readable and pass the same rules. A maintainer reviews
