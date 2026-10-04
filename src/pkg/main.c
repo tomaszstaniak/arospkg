@@ -8,6 +8,7 @@
 #include "../libpkg/verify.h"
 #include "../libpkg/entries.h"
 #include "present.h"
+#include "../about.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -199,72 +200,74 @@ static void search_table(const pkg_entries *es, int hidden)
 
 static void usage(void)
 {
-    printf("%s\n\n", VERSION);
-    printf("usage: apkg [options] <command>\n\n");
-    printf("  update                download the index\n");
-    printf("  search [term]         what the index offers\n");
-    printf("  list                  what is installed\n");
-    printf("  show <id>             what a package is, whether it runs here, what it\n");
-    printf("                        needs and what is installed; changes nothing\n");
-    printf("  info <id>             the registry entry for one package\n");
-    printf("  install <id>          install from the index, archive from cache/\n");
-    printf("  remove <id>           uninstall, keeping anything modified\n");
-    printf("  upgrade <id>          to the index's newer revision of the same\n");
-    printf("                        version; prints the plan, refuses on conflict\n");
-    printf("  rollback <id>         back to the revision the last upgrade replaced\n");
-    printf("  unlock                clear a lock left by a dead run\n");
-    printf("  doctor [--retry]      say what is unresolved and why; --retry\n");
-    printf("                        re-runs recovery. There is no force.\n");
-    printf("  assert-hash <f> <sha> PASS if the file hashes to sha, else FAIL\n\n");
-    printf("  --root <dir>          package root (default SYS:Packages)\n");
-    printf("  --index <file>        index.json (default <root>/db/index.json)\n");
-    printf("  --index-url <url>     where update fetches it from\n");
-    printf("  --verify-name <name>  require the certificate to match this\n");
-    printf("                        instead of the host; must fail, for testing\n");
-    printf("  --json                search and list print rows as JSON, for\n");
-    printf("                        programs rather than people\n");
-    printf("  --all-abi             also list packages for the other ABI\n");
-    printf("  --abi <v0|v1|v11>     install one anyway. It will not start;\n");
-    printf("                        this is for diagnosis, not for use\n");
-    printf("  --expect <status>     PASS only if the run ends with this status;\n");
-    printf("                        a test that merely produced a report has\n");
-    printf("                        not shown it reached what it was testing\n");
-    printf("  --report <file>       write a machine-readable run report\n");
-    printf("  --run-id <s>          label that report; defaults to a timestamp\n");
-    printf("  --machine <s>         which guest this ran on, recorded verbatim\n");
-    printf("  --version             print the build id and exit\n");
-    printf("  --fail-at commit|doctor  make that write fail, for testing\n");
-    printf("  verify <id>           the installed files against the registry: as\n");
-    printf("                        installed, changed locally, missing, not ours\n");
-    printf("  --dry-run             with install/remove/upgrade/rollback: the plan\n");
-    printf("                        only; nothing changed, nothing recovered\n");
-    printf("  --fetch               with --dry-run: may download into the cache\n");
-    printf("  requires <id>         each system requirement, probed here and now\n");
-    printf("  --slow <ms>           slow the download and the extract, for testing\n");
-    printf("  --progress            print each progress callback, for testing\n");
-    printf("  --plain               no colour, bold or progress line, even in a\n");
-    printf("                        terminal that can show them\n");
-    printf("  --color=auto|always|never\n");
-    printf("                        colour only; auto: when the terminal says it\n");
-    printf("                        can. Output to a file is never decorated\n");
-    printf("  --break-download-at N   testing only: reset the connection of the next\n");
-    printf("                        download after N bytes of its body\n");
-    printf("  --corrupt-download-at N testing only: corrupt the next download's data\n");
-    printf("                        after N bytes of its body\n");
-    printf("  --cancel-at <phase>   cancel from the callback in that phase, for\n");
-    printf("                        testing: download, download-mid (once bytes\n");
-    printf("                        flow), verify, extract, publish\n");
-    printf("  --break-recovery <n>  abort recovery after n files, for testing\n");
-    printf("  --interrupt-at <n>    stop mid-operation on purpose, for testing:\n");
-    printf("                        1 after plan, 2 after dir, 3 after dir marker,\n");
-    printf("                        4 after registry, 5 before commit,\n");
-    printf("                        6 after remove deletes files,\n");
-    printf("                        7 inside publish, between delete and rename,\n");
-    printf("                        8 after the drawer icon is in place,\n");
-    printf("                        9 upgrade: old tree moved aside,\n");
-    printf("                        10 upgrade: new tree in place\n");
-    printf("\nAn interrupted run leaves the machine in a state the next run must\n");
-    printf("recover. That is the point of the flag.\n");
+    printf("%s -- Find and install software for AROS\n\n", VERSION);
+    printf("Usage: apkg [options] <command>\n\n"
+           "Commands:\n"
+           "  search [term]     Search available packages\n"
+           "  show <id>         Show package details and requirements\n"
+           "  install <id>      Install a package\n"
+           "  list              List installed packages\n"
+           "  update            Refresh the package catalogue\n"
+           "  upgrade <id>      Install a newer revision of the same version\n"
+           "  rollback <id>     Restore the previous package revision\n"
+           "  remove <id>       Remove a package; keep locally modified files\n"
+           "  verify <id>       Check installed files for changes\n"
+           "  info <id>         Show the installed package record\n"
+           "  doctor            Report installation and recovery problems\n\n"
+           "Options:\n"
+           "  --root <dir>      Package directory (default: SYS:Packages)\n"
+           "  --plain           Disable formatting and progress output\n"
+           "  --color=<mode>    Colour output: auto, always or never\n"
+           "  --json            Output search and list results as JSON\n"
+           "  --version         Show version and build information\n"
+           "  --about           Show author, project and licence information\n"
+           "  --help            Show this help\n"
+           "  --help-all        Include advanced and testing options\n"
+           "  --help-testing    Show testing options\n\n"
+           "Example:\n"
+           "  apkg update\n"
+           "  apkg search soliton\n"
+           "  apkg install soliton\n");
+}
+
+static void usage_testing(void)
+{
+    printf("Testing options (use a separate --root):\n"
+           "  assert-hash <file> <sha>  Check a file's SHA-256\n"
+           "  --verify-name <name>     Override the TLS certificate hostname\n"
+           "  --abi <v0|v1|v11>        Override ABI selection for testing\n"
+           "  --expect <status>        Require the specified exit status\n"
+           "  --report <file>          Write a machine-readable test report\n"
+           "  --run-id <id>            Set the test report identifier\n"
+           "  --machine <name>         Record the test machine name\n"
+           "  --slow <ms>              Delay download and extraction steps\n"
+           "  --progress               Print progress callback events\n"
+           "  --fail-at commit|doctor  Simulate a failed write\n"
+           "  --break-download-at <n>  Simulate one connection reset after n bytes\n"
+           "  --corrupt-download-at <n> Simulate one TLS data error after n bytes\n"
+           "  --cancel-at <phase>      Request cancellation in a phase\n"
+           "                          download, download-mid, verify, extract, publish\n"
+           "  --break-recovery <n>     Interrupt recovery after n files\n"
+           "  --interrupt-at <n>       Interrupt an operation at a checkpoint:\n"
+           "    1 plan; 2 directory; 3 directory marker; 4 registry;\n"
+           "    5 before commit; 6 remove; 7 publish; 8 drawer icon;\n"
+           "    9 old tree moved; 10 new tree published\n"
+           "Interrupted operations may require recovery on the next run.\n");
+}
+
+static void usage_all(void)
+{
+    usage();
+    printf("\nAdvanced options:\n"
+           "  requires <id>       Check system requirements for a package\n"
+           "  unlock              Remove a stale operation lock\n"
+           "  doctor --retry      Retry pending recovery\n"
+           "  --index <file>      Read a local catalogue file\n"
+           "  --index-url <url>   Set the catalogue download URL\n"
+           "  --all-abi           Include packages for other CPUs and ABIs\n"
+           "  --dry-run           Preview install/remove/upgrade/rollback\n"
+           "  --fetch             Allow downloads during a dry run\n\n");
+    usage_testing();
 }
 
 /* The progress contract, driven from the command line so a guest run can show
@@ -432,6 +435,9 @@ static int real_main(int argc, char **argv)
             }
             return 0;
         }
+        else if (!strcmp(argv[i], "--about")) { printf("%s\n\n%s\n", VERSION, AROSPKG_ABOUT); return 0; }
+        else if (!strcmp(argv[i], "--help-all")) { usage_all(); return 0; }
+        else if (!strcmp(argv[i], "--help-testing")) { usage_testing(); return 0; }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) { usage(); return 0; }
         else if (!cmd) cmd = argv[i];
         else if (!arg) arg = argv[i];

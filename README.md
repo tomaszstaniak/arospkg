@@ -93,6 +93,12 @@ Run PkgManager --root Work:Packages
 
 This selects a separate package root; it does not move existing installs.
 
+In the development version, use `apkg --help` for common commands,
+`--help-all` for the complete list,
+and `--help-testing` for test controls. `apkg --about` shows the author,
+project page and licence; PkgManager has an **About** button. Detailed build
+information remains available through `apkg --version`.
+
 ### If a download fails
 
 Check that the system has a working network connection and that

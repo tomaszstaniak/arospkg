@@ -5,6 +5,7 @@
 #include "job.h"
 #include "rexx.h"
 #include "rexxcmd.h"
+#include "../about.h"
 #include "../libpkg/verify.h"
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -20,11 +21,12 @@
 #define PM_VERSION "0.3.1"
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
-       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE };
+       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE };
 
 static Object *app, *win, *str_search, *cyc_cat, *cyc_state, *lst, *txt_detail,
               *txt_status, *gauge, *btn_install, *btn_remove, *btn_update, *btn_cancel,
-              *btn_upgrade, *btn_rollback, *win_confirm, *txt_confirm, *btn_proceed, *btn_decline;
+              *btn_upgrade, *btn_rollback, *win_confirm, *txt_confirm, *btn_proceed, *btn_decline,
+              *win_about, *btn_about, *btn_about_close;
 static int auto_yes;              /* --yes: confirm requesters without asking; for tests */
 static pkg_entries rows;          /* the whole query; the list shows a filtered view */
 static job cur;
@@ -1014,6 +1016,7 @@ static int real_main(int argc, char **argv)
 
     app = ApplicationObject,
         MUIA_Application_Title,       (IPTR)"PkgManager",
+        MUIA_Application_Author,      (IPTR)AROSPKG_AUTHOR,
         MUIA_Application_Version,     (IPTR)"$VER: PkgManager 0.3.1 (2.10.2026)",
         MUIA_Application_Description, (IPTR)"Install software from AROS Archives",
         MUIA_Application_Base,        (IPTR)"PKGMANAGER",
@@ -1037,6 +1040,7 @@ static int real_main(int argc, char **argv)
                         MUIA_Cycle_Entries, (IPTR)state_entries,
                     End),
                     Child, (btn_update = SimpleButton("Update index")),
+                    Child, (btn_about = SimpleButton("About")),
                 End),
                 Child, (lst = ListviewObject,
                     MUIA_Listview_List, (ListObject,
@@ -1071,6 +1075,16 @@ static int real_main(int argc, char **argv)
                 End),
             End),
         End),
+        SubWindow, (win_about = WindowObject,
+            MUIA_Window_Title, (IPTR)"About PkgManager",
+            MUIA_Window_ID, MAKE_ID('P','K','G','A'),
+            WindowContents, (VGroup,
+                Child, (TextObject,
+                    MUIA_Text_Contents, (IPTR)("PkgManager " PM_VERSION "\n\n" AROSPKG_ABOUT),
+                End),
+                Child, (btn_about_close = SimpleButton("Close")),
+            End),
+        End),
         SubWindow, (win_confirm = WindowObject,
             MUIA_Window_Title, (IPTR)"PkgManager: confirm",
             MUIA_Window_ID,    MAKE_ID('P','K','G','C'),
@@ -1101,6 +1115,9 @@ static int real_main(int argc, char **argv)
     DoMethod(cyc_cat,   MUIM_Notify, MUIA_Cycle_Active, MUIV_EveryTime, (IPTR)app, 2, MUIM_Application_ReturnID, ID_FILTER);
     DoMethod(cyc_state, MUIM_Notify, MUIA_Cycle_Active, MUIV_EveryTime, (IPTR)app, 2, MUIM_Application_ReturnID, ID_FILTER);
     DoMethod(btn_update,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_UPDATE);
+    DoMethod(btn_about, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT);
+    DoMethod(btn_about_close, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT_CLOSE);
+    DoMethod(win_about, MUIM_Notify, MUIA_Window_CloseRequest, TRUE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT_CLOSE);
     DoMethod(btn_install, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_INSTALL);
     DoMethod(btn_remove,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_REMOVE);
     DoMethod(btn_cancel,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_CANCEL);
@@ -1128,6 +1145,14 @@ static int real_main(int argc, char **argv)
             if (in_flight) close_requested(); else break;
         }
         switch (ret) {
+        case ID_ABOUT:
+            SetAttrs(win_about, MUIA_Window_Open, TRUE, MUIA_Window_Activate, TRUE, TAG_DONE);
+            logline("about opened");
+            break;
+        case ID_ABOUT_CLOSE:
+            SetAttrs(win_about, MUIA_Window_Open, FALSE, TAG_DONE);
+            logline("about closed");
+            break;
         case ID_SEARCH: search_acknowledged(); break;
         case ID_FILTER: {
             IPTR a = 0, st = 0;
