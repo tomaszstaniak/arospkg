@@ -100,9 +100,26 @@ REVISION_MAX = 2**31 - 1
 NOTES_LINES, NOTES_LINE = 8, 159
 
 
-def check(m):
-    """Return a list of reasons this manifest cannot be published."""
+# Filled in from the uploaded file when a package is submitted, never written
+# by its author: what the author's copy says could only disagree with the file.
+PUBLICATION_FIELDS = ("url", "size", "sha256", "status")
+
+
+def check(m, stage="index"):
+    """Return a list of reasons this manifest cannot be published.
+
+    stage "index": a manifest in arospkg-index, complete and approved.
+    stage "author": the manifest an author ships in the archive
+    (.arospkg/manifest.toml); the same rules, without the publication fields,
+    which it must not carry."""
     problems = []
+    if stage == "author":
+        for k in PUBLICATION_FIELDS:
+            if k in m:
+                problems.append(f"{k}: set when the archive is submitted, from the uploaded file; "
+                                "remove it from the manifest")
+        m = {**m, "status": "approved", "url": "https://placeholder.invalid/p.zip",
+             "size": 1, "sha256": "0" * 64}
     # A deliberate exclusion is not the same as an unreviewed skeleton, and
     # collapsing the two would hide a decision inside a backlog count.
     if m.get("excluded"):
@@ -145,19 +162,19 @@ def check_notes(v):
     if v is None:
         return []
     if not isinstance(v, list) or not all(isinstance(x, str) for x in v):
-        return ["post_install_notes must be a list of strings, one per line"]
+        return ["post_install_notes: not a list of strings; write one string per line"]
     problems = []
     if len(v) > NOTES_LINES:
-        problems.append(f"post_install_notes has {len(v)} lines; the client shows {NOTES_LINES}")
-    for i, line in enumerate(v, 1):
+        problems.append(f"post_install_notes: {len(v)} lines; maximum is {NOTES_LINES}")
+    # Counted from 0, as requires_system[i] is.
+    for i, line in enumerate(v):
         if not line.strip():
-            problems.append(f"post_install_notes line {i} is empty")
+            problems.append(f"post_install_notes[{i}]: empty; remove the line")
         elif not PLAIN.match(line):
-            problems.append(f"post_install_notes line {i} has a character the client would read "
-                            "differently: use printable ASCII without '\"' or '\\'")
+            problems.append(f"post_install_notes[{i}]: has a character the client would read "
+                            "differently; use printable ASCII without '\"' or '\\'")
         elif len(line) > NOTES_LINE:
-            problems.append(f"post_install_notes line {i} is {len(line)} characters; "
-                            f"the client shows {NOTES_LINE}")
+            problems.append(f"post_install_notes[{i}]: {len(line)} characters; maximum is {NOTES_LINE}")
     return problems
 
 
@@ -273,6 +290,39 @@ def archive_names(path):
     raise ValueError("not a ZIP or LHA archive")
 
 
+# What the client refuses in an archive member (src/libpkg/ops.c), and its
+# limits on what it installs.
+MEMBER_MAX, PKGPATH_MAX, FILES_MAX = 511, 255, 2048
+
+
+def check_members(m, names, where="the archive"):
+    """The member names of an archive, or of a drawer about to be packed,
+    against the client's rules and the manifest's subdir and icon."""
+    problems = []
+    sub = m.get("subdir") or ""
+    files = 0
+    for n in sorted(names):
+        rel = n[len(sub) + 1:] if sub and n.startswith(sub + "/") else (n if not sub else None)
+        parts = n.rstrip("/").split("/")
+        if n.startswith(("/", "\\")) or ":" in n or ".." in parts \
+                or any(ord(ch) < 0x20 or ord(ch) == 0x7f for ch in n):
+            problems.append(f"member {n[:60]!r}: the client refuses this name (absolute, a volume, "
+                            "'..' or a control character); rename it")
+        elif len(n.encode()) > MEMBER_MAX:
+            problems.append(f"member {n[:60]}...: longer than the {MEMBER_MAX} bytes the client reads")
+        elif rel is not None and len(rel.rstrip("/").encode()) > PKGPATH_MAX:
+            problems.append(f"member {rel[:60]}...: path inside the package longer than {PKGPATH_MAX} bytes")
+        if rel is not None and not n.endswith("/"):
+            files += 1
+    if files > FILES_MAX:
+        problems.append(f"subdir: {files} files; the client installs at most {FILES_MAX}")
+    if m.get("icon") and m["icon"] not in names:
+        problems.append(f'icon: {m["icon"]!r} is not at that path in {where}')
+    if sub and not any(n.startswith(sub + "/") for n in names):
+        problems.append(f'subdir: {sub!r} is not in {where}')
+    return problems
+
+
 def check_archive(m, cache):
     """subdir and icon must exist in the archive. Checked here, where it lands on
     us, because the client refuses an icon the archive lacks -- which is right,
@@ -287,19 +337,7 @@ def check_archive(m, cache):
         names = archive_names(hits[0])
     except Exception as exc:
         return [], [f"{name}: cannot list ({exc}): subdir and icon unchecked"]
-    problems = []
-    sub = m.get("subdir") or ""
-    for n in sorted(names):
-        rel = n[len(sub) + 1:] if sub and n.startswith(sub + "/") else (n if not sub else None)
-        if len(n.encode()) >= 512:
-            problems.append(f"member name longer than the client reads: {n[:60]}...")
-        elif rel is not None and len(rel.rstrip("/").encode()) > 255:
-            problems.append(f"path inside the package longer than 255 bytes: {rel[:60]}...")
-    if m.get("icon") and m["icon"] not in names:
-        problems.append(f'icon {m["icon"]!r} is not at that path in the archive')
-    if m.get("subdir") and not any(n.startswith(m["subdir"] + "/") for n in names):
-        problems.append(f'subdir {m["subdir"]!r} is not in the archive')
-    return problems, []
+    return check_members(m, names), []
 
 
 def main():

@@ -141,6 +141,10 @@ QEMU, with the published catalogue.
 
 Start at [`docs/README.md`](docs/README.md):
 
+- [using arospkg](docs/guide/using.md): install, open, update, remove,
+  in one page;
+- [publishing your program](docs/guide/authoring.md): describe, check,
+  pack and submit with `apkg-pack`;
 - [packaging guide](docs/guide/packaging.md): from a program's drawer to an
   approved index entry, tested on AROS;
 - [metadata reference](docs/guide/metadata.md): every field, and who

@@ -55,14 +55,14 @@ expect("min_version bool", {"requires_system": [{"type": "library", "id": "a.lib
        "min_version True")
 
 expect("notes: plain lines pass", {"post_install_notes": ["Needs the original game data.", "Copy it into the drawer."]}, None)
-expect("notes: not a list", {"post_install_notes": "one line"}, "must be a list of strings")
-expect("notes: nine lines", {"post_install_notes": ["x"] * 9}, "has 9 lines")
-expect("notes: line too long", {"post_install_notes": ["a" * 160]}, "line 1 is 160 characters")
+expect("notes: not a list", {"post_install_notes": "one line"}, "not a list of strings")
+expect("notes: nine lines", {"post_install_notes": ["x"] * 9}, "9 lines; maximum is 8")
+expect("notes: line too long", {"post_install_notes": ["a" * 160]}, "post_install_notes[0]: 160 characters; maximum is 159")
 expect("notes: line of the limit", {"post_install_notes": ["a" * 159]}, None)
-expect("notes: escape sequence", {"post_install_notes": ["\x1b[31mred"]}, "line 1 has a character")
-expect("notes: quote", {"post_install_notes": ['say "hi"']}, "line 1 has a character")
-expect("notes: empty line", {"post_install_notes": ["ok", " "]}, "line 2 is empty")
-expect("notes: non-ASCII", {"post_install_notes": ["Café"]}, "line 1 has a character")
+expect("notes: escape sequence", {"post_install_notes": ["\x1b[31mred"]}, "post_install_notes[0]: has a character")
+expect("notes: quote", {"post_install_notes": ['say "hi"']}, "post_install_notes[0]: has a character")
+expect("notes: empty line", {"post_install_notes": ["ok", " "]}, "post_install_notes[1]: empty")
+expect("notes: non-ASCII", {"post_install_notes": ["Café"]}, "post_install_notes[0]: has a character")
 
 
 def toml(m):
