@@ -1174,6 +1174,7 @@ static int real_main(int argc, char **argv)
     SetAttrs(btn_cancel,   MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_upgrade,  MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(win, MUIA_Window_Open, TRUE, TAG_DONE);
     refill("", NULL, "start");
 
