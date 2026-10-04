@@ -194,9 +194,7 @@ int txn_write_plan(pkg_ctx *c, const char *id, const char *text)
     /* The plan carries one object per installed file, so a fixed 64-token
        buffer overflows on any real package -- ZapHod alone has hundreds. That
        failed safely (nothing outside staging had been touched) but it failed. */
-    t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    if (!t) { free(back); return -1; }
-    ok = js_parse(back, len, t, MAXTOK) > 0;
+    ok = js_parse_alloc(back, len, &t, PKG_JSON_MAXTOK) > 0;
     free(t);
     free(back);
     return ok ? 0 : -1;
@@ -207,16 +205,13 @@ int txn_write_plan(pkg_ctx *c, const char *id, const char *text)
 int inv_from_registry(const char *json, size_t len,
                              inv_ent *inv, int max, int *n)
 {
-    js_tok *t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    int ntok, arr, i;
+    js_tok *t = NULL;
+    int ntok, arr, el;
     *n = 0;
-    if (!t) return -1;
-    ntok = js_parse(json, len, t, MAXTOK);
+    ntok = js_parse_alloc(json, len, &t, PKG_JSON_MAXTOK);
     if (ntok <= 0) { free(t); return -1; }
     arr = js_member(json, t, ntok, 0, "contents");
-    for (i = 0; ; i++) {
-        int el = js_elem(t, ntok, arr, i);
-        if (el < 0 || *n >= max) break;
+    for (el = js_child(t, ntok, arr); el >= 0 && *n < max; el = js_sibling(t, ntok, el)) {
         js_str(json, t, js_member(json, t, ntok, el, "path"), inv[*n].rel, sizeof inv[*n].rel);
         js_str(json, t, js_member(json, t, ntok, el, "sha256"), inv[*n].sha, sizeof inv[*n].sha);
         inv[*n].size = js_long(json, t, js_member(json, t, ntok, el, "size"), -1);

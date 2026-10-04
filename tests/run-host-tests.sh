@@ -40,6 +40,19 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_hint" \
     "$HERE/test_hint.c" "$HERE/../src/pkg/hint.c"
 "$OUT/test_hint"
 
+# The JSON reader past the old 8192-value array: generated catalogues of the
+# size of AROS Archives (~2000) and with headroom (5000), and its failures.
+for f in json entries; do
+    $CC -O1 -Wall -Wextra -std=gnu99 -Dmalloc=t_malloc -c -o "$OUT/big-$f.o" "$SRC/$f.c"
+done
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_bigindex" \
+    "$HERE/test_bigindex.c" "$OUT/big-json.o" "$OUT/big-entries.o" "$SRC/listing.c"
+"$OUT/test_bigindex" --errors
+for n in 170 2000 5000; do
+    python3 "$HERE/fixtures/make-big-index.py" $n "$OUT/big-$n.json"
+    "$OUT/test_bigindex" "$OUT/big-$n.json" $n
+done
+
 # test_zip reads archives made here, shaped like the ones that failed on AROS
 python3 - <<'PY2'
 import zipfile, os

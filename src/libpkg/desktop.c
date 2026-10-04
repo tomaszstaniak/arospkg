@@ -37,9 +37,7 @@ pkg_status pkg_open_folder(pkg_ctx *c, const char *id, char *where, size_t n, pk
     registry_path(c, id, regpath, sizeof regpath);
     if (!(txt = u_read_all(regpath, &len)))
         return pkg_fail(e, PKG_E_NOT_FOUND, "not installed", "", id);
-    t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    if (!t) { free(txt); return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id); }
-    ntok = js_parse(txt, len, t, MAXTOK);
+    ntok = js_parse_alloc(txt, len, &t, PKG_JSON_MAXTOK);
     if (ntok > 0) js_str(txt, t, js_member(txt, t, ntok, 0, "dir"), dir, sizeof dir);
     free(t); free(txt);
     /* Entries before the field existed were installed as <root>/<id>. */

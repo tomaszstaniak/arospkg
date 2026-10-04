@@ -6,10 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* The same ceiling ops.c uses for the index (MAXTOK in internal.h); repeated
- * here rather than included, because internal.h drags the context in and this
- * file is meant to build with nothing but json.c and listing.c beside it. */
-#define ENTRIES_MAXTOK 8192
 
 /* The ABI tags a build can declare and an index can carry. The same list is
  * ABIS in tools/mkindex.py; a tag added in one place and not the other would
@@ -153,19 +149,17 @@ int entries_from_index_on(const char *json, size_t len, const char *term,
                           const char *my_arch, const char *my_abi, int show_all,
                           pkg_entries *out, int *hidden)
 {
-    js_tok *t = (js_tok *)malloc(sizeof(js_tok) * ENTRIES_MAXTOK);
-    int ntok, arr, i, rc = 0;
+    js_tok *t;
+    int ntok, arr, el, rc = 0;
 
     if (hidden) *hidden = 0;
-    if (!t) return -1;
-    ntok = js_parse(json, len, t, ENTRIES_MAXTOK);
-    arr = (ntok > 0) ? js_member(json, t, ntok, 0, "packages") : -1;
-    if (arr < 0) { free(t); return -1; }
+    ntok = js_parse_alloc(json, len, &t, PKG_JSON_MAXTOK);
+    if (ntok < 0) return ntok;
+    arr = js_member(json, t, ntok, 0, "packages");
+    if (arr < 0) { free(t); return JS_EINVAL; }
 
-    for (i = 0; ; i++) {
-        int el = js_elem(t, ntok, arr, i);
+    for (el = js_child(t, ntok, arr); el >= 0; el = js_sibling(t, ntok, el)) {
         pkg_entry e;
-        if (el < 0) break;
         row_from_element(json, t, ntok, el, &e);
         {
             /* A build that recorded no ABI cannot judge the ABI, so it hides
@@ -178,7 +172,7 @@ int entries_from_index_on(const char *json, size_t len, const char *term,
 
         if (!pkg_match(e.id, e.summary, e.category, term)) continue;
         if (!e.ours && !show_all) { if (hidden) (*hidden)++; continue; }
-        if (entries_push(out, &e) != 0) { rc = -1; break; }
+        if (entries_push(out, &e) != 0) { rc = JS_ENOMEM; break; }
     }
     free(t);
     /* Sorted here, not trusted from the file: the index a machine holds is
@@ -208,11 +202,9 @@ int index_select_variant(const char *json, const js_tok *t, int ntok, int arr,
                          const char *id, const char *my_arch, const char *my_abi,
                          int *how, int *n_same)
 {
-    int i, best_any = -1, best_mine = -1, mine = 0;
-    for (i = 0; arr >= 0; i++) {
-        int el = js_elem(t, ntok, arr, i);
+    int el, best_any = -1, best_mine = -1, mine = 0;
+    for (el = js_child(t, ntok, arr); el >= 0; el = js_sibling(t, ntok, el)) {
         char pid[PKG_MAXID], arch[16], abi[8], why[200];
-        if (el < 0) break;
         member_str(json, t, ntok, el, "id", pid, sizeof pid);
         if (strcmp(pid, id)) continue;
         if (best_any < 0 || variant_key_less(json, t, ntok, el, best_any)) best_any = el;
@@ -264,20 +256,18 @@ int notes_from_element(const char *json, const js_tok *t, int ntok, int el,
 int details_from_index(const char *json, size_t len, const char *id,
                        const char *my_arch, const char *my_abi, pkg_details *d)
 {
-    js_tok *t = (js_tok *)malloc(sizeof(js_tok) * ENTRIES_MAXTOK);
-    int ntok, arr, i, chosen;
+    js_tok *t;
+    int ntok, arr, el, chosen;
     size_t used = 0;
     char names[8][40];
 
     memset(d, 0, sizeof *d);
-    if (!t) return -1;
-    ntok = js_parse(json, len, t, ENTRIES_MAXTOK);
-    arr = (ntok > 0) ? js_member(json, t, ntok, 0, "packages") : -1;
-    if (arr < 0) { free(t); return -1; }
-    for (i = 0; ; i++) {
-        int el = js_elem(t, ntok, arr, i);
+    ntok = js_parse_alloc(json, len, &t, PKG_JSON_MAXTOK);
+    if (ntok < 0) return ntok;
+    arr = js_member(json, t, ntok, 0, "packages");
+    if (arr < 0) { free(t); return JS_EINVAL; }
+    for (el = js_child(t, ntok, arr); el >= 0; el = js_sibling(t, ntok, el)) {
         char pid[PKG_MAXID], arch[16], abi[8];
-        if (el < 0) break;
         member_str(json, t, ntok, el, "id", pid, sizeof pid);
         if (strcmp(pid, id)) continue;
         member_str(json, t, ntok, el, "arch", arch, sizeof arch);
@@ -323,12 +313,12 @@ int details_from_index(const char *json, size_t len, const char *id,
 
 int entry_from_registry(const char *json, size_t len, pkg_entry *e)
 {
-    js_tok *t = (js_tok *)malloc(sizeof(js_tok) * ENTRIES_MAXTOK);
+    js_tok *t;
     int ntok;
-    if (!t) return -1;
     memset(e, 0, sizeof *e);
-    ntok = js_parse(json, len, t, ENTRIES_MAXTOK);
-    if (ntok <= 0 || t[0].type != JS_OBJ) { free(t); return -1; }
+    ntok = js_parse_alloc(json, len, &t, PKG_JSON_MAXTOK);
+    if (ntok < 0) return ntok;
+    if (t[0].type != JS_OBJ) { free(t); return JS_EINVAL; }
     member_str(json, t, ntok, 0, "name",    e->id,      sizeof e->id);
     member_str(json, t, ntok, 0, "version", e->version, sizeof e->version);
     member_str(json, t, ntok, 0, "arch",    e->arch,    sizeof e->arch);

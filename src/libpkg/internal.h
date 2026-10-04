@@ -4,8 +4,11 @@
 #include "req.h"
 #include <stddef.h>
 
-#define MAXTOK 8192
 #define MAXINV 2048
+
+/* An index js_parse_alloc or the entries readers refused (a JS_E* code),
+   with the cause the user can act on. */
+pkg_status index_unreadable(pkg_err *e, int code, const char *path);
 
 struct pkg_ctx {
     char root[PKG_MAXPATH];

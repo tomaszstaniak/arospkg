@@ -24,7 +24,7 @@ static void recover_one(pkg_ctx *c, const char *tid)
     char dir[PKG_MAXPATH], planp[PKG_MAXPATH];
     char *plan = NULL;
     js_tok *t = NULL;
-    int ntok, arr, i, ninv = 0;
+    int ntok, arr, el, ninv = 0;
     char op[16] = "", dest[PKG_MAXPATH] = "", regpath[PKG_MAXPATH] = "";
     char regbefore[16] = "", dirbefore[16] = "", staging[PKG_MAXPATH] = "";
     inv_ent *inv = NULL;
@@ -47,9 +47,7 @@ static void recover_one(pkg_ctx *c, const char *tid)
         pkgctx_unresolved(c);
         return;
     }
-    t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    if (!t) { free(plan); pkgctx_unresolved(c); return; }
-    ntok = js_parse(plan, len, t, MAXTOK);
+    ntok = js_parse_alloc(plan, len, &t, PKG_JSON_MAXTOK);
     if (ntok <= 0) {
         printf("  %s: plan is not valid JSON -- stopping\n", tid);
         free(plan); free(t); pkgctx_unresolved(c);
@@ -75,9 +73,7 @@ static void recover_one(pkg_ctx *c, const char *tid)
     inv = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV);
     if (!inv) { free(plan); free(t); pkgctx_unresolved(c); return; }
     arr = js_member(plan, t, ntok, 0, "contents");
-    for (i = 0; ; i++) {
-        int el = js_elem(t, ntok, arr, i);
-        if (el < 0 || ninv >= MAXINV) break;
+    for (el = js_child(t, ntok, arr); el >= 0 && ninv < MAXINV; el = js_sibling(t, ntok, el)) {
         js_str(plan, t, js_member(plan, t, ntok, el, "path"),   inv[ninv].rel, sizeof inv[ninv].rel);
         js_str(plan, t, js_member(plan, t, ntok, el, "sha256"), inv[ninv].sha, sizeof inv[ninv].sha);
         inv[ninv].size = js_long(plan, t, js_member(plan, t, ntok, el, "size"), -1);

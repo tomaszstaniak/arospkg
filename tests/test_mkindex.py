@@ -75,7 +75,7 @@ def toml(m):
     return "\n".join(lines) + "\n"
 
 
-def run(manifests):
+def run(manifests, *extra):
     with tempfile.TemporaryDirectory() as d:
         d = Path(d); (d / "m").mkdir()
         for name, text in manifests.items():
@@ -83,7 +83,7 @@ def run(manifests):
         out = d / "index.json"
         out.write_text("PREVIOUS\n")
         r = subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(d / "m"),
-                            "--out", str(out), "--cache", str(d / "nocache")], capture_output=True, text=True)
+                            "--out", str(out), "--cache", str(d / "nocache"), *extra], capture_output=True, text=True)
         return r.returncode, out.read_text(), r.stdout
 
 
@@ -104,8 +104,12 @@ if code == 0 or text != "PREVIOUS\n":
 
 many = {f"p{i:03}.x86_64.toml": toml({**GOOD, "id": f"p{i:03}"}) for i in range(260)}
 code, text, out = run(many)
-if code == 0 or text != "PREVIOUS\n" or "larger than the 0.3 client can read" not in out:
-    fails.append(f"an index past the client's capacity: exit {code}")
+if code == 0 or text != "PREVIOUS\n" or "larger than clients up to 0.3.2 can read" not in out:
+    fails.append(f"an index past the old clients' capacity: exit {code}")
+# The same index for a file old clients do not fetch: written whole.
+code, text, out = run(many, "--beyond-old-clients")
+if code != 0 or text.count('"id"') != 260:
+    fails.append(f"--beyond-old-clients: exit {code}")
 
 if fails:
     print("\n".join(fails)); print(f"MKINDEX: {len(fails)} failed"); sys.exit(1)

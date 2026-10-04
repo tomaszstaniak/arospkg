@@ -264,10 +264,8 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     idx = u_read_all(index_path, &len);
     if (!idx) return pkg_fail(e, PKG_E_NOT_FOUND, "cannot read the index",
                               "Run pkg update to fetch one.", index_path);
-    t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    if (!t) { free(idx); return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id); }
-    ntok = js_parse(idx, len, t, MAXTOK);
-    if (ntok <= 0) { st = pkg_fail(e, PKG_E_IO, "the index is not valid JSON", index_path, id); goto out; }
+    ntok = js_parse_alloc(idx, len, &t, PKG_JSON_MAXTOK);
+    if (ntok < 0) { st = index_unreadable(e, ntok, index_path); goto out; }
 
     arr = js_member(idx, t, ntok, 0, "packages");
     {
@@ -603,8 +601,8 @@ pkg_status pkg_remove(pkg_ctx *c, const char *id, pkg_stop stop, pkg_err *e)
     /* Only an icon the registry says WE installed is ours to consider. An entry
      * written before icons existed has no "icon" member and reads as none. */
     {
-        js_tok *t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-        int nt = t ? js_parse(regtext, len, t, MAXTOK) : -1;
+        js_tok *t = NULL;
+        int nt = js_parse_alloc(regtext, len, &t, PKG_JSON_MAXTOK);
         if (nt > 0) {
             int ic = js_member(regtext, t, nt, 0, "icon");
             if (ic >= 0) {
@@ -862,8 +860,7 @@ pkg_status pkg_doctor(pkg_ctx *c, char **out, pkg_err *e)
                     "  do        inspect %s by hand; nothing here was cleaned up\n", d);
                 continue;
             }
-            t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-            ntok = t ? js_parse(plan, plen, t, MAXTOK) : -1;
+            ntok = js_parse_alloc(plan, plen, &t, PKG_JSON_MAXTOK);
             if (ntok > 0) {
                 js_str(plan, t, js_member(plan, t, ntok, 0, "op"), op, sizeof op);
                 js_str(plan, t, js_member(plan, t, ntok, 0, "package"), pkgname, sizeof pkgname);
@@ -906,7 +903,10 @@ pkg_status pkg_doctor(pkg_ctx *c, char **out, pkg_err *e)
 
 /* ------------------------------------------------------------ update, search */
 
-#define INDEX_MAX (4L * 1024 * 1024)
+/* The largest index `update` takes. The public one measured 874 bytes per
+   package (2026-10-04), so 5000 packages are about 4.4 MB; this leaves room
+   for three times that, and caps what a broken server can make us store. */
+#define INDEX_MAX (16L * 1024 * 1024)
 
 /* Refuse a package built for a different ABI.
  *
@@ -990,9 +990,15 @@ pkg_status pkg_update(pkg_ctx *c, const char *index_url, pkg_err *e)
         char *txt; size_t len; js_tok *t; int n;
         txt = u_read_all(part, &len);
         if (!txt) return pkg_fail(e, PKG_E_IO, "cannot read the downloaded index", "", part);
-        t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-        n = t ? js_parse(txt, len, t, MAXTOK) : -1;
-        if (n <= 0 || js_member(txt, t, n, 0, "packages") < 0) {
+        n = js_parse_alloc(txt, len, &t, PKG_JSON_MAXTOK);
+        if (n == JS_ELIMIT || n == JS_ENOMEM) {
+            free(txt); u_delete(part);
+            index_unreadable(e, n, part);
+            snprintf(e->detail + strlen(e->detail), sizeof e->detail - strlen(e->detail),
+                     " The one you had is untouched.");
+            return e->status;
+        }
+        if (n < 0 || js_member(txt, t, n, 0, "packages") < 0) {
             free(txt); free(t); u_delete(part);
             /* Reached only for a 2xx response whose CONTENT is wrong. A 404
                never gets here; it failed above as an HTTP error. */
@@ -1008,6 +1014,22 @@ pkg_status pkg_update(pkg_ctx *c, const char *index_url, pkg_err *e)
     return PKG_OK;
 }
 
+pkg_status index_unreadable(pkg_err *e, int code, const char *path)
+{
+    char why[160];
+    if (code == JS_ENOMEM)
+        return pkg_fail(e, PKG_E_NOMEM, "not enough memory to read the index",
+                        "Close other programs and try again.", path);
+    if (code == JS_ELIMIT) {
+        snprintf(why, sizeof why, "It holds more than %d JSON values, more than this "
+                 "apkg reads from one file. A newer apkg may read it.", PKG_JSON_MAXTOK);
+        return pkg_fail(e, PKG_E_VERIFY, "the index is too large", why, path);
+    }
+    return pkg_fail(e, PKG_E_VERIFY, "the index is not readable",
+                    "It is not valid JSON, or has no packages array. Run apkg update "
+                    "to fetch it again.", path);
+}
+
 pkg_status pkg_query(pkg_ctx *c, const char *index_path, const char *term,
                      pkg_entries *out, int *hidden, pkg_err *e)
 {
@@ -1017,11 +1039,9 @@ pkg_status pkg_query(pkg_ctx *c, const char *index_path, const char *term,
     idx = u_read_all(index_path, &len);
     if (!idx) return pkg_fail(e, PKG_E_NOT_FOUND, "no index -- run apkg update first",
                               "", index_path);
-    if (entries_from_index_on(idx, len, term, pkg_arch(), pkg_abi(), pkg_abi_show_all(), out, hidden) != 0) {
+    if ((i = entries_from_index_on(idx, len, term, pkg_arch(), pkg_abi(), pkg_abi_show_all(), out, hidden)) != 0) {
         free(idx); pkg_entries_free(out);
-        return pkg_fail(e, PKG_E_VERIFY, "the index is not readable",
-                        "It has no packages array. Run apkg update to fetch it again.",
-                        index_path);
+        return index_unreadable(e, i, index_path);
     }
     free(idx);
     for (i = 0; i < out->n; i++) {
@@ -1101,10 +1121,9 @@ pkg_status pkg_requirements(pkg_ctx *c, const char *index_path, const char *id,
     out[0] = 0;
     idx = u_read_all(index_path, &len);
     if (!idx) return pkg_fail(e, PKG_E_NOT_FOUND, "no index -- run apkg update first", "", index_path);
-    t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    if (!t) { free(idx); return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", ""); }
-    ntok = js_parse(idx, len, t, MAXTOK);
-    arr = (ntok > 0) ? js_member(idx, t, ntok, 0, "packages") : -1;
+    ntok = js_parse_alloc(idx, len, &t, PKG_JSON_MAXTOK);
+    if (ntok < 0) { free(idx); return index_unreadable(e, ntok, index_path); }
+    arr = js_member(idx, t, ntok, 0, "packages");
     {
         int how;
         found = index_select_variant(idx, t, ntok, arr, id, pkg_arch(), pkg_abi(), &how, NULL);
@@ -1133,15 +1152,13 @@ pkg_status pkg_details_get(pkg_ctx *c, const char *index_path, const char *id,
     else {
         rc = details_from_index(idx, len, id, pkg_arch(), pkg_abi(), d);
         free(idx);
-        if (rc < 0)
-            return pkg_fail(e, PKG_E_VERIFY, "the index is not readable",
-                            "It has no packages array. Run apkg update to fetch it again.", index_path);
+        if (rc < 0) return index_unreadable(e, rc, index_path);
     }
     registry_path(c, id, p, sizeof p);
     if ((txt = u_read_all(p, &len)) != NULL) {
         pkg_entry r;
         if (entry_from_registry(txt, len, &r) == 0) {
-            js_tok *t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
+            js_tok *t = NULL;
             char dir[PKG_MAXID] = "", rabi[16] = "";
             if (!d->in_index) {
                 /* Known to the registry alone: describe what is installed. */
@@ -1152,8 +1169,8 @@ pkg_status pkg_details_get(pkg_ctx *c, const char *index_path, const char *id,
             snprintf(d->e.installed_version, sizeof d->e.installed_version, "%s", r.installed_version);
             d->e.installed_revision = r.installed_revision;
             snprintf(d->installed_arch, sizeof d->installed_arch, "%s", r.arch);
-            if (t) {
-                int ntok = js_parse(txt, len, t, MAXTOK);
+            {
+                int ntok = js_parse_alloc(txt, len, &t, PKG_JSON_MAXTOK);
                 if (ntok > 0) {
                     js_str(txt, t, js_member(txt, t, ntok, 0, "dir"), dir, sizeof dir);
                     js_str(txt, t, js_member(txt, t, ntok, 0, "installed"), d->installed_when, sizeof d->installed_when);

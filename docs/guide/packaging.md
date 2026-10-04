@@ -351,7 +351,13 @@ draft/index.json is unchanged.
 ```
 
 The `client capacity` line shows how much of what the 0.3 client can read
-the index uses. If the archive is not in the cache, `mkindex.py` prints
+the index uses. The generator after 0.3.2 prints `index size` instead, with
+two shares: of what clients up to 0.3.2 read (8192 JSON values, 4 MiB, a
+fixed array in those clients) and of what later clients read (they allocate
+what the file needs, up to 1048576 values and 16 MiB as a guard against a
+broken file). It refuses to write past the older limit unless told
+`--beyond-old-clients`, because those clients fetch the same file. Nothing
+is shortened to fit: notes and descriptions are published whole or refused. If the archive is not in the cache, `mkindex.py` prints
 `warning: … subdir and icon unchecked` and goes on without that check.
 
 What it checks, and what it leaves to a person, is in

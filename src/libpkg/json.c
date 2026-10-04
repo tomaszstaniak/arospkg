@@ -3,48 +3,53 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* With t NULL nothing is stored: js_parse_alloc's counting pass. */
 static int alloc_tok(js_tok *t, int max, int *n)
 {
     if (*n >= max) return -1;
-    t[*n].type = JS_UNDEF; t[*n].start = t[*n].end = -1;
-    t[*n].size = 0; t[*n].parent = -1;
+    if (t) {
+        t[*n].type = JS_UNDEF; t[*n].start = t[*n].end = -1;
+        t[*n].size = 0; t[*n].parent = -1; t[*n].next = *n + 1;
+    }
     return (*n)++;
 }
 
 int js_parse(const char *js, size_t len, js_tok *t, int max)
 {
-    int n = 0, super = -1;
+    int n = 0, super = -1, depth = 0;
     size_t i;
+    /* Offsets are ints; a longer text cannot be described. */
+    if (len > 0x7fffffffu) return -1;
     for (i = 0; i < len; i++) {
         char c = js[i];
         int id;
         switch (c) {
         case '{': case '[':
             id = alloc_tok(t, max, &n); if (id < 0) return -1;
+            depth++;
+            if (!t) break;
             if (super != -1) t[super].size++;
             t[id].type = (c == '{') ? JS_OBJ : JS_ARR;
             t[id].start = (int)i; t[id].parent = super;
             super = id;
             break;
-        case '}': case ']': {
-            js_type want = (c == '}') ? JS_OBJ : JS_ARR;
-            int k;
-            for (k = n - 1; k >= 0; k--)
-                if (t[k].start != -1 && t[k].end == -1) {
-                    if (t[k].type != want) return -1;
-                    t[k].end = (int)i + 1;
-                    super = t[k].parent;
-                    break;
-                }
-            if (k < 0) return -1;
+        case '}': case ']':
+            /* The innermost open container is always `super`. */
+            if (depth == 0) return -1;
+            depth--;
+            if (!t) break;
+            if (t[super].type != ((c == '}') ? JS_OBJ : JS_ARR)) return -1;
+            t[super].end = (int)i + 1;
+            t[super].next = n;
+            super = t[super].parent;
             break;
-        }
         case '"': {
             size_t start = ++i;
             for (; i < len && js[i] != '"'; i++)
                 if (js[i] == '\\' && i + 1 < len) i++;
             if (i >= len) return -1;
             id = alloc_tok(t, max, &n); if (id < 0) return -1;
+            if (!t) break;
             t[id].type = JS_STR; t[id].start = (int)start; t[id].end = (int)i;
             t[id].parent = super;
             if (super != -1) t[super].size++;
@@ -60,23 +65,56 @@ int js_parse(const char *js, size_t len, js_tok *t, int max)
                     d == '\t' || d == '\r' || d == '\n') break;
             }
             id = alloc_tok(t, max, &n); if (id < 0) return -1;
-            t[id].type = JS_PRIM; t[id].start = (int)start; t[id].end = (int)i;
-            t[id].parent = super;
-            if (super != -1) t[super].size++;
+            if (t) {
+                t[id].type = JS_PRIM; t[id].start = (int)start; t[id].end = (int)i;
+                t[id].parent = super;
+                if (super != -1) t[super].size++;
+            }
             i--;
             break;
         }
         }
     }
+    /* An unclosed container is not a document. */
+    if (depth != 0) return -1;
     return n;
+}
+
+int js_parse_alloc(const char *js, size_t len, js_tok **out, int limit)
+{
+    int n;
+    *out = NULL;
+    n = js_parse(js, len, NULL, limit);
+    if (n < 0) {
+        /* Tell "too many" from "malformed": count again without a ceiling. */
+        return js_parse(js, len, NULL, 0x7fffffff) < 0 ? JS_EINVAL : JS_ELIMIT;
+    }
+    if (n == 0) return JS_EINVAL;
+    if ((size_t)n > ((size_t)-1) / sizeof(js_tok)) return JS_ENOMEM;
+    *out = (js_tok *)malloc(sizeof(js_tok) * (size_t)n);
+    if (!*out) return JS_ENOMEM;
+    if (js_parse(js, len, *out, n) != n) { free(*out); *out = NULL; return JS_EINVAL; }
+    return n;
+}
+
+int js_child(const js_tok *t, int ntok, int c)
+{
+    if (c < 0 || c >= ntok || (t[c].type != JS_OBJ && t[c].type != JS_ARR)) return -1;
+    return (c + 1 < ntok && t[c + 1].parent == c) ? c + 1 : -1;
+}
+
+int js_sibling(const js_tok *t, int ntok, int i)
+{
+    int j;
+    if (i < 0 || i >= ntok) return -1;
+    j = t[i].next;
+    return (j < ntok && t[j].parent == t[i].parent) ? j : -1;
 }
 
 /* Skip over token i and everything nested inside it. */
 static int skip(const js_tok *t, int ntok, int i)
 {
-    int end = t[i].end, j = i + 1;
-    while (j < ntok && t[j].start < end) j++;
-    return j;
+    return t[i].next < ntok ? t[i].next : ntok;
 }
 
 int js_member(const char *js, const js_tok *t, int ntok, int obj, const char *name)

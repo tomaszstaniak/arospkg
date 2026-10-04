@@ -52,9 +52,7 @@ int swap_read_registry(const char *path, rev_info *r, inv_ent *inv, int *ninv, c
     size_t len; char *js = u_read_all(path, &len);
     js_tok *t; int n, ic, pv;
     if (!js) return -1;
-    t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    if (!t) { free(js); return -1; }
-    n = js_parse(js, len, t, MAXTOK);
+    n = js_parse_alloc(js, len, &t, PKG_JSON_MAXTOK);
     if (n <= 0) { free(t); free(js); return -1; }
     memset(r, 0, sizeof *r);
     member(js, t, n, 0, "version", r->version, sizeof r->version);
@@ -92,10 +90,9 @@ pkg_status swap_read_index(const char *index_path, const char *id,
     size_t len; char *js = u_read_all(index_path, &len);
     js_tok *t; int n, arr, found = -1; char why[200];
     if (!js) return pkg_fail(e, PKG_E_NOT_FOUND, "cannot read the index", "Run apkg update to fetch one.", index_path);
-    t = (js_tok *)malloc(sizeof(js_tok) * MAXTOK);
-    if (!t) { free(js); return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id); }
-    n = js_parse(js, len, t, MAXTOK);
-    arr = n > 0 ? js_member(js, t, n, 0, "packages") : -1;
+    n = js_parse_alloc(js, len, &t, PKG_JSON_MAXTOK);
+    if (n < 0) { free(js); return index_unreadable(e, n, index_path); }
+    arr = js_member(js, t, n, 0, "packages");
     {
         int how, same;
         found = index_select_variant(js, t, n, arr, id, want_arch, want_abi, &how, &same);

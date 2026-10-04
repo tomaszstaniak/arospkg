@@ -25,7 +25,8 @@ int notes_from_element(const char *json, const js_tok *t, int ntok, int el,
  * matches everything). Rows for another ABI are kept only with `show_all`;
  * otherwise they are counted in *hidden (if non-NULL) and dropped. Rows come
  * out sorted by id, case-insensitively, whatever order the file had. Returns
- * 0, or -1 if the text is not a readable index. */
+ * 0, or a JS_E* code (json.h): not a readable index, too large, or out of
+ * memory. */
 int entries_from_index(const char *json, size_t len, const char *term,
                        const char *my_abi, int show_all,
                        pkg_entries *out, int *hidden);

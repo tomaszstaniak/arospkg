@@ -80,10 +80,16 @@ REQ_MAX = {"id": 63, "type": 23}
 # act on something other than what the manifest says (measured 2026-09-29:
 # a '"' in version made every later upgrade compare unequal).
 PLAIN = re.compile(r'^[\x20-\x21\x23-\x5b\x5d-\x7e]*$')
-# Values the client's JSON reader can hold: every key and value is one token
-# (src/libpkg/internal.h MAXTOK), and `apkg update` takes at most 4 MiB.
-CLIENT_MAXTOK = 8192
-CLIENT_MAXBYTES = 4 * 1024 * 1024
+# What a client can read; every key and value is one JSON value.
+# Clients up to 0.3.2 hold 8192 values in a fixed array and take 4 MiB, and
+# they read the same published file, so an index past that breaks them with
+# "the index is not valid JSON". That is their limit, not the format's.
+OLD_CLIENT_MAXTOK = 8192
+OLD_CLIENT_MAXBYTES = 4 * 1024 * 1024
+# Later clients allocate what the file needs, up to these guards against a
+# broken or hostile file (src/libpkg/json.h PKG_JSON_MAXTOK, ops.c INDEX_MAX).
+CLIENT_MAXTOK = 1 << 20
+CLIENT_MAXBYTES = 16 * 1024 * 1024
 REVISION_MAX = 2**31 - 1
 # post_install_notes: what the client holds (src/libpkg/pkg.h PKG_NOTES_*).
 # Refused, not shortened, past these: a cut sentence can say the opposite.
@@ -298,6 +304,8 @@ def main():
     ap.add_argument("--manifests", default="../arospkg-index/manifests")
     ap.add_argument("--out", default="../arospkg-index/index.json")
     ap.add_argument("--verbose", action="store_true", help="list every rejection")
+    ap.add_argument("--beyond-old-clients", action="store_true",
+                    help="write an index larger than clients up to 0.3.2 read")
     ap.add_argument("--cache", default=".cache/archives",
                     help="downloaded archives, to check subdir and icon against")
     args = ap.parse_args()
@@ -407,14 +415,20 @@ def main():
             print()
             for name, probs in rejected:
                 print(f"  {name}: {'; '.join(probs)}")
-    print(f"client capacity        {ntok} of {CLIENT_MAXTOK} JSON values, "
-          f"{nbytes} of {CLIENT_MAXBYTES} bytes")
+    print(f"index size             {ntok} JSON values, {nbytes} bytes")
+    print(f"  clients up to 0.3.2  {100 * ntok // OLD_CLIENT_MAXTOK}% of {OLD_CLIENT_MAXTOK} values, "
+          f"{100 * nbytes // OLD_CLIENT_MAXBYTES}% of {OLD_CLIENT_MAXBYTES} bytes")
+    print(f"  later clients        {100 * ntok // CLIENT_MAXTOK}% of {CLIENT_MAXTOK} values, "
+          f"{100 * nbytes // CLIENT_MAXBYTES}% of {CLIENT_MAXBYTES} bytes")
     stop = []
     if failed:
         stop.append(f"{len(failed)} approved manifest(s) not published: {', '.join(sorted(failed))}")
     if ntok > CLIENT_MAXTOK or nbytes > CLIENT_MAXBYTES:
-        stop.append("the index is larger than the 0.3 client can read; it would report "
-                    "'the index is not valid JSON'")
+        stop.append("the index is larger than any client reads")
+    elif (ntok > OLD_CLIENT_MAXTOK or nbytes > OLD_CLIENT_MAXBYTES) and not args.beyond_old_clients:
+        stop.append("the index is larger than clients up to 0.3.2 can read; they would report "
+                    "'the index is not valid JSON'. Pass --beyond-old-clients to write it "
+                    "anyway, for a file those clients do not fetch")
     if stop:
         for why in stop:
             print(f"\nNOT WRITTEN: {why}")

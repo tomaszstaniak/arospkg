@@ -247,13 +247,16 @@ it matches `mkindex.py`'s output exactly:
 - Strings are copied as they stand. JSON escapes are not decoded, so a
   non-ASCII character reaches the screen as `é`. **Use plain ASCII in
   every string.**
-- The whole file may hold at most 8192 JSON values. Each key counts, and so
-  does each value, array and object. The count depends on the fields, not
-  only on the number of packages: the entry above uses 61, and the 27
-  published packages use 1373. Past the limit the client reports *the index
-  is not valid JSON*. `apkg update` also refuses an index larger than 4 MiB.
-  `mkindex.py` prints both figures and refuses to write an index that
-  exceeds either.
+- Size. Each key counts as one JSON value, and so does each value, array
+  and object; the published index averaged about 50 values and 874 bytes per
+  package on 2026-10-04. Clients up to 0.3.2 hold at most 8192 values in a
+  fixed array and take at most 4 MiB; past that they report *the index is
+  not valid JSON*. Later clients allocate what the file needs, and refuse
+  only past 1048576 values or 16 MiB, a guard against a broken file rather
+  than a size the catalogue is meant to reach (5000 packages are about 4 MB
+  and 241000 values). `mkindex.py` prints the share of both limits, and
+  refuses to write past the older one unless given `--beyond-old-clients`,
+  since those clients fetch the same file.
 
 ## The local registry
 
@@ -335,7 +338,7 @@ Other things under the root, all the client's:
 | `requires_system` is complete and correct | none | probes what is listed | derives it from the binary |
 | `depends` exist in the index | ✔ | not read | |
 | strings readable by the client, operational lengths | ✔ | reads them as they stand | |
-| the index fits the client (8192 values, 4 MiB) | ✔ | reports invalid JSON past it | |
+| the index fits clients up to 0.3.2 (8192 values, 4 MiB) | ✔ unless `--beyond-old-clients` | 0.3.2 reports invalid JSON past it; later clients read up to 1048576 values, 16 MiB | |
 | `version`, `revision`, `summary`, `license`, `[source]` | `revision` range | display only | all of it |
 | `installs_on`, `runs_on`, `does_not_run_on` | none | none | only claims that were tested |
 | the program starts and keeps user data | none | none | ✔ |
