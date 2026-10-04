@@ -69,8 +69,21 @@ apkg install soliton
 ```
 
 `show` displays the description, compatibility and requirements before
-you download anything. After installation, open `SYS:Packages/soliton`
-in Wanderer to launch the game.
+you download anything. After installation apkg prints where the program
+is and the command that opens its drawer in Wanderer:
+
+```text
+apkg open soliton
+```
+
+Four commands with similar names do different things:
+
+```text
+apkg update          refreshes the catalogue
+apkg upgrade <id>    updates an installed package
+apkg self-update     updates apkg itself
+apkg open <id>       opens the drawer of an installed package
+```
 
 | Command | What it does |
 |---|---|
@@ -81,6 +94,12 @@ in Wanderer to launch the game.
 | `apkg remove soliton` | Remove the package, keeping locally changed files and files it did not install. |
 | `apkg upgrade soliton` | Install a newer revision of the same upstream version, when available. |
 | `apkg rollback soliton` | Return to the previous revision, if its archive is still cached. |
+| `apkg open soliton` | Open the package's drawer in Wanderer. |
+| `apkg self-update` | Replace this apkg with the latest stable release; `--check` only reports. |
+
+`self-update` first appears after 0.3.2, so the first release that has it is
+installed by hand as above; later ones update with `apkg self-update`.
+PkgManager is not updated by it: take it from the release archive.
 
 Both interfaces use `SYS:Packages` by default. For another location, pass
 the **same root to both**, every time:

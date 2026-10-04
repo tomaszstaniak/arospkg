@@ -8,6 +8,7 @@
 #include "../libpkg/verify.h"
 #include "../libpkg/entries.h"
 #include "present.h"
+#include "hint.h"
 #include "selfupdate.h"
 #include "../about.h"
 #include <stdio.h>
@@ -38,6 +39,8 @@ static void verdict(const char *w)
 
 static void print_notes(const pkg_details *d, int after_install);
 
+static const char *hint_root;
+
 static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_details *d)
 {
     char version[80], text[1200], why[240];
@@ -51,7 +54,7 @@ static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_d
         snprintf(text, sizeof text, "installed (%s)", version);
         pr_field("State", text, PR_GREEN);
         pr_field("Location", d->installed_dir, -1);
-        snprintf(text, sizeof text, "apkg open %s", d->e.id);
+        open_hint(text, sizeof text, hint_root, d->e.id);
         pr_field("Open folder", text, -1);
         if (*d->installed_when) pr_field("Installed on", d->installed_when, -1);
         if (*d->installed_arch) {
@@ -427,7 +430,7 @@ static void print_notes(const pkg_details *d, int after_install)
    how to get to it, from the registry entry just written. */
 static void print_installed(pkg_ctx *c, const char *index, const char *id, const char *verb)
 {
-    pkg_details d; pkg_err e2; char v[80], line[PKG_MAXID + 16];
+    pkg_details d; pkg_err e2; char v[80], line[2 * PKG_MAXPATH + PKG_MAXID + 32];
     memset(&e2, 0, sizeof e2);
     putchar('\n');
     if (pkg_details_get(c, index, id, &d, &e2) != PKG_OK || !d.e.installed) {
@@ -437,7 +440,7 @@ static void print_installed(pkg_ctx *c, const char *index, const char *id, const
     rev_label(v, sizeof v, d.e.installed_version, d.e.installed_revision);
     pr_word(PR_GREEN, verb); printf(" %s %s\n", id, v);
     pr_field("Location", d.installed_dir, -1);
-    snprintf(line, sizeof line, "apkg open %s", id);
+    open_hint(line, sizeof line, hint_root, id);
     pr_field("Open folder", line, -1);
     print_notes(&d, 1);
 }
@@ -480,7 +483,7 @@ static int real_main(int argc, char **argv)
     memset(&e, 0, sizeof e);
 
     for (i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "--root") && i + 1 < argc)        root = argv[++i];
+        if (!strcmp(argv[i], "--root") && i + 1 < argc)        hint_root = root = argv[++i];
         else if (!strcmp(argv[i], "--index") && i + 1 < argc)  index = argv[++i];
         else if (!strcmp(argv[i], "--index-url") && i + 1 < argc) index_url = argv[++i];
         else if (!strcmp(argv[i], "--interrupt-at") && i + 1 < argc)

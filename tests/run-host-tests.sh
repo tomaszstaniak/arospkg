@@ -36,6 +36,10 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_zip" \
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_rexxcmd" \
     "$HERE/test_rexxcmd.c" "$HERE/../src/pkgmanager/rexxcmd.c"
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_hint" \
+    "$HERE/test_hint.c" "$HERE/../src/pkg/hint.c"
+"$OUT/test_hint"
+
 # test_zip reads archives made here, shaped like the ones that failed on AROS
 python3 - <<'PY2'
 import zipfile, os

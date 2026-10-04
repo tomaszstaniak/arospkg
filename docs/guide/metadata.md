@@ -152,7 +152,12 @@ and no terminal sequence can be in them. The package's author can write
 them for their own package, or the index maintainer for an existing upload,
 without repacking the archive. They do not replace structured fields: a
 library the program needs belongs in `requires_system`, where the client
-checks it.
+checks it. Do not repeat where the package is installed or how to open it:
+the client prints both after every install, with the right path for the
+user's package root.
+
+These limits are what the current client can read safely, not the intended
+shape of the format; Unicode and longer text need a client change first.
 
 A client that does not know the key skips it. The registry's copy is a
 record of what the user was told at installation, read when the catalogue no
