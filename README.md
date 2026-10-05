@@ -125,7 +125,9 @@ python3 apkg-pack.pyz build build/MyApp --output myapp-1.0.x86_64-aros-v11.zip
 python3 apkg-pack.pyz submit <download-url> --pr
 ```
 
-It runs with Python 3.11 or later on macOS, Linux and Windows. Your sources
+[Download apkg-pack.pyz](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.1.0/apkg-pack.pyz)
+and run it with Python 3.11 or later on macOS, Linux or Windows; AROS
+support is experimental. Your sources
 can stay private, and packing needs no GitHub account or network. It packs,
 it does not compile, and its checks do not test the program on AROS. Read
 the [authoring guide](docs/guide/authoring.md).

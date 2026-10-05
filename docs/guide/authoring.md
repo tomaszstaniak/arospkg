@@ -17,8 +17,9 @@ URL where you uploaded the ZIP.
 You need Python 3.11 or later on macOS, Linux or Windows. `init`, `check`
 and `build` need nothing else.
 
-Download `apkg-pack.pyz` from the
-[latest arospkg release](https://github.com/tomaszstaniak/arospkg/releases/latest)
+Download [`apkg-pack.pyz`](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.1.0/apkg-pack.pyz)
+(0.1.0, [SHA256SUMS](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.1.0/SHA256SUMS),
+[release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/apkg-pack-v0.1.0))
 and run it with Python:
 
 ```text
@@ -29,12 +30,21 @@ On Windows, run `py apkg-pack.pyz`. The examples below write `apkg-pack`
 for whichever form you use. To build the file from an arospkg checkout
 instead: `python3 tools/make-apkg-pack.py --output apkg-pack.pyz`.
 
-On AROS itself, `--version`, `check` and `build` ran once on AROS One
-(ABIv11) with the aros-cpython 0.1.0 interpreter, with two limits: that
-Python starts only while a TCP/IP stack is running, and paths must be
-written POSIX style (`/RAM/demo.zip`, not `RAM:demo.zip`). The same input
-packed there gives the same files but a different ZIP checksum than on a
-host, because the compressor differs. Other AROS systems are not tested.
+AROS support is experimental. With the aros-cpython 0.1.0 interpreter on
+AROS One (ABIv11), `check` and `build` work. That Python opens
+bsdsocket.library when it starts, so a TCP/IP stack must be running even
+though packing uses no network. Write paths POSIX style:
+
+```text
+python apkg-pack.pyz build Demo --output /RAM/demo.zip
+python apkg-pack.pyz check /RAM/demo.zip
+```
+
+`RAM:demo.zip` is not understood. Other AROS systems are not tested.
+
+A ZIP built from the same files on another computer has the same contents
+but may have a different checksum. That is expected: publish the one ZIP
+you built, and the catalogue records the checksum of that file.
 
 Optional: `git` and the GitHub CLI `gh`, signed in with `gh auth login`,
 for `submit --pr`; `lha` (lhasa) to check `.lha` archives.
@@ -126,7 +136,8 @@ its size and SHA-256, and opens a pull request in
 [arospkg-index](https://github.com/tomaszstaniak/arospkg-index) with the
 entry. It uses your existing `gh` login and goes through your fork if you
 cannot push. Submitting the same release again opens no second pull
-request. You never type the size or checksum.
+request. You never type the size or checksum. `submit --pr` is tested on
+macOS and Linux; on Windows it is not tested yet.
 
 Without GitHub, preview the entry in a local copy of the catalogue and send
 it to the maintainers another way, such as an issue or an e-mail:

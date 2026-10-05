@@ -4,6 +4,10 @@ Python 3.11 or later, without an arospkg checkout.
 
     tools/make-apkg-pack.py [--output dist/apkg-pack.pyz]
 
+Its version is the nearest apkg-pack-vX.Y.Z tag (git describe). Release it
+on such a tag, never as the repository's latest release: apkg self-update
+downloads from releases/latest.
+
 The archive holds the files this checkout runs, unchanged: apkg-pack (as
 apkg_pack.py), mkindex.py and catalogue.py, whose rules the catalogue CI
 uses too, publish_github.py for submit --pr, and the licence. Nothing is
@@ -36,11 +40,13 @@ STAMP = (1980, 1, 1, 0, 0, 0)
 
 def version():
     try:
-        v = subprocess.run(["git", "-C", str(ROOT), "describe", "--tags", "--always", "--dirty"],
+        # apkg-pack is released on its own tags, apart from the client's vX.Y.Z.
+        v = subprocess.run(["git", "-C", str(ROOT), "describe", "--tags", "--match", "apkg-pack-v*",
+                            "--always", "--dirty"],
                            capture_output=True, text=True, check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         v = "unknown"
-    return v.removeprefix("v")
+    return v.removeprefix("apkg-pack-v")
 
 
 def main():
