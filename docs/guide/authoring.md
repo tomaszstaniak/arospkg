@@ -156,6 +156,21 @@ build. [Folio's release script](https://github.com/tomaszstaniak/aros-foliopdf/b
 is a working example. It keeps one description per target in
 `packaging/catalogue/` and stops if its version does not match the release.
 
+## Optional: a skill for AI coding assistants
+
+If you use an AI coding assistant that reads agent skills (Claude Code and
+others supported by [skills.sh](https://skills.sh)), the
+`aros-package-author` skill walks it through the same steps. It runs
+apkg-pack, asks only for what is missing, never guesses the ABI or
+dependencies, does not read or send your sources, and uploads or submits
+nothing unless you ask. Install it in your project with Node.js:
+
+```text
+npx skills add tomaszstaniak/arospkg --skill aros-package-author
+```
+
+Nothing above depends on it.
+
 ## Notes for maintainers
 
 - Archives without `.arospkg/manifest.toml`, including those already on
