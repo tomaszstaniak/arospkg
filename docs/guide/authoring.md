@@ -29,6 +29,13 @@ On Windows, run `py apkg-pack.pyz`. The examples below write `apkg-pack`
 for whichever form you use. To build the file from an arospkg checkout
 instead: `python3 tools/make-apkg-pack.py --output apkg-pack.pyz`.
 
+On AROS itself, `--version`, `check` and `build` ran once on AROS One
+(ABIv11) with the aros-cpython 0.1.0 interpreter, with two limits: that
+Python starts only while a TCP/IP stack is running, and paths must be
+written POSIX style (`/RAM/demo.zip`, not `RAM:demo.zip`). The same input
+packed there gives the same files but a different ZIP checksum than on a
+host, because the compressor differs. Other AROS systems are not tested.
+
 Optional: `git` and the GitHub CLI `gh`, signed in with `gh auth login`,
 for `submit --pr`; `lha` (lhasa) to check `.lha` archives.
 
