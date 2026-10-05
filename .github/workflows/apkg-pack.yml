@@ -25,7 +25,9 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python tests/test_apkg_pack_standalone.py
       - run: python tests/test_apkg_pack.py
+      # The stand-in gh is a POSIX script; submit --pr is not tested on Windows.
       - run: python tests/test_publish_github.py
+        if: runner.os != 'Windows'
       - run: python tools/make-apkg-pack.py --output dist/apkg-pack.pyz
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'

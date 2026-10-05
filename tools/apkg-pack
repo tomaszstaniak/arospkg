@@ -253,7 +253,8 @@ def cmd_init(a):
     if problems:
         report(problems, out.name)
         fail("not written")
-    out.write_text(write_toml(m), encoding="utf-8")
+    # LF on every host: the file goes into the archive byte for byte.
+    out.write_text(write_toml(m), encoding="utf-8", newline="\n")
     print(f"written {out}")
     print("Next: apkg-pack check " + a.drawer)
 
@@ -326,7 +327,8 @@ def cmd_build(a):
     # Same inputs, same bytes: fixed order, time, permissions and compression.
     epoch = int(a.epoch if a.epoch is not None else os.environ.get("SOURCE_DATE_EPOCH", 315532800))
     stamp = tuple(__import__("time").gmtime(max(epoch, 315532800))[:6])
-    manifest_text = mp.read_text(encoding="utf-8")
+    # The author's file as it is: read_text would turn CRLF into LF on Windows.
+    manifest_text = mp.read_bytes().decode("utf-8")
     tmp = out.with_name(out.name + ".part")
     with zipfile.ZipFile(tmp, "w") as z:
         def add(name, data=None, src=None):
@@ -432,7 +434,7 @@ def cmd_submit(a):
     target, m, effective, ov = index_manifest(a.url, data, index_dir)
     name = target.name
     new = write_toml(m, GENERATED.format(name=name))
-    old = target.read_text(encoding="utf-8") if target.exists() else None
+    old = target.read_bytes().decode("utf-8") if target.exists() else None
     if old == new:
         print(f"{name}: already up to date; nothing to submit")
         return
@@ -454,7 +456,7 @@ def cmd_submit(a):
     if a.dry_run:
         print("\n(dry run: nothing written)")
         return
-    target.write_text(new, encoding="utf-8")
+    target.write_text(new, encoding="utf-8", newline="\n")
     print(f"\nwritten {target}")
     if a.pr:
         publish_github.open_pr(work, a.repo, target, m)
