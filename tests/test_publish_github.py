@@ -49,7 +49,10 @@ def setup(d, fork_exists=False, squatter=False):
 
 def submit(fake, data, d):
     z = d / "demo.zip"; z.write_bytes(data)
-    env = {**os.environ, "FAKEGH": str(fake), "PATH": f"{HERE / 'tests/fakegh'}:{os.environ['PATH']}"}
+    # The commit carries the user's git identity; a CI runner has none.
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t", **os.environ,
+           "FAKEGH": str(fake), "PATH": f"{HERE / 'tests/fakegh'}:{os.environ['PATH']}"}
     r = subprocess.run([sys.executable, str(HERE / "tools/apkg-pack"), "submit",
                         "https://example.invalid/demo.zip", "--pr", "--repo", UP, "--use-local-copy", str(z)],
                        capture_output=True, text=True, env=env)

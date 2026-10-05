@@ -112,6 +112,26 @@ Check that the system has a working network connection and that
 required; do not disable them.
 If `show` reports a CPU or ABI mismatch, choose a build for your system.
 
+## For application authors
+
+You build your program as usual. `apkg-pack` describes the built drawer
+once, checks it and packs it into a ZIP that apkg installs. Upload the ZIP
+where you normally publish, then submit its URL to the catalogue:
+
+```text
+python3 apkg-pack.pyz init build/MyApp
+python3 apkg-pack.pyz check build/MyApp
+python3 apkg-pack.pyz build build/MyApp --output myapp-1.0.x86_64-aros-v11.zip
+python3 apkg-pack.pyz submit <download-url> --pr
+```
+
+[Download apkg-pack.pyz](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.1.0/apkg-pack.pyz)
+and run it with Python 3.11 or later on macOS, Linux or Windows; AROS
+support is experimental. Your sources
+can stay private, and packing needs no GitHub account or network. It packs,
+it does not compile, and its checks do not test the program on AROS. Read
+the [authoring guide](docs/guide/authoring.md).
+
 ## What it looks like
 
 ![apkg search and apkg show in an AROS Shell](docs/images/apkg-search-show.png)

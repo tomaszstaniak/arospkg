@@ -13,8 +13,14 @@ status are filled in by `submit`. In the archive it is .arospkg/manifest.toml.
 The rules are mkindex.py's, imported, not copied: a package this tool accepts
 is one the catalogue generator accepts.
 
-This runs on the host (macOS, Linux, a CI runner). It does not run the
-program and says nothing about whether it works on any AROS.
+This runs on the author's computer (macOS, Linux, Windows, a CI runner)
+and needs only Python 3.11 or later. init, check and build work offline;
+only submit uses the network, and only submit --pr uses git and gh. It does
+not run the program and says nothing about whether it works on any AROS.
+
+The same file is the command in an arospkg checkout and, with mkindex.py,
+catalogue.py and publish_github.py, the standalone apkg-pack.pyz that
+tools/make-apkg-pack.py builds.
 """
 import argparse
 import difflib
@@ -32,6 +38,14 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mkindex  # noqa: E402
+
+try:                                    # written into apkg-pack.pyz when it is built
+    from _apkg_pack_build import VERSION
+except ImportError:
+    VERSION = "from an arospkg checkout"
+# An arospkg checkout normally sits beside an arospkg-index checkout; the
+# standalone tool has no such neighbour and is told where the index is.
+SIBLING_INDEX = HERE.parent.parent / "arospkg-index"
 
 DOWNLOAD_MAX = 64 * 1024 * 1024          # the client's own download limit
 FILE_MAX, TOTAL_MAX = 64 * 1024 * 1024, 256 * 1024 * 1024
@@ -239,7 +253,8 @@ def cmd_init(a):
     if problems:
         report(problems, out.name)
         fail("not written")
-    out.write_text(write_toml(m), encoding="utf-8")
+    # LF on every host: the file goes into the archive byte for byte.
+    out.write_text(write_toml(m), encoding="utf-8", newline="\n")
     print(f"written {out}")
     print("Next: apkg-pack check " + a.drawer)
 
@@ -312,7 +327,8 @@ def cmd_build(a):
     # Same inputs, same bytes: fixed order, time, permissions and compression.
     epoch = int(a.epoch if a.epoch is not None else os.environ.get("SOURCE_DATE_EPOCH", 315532800))
     stamp = tuple(__import__("time").gmtime(max(epoch, 315532800))[:6])
-    manifest_text = mp.read_text(encoding="utf-8")
+    # The author's file as it is: read_text would turn CRLF into LF on Windows.
+    manifest_text = mp.read_bytes().decode("utf-8")
     tmp = out.with_name(out.name + ".part")
     with zipfile.ZipFile(tmp, "w") as z:
         def add(name, data=None, src=None):
@@ -410,13 +426,15 @@ def cmd_submit(a):
         work = publish_github.checkout(a.repo)
         index_dir = work
     else:
+        if not a.index:
+            fail("submit needs --pr, or --index DIR with an arospkg-index checkout")
         index_dir = Path(a.index).resolve()
     if not (index_dir / "manifests").is_dir():
         fail(f"{index_dir}: not an arospkg-index checkout (no manifests/)")
     target, m, effective, ov = index_manifest(a.url, data, index_dir)
     name = target.name
     new = write_toml(m, GENERATED.format(name=name))
-    old = target.read_text(encoding="utf-8") if target.exists() else None
+    old = target.read_bytes().decode("utf-8") if target.exists() else None
     if old == new:
         print(f"{name}: already up to date; nothing to submit")
         return
@@ -438,7 +456,7 @@ def cmd_submit(a):
     if a.dry_run:
         print("\n(dry run: nothing written)")
         return
-    target.write_text(new, encoding="utf-8")
+    target.write_text(new, encoding="utf-8", newline="\n")
     print(f"\nwritten {target}")
     if a.pr:
         publish_github.open_pr(work, a.repo, target, m)
@@ -447,6 +465,7 @@ def cmd_submit(a):
 def main():
     ap = argparse.ArgumentParser(prog="apkg-pack", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--version", action="version", version=f"apkg-pack {VERSION}")
     sub = ap.add_subparsers(dest="cmd", required=True)
     i = sub.add_parser("init", help="describe a drawer: write DRAWER.arospkg.toml beside it")
     i.add_argument("drawer")
@@ -467,7 +486,8 @@ def main():
     b.add_argument("--epoch", type=int, help="timestamp for every member (default SOURCE_DATE_EPOCH or 1980)")
     s = sub.add_parser("submit", help="prepare the arospkg-index entry for an uploaded archive")
     s.add_argument("url")
-    s.add_argument("--index", default=str(HERE.parent.parent / "arospkg-index"))
+    s.add_argument("--index", default=str(SIBLING_INDEX) if (SIBLING_INDEX / "manifests").is_dir() else None,
+                   help="an arospkg-index checkout to write into (default: one beside arospkg)")
     s.add_argument("--dry-run", action="store_true", help="show the change; write nothing")
     s.add_argument("--pr", action="store_true",
                    help="open a pull request (through your fork if you cannot push to --repo)")
