@@ -464,7 +464,8 @@ static pkg_status do_upgrade(pkg_ctx *c, const char *index_path, const char *id,
     if (swap_read_registry(regpath, &from, old, &nold, &from_text) != 0) { free(old); return pkg_fail(e, PKG_E_IO, "the registry entry is not readable", "", regpath); }
 
     /* The installed target, not whatever the index lists first: an upgrade
-       replaces this build with a newer revision of the same build. */
+       replaces this build with a newer version or revision of the same build
+       (same CPU and ABI); upgrade_allowed() decides which is newer. */
     st = swap_read_index(index_path, id, from.arch[0] ? from.arch : pkg_arch(),
                          pkg_abi_override() && *pkg_abi_override() ? pkg_abi_override()
                                                                    : (from.abi[0] ? from.abi : pkg_abi()),

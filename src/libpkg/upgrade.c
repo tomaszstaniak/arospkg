@@ -80,20 +80,65 @@ int upgrade_plan(const inv_ent *old, int nold,
     return n;
 }
 
+/* Up to 8 components of up to 9 digits each: every value fits a long, and
+   anything longer is not a version number anyone compares by hand either. */
+#define VMAX_PARTS 8
+static int version_parse(const char *v, long part[VMAX_PARTS])
+{
+    int n = 0;
+    if (!v || !*v) return -1;
+    for (;;) {
+        long x = 0; int digits = 0;
+        while (*v >= '0' && *v <= '9') {
+            if (++digits > 9) return -1;
+            x = x * 10 + (*v++ - '0');
+        }
+        if (!digits || n == VMAX_PARTS) return -1;
+        part[n++] = x;
+        if (!*v) return n;
+        if (*v++ != '.') return -1;
+    }
+}
+
+int version_compare(const char *a, const char *b)
+{
+    long pa[VMAX_PARTS], pb[VMAX_PARTS];
+    int na = version_parse(a, pa), nb = version_parse(b, pb), i;
+    if (na < 0 || nb < 0) return 2;
+    for (i = 0; i < na || i < nb; i++) {
+        long x = i < na ? pa[i] : 0, y = i < nb ? pb[i] : 0;
+        if (x != y) return x < y ? -1 : 1;
+    }
+    return 0;
+}
+
 int upgrade_allowed(const char *from_version, long from_rev,
                     const char *to_version, long to_rev,
                     char *why, size_t n)
 {
-    if (strcmp(from_version, to_version) != 0) {
-        snprintf(why, n, "installed is version %s, the index offers %s: no rule "
-                 "orders one upstream version against another yet, so this is "
-                 "refused rather than guessed", from_version, to_version);
+    if (strcmp(from_version, to_version) == 0) {
+        if (to_rev <= from_rev) {
+            snprintf(why, n, "installed is %s revision %ld and the index offers "
+                     "revision %ld, which is not newer", from_version, from_rev, to_rev);
+            return -1;
+        }
+        return 0;
+    }
+    switch (version_compare(from_version, to_version)) {
+    case -1:
+        return 0;
+    case 1:
+        snprintf(why, n, "installed is version %s, newer than the %s the index offers: "
+                 "apkg does not go back to an older version", from_version, to_version);
+        return -1;
+    case 0:
+        snprintf(why, n, "installed is version %s and the index offers %s, the same number "
+                 "written differently: refused rather than guessed", from_version, to_version);
+        return -1;
+    default:
+        snprintf(why, n, "installed is version %s, the index offers %s: only versions of "
+                 "numbers and dots are ordered, so this is refused rather than guessed "
+                 "(remove and install to change version)", from_version, to_version);
         return -1;
     }
-    if (to_rev <= from_rev) {
-        snprintf(why, n, "installed is %s revision %ld and the index offers "
-                 "revision %ld, which is not newer", from_version, from_rev, to_rev);
-        return -1;
-    }
-    return 0;
 }

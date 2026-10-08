@@ -56,8 +56,12 @@ apkg self-update --check
 apkg self-update
 ```
 
-`update` refreshes the catalogue. `upgrade` installs a newer revision of
-the same upstream version of a package.
+`update` refreshes the catalogue. `upgrade` installs a newer version of
+a package, or a newer packaging revision of the same version, and keeps
+files you changed. Versions are compared as numbers (1.10 is newer than
+1.9) only when they consist of numbers and dots; apkg refuses an older
+version and any version it cannot order, and says why. `rollback` returns
+to what the last upgrade replaced.
 
 `self-update --check` checks for a newer stable apkg release. `self-update`
 replaces the apkg executable you started and keeps the previous copy as

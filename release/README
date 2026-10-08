@@ -78,14 +78,17 @@ UPDATES
 -------
 
   apkg update                refresh the catalogue
-  apkg upgrade <id>          install a newer packaging revision
-  apkg rollback <id>         restore the previous revision
+  apkg upgrade <id>          install a newer version or packaging revision
+  apkg rollback <id>         restore what the last upgrade replaced
   apkg self-update --check   check for a newer stable apkg
   apkg self-update           replace the apkg executable you started
 
-Upgrade supports revisions of the same upstream version, not a change
-to a different upstream version. Rollback needs the previous archive
-in the cache. Close the application before either operation or removal.
+Upgrade moves to a newer upstream version (0.1.0 to 0.2.0, 1.9 to
+1.10) or to a newer packaging revision of the same version. Versions are
+ordered only when they are plain numbers and dots; any other change of
+version, and any older version, is refused with the reason. Files you
+changed are kept, as in a revision upgrade. Rollback needs the previous
+archive in the cache. Close the application before either operation or removal.
 
 Self-update keeps apkg.old beside the updated executable. PkgManager
 must be updated separately from the release archive. Recovery instructions:

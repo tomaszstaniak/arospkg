@@ -78,6 +78,9 @@ Copy PAYLOAD:PUTFILE RAM:putfile
 Copy PAYLOAD:I/IDX1 RAM:idx-r1.json
 Copy PAYLOAD:I/IDX2 RAM:idx-r2.json
 Copy PAYLOAD:I/IDXV2 RAM:idx-v2.json
+Copy PAYLOAD:I/IDXVDN RAM:idx-vdown.json
+Copy PAYLOAD:I/IDXVEQ RAM:idx-veq.json
+Copy PAYLOAD:I/IDXVBD RAM:idx-vbad.json
 Protect RAM:apkg +e
 Protect RAM:putfile +e
 Delete SYS:PkgUp ALL FORCE QUIET
@@ -145,8 +148,31 @@ say("and the rollback for real")
 c(run("u-rollback2", 0, "rollback up"))
 c(ah("", "Up/Prog", "r1/Up/Prog")); c(ah("", "Up/OldFile", "r1/Up/OldFile"))
 L.append(absent("Up/NewFile", "u-rollback2"))
-say("upgrade to a different upstream version is refused")
-c(run("u-version", 7, "upgrade up", "idx-v2.json"))
+say("a new upstream version, 1.0 -> 2.0: interrupted at 9 and 10 first, then recovered; 1.0 must be intact")
+for point in (9, 10):
+    L.append(f"Copy PAYLOAD:A/UPR2 {ROOT}/cache/up.new.zip")
+    c(run(f"u-ver-int{point}", 11, f"--interrupt-at {point} upgrade up", "idx-v2.json"))
+    c(run(f"u-ver-int{point}-doctor", 0, "doctor --retry"))
+    c(ah("", "Up/Prog", "r1/Up/Prog")); c(ah("", "Up/OldFile", "r1/Up/OldFile")); c(ah("", "Up/config.txt", "user/config")); c(ah("", "Up.info", "r1/Up.info"))
+    L.append(absent("Up/NewFile", f"u-ver-int{point}"))
+say("upgrade 1.0 -> 2.0 for real: the same plan as a revision -- Prog replaced, NewFile added, OldFile removed, the user's config kept")
+L.append(f"Copy PAYLOAD:A/UPR2 {ROOT}/cache/up.new.zip")
+c(run("u-ver-upgrade", 0, "upgrade up", "idx-v2.json"))
+c(ah("", "Up/Prog", "r2/Up/Prog")); c(ah("", "Up/NewFile", "r2/Up/NewFile")); c(ah("", "Up/config.txt", "user/config")); c(ah("", "Up.info", "r2/Up.info"))
+L.append(absent("Up/OldFile", "u-ver-upgrade"))
+c(f"{A} info up")
+say("an older version (0.9) is refused: no silent downgrade; 2.0 untouched")
+c(run("u-ver-down", 7, "upgrade up", "idx-vdown.json"))
+say("2.0.0, the same number written differently, is refused")
+c(run("u-ver-equal", 7, "upgrade up", "idx-veq.json"))
+say("2.1- cannot be ordered and is refused, not guessed")
+c(run("u-ver-unordered", 7, "upgrade up", "idx-vbad.json"))
+c(ah("", "Up/Prog", "r2/Up/Prog")); c(ah("", "Up/NewFile", "r2/Up/NewFile")); c(ah("", "Up/config.txt", "user/config"))
+say("rollback from 2.0 to 1.0: the previous version's files back, the user's config kept")
+c(run("u-ver-rollback", 0, "rollback up"))
+c(ah("", "Up/Prog", "r1/Up/Prog")); c(ah("", "Up/OldFile", "r1/Up/OldFile")); c(ah("", "Up/config.txt", "user/config")); c(ah("", "Up.info", "r1/Up.info"))
+L.append(absent("Up/NewFile", "u-ver-rollback"))
+c(f"{A} info up")
 L.append('Echo >>RAM:up-console.txt "== end =="')
 L.append("Join RAM:urep/#?.json AS RAM:up-reports.txt")
 L.append("RAM:putfile RAM:up-console.txt")
@@ -223,9 +249,14 @@ V.append("RAM:putfile RAM:vf-console.txt")
 V.append("RAM:putfile RAM:vf-reports.txt")
 open(os.path.join(out, "VERIFY"), "w").write("\n".join(V) + "\n")
 
-# the different-version index, edited here so the guest need not
-v2 = index(3, z2); v2["packages"][0]["version"] = "2.0"
-with open(os.path.join(out, "idx-v2.json"), "w") as f: json.dump(v2, f, indent=1)
+# Indexes that offer revision 2's archive under other upstream versions,
+# edited here so the guest need not: a newer one (allowed), an older one
+# (a downgrade), the same number written differently, and one that cannot
+# be ordered. Revisions count per version, so 2.0 starts again at 1.
+for name, version, rev in (("idx-v2.json", "2.0", 1), ("idx-vdown.json", "0.9", 9),
+                           ("idx-veq.json", "2.0.0", 9), ("idx-vbad.json", "2.1-", 1)):
+    v = index(rev, z2); v["packages"][0]["version"] = version
+    with open(os.path.join(out, name), "w") as f: json.dump(v, f, indent=1)
 
 print("fixtures in", out)
 for k in ("r1/Up/Prog", "r2/Up/Prog", "user/config", "user/newfile", "user/prog"):

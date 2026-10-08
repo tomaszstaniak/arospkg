@@ -49,10 +49,22 @@ int upgrade_plan(const inv_ent *old, int nold,
 
 const char *upgrade_actname(up_act);
 
-/* The revision rule, in one place. Returns 0 if `to` may replace `from`, or
- * -1 with the reason: the versions differ (no ordering rule exists across
- * upstream versions and none is invented here), or the revision does not
- * increase. */
+/* Order two upstream versions, when that can be done without guessing.
+ * A version is ordered only if it is plain dotted numbers: one to eight
+ * components, each 1-9 digits ("0.2.0", "1.10", "2026.09"). Components
+ * compare as numbers, so 1.10 > 1.9; a missing component counts as 0.
+ * Returns -1/0/1 (a < b, equal, a > b), or 2 when either version is not of
+ * that form. Two versions equal as numbers but written differently
+ * ("1.0" and "1.0.0", "1.02" and "1.2") return 0. */
+int version_compare(const char *a, const char *b);
+
+/* The upgrade rule, in one place. Returns 0 if `to` may replace `from`, or
+ * -1 with the reason. Allowed: the same version with a higher revision, or
+ * a newer version by version_compare (any revision). Refused, with the
+ * reason in plain words: an older version (never a silent downgrade), the
+ * same version written differently, a revision that does not increase, and
+ * a change between versions that cannot be ordered ("1.3-", "v2", dates
+ * with letters): those are not guessed. */
 int upgrade_allowed(const char *from_version, long from_rev,
                     const char *to_version, long to_rev,
                     char *why, size_t n);

@@ -226,7 +226,7 @@ static void usage(void)
            "  install <id>      Install a package\n"
            "  list              List installed packages\n"
            "  update            Refresh the package catalogue\n"
-           "  upgrade <id>      Install a newer revision of the same version\n"
+           "  upgrade <id>      Install a newer version or revision\n"
            "  rollback <id>     Restore the previous package revision\n"
            "  remove <id>       Remove a package; keep locally modified files\n"
            "  verify <id>       Check installed files for changes\n"

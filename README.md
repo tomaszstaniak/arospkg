@@ -81,7 +81,7 @@ apkg open soliton
 | `apkg list` | List installed packages. |
 | `apkg verify soliton` | Check installed files against the package record. |
 | `apkg remove soliton` | Remove the package, keeping locally changed files and files it did not install. |
-| `apkg upgrade soliton` | Install a newer revision of the same upstream version, when available. |
+| `apkg upgrade soliton` | Install a newer version or packaging revision, when available. |
 | `apkg rollback soliton` | Return to the previous revision, if its archive is still cached. |
 | `apkg open soliton` | Open the package's drawer in Wanderer. |
 | `apkg self-update` | Replace this apkg with the latest stable release; `--check` only reports. |

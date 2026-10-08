@@ -102,10 +102,45 @@ int main(void)
     ok(upgrade_allowed("2.9", 1, "2.9", 2, why, sizeof why) == 0, "same version, higher revision: allowed");
     ok(upgrade_allowed("2.9", 2, "2.9", 2, why, sizeof why) != 0 && strstr(why, "not newer"),
        "same revision: refused as not newer");
-    ok(upgrade_allowed("2.9", 1, "3.0", 1, why, sizeof why) != 0 && strstr(why, "no rule"),
-       "different upstream version: refused, no rule invented");
-    ok(upgrade_allowed("2.10", 1, "2.9", 5, why, sizeof why) != 0,
-       "and never compared lexically: 2.10 vs 2.9 is just 'different'");
+    /* Across versions: ordered only when both are dotted numbers. */
+    ok(version_compare("0.1.0", "0.2.0") == -1, "0.1.0 < 0.2.0");
+    ok(version_compare("1.9", "1.10") == -1, "1.9 < 1.10: numbers, not text");
+    ok(version_compare("1.10", "1.9") == 1, "1.10 > 1.9");
+    ok(version_compare("2", "2.0.1") == -1, "a missing component counts as 0");
+    ok(version_compare("1.0", "1.0.0") == 0, "1.0 and 1.0.0 are equal as numbers");
+    ok(version_compare("1.02", "1.2") == 0, "leading zeros do not change the number");
+    ok(version_compare("2026.09", "2026.10") == -1, "dates as numbers");
+    ok(version_compare("1.3-", "1.4") == 2, "a trailing '-' is not a number");
+    ok(version_compare("v1.3", "1.4") == 2, "a 'v' prefix is not a number");
+    ok(version_compare("1.3b", "1.4") == 2, "letters are not ordered");
+    ok(version_compare("1..3", "1.4") == 2 && version_compare("1.3.", "1.4") == 2 &&
+       version_compare(".1", "1") == 2, "empty components are not numbers");
+    ok(version_compare("", "1") == 2 && version_compare(NULL, "1") == 2, "empty or missing version");
+    ok(version_compare("1234567890", "1") == 2, "a component over 9 digits is refused, not overflowed");
+    ok(version_compare("1.2.3.4.5.6.7.8", "1.2.3.4.5.6.7.9") == -1 &&
+       version_compare("1.2.3.4.5.6.7.8.9", "2") == 2, "at most 8 components");
+
+    ok(upgrade_allowed("0.1.0", 1, "0.2.0", 1, why, sizeof why) == 0, "newer version: allowed");
+    ok(upgrade_allowed("0.1.0", 5, "0.2.0", 1, why, sizeof why) == 0,
+       "newer version with a lower revision number: allowed, revisions count per version");
+    ok(upgrade_allowed("1.9", 1, "1.10", 1, why, sizeof why) == 0, "1.9 -> 1.10 allowed");
+    ok(upgrade_allowed("2.10", 1, "2.9", 5, why, sizeof why) != 0 && strstr(why, "older version"),
+       "2.10 -> 2.9 is a downgrade and refused, whatever the revision");
+    ok(upgrade_allowed("0.2.0", 1, "0.1.0", 9, why, sizeof why) != 0 && strstr(why, "older version"),
+       "no silent downgrade");
+    ok(upgrade_allowed("1.0", 1, "1.0.0", 2, why, sizeof why) != 0 && strstr(why, "written differently"),
+       "equal numbers written differently: refused");
+    ok(upgrade_allowed("1.3-", 1, "1.4", 1, why, sizeof why) != 0 && strstr(why, "numbers and dots"),
+       "an unordered format: refused with the reason");
+    ok(upgrade_allowed("v1.3", 1, "v1.4", 1, why, sizeof why) != 0 && strstr(why, "refused rather than guessed"),
+       "both unordered: refused, not guessed");
+    ok(upgrade_allowed("1.3-", 1, "1.3-", 2, why, sizeof why) == 0,
+       "an unordered format still gets new revisions of the same version");
+    {
+        char small[240];
+        upgrade_allowed("12345678.12345678.1", 1, "beta-2026-10-08-x", 1, small, sizeof small);
+        ok(strlen(small) < sizeof small - 1, "the longest reason fits the 240-byte buffers callers use");
+    }
 
     printf(bad ? "\nFAIL %d\n" : "\nPASS all checks\n", bad);
     return bad != 0;
