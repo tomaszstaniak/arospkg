@@ -1,7 +1,7 @@
 /* apkg self-update; see selfupdate.c and docs/self-update.md. */
 #ifndef APKG_SELFUPDATE_H
 #define APKG_SELFUPDATE_H
-/* current: this apkg's version ("0.4.0"); root: the package root, only to
+/* current: this apkg's version ("0.4.1"); root: the package root, only to
    see whether an operation holds its lock. Returns a Shell return code. */
 int apkg_self_update(const char *current, const char *root, int check_only);
 /* Testing only: another release base URL (https, ending in "/"), a local

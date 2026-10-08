@@ -1,4 +1,4 @@
-arospkg 0.4.0
+arospkg 0.4.1
 =============
 
 Install software with apkg in the Shell or PkgManager on the desktop.
@@ -28,8 +28,9 @@ you to the installed program. Start it from its icon.
 BUILDS
 ------
 
-0.4.0:
+0.4.1:
   x86_64-aros-v11    apkg and PkgManager
+0.4.0 (unchanged, in release 0.4.0):
   i386-aros-v0       apkg
   aarch64-aros-raspi apkg for native AROS on Raspberry Pi, ABIv1
 
@@ -63,6 +64,16 @@ before the command:
   apkg --root "Work:Packages" open soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.4.1
+------------
+
+- apkg upgrade moves to a newer version of a program, for example
+  Limpet 0.1.0 to 0.2.0, with the same plan, kept files, rollback and
+  recovery as a revision upgrade. Versions made of numbers and dots are
+  compared as numbers (1.10 is newer than 1.9). An older version, or one
+  apkg cannot order, is refused with the reason. PkgManager offers the
+  same upgrades.
 
 NEW IN 0.4
 ----------

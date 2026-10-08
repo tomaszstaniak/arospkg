@@ -6,14 +6,17 @@ Both use the same catalogue and installed packages.
 
 ## Downloads
 
-**[Download 0.4.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.x86_64-aros-v11.zip)**
-· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0)
-· [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.i386-aros-v0.zip)
-· [Raspberry Pi](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip)
+**[Download 0.4.1 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.1)
+· [i386 ABIv0 (0.4.0)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.i386-aros-v0.zip)
+· [Raspberry Pi (0.4.0)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip)
 · [Other builds (0.3.1, experimental)](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
 
-New in 0.4.0: open installed folders, read package setup notes, update apkg
-itself and use larger catalogues. Tested with 5,000 package entries.
+New in 0.4.1: `apkg upgrade` moves to a newer version of a program (for
+example Limpet 0.1.0 to 0.2.0), not only to a newer packaging revision.
+On 0.4.0, `apkg self-update` installs it. New in 0.4.0: open installed
+folders, read package setup notes, update apkg itself and use larger
+catalogues.
 
 ## Install
 
@@ -193,14 +196,14 @@ with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.
 
-The 0.4.0 archive was made from the release commit with
-`README=release/README TARGETS=x86_64-aros-v11 sh tools/make-rc.sh 0.4.0`.
+The 0.4.1 archive was made from the release commit with
+`README=release/README TARGETS=x86_64-aros-v11 sh tools/make-rc.sh 0.4.1`.
 Despite its name, this script packages stable releases too; without
 `TARGETS` it builds all four targets and needs all four toolchains.
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
-The published 0.4.0 release description is kept in
-[`release/notes-0.4.0.md`](release/notes-0.4.0.md). Update that file when adding
+The published release descriptions are kept in `release/notes-<version>.md`
+([0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
 builds, then use it for the GitHub release notes.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,

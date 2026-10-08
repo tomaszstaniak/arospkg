@@ -21,7 +21,7 @@
 #ifdef APKG_TEST_VERSION
 static const char *VERSION = "apkg " APKG_TEST_VERSION;
 #else
-static const char *VERSION = "apkg 0.4.0";
+static const char *VERSION = "apkg 0.4.1";
 #endif
 
 /* `show`: the library's account of one package, laid out for a person. The
