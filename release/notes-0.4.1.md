@@ -5,12 +5,12 @@ Package management for AROS, with the apkg command-line tool and PkgManager desk
 | Target | Version | Included |
 |---|---|---|
 | [x86_64 ABIv11](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.x86_64-aros-v11.zip) | 0.4.1 | apkg and PkgManager |
-| [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.i386-aros-v0.zip) | 0.4.0 | apkg |
-| [Raspberry Pi, aarch64 ABIv1](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip) | 0.4.0 | apkg |
+| [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.i386-aros-v0.zip) | 0.4.1 | apkg |
+| [Raspberry Pi, aarch64 ABIv1](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.aarch64-aros-raspi.zip) | 0.4.1, built but not run | apkg |
 | [x86_64 ABIv1, mainline](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.x86_64-aros-v1.zip) | 0.3.1, experimental | apkg |
 | [Hosted aarch64, Macaros](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.aarch64-aros.zip) | 0.3.1, experimental | apkg |
 
-0.4.1 is built for x86_64 ABIv11 only. On i386 and Raspberry Pi, keep 0.4.0; `apkg self-update` there reports that 0.4.1 has no build for that machine and changes nothing.
+The i386 and Raspberry Pi archives were added to this release on 2026-10-08, built from the same commit (v0.4.1). The Raspberry Pi build has not been run on a Pi or in an emulator; if you need a build that was run, [0.4.0](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0) was checked under QEMU raspi3b.
 
 ## What's new in 0.4.1
 
@@ -36,4 +36,12 @@ x86_64 ABIv11 on AROS One 1.3 under QEMU:
 - the upgrade suite: revision upgrades, conflicts, rollbacks, interruptions at three points with recovery, and the new version cases (1.0 to 2.0 interrupted twice and recovered, then upgraded with the user's changes kept; an older, an equal and an unordered version refused; rollback from 2.0 to 1.0);
 - Limpet from the public catalogue: 0.1.0 installed, a theme edited, `apkg upgrade limpet` to 0.2.0 with the edit kept, `verify`, rollback to 0.1.0 and upgrade again; the upgraded Limpet started.
 
+i386 ABIv0 under QEMU, with the archive's own apkg:
+
+- the same upgrade suite, with the test indexes set to i386: all checks passed;
+- `apkg self-update` from 0.4.0 to 0.4.1.
+
+Raspberry Pi: built and checked on the host only (file format, architecture, the libraries it opens, compared with 0.4.0). Not run.
+
 Use the `SHA256SUMS` from this release to verify your download.
+

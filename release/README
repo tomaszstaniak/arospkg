@@ -30,9 +30,9 @@ BUILDS
 
 0.4.1:
   x86_64-aros-v11    apkg and PkgManager
-0.4.0 (unchanged, in release 0.4.0):
-  i386-aros-v0       apkg
+  i386-aros-v0       apkg (added to the release on 2026-10-08)
   aarch64-aros-raspi apkg for native AROS on Raspberry Pi, ABIv1
+                     (added to the release on 2026-10-08)
 
 Experimental mainline x86_64 ABIv1 and hosted Macaros aarch64 builds remain
 available in release 0.3.1. Pi and Macaros builds are separate.
@@ -40,9 +40,11 @@ available in release 0.3.1. Pi and Macaros builds are separate.
 Downloads: https://github.com/tomaszstaniak/arospkg/releases
 
 x86_64 ABIv11 has the most test coverage, on AROS One 1.3 under QEMU.
-The i386 archive was checked through update, search, install, open and
-removal. The Pi build was checked with a local catalogue and cached
-archives under QEMU raspi3b; network operations were not tested.
+The i386 archive was checked under QEMU with the upgrade suite and with
+self-update from 0.4.0. The Pi archive of 0.4.1 was only built and checked
+on the host (file format, architecture, linked libraries); it has not been
+run on a Pi or in an emulator. The Pi build of 0.4.0 was checked with a
+local catalogue and cached archives under QEMU raspi3b.
 
 For online operations you need working networking and the certificate
 bundle ENV:SYS/Certificates/ca-bundle.crt. PkgManager needs Zune.
