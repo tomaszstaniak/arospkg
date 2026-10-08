@@ -9,8 +9,7 @@ Both use the same catalogue and installed packages.
 **[Download 0.4.1 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.x86_64-aros-v11.zip)**
 · [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.1)
 · [i386 ABIv0 (0.4.1)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.i386-aros-v0.zip)
-· [Raspberry Pi (0.4.1, built but not run)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.aarch64-aros-raspi.zip)
-· [Raspberry Pi (0.4.0, tested under QEMU)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip)
+· [Raspberry Pi (0.4.0)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip)
 · [Other builds (0.3.1, experimental)](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.3.1)
 
 New in 0.4.1: `apkg upgrade` moves to a newer version of a program (for

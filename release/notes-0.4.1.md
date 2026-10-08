@@ -6,11 +6,11 @@ Package management for AROS, with the apkg command-line tool and PkgManager desk
 |---|---|---|
 | [x86_64 ABIv11](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.x86_64-aros-v11.zip) | 0.4.1 | apkg and PkgManager |
 | [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.i386-aros-v0.zip) | 0.4.1 | apkg |
-| [Raspberry Pi, aarch64 ABIv1](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.1/arospkg-0.4.1.aarch64-aros-raspi.zip) | 0.4.1, built but not run | apkg |
+| [Raspberry Pi, aarch64 ABIv1](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip) | 0.4.0 | apkg |
 | [x86_64 ABIv1, mainline](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.x86_64-aros-v1.zip) | 0.3.1, experimental | apkg |
 | [Hosted aarch64, Macaros](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.aarch64-aros.zip) | 0.3.1, experimental | apkg |
 
-The i386 and Raspberry Pi archives were added to this release on 2026-10-08, built from the same commit (v0.4.1). The Raspberry Pi build has not been run on a Pi or in an emulator; if you need a build that was run, [0.4.0](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.0) was checked under QEMU raspi3b.
+The i386 archive was added to this release on 2026-10-08, built from the same commit (v0.4.1). There is no 0.4.1 build for Raspberry Pi: one was built, but it could not be tested, so it was withdrawn. On a Pi, keep 0.4.0; `apkg self-update` there reports that this release has no archive for that machine and changes nothing.
 
 ## What's new in 0.4.1
 
@@ -40,8 +40,6 @@ i386 ABIv0 under QEMU, with the archive's own apkg:
 
 - the same upgrade suite, with the test indexes set to i386: all checks passed;
 - `apkg self-update` from 0.4.0 to 0.4.1.
-
-Raspberry Pi: built and checked on the host only (file format, architecture, the libraries it opens, compared with 0.4.0). Not run.
 
 Use the `SHA256SUMS` from this release to verify your download.
 
