@@ -1,4 +1,4 @@
-arospkg 0.4.1
+arospkg 0.4.2
 =============
 
 Install software with apkg in the Shell or PkgManager on the desktop.
@@ -28,22 +28,22 @@ you to the installed program. Start it from its icon.
 BUILDS
 ------
 
-0.4.1:
+0.4.2:
   x86_64-aros-v11    apkg and PkgManager
-  i386-aros-v0       apkg (added to the release on 2026-10-08)
+  i386-aros-v0       apkg
+  x86_64-aros-v1     apkg, experimental (mainline AROS)
 0.4.0 (unchanged, in release 0.4.0):
   aarch64-aros-raspi apkg for native AROS on Raspberry Pi, ABIv1
 
-Experimental mainline x86_64 ABIv1 and hosted Macaros aarch64 builds remain
-available in release 0.3.1. Pi and Macaros builds are separate.
+A hosted Macaros aarch64 build remains available in release 0.3.1.
 
 Downloads: https://github.com/tomaszstaniak/arospkg/releases
 
 x86_64 ABIv11 has the most test coverage, on AROS One 1.3 under QEMU.
-The i386 archive was checked under QEMU with the upgrade suite and with
-self-update from 0.4.0. A 0.4.1 build for the Pi was withdrawn because it
-could not be tested; the Pi build of 0.4.0 was checked with a local
-catalogue and cached archives under QEMU raspi3b.
+The i386 and mainline archives were checked under QEMU; the release notes
+say what was run on each. There is no 0.4.1 or
+0.4.2 build for the Pi: none could be tested there. The Pi build of 0.4.0
+was checked with a local catalogue and cached archives under QEMU raspi3b.
 
 For online operations you need working networking and the certificate
 bundle ENV:SYS/Certificates/ca-bundle.crt. PkgManager needs Zune.
@@ -65,6 +65,27 @@ before the command:
   apkg --root "Work:Packages" open soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.4.2
+------------
+
+- apkg outdated lists installed packages with a newer version in the
+  catalogue, and says why one that exists cannot be installed here
+  (another CPU or ABI, a missing library). Nothing is downloaded to make
+  the list. --all lists every installed package; --json is for scripts.
+  apkg update ends with the number of updates.
+- apkg upgrade --all shows the plan, then upgrades one package at a time
+  and reports each. A package that fails leaves the others as they are;
+  the group is not undone as a whole.
+- Ctrl-C stops a download, including apkg update. Once files are being
+  changed the operation finishes and apkg says so.
+- Output redirected to a file is complete on mainline AROS, where
+  apkg search >file used to come out empty.
+- PkgManager: an Updates (N) filter, update state and installed version
+  in the list, the catalogue's date above it, and About > Check for a
+  newer version. ARexx: OUTDATED.
+- --keep-rejected keeps a download that failed its checksum, for a bug
+  report.
 
 NEW IN 0.4.1
 ------------
@@ -90,7 +111,9 @@ UPDATES
 -------
 
   apkg update                refresh the catalogue
+  apkg outdated              list installed packages with updates
   apkg upgrade <id>          install a newer version or packaging revision
+  apkg upgrade --all         every update that can be installed, in turn
   apkg rollback <id>         restore what the last upgrade replaced
   apkg self-update --check   check for a newer stable apkg
   apkg self-update           replace the apkg executable you started
