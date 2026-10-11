@@ -34,7 +34,8 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_zip" \
     "$HERE/test_zip.c" "$SRC/zip.c" "$HERE/host_util.c" -lz
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_rexxcmd" \
-    "$HERE/test_rexxcmd.c" "$HERE/../src/pkgmanager/rexxcmd.c"
+    "$HERE/test_rexxcmd.c" "$HERE/../src/pkgmanager/rexxcmd.c" "$SRC/updates.c" "$SRC/entries.c" \
+    "$SRC/json.c" "$SRC/listing.c" "$SRC/req.c" "$SRC/upgrade.c" "$SRC/err.c"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_release" "$HERE/test_release.c" "$SRC/release.c"
 "$OUT/test_release"

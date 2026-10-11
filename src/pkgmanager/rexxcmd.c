@@ -9,7 +9,7 @@
 #include <string.h>
 
 /* One argument of a template: name and kind, as ReadArgs spells them. */
-typedef enum { A_POS_PKG, A_POS_ID, A_KEY_FIELD, A_KEY_MATCH, A_SWITCH_INSTALLED } argkind;
+typedef enum { A_POS_PKG, A_POS_ID, A_KEY_FIELD, A_KEY_MATCH, A_SWITCH_INSTALLED, A_SWITCH_SHOW } argkind;
 
 typedef struct {
     rx_cmd      cmd;
@@ -36,6 +36,7 @@ static const cmddef cmds[] = {
     { RXC_CANCEL,       "CANCEL",       1, { A_POS_ID }, 0 },
     { RXC_QUIT,         "QUIT",         0, { 0 }, 0 },
     { RXC_LASTERROR,    "LASTERROR",    0, { 0 }, 0 },
+    { RXC_OUTDATED,     "OUTDATED",     1, { A_SWITCH_SHOW }, 0 },
 };
 #define NCMDS (int)(sizeof cmds / sizeof cmds[0])
 
@@ -47,6 +48,7 @@ static const char *argname(argkind k)
     case A_KEY_FIELD: return "FIELD";
     case A_KEY_MATCH: return "MATCH";
     case A_SWITCH_INSTALLED: return "INSTALLED";
+    case A_SWITCH_SHOW: return "SHOW";
     }
     return "?";
 }
@@ -167,7 +169,7 @@ static int set_arg(rx_req *r, argkind k, const char *v, char *err, size_t errn)
         if (*end || id <= 0) { snprintf(err, errn, "BADARGS ID must be a job number"); return -1; }
         r->job = id; return 0;
     }
-    case A_SWITCH_INSTALLED: return 0;
+    case A_SWITCH_INSTALLED: case A_SWITCH_SHOW: return 0;
     }
     return -1;
 }
@@ -207,9 +209,10 @@ int rx_parse(const char *line, rx_req *r, char *err, size_t errn)
         if (slot >= 0) {
             argkind a = d->args[slot];
             if (given[slot]) { snprintf(err, errn, "BADARGS %s given twice", argname(a)); return RX_RC_FAIL; }
-            if (a == A_SWITCH_INSTALLED) {
-                if (t[i].key[0]) { snprintf(err, errn, "BADARGS INSTALLED takes no value"); return RX_RC_FAIL; }
-                r->installed = 1; given[slot] = 1; continue;
+            if (a == A_SWITCH_INSTALLED || a == A_SWITCH_SHOW) {
+                if (t[i].key[0]) { snprintf(err, errn, "BADARGS %s takes no value", argname(a)); return RX_RC_FAIL; }
+                if (a == A_SWITCH_SHOW) r->show = 1; else r->installed = 1;
+                given[slot] = 1; continue;
             }
             if (t[i].key[0]) {
                 if (set_arg(r, a, t[i].text, err, errn)) return RX_RC_FAIL;
@@ -396,4 +399,23 @@ static const char *job_get(const void *obj, const char *f, char *tmp, size_t n)
 int rx_format_job(const rx_job *j, const char *field, char *out, size_t n)
 {
     return format(j, job_get, job_fields, field, out, n);
+}
+
+int rx_format_updates(const pkg_updates *u, char *out, size_t n)
+{
+    size_t k; int i, over = 0;
+    k = (size_t)snprintf(out, n, "catalogue %s\nupdated %s\nstale %d\ninstalled %d\nnewer %d\nready %d\nblocked %d\npackages ",
+                         pkg_cat_word(u->catalogue), u->catalogue_when, u->catalogue_stale,
+                         u->installed, u->newer, u->ready, u->blocked);
+    if (k >= n) return -1;
+    for (i = 0; i < u->n; i++) {
+        size_t l;
+        if (!u->rows[i].newer) continue;
+        l = strlen(u->rows[i].id);
+        if (k + l + 2 >= n) { over = 1; break; }
+        if (out[k - 1] != ' ') out[k++] = ' ';
+        memcpy(out + k, u->rows[i].id, l + 1); k += l;
+    }
+    while (k && out[k - 1] == ' ') out[--k] = 0;
+    return over ? -1 : 0;
 }

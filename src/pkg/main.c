@@ -518,8 +518,11 @@ static void updates_summary(const pkg_updates *u, const char *root)
         return;
     }
     cmd_hint(cmd, sizeof cmd, root, "outdated");
-    if (u->blocked)
-        snprintf(line, sizeof line, "%d update%s available for installed packages (%d blocked). See them: %s",
+    if (!u->ready)
+        snprintf(line, sizeof line, "%d update%s for installed packages, none of which can be installed now. See why: %s",
+                 u->newer, u->newer == 1 ? "" : "s", cmd);
+    else if (u->blocked)
+        snprintf(line, sizeof line, "%d update%s available for installed packages (%d of them blocked). See them: %s",
                  u->newer, u->newer == 1 ? "" : "s", u->blocked, cmd);
     else
         snprintf(line, sizeof line, "%d update%s available for installed packages. See them: %s",
@@ -602,8 +605,8 @@ static int outdated(pkg_ctx *c, const char *index, const char *root, int all, in
             if (u.rows[i].state != PKG_UPD_CURRENT && !u.rows[i].newer) other++;
         if (other) {
             cmd_hint(cmd, sizeof cmd, root, "outdated --all");
-            snprintf(line, sizeof line, "%d installed package%s could not be compared with the catalogue: %s",
-                     other, other == 1 ? "" : "s", cmd);
+            snprintf(line, sizeof line, "%d more installed package%s neither current nor upgradable (newer than "
+                     "the catalogue, not in it, or not comparable): %s", other, other == 1 ? " is" : "s are", cmd);
             pr_text(line, 0);
         }
     }
@@ -884,7 +887,9 @@ static int real_main(int argc, char **argv)
             }
         }
     } else if (!strcmp(cmd, "outdated")) {
-        int rc = outdated(c, index, root, all, json);
+        int rc;
+        if (arg) { printf("apkg outdated: it takes no package; it lists all of them\n"); pkg_close(c); return 5; }
+        rc = outdated(c, index, root, all, json);
         pkg_close(c);
         return rc;
     } else if (!strcmp(cmd, "upgrade") && all && !arg) {

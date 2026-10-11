@@ -64,8 +64,11 @@ static void worker_main(void)
     memset(&e, 0, sizeof e);
     memset(&plan, 0, sizeof plan);
     pkg_test_slow(slow_ms);
-    st = pkg_open(j->root, PKG_OPEN_WRITE, &c, &e);
-    if (st == PKG_OK) {
+    /* The release check reads the network and nothing in the root: no
+       lock, so it never waits for, or blocks, a package operation. */
+    if (j->kind == JOB_CHECK_RELEASE) {
+        st = pkg_release_check(NULL, NULL, j->current, &j->done->rel, &e);
+    } else if ((st = pkg_open(j->root, PKG_OPEN_WRITE, &c, &e)) == PKG_OK) {
         pkg_set_progress(c, on_progress, j);
         switch (j->kind) {
         case JOB_INSTALL:  st = pkg_install(c, j->index, j->id, PKG_STOP_NONE, &e); break;

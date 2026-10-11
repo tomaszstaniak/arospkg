@@ -17,16 +17,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <strings.h>
 
 #define PM_VERSION "0.4.1"
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
-       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN };
+       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN,
+       ID_CHECK };
 
 static Object *app, *win, *str_search, *cyc_cat, *cyc_state, *lst, *txt_detail,
               *txt_status, *gauge, *btn_install, *btn_remove, *btn_update, *btn_cancel,
               *btn_upgrade, *btn_rollback, *win_confirm, *txt_confirm, *btn_proceed, *btn_decline,
-              *win_about, *btn_about, *btn_about_close, *btn_open;
+              *win_about, *btn_about, *btn_about_close, *btn_open,
+              *txt_catalogue, *btn_check, *txt_release;
 static int auto_yes;              /* --yes: confirm requesters without asking; for tests */
 static pkg_entries rows;          /* the whole query; the list shows a filtered view */
 static job cur;
@@ -38,6 +41,11 @@ static int quit_pending;          /* close asked for while a job ran */
 static char last_phase[16]; static int last_can_cancel;
 static int confirming;            /* a plan is shown and the window waits for the user */
 static int rexx_quit;             /* QUIT arrived with nothing running */
+/* The shared updates model (pkg_updates in pkg.h), recomputed by every
+   refill: after start, every finished job and every search or filter. It
+   reads the catalogue and the registry only; no network. */
+static pkg_updates upd;
+static int start_updates;         /* --updates: open with the Updates filter */
 
 /* Every operation gets a record and a number, whether the window or a
  * script started it, so a script can follow either. `active` is the one the
@@ -83,8 +91,11 @@ AROS_UFH3S(void, display_func,
         array[0] = (char *)"\33bPackage"; array[1] = (char *)"\33bVersion";
         array[2] = (char *)"\33bState";   array[3] = (char *)"\33bSummary";
     } else {
+        const pkg_update_row *u = e->installed ? pkg_updates_find(&upd, e->id) : NULL;
         array[0] = e->id; array[1] = e->version;
-        array[2] = (char *)(e->installed ? "installed" : (e->ours ? "" : "other ABI"));
+        array[2] = (char *)(u && u->state == PKG_UPD_AVAILABLE ? "\33bupdate available" :
+                            u && u->state == PKG_UPD_BLOCKED ? "update blocked" :
+                            e->installed ? "installed" : (e->ours ? "" : "other ABI"));
         array[3] = e->summary;
     }
     AROS_USERFUNC_EXIT
@@ -117,7 +128,11 @@ static void show_err(const char *what, pkg_status st, const pkg_err *e)
 static char  cat_names[MAXCAT][32];
 static STRPTR cat_entries[MAXCAT + 2];
 static char  cat_chosen[32];
-static STRPTR state_entries[] = { (STRPTR)"All", (STRPTR)"Installed", (STRPTR)"Not installed", NULL };
+/* The fourth entry is relabelled with the count on every refill. */
+static char upd_label[32] = "Updates";
+static STRPTR state_entries[] = { (STRPTR)"All", (STRPTR)"Installed", (STRPTR)"Not installed",
+                                  (STRPTR)upd_label, NULL };
+enum { ST_ALL, ST_INSTALLED, ST_NOT_INSTALLED, ST_UPDATES };
 
 static void top_category(const char *cat, char *out, size_t n)
 {
@@ -168,12 +183,58 @@ static int passes_filters(const pkg_entry *e)
         if (strcmp(top, cat_chosen) != 0) return 0;
     }
     GetAttr(MUIA_Cycle_Active, cyc_state, &st);
-    if (st == 1 && !e->installed) return 0;
-    if (st == 2 &&  e->installed) return 0;
+    if (st == ST_INSTALLED && !e->installed) return 0;
+    if (st == ST_NOT_INSTALLED && e->installed) return 0;
+    if (st == ST_UPDATES) {
+        const pkg_update_row *u = e->installed ? pkg_updates_find(&upd, e->id) : NULL;
+        if (!u || !u->newer) return 0;
+    }
     return 1;
 }
 
+static int passes_filters_is_updates(void)
+{
+    IPTR st = 0;
+    GetAttr(MUIA_Cycle_Active, cyc_state, &st);
+    return st == ST_UPDATES;
+}
+
 /* ------------------------------------------------------------------ rows */
+
+/* Above the list: how old the catalogue is, and the update count, or the
+ * reason there is no count. A missing or unreadable catalogue is said as
+ * such, never shown as "0 updates". */
+static void show_catalogue(void)
+{
+    static char line[300];
+    IPTR st = 0;
+    if (upd.catalogue == PKG_CAT_MISSING)
+        snprintf(line, sizeof line, "\33bCatalogue: none yet\33n -- press Update index. Updates cannot be checked.");
+    else if (upd.catalogue == PKG_CAT_UNREADABLE)
+        snprintf(line, sizeof line, "\33bCatalogue: cannot be read\33n (%s) -- press Update index.", upd.catalogue_error);
+    else {
+        size_t k = (size_t)snprintf(line, sizeof line, "Catalogue updated %s%s   ",
+                                    upd.catalogue_when[0] ? upd.catalogue_when : "(date unknown)",
+                                    upd.catalogue_stale ? " \33b(more than two weeks ago)\33n" : "");
+        if (!upd.installed) snprintf(line + k, sizeof line - k, "Nothing installed.");
+        else if (!upd.newer) snprintf(line + k, sizeof line - k, "Installed packages are up to date.");
+        else if (!upd.ready)
+            snprintf(line + k, sizeof line - k, "\33b%d update%s\33n, none installable now (see details)",
+                     upd.newer, upd.newer == 1 ? "" : "s");
+        else if (upd.blocked)
+            snprintf(line + k, sizeof line - k, "\33b%d update%s available\33n (%d of them blocked)",
+                     upd.newer, upd.newer == 1 ? "" : "s", upd.blocked);
+        else
+            snprintf(line + k, sizeof line - k, "\33b%d update%s available\33n", upd.newer, upd.newer == 1 ? "" : "s");
+    }
+    SetAttrs(txt_catalogue, MUIA_Text_Contents, (IPTR)line, TAG_DONE);
+    if (upd.catalogue == PKG_CAT_OK && upd.newer) snprintf(upd_label, sizeof upd_label, "Updates (%d)", upd.newer);
+    else snprintf(upd_label, sizeof upd_label, "Updates");
+    GetAttr(MUIA_Cycle_Active, cyc_state, &st);
+    /* NoNotify for the reason given in rebuild_categories. */
+    SetAttrs(cyc_state, MUIA_NoNotify, TRUE, MUIA_Cycle_Entries, (IPTR)state_entries,
+             MUIA_Cycle_Active, st, TAG_DONE);
+}
 
 static void show_detail(void);
 
@@ -193,6 +254,11 @@ static void refill(const char *term, const char *keep_id, const char *why)
     st = pkg_open(root, PKG_OPEN_READ, &c, &e);
     if (st != PKG_OK) { show_err("cannot open the package root", st, &e); return; }
     st = pkg_query(c, index_path, term, &fresh, &hidden, &e);
+    {
+        pkg_err e3; memset(&e3, 0, sizeof e3);
+        pkg_updates_free(&upd);
+        if (pkg_updates_get(c, index_path, 1, &upd, &e3) != PKG_OK) memset(&upd, 0, sizeof upd);
+    }
     /* The category cycle lists what the whole index holds, not what the
        current search left: a search with no hits used to empty the cycle
        and forget the chosen category with it. */
@@ -216,10 +282,13 @@ static void refill(const char *term, const char *keep_id, const char *why)
             if (keep_id && strcmp(rows.v[i].id, keep_id) == 0) again = shown;
             shown++;
         }
-        logline("refill (%s) term=\"%s\" rows=%d shown=%d installed=%d keep=%s",
-                why, term ? term : "", rows.n, shown, inst, keep_id ? keep_id : "-");
+        logline("refill (%s) term=\"%s\" rows=%d shown=%d installed=%d keep=%s updates=%d ready=%d blocked=%d catalogue=%s when=%s",
+                why, term ? term : "", rows.n, shown, inst, keep_id ? keep_id : "-",
+                upd.newer, upd.ready, upd.blocked, pkg_cat_word(upd.catalogue), upd.catalogue_when);
         if (rows.n == 0 && hidden == 0 && !(term && *term))
             snprintf(msg, sizeof msg, "the index lists no packages");
+        else if (shown == 0 && passes_filters_is_updates())
+            snprintf(msg, sizeof msg, "%s", upd.installed ? "no updates for the installed packages" : "nothing is installed");
         else if (shown == 0)
             snprintf(msg, sizeof msg, "no packages match%s%s%s",
                      term && *term ? " \"" : "", term && *term ? term : "", term && *term ? "\"" : "");
@@ -239,6 +308,7 @@ static void refill(const char *term, const char *keep_id, const char *why)
         logline("refill (%s): index unreadable: %s", why, e.summary);
         show_err("the index cannot be read", st, &e);
     }
+    show_catalogue();
     SetAttrs(lst, MUIA_List_Quiet, FALSE, TAG_DONE);
     /* The list forgets its selection when cleared; the user did not. */
     if (again >= 0) SetAttrs(lst, MUIA_List_Active, again, TAG_DONE);
@@ -333,13 +403,23 @@ static void show_detail(void)
         /* The two questions the buttons need, answered by the library. */
         char why[240]; int up = 0, back = 0;
         if (e->installed) {
-            up = pkg_can_upgrade(e, why, sizeof why);
-            if (up) {
-                size_t n2 = strlen(buf);
-                char a[80], b[80];
-                rev_label(a, sizeof a, e->installed_version, e->installed_revision);
-                rev_label(b, sizeof b, e->version, e->revision);
-                snprintf(buf + n2, sizeof buf - n2, "\33bupgrade available:\33n %s -> %s\n", a, b);
+            /* The update state from the shared model: the same answer as
+               the list, apkg outdated and the ScreenBar widget. */
+            const pkg_update_row *u = pkg_updates_find(&upd, e->id);
+            size_t n2 = strlen(buf);
+            char a[80], b[80];
+            up = u && u->state == PKG_UPD_AVAILABLE;
+            if (!u) snprintf(why, sizeof why, "not known");
+            else snprintf(why, sizeof why, "%s", u->why);
+            if (u) {
+                rev_label(a, sizeof a, u->installed_version, u->installed_revision);
+                if (u->available_version[0]) rev_label(b, sizeof b, u->available_version, u->available_revision);
+                else snprintf(b, sizeof b, "-");
+                if (u->newer)
+                    snprintf(buf + n2, sizeof buf - n2, "\33bupdate %s:\33n %s -> %s%s%s\n",
+                             up ? "available" : "blocked", a, b, up ? "" : " -- ", up ? "" : u->why);
+                else if (u->state != PKG_UPD_CURRENT)
+                    snprintf(buf + n2, sizeof buf - n2, "installed %s, catalogue %s -- %s\n", a, b, u->why);
             }
             {
                 pkg_ctx *c = NULL; pkg_err err; memset(&err, 0, sizeof err);
@@ -421,6 +501,7 @@ static void open_folder(const char *id)
 static void busy(int on)
 {
     SetAttrs(btn_update,  MUIA_Disabled, on, TAG_DONE);
+    SetAttrs(btn_check,   MUIA_Disabled, on, TAG_DONE);
     SetAttrs(btn_cancel,  MUIA_Disabled, TRUE, TAG_DONE);   /* until an event says otherwise */
     SetAttrs(gauge, MUIA_Gauge_Current, 0, MUIA_Gauge_InfoText, (IPTR)(on ? "starting" : ""), TAG_DONE);
     if (on) {
@@ -440,6 +521,7 @@ static const char *opname(job_kind k)
     case JOB_UPDATE:  return "update";
     case JOB_PREVIEW_UPGRADE: case JOB_UPGRADE: return "upgrade";
     case JOB_PREVIEW_ROLLBACK: case JOB_ROLLBACK: return "rollback";
+    case JOB_CHECK_RELEASE: return "check";
     default: return "none";
     }
 }
@@ -493,6 +575,7 @@ static int start(job_kind kind, const char *id)
     snprintf(cur.root, sizeof cur.root, "%s", root);
     snprintf(cur.index, sizeof cur.index, "%s", index_path);
     snprintf(cur.index_url, sizeof cur.index_url, "%s", index_url);
+    snprintf(cur.current, sizeof cur.current, "%s", PM_VERSION);
     cur.reply = port;
     last_phase[0] = 0; last_can_cancel = 0;
     busy(1);
@@ -500,6 +583,7 @@ static int start(job_kind kind, const char *id)
            kind == JOB_UPDATE ? "updating the index..." :
            kind == JOB_UPGRADE ? "upgrading..." : kind == JOB_ROLLBACK ? "rolling back..." :
            kind == JOB_PREVIEW_UPGRADE ? "working out what the upgrade would do..." :
+           kind == JOB_CHECK_RELEASE ? "asking for the latest release..." :
            "working out what the rollback would do...");
     if (job_start(&cur) != 0) { busy(0); status("could not start the worker process"); return -1; }
     in_flight = 1;
@@ -586,9 +670,10 @@ static int on_message(pm_msg *m)
     }
     if (m->kind == PM_DONE) {
         static const char *verb[] = { "none", "install", "remove", "update",
-                                      "preview upgrade", "upgrade", "preview rollback", "rollback" };
+                                      "preview upgrade", "upgrade", "preview rollback", "rollback",
+                                      "check for a newer version" };
         static const char *past[] = { "", "installed", "removed", "index updated",
-                                      "", "upgraded", "", "rolled back" };
+                                      "", "upgraded", "", "rolled back", "checked" };
         job_kind kind = cur.kind;
         rx_job *j = active;
         char line[160], why[640];
@@ -597,6 +682,37 @@ static int on_message(pm_msg *m)
                 m->status == PKG_OK ? "" : " ", m->status == PKG_OK ? "" : m->err.summary);
         in_flight = 0;
         err_text(why, sizeof why, &m->err);
+        if (kind == JOB_CHECK_RELEASE) {
+            /* The answer goes where the question was asked, in About. It
+               says plainly that the window is not replaced by anything. */
+            static char text[600];
+            const pkg_release *r = &m->rel;
+            if (m->status != PKG_OK) snprintf(text, sizeof text, "Could not check: %s", why);
+            else if (r->found != 1)
+                snprintf(text, sizeof text, "The latest stable release (%s) has no archive for %s.\n"
+                         "This PkgManager %s stays as it is.", r->other_version[0] ? r->other_version : "?",
+                         r->target, PM_VERSION);
+            else if (r->cmp < 0)
+                snprintf(text, sizeof text, "A newer release is available: %s (this is %s).\n"
+                         "Update PkgManager from the archive at\n%s\n"
+                         "apkg self-update updates only apkg.", r->version, PM_VERSION, PKG_RELEASE_PAGE);
+            else if (r->cmp == 0)
+                snprintf(text, sizeof text, "PkgManager %s is the latest stable release.\n"
+                         "apkg self-update updates only apkg.", PM_VERSION);
+            else snprintf(text, sizeof text, "PkgManager %s is newer than the latest stable release (%s).",
+                          PM_VERSION, r->version);
+            SetAttrs(txt_release, MUIA_Text_Contents, (IPTR)text, TAG_DONE);
+            logline("release check: status=%d found=%d version=%s other=%s cmp=%d", (int)m->status,
+                    r->found, r->version, r->other_version, r->cmp);
+            if (j) {
+                if (m->status == PKG_OK) finish(j, RXJ_DONE, "", text);
+                else finish(j, RXJ_FAILED, rx_statusword(m->status), why);
+            }
+            if (quit_pending) return 1;
+            busy(0);
+            status(m->status == PKG_OK ? "release checked: see About" : "could not check for a newer version");
+            return 0;
+        }
         if (kind == JOB_PREVIEW_UPGRADE || kind == JOB_PREVIEW_ROLLBACK) {
             /* The plan came back as data. Show it, and ask -- or say why not. */
             const pkg_plan *p = &m->plan;
@@ -833,7 +949,13 @@ static void rx_info(rexx_msg *m, const rx_req *r)
         return;
     }
     if (e.installed) {
-        up = pkg_can_upgrade(&e, why, sizeof why);
+        /* As the window's Upgrade button: from the updates model. */
+        pkg_updates u; pkg_err ue; memset(&ue, 0, sizeof ue);
+        if (pkg_updates_get(c, index_path, 1, &u, &ue) == PKG_OK) {
+            const pkg_update_row *ur = pkg_updates_find(&u, e.id);
+            up = ur && ur->state == PKG_UPD_AVAILABLE;
+            pkg_updates_free(&u);
+        } else up = pkg_can_upgrade(&e, why, sizeof why);
         back = pkg_can_rollback(c, e.id, why, sizeof why);
     }
     pkg_close(c);
@@ -966,6 +1088,35 @@ static void rx_cancel(rexx_msg *m, const rx_req *r)
     rx_ok(m, "requested");
 }
 
+/* OUTDATED [SHOW]: the updates model's counts and ids; with SHOW the window
+   also comes forward with the Updates filter, which is what the ScreenBar
+   widget's action asks for when PkgManager is already running. */
+static void rx_outdated(rexx_msg *m, const rx_req *r)
+{
+    pkg_ctx *c; pkg_updates u; pkg_err e;
+    if (r->show) {
+        SetAttrs(str_search, MUIA_NoNotify, TRUE, MUIA_String_Contents, (IPTR)"", TAG_DONE);
+        last_term[0] = 0; cat_chosen[0] = 0;
+        SetAttrs(cyc_cat,   MUIA_NoNotify, TRUE, MUIA_Cycle_Active, 0, TAG_DONE);
+        SetAttrs(cyc_state, MUIA_NoNotify, TRUE, MUIA_Cycle_Active, ST_UPDATES, TAG_DONE);
+        refill("", NULL, "arexx outdated show");
+        SetAttrs(app, MUIA_Application_Iconified, FALSE, TAG_DONE);
+        SetAttrs(win, MUIA_Window_Open, TRUE, TAG_DONE);
+        DoMethod(win, MUIM_Window_ToFront);
+        SetAttrs(win, MUIA_Window_Activate, TRUE, TAG_DONE);
+    }
+    if (!(c = rx_open(m))) return;
+    memset(&e, 0, sizeof e);
+    if (pkg_updates_get(c, index_path, 1, &u, &e) != PKG_OK) {
+        char t[600]; pkg_close(c); err_text(t, sizeof t, &e);
+        rx_fail(m, RX_RC_ERROR, "%s %s", rx_statusword(e.status), t); return;
+    }
+    pkg_close(c);
+    if (rx_format_updates(&u, rxout, sizeof rxout) != 0) rx_fail(m, RX_RC_ERROR, "TOOLONG the answer does not fit in one ARexx result");
+    else rx_ok(m, rxout);
+    pkg_updates_free(&u);
+}
+
 static void rexx_dispatch(rexx_msg *m, const char *line)
 {
     rx_req r; char err[300];
@@ -980,6 +1131,7 @@ static void rexx_dispatch(rexx_msg *m, const char *line)
     case RXC_INFO:         rx_info(m, &r); break;
     case RXC_REQUIREMENTS: rx_requirements(m, &r); break;
     case RXC_SHOW:         rx_show(m, &r); break;
+    case RXC_OUTDATED:     rx_outdated(m, &r); break;
     case RXC_UPDATE: case RXC_INSTALL: case RXC_REMOVE: case RXC_UPGRADE: case RXC_ROLLBACK:
         rx_start(m, &r); break;
     case RXC_JOB: case RXC_WAIT: rx_jobcmd(m, &r); break;
@@ -1029,6 +1181,7 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc) /* tests */
             pkg_test_break_download(atol(argv[++i]), 2);
         else if (!strcmp(argv[i], "--yes")) auto_yes = 1;        /* tests: no requester to click */
+        else if (!strcmp(argv[i], "--updates") || !strcasecmp(argv[i], "UPDATES")) start_updates = 1;
         else if (!strcmp(argv[i], "--rexxlib") && i + 1 < argc) rexxlib = argv[++i];  /* tests: a machine without ARexx */
         else if (!strcmp(argv[i], "--test-nomem") && i + 1 < argc) {                   /* tests: allocation failures */
             const char *w = argv[++i];
@@ -1078,6 +1231,9 @@ static int real_main(int argc, char **argv)
                     Child, (btn_update = SimpleButton("Update index")),
                     Child, (btn_about = SimpleButton("About")),
                 End),
+                Child, (txt_catalogue = TextObject,
+                    MUIA_Text_Contents, (IPTR)"",
+                End),
                 Child, (lst = ListviewObject,
                     MUIA_Listview_List, (ListObject,
                         MUIA_Frame,           MUIV_Frame_InputList,
@@ -1119,7 +1275,15 @@ static int real_main(int argc, char **argv)
                 Child, (TextObject,
                     MUIA_Text_Contents, (IPTR)("PkgManager " PM_VERSION "\n\n" AROSPKG_ABOUT),
                 End),
-                Child, (btn_about_close = SimpleButton("Close")),
+                Child, (txt_release = TextObject,
+                    MUIA_Frame, MUIV_Frame_Text,
+                    MUIA_Text_Contents, (IPTR)"PkgManager and apkg are updated separately:\n"
+                                              "apkg self-update replaces only apkg.",
+                End),
+                Child, (HGroup,
+                    Child, (btn_check = SimpleButton("Check for a newer version")),
+                    Child, (btn_about_close = SimpleButton("Close")),
+                End),
             End),
         End),
         SubWindow, (win_confirm = WindowObject,
@@ -1154,6 +1318,7 @@ static int real_main(int argc, char **argv)
     DoMethod(btn_update,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_UPDATE);
     DoMethod(btn_about, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT);
     DoMethod(btn_about_close, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT_CLOSE);
+    DoMethod(btn_check, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_CHECK);
     DoMethod(win_about, MUIM_Notify, MUIA_Window_CloseRequest, TRUE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT_CLOSE);
     DoMethod(btn_install, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_INSTALL);
     DoMethod(btn_remove,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_REMOVE);
@@ -1175,7 +1340,8 @@ static int real_main(int argc, char **argv)
     SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(win, MUIA_Window_Open, TRUE, TAG_DONE);
-    refill("", NULL, "start");
+    if (start_updates) SetAttrs(cyc_state, MUIA_NoNotify, TRUE, MUIA_Cycle_Active, ST_UPDATES, TAG_DONE);
+    refill("", NULL, start_updates ? "start updates" : "start");
 
     while (!quit) {
         ret = DoMethod(app, MUIM_Application_NewInput, (IPTR)&sigs);
@@ -1208,6 +1374,7 @@ static int real_main(int argc, char **argv)
         case ID_OPEN:    { pkg_entry *e = selected(); if (e) open_folder(e->id); } break;
         case ID_UPGRADE: { pkg_entry *e = selected(); if (e) { logline("upgrade pressed for %s", e->id); begin(JOB_PREVIEW_UPGRADE, e->id, "window"); } } break;
         case ID_ROLLBACK:{ pkg_entry *e = selected(); if (e) { logline("rollback pressed for %s", e->id); begin(JOB_PREVIEW_ROLLBACK, e->id, "window"); } } break;
+        case ID_CHECK:   logline("check for a newer version pressed"); begin(JOB_CHECK_RELEASE, NULL, "window"); break;
         case ID_CANCEL:  if (in_flight) { cur.cancel = 1; if (active) active->cancel_asked = 1; status("cancelling..."); logline("cancel pressed for %s", cur.id); } break;
         case ID_PROCEED: proceed("confirmed"); break;
         case ID_DECLINE: decline("declined"); break;
@@ -1237,6 +1404,7 @@ static int real_main(int argc, char **argv)
     rexx_close("CLOSING PkgManager has quit");
     MUI_DisposeObject(app);
     pkg_entries_free(&rows);
+    pkg_updates_free(&upd);
     DeleteMsgPort(port);
     logline("quit");
     if (logf) fclose(logf);

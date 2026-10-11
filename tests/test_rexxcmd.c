@@ -107,7 +107,7 @@ int main(void)
     bad("JOB 3x", "BADARGS ID must be a job number");
     bad("CANCEL 1 2", "BADARGS CANCEL: unexpected argument");
 
-    CHECK(!strcmp(rx_help(), "VERSION HELP LIST INFO REQUIREMENTS SHOW UPDATE INSTALL REMOVE UPGRADE ROLLBACK JOB WAIT CANCEL QUIT LASTERROR"));
+    CHECK(!strcmp(rx_help(), "VERSION HELP LIST INFO REQUIREMENTS SHOW UPDATE INSTALL REMOVE UPGRADE ROLLBACK JOB WAIT CANCEL QUIT LASTERROR OUTDATED"));
 
     /* replies: every field as "name value" lines, or one bare value */
     {
@@ -156,6 +156,23 @@ int main(void)
     CHECK(!strcmp(rx_statusword(PKG_E_REQUIRES), "REQUIRES"));
     CHECK(!strcmp(rx_statusword(PKG_OK), "OK"));
 
+    {
+        rx_req r; char err[200], out[512];
+        pkg_update_row rows[2]; pkg_updates up;
+        CHECK(rx_parse("OUTDATED", &r, err, sizeof err) == 0 && r.cmd == RXC_OUTDATED && !r.show);
+        CHECK(rx_parse("outdated SHOW", &r, err, sizeof err) == 0 && r.show);
+        CHECK(rx_parse("OUTDATED SHOW=1", &r, err, sizeof err) == RX_RC_FAIL);
+        CHECK(rx_parse("OUTDATED folio", &r, err, sizeof err) == RX_RC_FAIL);
+        memset(&up, 0, sizeof up); memset(rows, 0, sizeof rows);
+        snprintf(rows[0].id, sizeof rows[0].id, "folio"); rows[0].newer = 1;
+        snprintf(rows[1].id, sizeof rows[1].id, "soliton");
+        up.rows = rows; up.n = 2; up.installed = 2; up.newer = 1; up.ready = 1;
+        snprintf(up.catalogue_when, sizeof up.catalogue_when, "2026-10-11 10:25");
+        CHECK(rx_format_updates(&up, out, sizeof out) == 0);
+        CHECK(!strcmp(out, "catalogue ok\nupdated 2026-10-11 10:25\nstale 0\ninstalled 2\nnewer 1\nready 1\nblocked 0\npackages folio"));
+        up.newer = 0; rows[0].newer = 0; up.catalogue = PKG_CAT_MISSING;
+        CHECK(rx_format_updates(&up, out, sizeof out) == 0 && strstr(out, "catalogue missing") && strstr(out, "\npackages") && out[strlen(out) - 1] == 's');
+    }
     if (fails) { printf("%d failure(s)\n", fails); return 1; }
     printf("rexxcmd: all checks pass\n");
     return 0;

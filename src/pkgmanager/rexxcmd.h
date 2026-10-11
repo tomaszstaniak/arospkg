@@ -19,7 +19,7 @@ enum { RX_RC_OK = 0, RX_RC_WARN = 5, RX_RC_ERROR = 10, RX_RC_FAIL = 20 };
 typedef enum {
     RXC_NONE = 0, RXC_VERSION, RXC_HELP, RXC_LIST, RXC_INFO, RXC_REQUIREMENTS,
     RXC_SHOW, RXC_UPDATE, RXC_INSTALL, RXC_REMOVE, RXC_UPGRADE, RXC_ROLLBACK,
-    RXC_JOB, RXC_WAIT, RXC_CANCEL, RXC_QUIT, RXC_LASTERROR
+    RXC_JOB, RXC_WAIT, RXC_CANCEL, RXC_QUIT, RXC_LASTERROR, RXC_OUTDATED
 } rx_cmd;
 
 typedef struct {
@@ -28,6 +28,7 @@ typedef struct {
     char   field[24];           /* INFO, JOB, WAIT: one field instead of all */
     char   match[128];          /* LIST MATCH */
     int    installed;           /* LIST INSTALLED */
+    int    show;                /* OUTDATED SHOW */
     long   job;                 /* JOB, WAIT, CANCEL; 0 = the latest job */
 } rx_req;
 
@@ -76,6 +77,11 @@ int rx_format_entry(const pkg_entry *, int can_upgrade, int can_rollback,
                     const char *compatibility, const char *requirements,
                     const char *field, char *out, size_t n);
 int rx_format_job(const rx_job *, const char *field, char *out, size_t n);
+
+/* OUTDATED's answer from the shared updates model: one "name value" line
+ * each for catalogue, updated, stale, installed, newer, ready, blocked, and
+ * "packages" with the ids that have something newer. -1 if it does not fit. */
+int rx_format_updates(const pkg_updates *, char *out, size_t n);
 
 /* The fields in order, space separated, for the BADARGS message. */
 const char *rx_entry_fields(void);

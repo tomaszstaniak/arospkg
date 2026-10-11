@@ -5,10 +5,12 @@
 #define PKGMANAGER_JOB_H
 
 #include "../libpkg/pkg.h"
+#include "../libpkg/release.h"
 #include <exec/ports.h>
 
 typedef enum { JOB_NONE, JOB_INSTALL, JOB_REMOVE, JOB_UPDATE,
-               JOB_PREVIEW_UPGRADE, JOB_UPGRADE, JOB_PREVIEW_ROLLBACK, JOB_ROLLBACK } job_kind;
+               JOB_PREVIEW_UPGRADE, JOB_UPGRADE, JOB_PREVIEW_ROLLBACK, JOB_ROLLBACK,
+               JOB_CHECK_RELEASE } job_kind;
 
 struct pm_msg_s;
 
@@ -19,6 +21,7 @@ typedef struct {
     char            root[PKG_MAXPATH];
     char            index[PKG_MAXPATH];
     char            index_url[512];
+    char            current[16];  /* JOB_CHECK_RELEASE: this PkgManager's version */
     struct MsgPort *reply;      /* the window's port; the worker sends here */
     volatile int    cancel;     /* set by the window, read by the callback  */
     volatile int    running;
@@ -44,6 +47,7 @@ typedef struct pm_msg_s {
     pkg_status     status;
     pkg_err        err;
     pkg_plan       plan;        /* filled for the preview jobs */
+    pkg_release    rel;         /* filled for JOB_CHECK_RELEASE */
 } pm_msg;
 
 /* Start the worker process for `j`. Returns 0 on success; the worker will
