@@ -92,7 +92,23 @@ AROS_UFH3S(void, display_func,
         array[2] = (char *)"\33bState";   array[3] = (char *)"\33bSummary";
     } else {
         const pkg_update_row *u = e->installed ? pkg_updates_find(&upd, e->id) : NULL;
+        /* The entry is the catalogue's, so its version is the one on offer.
+           For an installed package the column says what is on this machine,
+           and where a newer one waits, what it would become. The hook is
+           called for one row at a time and MUI draws it before the next, so
+           one buffer serves every row. */
+        static char ver[140];
         array[0] = e->id; array[1] = e->version;
+        if (u && u->installed_version[0]) {
+            if (u->newer && strcmp(u->installed_version, u->available_version) == 0)
+                snprintf(ver, sizeof ver, "%s r%ld -> r%ld", u->installed_version,
+                         u->installed_revision, u->available_revision);
+            else if (u->newer)
+                snprintf(ver, sizeof ver, "%s -> %s", u->installed_version, u->available_version);
+            else
+                snprintf(ver, sizeof ver, "%s", u->installed_version);
+            array[1] = ver;
+        }
         array[2] = (char *)(u && u->state == PKG_UPD_AVAILABLE ? "\33bupdate available" :
                             u && u->state == PKG_UPD_BLOCKED ? "update blocked" :
                             e->installed ? "installed" : (e->ours ? "" : "other ABI"));
@@ -257,7 +273,12 @@ static void refill(const char *term, const char *keep_id, const char *why)
     {
         pkg_err e3; memset(&e3, 0, sizeof e3);
         pkg_updates_free(&upd);
-        if (pkg_updates_get(c, index_path, 1, &upd, &e3) != PKG_OK) memset(&upd, 0, sizeof upd);
+        if (pkg_updates_get(c, index_path, 1, &upd, &e3) != PKG_OK) {
+            /* Zeroed it would read as an OK catalogue with nothing installed. */
+            memset(&upd, 0, sizeof upd);
+            upd.catalogue = PKG_CAT_UNREADABLE;
+            snprintf(upd.catalogue_error, sizeof upd.catalogue_error, "%s", e3.summary);
+        }
     }
     /* The category cycle lists what the whole index holds, not what the
        current search left: a search with no hits used to empty the cycle
@@ -1206,7 +1227,7 @@ static int real_main(int argc, char **argv)
     app = ApplicationObject,
         MUIA_Application_Title,       (IPTR)"PkgManager",
         MUIA_Application_Author,      (IPTR)AROSPKG_AUTHOR,
-        MUIA_Application_Version,     (IPTR)"$VER: PkgManager 0.3.1 (2.10.2026)",
+        MUIA_Application_Version,     (IPTR)"$VER: PkgManager " PM_VERSION " (11.10.2026)",
         MUIA_Application_Description, (IPTR)"Install software from AROS Archives",
         MUIA_Application_Base,        (IPTR)"PKGMANAGER",
         SubWindow, (win = WindowObject,
