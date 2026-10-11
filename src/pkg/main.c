@@ -1077,5 +1077,14 @@ static int real_main(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-    return pkg_run_with_stack(real_main, argc, argv);
+    int rc = pkg_run_with_stack(real_main, argc, argv);
+    /* Not optional. On mainline before da9bbd01b5 (2026-09-24, so the pool's
+       v1 base and the Raspberry Pi image of 2026-08-22), output still in the
+       stdio buffer at exit is discarded when stdout is redirected: measured
+       with tests/stdout-probe on pool v1-1, fputs/fwrite/putchar lost, printf
+       and puts kept, fputs followed by fflush kept. `apkg search >file` and
+       `apkg outdated --json >file` came out empty that way, because each
+       prints its answer with one fputs. */
+    fflush(stdout);
+    return rc;
 }
