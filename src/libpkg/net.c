@@ -187,7 +187,13 @@ static int fetch_once(const char *host, const char *path, str *body,
     for (;;) {
         char chunk[16384];
         n = tls_read(t, chunk, sizeof chunk);
-        if (n < 0) { broken(why, host, &raw, tls_error(t)); goto out; }
+        if (n < 0) {
+            /* A Ctrl-C that the TCP stack turned into EINTR is the user's
+               cancel, the same as one the progress callback saw. Only when
+               there is a callback: without one nobody offered cancelling. */
+            if (prog_cb && tls_interrupted(t)) { snprintf(why, 240, "cancelled"); goto out; }
+            broken(why, host, &raw, tls_error(t)); goto out;
+        }
         if (n == 0) break;
         if (!str_add(&raw, chunk, (size_t)n, max_bytes)) {
             snprintf(why, 240, "response from %s exceeds %ld bytes", host, max_bytes);

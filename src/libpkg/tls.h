@@ -19,6 +19,10 @@ tls *tls_start(int sock, const char *host, const char *verify_name,
 int  tls_write(tls *t, const void *buf, size_t n);
 int  tls_read(tls *t, void *buf, size_t n);
 const char *tls_error(tls *t);
+/* 1 when the last read failed because the call was interrupted (EINTR):
+   on mainline AROS the TCP stack breaks a blocking recv on Ctrl-C, so that
+   is how a Ctrl-C during a download arrives there. */
+int tls_interrupted(tls *t);
 /* Testing only: the next receive on this connection fails as a reset socket
  * (TLS_TEST_RESET: recv returns -1, Errno() ECONNRESET) or delivers corrupted
  * bytes, which the TLS layer rejects (TLS_TEST_CORRUPT). Once. */

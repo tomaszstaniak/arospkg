@@ -175,6 +175,8 @@ int tls_write(tls *t, const void *b, size_t n)
 
 void tls_test_fail_next_recv(tls *t, int how) { if (t) t->trap = how; }
 
+int tls_interrupted(tls *t) { return t && t->sock_errno == EINTR; }
+
 /* The socket's error when there was one: that is what failed, and Mbed TLS
    only reports it as an internal error. Otherwise the TLS library's. */
 const char *tls_error(tls *t)
@@ -185,6 +187,8 @@ const char *tls_error(tls *t)
         snprintf(t->err, sizeof t->err, "connection reset");
     else if (t->sock_errno == ETIMEDOUT)
         snprintf(t->err, sizeof t->err, "connection timed out");
+    else if (t->sock_errno == EINTR)
+        snprintf(t->err, sizeof t->err, "interrupted (Ctrl-C)");
     else if (t->sock_errno)
         snprintf(t->err, sizeof t->err, "socket error %d", t->sock_errno);
     else if (t->ssl_err) {

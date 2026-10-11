@@ -130,7 +130,8 @@ download, or right after the archive has been verified. Once files are
 being changed it is not acted on; the operation finishes, and apkg says
 that the Ctrl-C came too late to stop it. `upgrade --all` then stops before
 the next package, and exits with 10. Ctrl-C during `apkg update` stops the
-download and keeps the catalogue you had. A command that was stopped can
+download and keeps the catalogue you had. (On mainline AROS the TCP stack
+itself breaks the transfer on Ctrl-C; apkg reports that as a cancel too.) A command that was stopped can
 simply be run again.
 
 Output redirected to a file (`apkg outdated >RAM:updates.txt`) is plain
