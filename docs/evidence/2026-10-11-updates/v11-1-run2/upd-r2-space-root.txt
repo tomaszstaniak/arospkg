@@ -1,0 +1,10 @@
+Updates for installed packages
+Catalogue updated 2026-10-11 11:39
+  Package  Installed      Available      State
+  upa  1.0-aros1      1.1-aros1      update available
+
+1 update available for installed packages. See them: apkg --root "SYS:Pkg Upd
+S" outdated
+Upgrade one: apkg --root "SYS:Pkg Upd S" upgrade <id>
+Upgrade all that can be: apkg --root "SYS:Pkg Upd S" upgrade --all
+rc=0

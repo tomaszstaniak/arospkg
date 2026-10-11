@@ -118,7 +118,9 @@ the other, each exactly as `apkg upgrade <id>` would, and reports each.
 Each package is its own operation: one that fails, for example because a
 file you changed would be overwritten, is left as it was and the others
 continue. The group is not undone as a whole. `apkg --dry-run upgrade
---all` prints each package's dry run and changes nothing.
+--all` prints each package's dry run and changes nothing. Its exit status
+is 0 when every planned upgrade succeeded (or there was nothing to do) and
+10 when any failed or was stopped.
 
 ### Ctrl-C, redirection and terminals
 

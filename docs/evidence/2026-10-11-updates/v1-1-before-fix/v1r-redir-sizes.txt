@@ -1,0 +1,10 @@
+Directory "RESULTS:" on Sunday 10/11/26:
+v1r-redir-version.txt        278 --arwed Today       11:22:54
+v1r-redir-search.txt       empty --arwed Today       11:22:54
+v1r-redir-search-upa.txt   empty --arwed Today       11:22:54
+v1r-redir-show.txt           368 --arwed Today       11:22:54
+v1r-redir-list.txt            18 --arwed Today       11:22:54
+v1r-redir-search-json.txt    1685 --arwed Today       11:22:54
+v1r-redir-search-viaram.txt   empty ---rwed Today       11:22:54
+v1r-redir-sizes.txt        empty --arwed Today       11:22:54
+8 files - 7 blocks used

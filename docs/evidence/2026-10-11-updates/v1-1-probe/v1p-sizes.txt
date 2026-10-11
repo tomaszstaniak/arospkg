@@ -1,0 +1,13 @@
+Directory "RESULTS:" on Sunday 10/11/26:
+v1p-fputs.txt              empty --arwed Today       11:27:24
+v1p-printf.txt                12 --arwed Today       11:27:24
+v1p-fwrite.txt             empty --arwed Today       11:27:24
+v1p-puts.txt                  10 --arwed Today       11:27:24
+v1p-putchar.txt            empty --arwed Today       11:27:24
+v1p-fputs-big.txt          empty --arwed Today       11:27:24
+v1p-printf-then-fputs.txt      13 --arwed Today       11:27:24
+v1p-fputs-then-printf.txt      26 --arwed Today       11:27:24
+v1p-fputs-flush.txt           14 --arwed Today       11:27:24
+v1p-fputs-ram.txt          empty ---rwed Today       11:27:24
+v1p-sizes.txt              empty --arwed Today       11:27:24
+11 files - 5 blocks used

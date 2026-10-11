@@ -1,0 +1,17 @@
+Updates for installed packages
+Catalogue updated 2026-10-11 11:24
+  Package  Installed      Available      State
+  upa  1.0-aros1      1.1-aros1      update available
+  upb  1.0-aros1      1.0-aros2      update available
+  upe  1.0-aros1      1.1-aros1      update blocked
+    this system does not provide what the newer version needs:
+    arospkg-test-missing.library
+
+3 updates available for installed packages (1 of them blocked). See them: apkg
+--root "SYS:PkgUpd" outdated
+Upgrade one: apkg --root "SYS:PkgUpd" upgrade <id>
+Upgrade all that can be: apkg --root "SYS:PkgUpd" upgrade --all
+5 more installed packages are neither current nor upgradable (newer than the
+catalogue, not in it, or not comparable): apkg --root "SYS:PkgUpd" outdated
+--all
+rc=0

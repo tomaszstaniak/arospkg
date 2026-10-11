@@ -1,0 +1,4 @@
+Could not update apkg: the latest stable release has no archive for this CPU
+and ABI
+  x86_64-aros-v11
+rc=10

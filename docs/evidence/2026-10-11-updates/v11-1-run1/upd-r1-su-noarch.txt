@@ -1,0 +1,10 @@
+apkg 0.4.1
+  Location: AROS:UPDT/apkg
+  Latest stable release: 0.4.2, with no archive for x86_64-aros-v11
+
+No newer apkg for this machine. This one stays as it is.
+  apkg self-update replaces only this apkg. PkgManager is a separate program:
+  take it from the release archive
+  (https://github.com/tomaszstaniak/arospkg/releases/latest), or use its "Check
+  for a newer version" in About.
+rc=0

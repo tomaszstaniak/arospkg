@@ -1,0 +1,5 @@
+11:40:31 start root=SYS:PkgUpd recheck=900s rexx=yes
+11:40:31 count: catalogue=ok when=2026-10-11 11:39 installed=8 newer=2 ready=1 blocked=1 -> "2 available (1 blocked)"
+11:40:31 registered token=1
+11:41:10 time limit
+11:41:10 clean exit rc=0

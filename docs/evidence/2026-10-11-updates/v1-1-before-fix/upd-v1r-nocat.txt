@@ -1,0 +1,3 @@
+No catalogue on this machine, so updates cannot be checked. Fetch it: apkg
+--root "SYS:PkgUpdN" update
+rc=10

@@ -1,0 +1,11 @@
+start PkgManager 0.4.1 sha256 3730b20e2c6f851b2e6be0a3b5b098dc826c1f3e758e5dee67a2899eb0416324 root SYS:PkgUpd: ARexx port PKGMANAGER
+refill (start) term="" rows=8 shown=8 installed=7 keep=- updates=1 ready=0 blocked=1 catalogue=ok when=2026-10-11 10:50
+about opened
+check for a newer version pressed
+job 1 check - from window
+done check for a newer version  status=0
+release check: status=0 found=1 version=0.4.1 other=0.4.1 cmp=0
+job 1 check - done: PkgManager 0.4.1 is the latest stable release.
+apkg self-update updates only apkg.
+worker task gone 0 ms after done
+quit
