@@ -19,6 +19,10 @@ void net_close(void);
  * accident; and redirects are followed but re-verified against the NEW host. */
 int  net_fetch(const char *url, const char *dest, long max_bytes, char why[240]);
 
+/* SHA-256 of the last fetched body as it was in memory before being written,
+ * or "" -- computed only when pkg_keep_rejected() is set. */
+const char *net_body_sha256(void);
+
 /* Bytes of body received so far, and the total from Content-Length when the
  * server sent one (0 otherwise). Setting *cancel abandons the fetch; nothing
  * has been written to disk at that point, so there is nothing to undo. */

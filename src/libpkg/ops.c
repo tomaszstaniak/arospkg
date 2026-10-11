@@ -139,6 +139,47 @@ static int dir_is_empty(const char *path)
 }
 
 
+/* --keep-rejected. A download that failed verification is moved aside, not
+ * deleted, so the bytes can be compared with the real file. It stays refused:
+ * nothing installs from it, and <archive>.rejected is a name no lookup reads
+ * as a cached archive, while the next download goes to <archive>.part as
+ * before. A newer rejection replaces an older one, so there is only ever one
+ * file to send. The hashes separate the suspects: the body in memory before
+ * the write (network, TLS, memory), the file as verification read it, and a
+ * second read of the same file (an unstable read path). Added 2026-10-08 for
+ * a mismatch on a real Raspberry Pi that QEMU did not reproduce. */
+static void reject_download(const char *part, const char *archive,
+                            const char *want_sha, long want_size,
+                            const char *first)
+{
+    char kept[PKG_MAXPATH], again[65] = "", one[65] = "";
+    const char *mem = net_body_sha256();
+    long n1 = -1, n2 = -1, sz;
+    int r1 = 0, r2;
+    if (!pkg_keep_rejected()) { u_delete(part); return; }
+    snprintf(kept, sizeof kept, "%s.rejected", archive);
+    if (u_publish(part, kept) != 0) {
+        printf("Could not rename the rejected download; it is left as %s\n", part);
+        snprintf(kept, sizeof kept, "%s", part);
+    }
+    sz = u_size(kept);
+    if (!first) {
+        r1 = sha256_file_count(kept, one, &n1);
+        first = r1 == 0 ? one : "(read error)";
+    }
+    r2 = sha256_file_count(kept, again, &n2);
+    printf("\nKept the rejected download for diagnosis. It was NOT installed.\n"
+           "  file      %s\n"
+           "  size      %ld bytes (index: %ld)\n"
+           "  expected  %s\n"
+           "  memory    %s\n"
+           "  disk      %s\n"
+           "  re-read   %s (%ld bytes read)\n\n",
+           kept, sz, want_size, want_sha,
+           mem && *mem ? mem : "(not computed)",
+           first, r2 == 0 ? again : "(read error)", n2);
+}
+
 pkg_status fetch_verified(pkg_ctx *c, const char *id, const char *url,
                           const char *want_sha, long want_size,
                           const char *archive, pkg_err *e)
@@ -185,12 +226,17 @@ pkg_status fetch_verified(pkg_ctx *c, const char *id, const char *url,
         net_close();
         snprintf(part, sizeof part, "%s.part", archive);
         if (want_size >= 0 && u_size(part) != want_size) {
-            u_delete(part);
+            reject_download(part, archive, want_sha, want_size, NULL);
             st = pkg_fail(e, PKG_E_VERIFY, "the download is the wrong size",
                           "Nothing was added to the cache.", url); return st;
         }
-        if (sha256_file(part, got) != 0 || strcmp(got, want_sha) != 0) {
-            u_delete(part);
+        if (sha256_file(part, got) != 0) {
+            reject_download(part, archive, want_sha, want_size, NULL);
+            st = pkg_fail(e, PKG_E_IO, "cannot read the download back",
+                          "Nothing was added to the cache.", part); return st;
+        }
+        if (strcmp(got, want_sha) != 0) {
+            reject_download(part, archive, want_sha, want_size, got);
             st = pkg_fail(e, PKG_E_VERIFY, "the download does not match the index",
                           got, url); return st;
         }

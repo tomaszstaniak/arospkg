@@ -293,6 +293,8 @@ static void usage_all(void)
            "  requires <id>       Check system requirements for a package\n"
            "  unlock              Remove a stale operation lock\n"
            "  doctor --retry      Retry pending recovery\n"
+           "  --keep-rejected     Keep a download that fails verification\n"
+           "                      as <cache>/<id>.<ext>.rejected (not installed)\n"
            "  --index <file>      Read a local catalogue file\n"
            "  --index-url <url>   Set the catalogue download URL\n"
            "  --all-abi           Include packages for other CPUs and ABIs\n"
@@ -723,6 +725,7 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--json")) json = 1;
         else if (!strcmp(argv[i], "--all")) all = 1;
         else if (!strcmp(argv[i], "--verbose")) pkg_set_verbose(1);
+        else if (!strcmp(argv[i], "--keep-rejected")) pkg_set_keep_rejected(1);
         else if (!strcmp(argv[i], "--plain")) plain = 1;
         else if (!strcmp(argv[i], "--color=auto")) color = PR_COLOR_AUTO;
         else if (!strcmp(argv[i], "--color=always")) color = PR_COLOR_ALWAYS;

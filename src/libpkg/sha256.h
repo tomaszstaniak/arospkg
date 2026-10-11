@@ -7,4 +7,6 @@ void sha256_update(sha256_ctx *, const void *, size_t);
 void sha256_final(sha256_ctx *, char out_hex[65]);
 /* Hash a whole file. Returns 0 on success. */
 int  sha256_file(const char *path, char out_hex[65]);
+/* The same, also giving the number of bytes read (set on failure too). */
+int  sha256_file_count(const char *path, char out_hex[65], long *bytes);
 #endif

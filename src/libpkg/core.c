@@ -349,6 +349,9 @@ void pkg_test_fault(pkg_fault f) { pkg_injected_fault = f; }
 static int verbose_s;
 void pkg_set_verbose(int v) { verbose_s = v; }
 int  pkg_verbose(void) { return verbose_s; }
+static int keep_rejected_s;
+void pkg_set_keep_rejected(int v) { keep_rejected_s = v; }
+int  pkg_keep_rejected(void) { return keep_rejected_s; }
 void pkg_last_removal(pkg_ctx *c, pkg_removal *out) { *out = c->removal; }
 
 int  pkg_slow_ms;

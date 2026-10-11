@@ -74,3 +74,23 @@ apkg remove zunecalc
 ```
 
 Files you changed, and files apkg did not install, are kept; apkg lists them.
+
+## When a download does not match the catalogue
+
+apkg downloads into `SYS:Packages/cache/<id>.<ext>.part`, checks its size
+and SHA-256 against the catalogue, and only then renames it into the cache.
+A download that fails either check is deleted at once, so after
+`the download does not match the index` there is no file left to look at.
+
+To keep it for diagnosis, repeat the install with `--keep-rejected`:
+
+```text
+apkg --keep-rejected install folio
+```
+
+The rejected file is then moved to `SYS:Packages/cache/<id>.<ext>.rejected`
+(a later rejection replaces it) and apkg prints its path, its size, the
+expected SHA-256, and three received ones: the body as it was in memory
+before being written, the file as verification read it, and a second read
+of the same file. The file is still refused: nothing is installed from it,
+and the next install downloads again rather than using it.

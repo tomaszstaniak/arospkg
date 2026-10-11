@@ -1,0 +1,33 @@
+{
+ "schema": 1,
+ "source": "https://archives.arosworld.org/share/FULLINDEX.readme",
+ "packages": [
+  {
+   "id": "folio",
+   "version": "0.4.1",
+   "summary": "PDF reader with two-page spreads, search and highlighting",
+   "arch": "x86_64",
+   "abi": "v11",
+   "category": "office/misc",
+   "url": "https://github.com/tomaszstaniak/aros-foliopdf/releases/download/v0.4.1/Folio-0.4.1-aros1.x86_64-aros-v11.zip",
+   "size": 28551337,
+   "sha256": "024ba46165b07e10bd44312f9cb2fe5ed8c412755e77958a750eb7d8b8065193",
+   "depends": [],
+   "requires_system": [],
+   "installs_on": [],
+   "runs_on": [],
+   "does_not_run_on": [],
+   "kind": "app",
+   "subdir": "Folio",
+   "icon": "Folio.info",
+   "install": {},
+   "revision": 1,
+   "source": "https://github.com/tomaszstaniak/aros-foliopdf",
+   "license": "AGPL-3.0-or-later",
+   "post_install_notes": [
+    "Launch from the Folio icon, which sets an 8 MiB stack. Shell: Stack 8388608.",
+    "Opening external web links requires openurl.library."
+   ]
+  }
+ ]
+}

@@ -17,6 +17,7 @@
 #include "pkg.h"
 #include "util.h"
 #include "slow.h"
+#include "sha256.h"
 
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -47,6 +48,8 @@ void net_set_slow(int ms) { slow_ms = ms; }
 static long break_at = -1;
 static int  break_how;
 void net_set_break(long b, int how) { break_at = b; break_how = how; }
+static char body_sha[65];
+const char *net_body_sha256(void) { return body_sha; }
 
 typedef struct { char *p; size_t len, cap; } str;
 
@@ -318,6 +321,15 @@ int net_fetch(const char *url, const char *dest, long max_bytes, char why[240])
         if (hop == MAXREDIR) { snprintf(why, 240, "too many redirects"); goto out; }
     }
 
+    /* Only for --keep-rejected: the body as it is in memory, before the
+       write. If it is right and the file is wrong, the network is cleared. */
+    body_sha[0] = 0;
+    if (pkg_keep_rejected()) {
+        sha256_ctx h;
+        sha256_init(&h);
+        sha256_update(&h, body.p, body.len);
+        sha256_final(&h, body_sha);
+    }
     snprintf(part, sizeof part, "%s.part", dest);
     u_delete(part);
     f = fopen(part, "wb");

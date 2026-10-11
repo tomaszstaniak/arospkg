@@ -296,6 +296,10 @@ void pkg_last_removal(pkg_ctx *, pkg_removal *);
    printed only when this is set; front ends show their own progress. */
 void pkg_set_verbose(int);
 int  pkg_verbose(void);
+/* Diagnosis only: a download that fails verification is kept as
+   <archive>.rejected instead of deleted. It is still refused. */
+void pkg_set_keep_rejected(int);
+int  pkg_keep_rejected(void);
 
 /* What an operation would do, from the same planners the operation uses,
  * with nothing changed: not the drawer, not the registry, and no recovery of

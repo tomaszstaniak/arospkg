@@ -1,0 +1,29 @@
+; apkg --keep-rejected, 2026-10-08. Controlled failures on real downloads.
+FAILAT 21
+Stack 262144
+Echo "== kr start =="
+Date
+SYS:KR1008/apkg --version
+Echo "-- T1 hash wrong in index, --keep-rejected"
+SYS:KR1008/apkg --root SYS:KR1008/root --index SYS:KR1008/bad.json --keep-rejected install folio
+Echo "rc=$RC"
+List SYS:KR1008/root/cache
+SYS:KR1008/apkg assert-hash SYS:KR1008/root/cache/folio.zip.rejected 693ebe244eaa8ef6b1e7fa7ce22217ea70b43261b79aa665fd96c6e03a1f5fe0
+Echo "rc=$RC"
+Echo "-- T2 same, without the flag: old behaviour, kept file untouched"
+SYS:KR1008/apkg --root SYS:KR1008/root --index SYS:KR1008/bad.json install folio
+Echo "rc=$RC"
+List SYS:KR1008/root/cache
+Echo "-- T3 size wrong in index, --keep-rejected"
+SYS:KR1008/apkg --root SYS:KR1008/root --index SYS:KR1008/size.json --keep-rejected install folio
+Echo "rc=$RC"
+List SYS:KR1008/root/cache
+Echo "-- T4 correct archive, --keep-rejected, rejected file present"
+SYS:KR1008/apkg --root SYS:KR1008/root --index SYS:KR1008/good.json --keep-rejected install folio
+Echo "rc=$RC"
+List SYS:KR1008/root/cache
+SYS:KR1008/apkg --root SYS:KR1008/root --index SYS:KR1008/good.json list
+SYS:KR1008/apkg --root SYS:KR1008/root verify folio
+Echo "rc=$RC"
+Date
+Echo "== kr end =="

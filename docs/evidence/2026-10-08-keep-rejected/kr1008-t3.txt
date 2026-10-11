@@ -1,0 +1,15 @@
+Installing folio 0.4.1-aros1
+Downloading 28172 KiB
+
+Kept the rejected download for diagnosis. It was NOT installed.
+  file      SYS:KR1008/root2/cache/folio.zip.rejected
+  size      28848659 bytes (index: 28848658)
+  expected  693ebe244eaa8ef6b1e7fa7ce22217ea70b43261b79aa665fd96c6e03a1f5fe0
+  memory    693ebe244eaa8ef6b1e7fa7ce22217ea70b43261b79aa665fd96c6e03a1f5fe0
+  disk      693ebe244eaa8ef6b1e7fa7ce22217ea70b43261b79aa665fd96c6e03a1f5fe0
+  re-read   693ebe244eaa8ef6b1e7fa7ce22217ea70b43261b79aa665fd96c6e03a1f5fe0 (28848659 bytes read)
+
+Could not install folio: the download is the wrong size
+  https://github.com/tomaszstaniak/aros-foliopdf/releases/download/v0.4.1/Folio
+  -0.4.1-aros1.aarch64-aros-raspi.zip
+  Nothing was added to the cache.

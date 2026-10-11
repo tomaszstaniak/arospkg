@@ -31,6 +31,14 @@ int main(void)
         "9f4390f8d30c2dd92ec9f095b65e2b9ae9b0a925a5258e241c9f1e910f734318", "55 bytes");
     bad += check("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 56,
         "b35439a4ac6f0948b6d6f9e3c6af0f5f590ce20f1bde7090ef7970686ec6738a", "56 bytes");
+    /* A read error is a failure, not a hash of what came before it. A
+       directory opens on POSIX and fails on the first read. */
+    {
+        char got[65]; long n = -1;
+        if (sha256_file_count(".", got, &n) == 0) {
+            printf("FAIL read error hashed as %s\n", got); bad++;
+        } else printf("ok   read error reported\n");
+    }
     printf(bad ? "\nFAILED\n" : "\nall vectors pass\n");
     return bad != 0;
 }

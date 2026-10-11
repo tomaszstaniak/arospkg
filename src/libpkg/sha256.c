@@ -86,14 +86,28 @@ void sha256_final(sha256_ctx *c, char out_hex[65])
     out_hex[64] = 0;
 }
 
-int sha256_file(const char *path, char out_hex[65])
+int sha256_file_count(const char *path, char out_hex[65], long *bytes)
 {
     FILE *f = fopen(path, "rb");
     sha256_ctx c; unsigned char buf[8192]; size_t n;
+    long total = 0;
+    int bad;
+    if (bytes) *bytes = 0;
     if (!f) return -1;
     sha256_init(&c);
-    while ((n = fread(buf, 1, sizeof buf, f)) > 0) sha256_update(&c, buf, n);
+    while ((n = fread(buf, 1, sizeof buf, f)) > 0) { sha256_update(&c, buf, n); total += (long)n; }
+    /* fread returns 0 on an error as well as at the end. Without this check a
+       read that failed half way hashed the part before it, and the caller
+       reported a file that does not match instead of one it could not read. */
+    bad = ferror(f);
     fclose(f);
+    if (bytes) *bytes = total;
+    if (bad) return -1;
     sha256_final(&c, out_hex);
     return 0;
+}
+
+int sha256_file(const char *path, char out_hex[65])
+{
+    return sha256_file_count(path, out_hex, NULL);
 }
