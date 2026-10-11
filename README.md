@@ -10,13 +10,19 @@ Both use the same catalogue and installed packages.
 · [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.2)
 · [i386 ABIv0 (0.4.2)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.i386-aros-v0.zip)
 · [Mainline x86_64 ABIv1 (0.4.2, experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.x86_64-aros-v1.zip)
-· [Raspberry Pi (0.4.0)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip)
+· [Raspberry Pi (0.4.2, experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.aarch64-aros-raspi.zip)
 
 New in 0.4.2: `apkg outdated` lists installed programs with updates and
 says why one cannot be installed here; `apkg upgrade --all` upgrades them
 one at a time; PkgManager has an Updates list. Ctrl-C stops any download.
 On 0.4.0 or 0.4.1, `apkg self-update` installs it (PkgManager comes from
 the archive). New in 0.4.1: upgrades across upstream versions.
+
+[Screenshots of 0.4.2 on AROS One](docs/screenshots/0.4.2/README.md).
+
+The Raspberry Pi archive includes apkg and PkgManager. It is an experimental
+build for user testing: compiled and linked with the native Pi SDK, but not
+runtime-tested on Pi. The reported Folio checksum failure remains unexplained.
 
 ## Install
 
@@ -36,8 +42,8 @@ apkg update
 No compiler, Installer script or separate TLS libraries are needed.
 
 Keep the extracted drawer somewhere permanent, not `RAM:`, if using
-PkgManager (included in the ABIv11 archive). Installing packages requires
-a working network connection.
+PkgManager (included in the ABIv11 and experimental Pi archives). Installing
+packages requires a working network connection.
 
 **Upgrading from 0.3.x?** Install 0.4.2 manually using the commands above.
 Keep `SYS:Packages`; it contains your installed programs and package records.

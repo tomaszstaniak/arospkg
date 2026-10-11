@@ -7,10 +7,12 @@ Package management for AROS, with the apkg command-line tool and PkgManager desk
 | [x86_64 ABIv11](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.x86_64-aros-v11.zip) | 0.4.2 | apkg and PkgManager | stable |
 | [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.i386-aros-v0.zip) | 0.4.2 | apkg | tested under QEMU, see below |
 | [x86_64 ABIv1, mainline](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.x86_64-aros-v1.zip) | 0.4.2 | apkg | experimental |
-| [Raspberry Pi, aarch64 ABIv1](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.0/arospkg-0.4.0.aarch64-aros-raspi.zip) | 0.4.0 | apkg | unchanged |
+| [Raspberry Pi, aarch64 ABIv1](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.aarch64-aros-raspi.zip) | 0.4.2 | apkg and PkgManager | experimental; compile/link only |
 | [Hosted aarch64, Macaros](https://github.com/tomaszstaniak/arospkg/releases/download/v0.3.1/arospkg-0.3.1.aarch64-aros.zip) | 0.3.1 | apkg | experimental |
 
-There is no 0.4.2 build for the Raspberry Pi: one builds, but it has not been run on a Pi, so it is not published. On a Pi, keep 0.4.0; `apkg self-update` there reports that this release has no archive for that machine and changes nothing.
+The Raspberry Pi archive is an experimental build for user testing. Both apkg and PkgManager compile and link with Clang 20.1.0 and the native Pi SDK; neither 0.4.2 binary has been run on Pi, emulated or physical. The Folio checksum failure is not diagnosed. `--keep-rejected` is available to collect evidence. Adding this archive also makes it available through `apkg self-update` on Pi; that updates only apkg, and PkgManager must be taken from the archive. Users who prefer the previously tested CLI can retain 0.4.0.
+
+[0.4.2 screenshots on AROS One](https://github.com/tomaszstaniak/arospkg/blob/main/docs/screenshots/0.4.2/README.md).
 
 ## What's new in 0.4.2
 
@@ -49,6 +51,6 @@ i386 ABIv0 (pool slot v0-2), with the archive's apkg: the same updates suite (al
 
 x86_64 ABIv1, mainline nightly 2026-09-23 (pool slot v1-1), with the archive's apkg: the same updates suite, including every redirected output, `apkg update` from the public catalogue and Ctrl-C during it. The public catalogue has no packages for mainline, so no install over the network was made there.
 
-Not tested in this release: PkgManager on anything but AROS One 1.3; the Pi build, which is not published.
+Not runtime-tested in this release: PkgManager on anything but AROS One 1.3; both binaries in the experimental Pi archive. The ScreenBar integration remains an internal demonstration and is not included in release archives.
 
 Use the `SHA256SUMS` from this release to verify your download.

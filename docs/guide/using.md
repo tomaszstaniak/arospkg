@@ -2,9 +2,9 @@
 
 Install programs with apkg in the Shell or PkgManager on the desktop.
 [Choose the archive for your CPU and ABI](../../README.md#downloads).
-0.4.2 is available for x86_64 ABIv11 and i386 ABIv0, and as an
-experimental build for mainline x86_64 ABIv1; the native Raspberry Pi
-build stays at 0.4.0.
+0.4.2 is available for x86_64 ABIv11 and i386 ABIv0, and as
+experimental builds for mainline x86_64 ABIv1 and native Raspberry Pi
+aarch64 ABIv1. The Pi build is compiled and linked, but not runtime-tested.
 
 ## Install apkg
 
@@ -21,7 +21,7 @@ Check that the version and ABI match the archive you downloaded.
 Keep your existing `SYS:Packages`. Versions 0.3.x require this manual
 upgrade to 0.4.
 
-PkgManager is included only in the x86_64 ABIv11 archive.
+PkgManager is included in the x86_64 ABIv11 and experimental Raspberry Pi archives.
 Keep its unpacked folder on disk. To use the graphical interface, run
 `Run PkgManager` from that folder. Click **Update index**, select a package
 and click **Install**.
@@ -148,7 +148,7 @@ replaces the apkg executable you started and keeps the previous copy as
 `apkg.old`. It does not update PkgManager: take PkgManager from the release
 archive. In PkgManager, **About** > **Check for a newer version** says
 whether a newer release exists. When the latest release has no archive for
-your machine (as for Raspberry Pi since 0.4.1), `--check` says so and your
+your machine, `--check` says so and your
 apkg stays as it is.
 
 ## Remove

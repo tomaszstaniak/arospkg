@@ -1,27 +1,40 @@
-arospkg for native AROS on Raspberry Pi (aarch64, ABIv1) -- local test build
-============================================================================
+arospkg 0.4.2 for native AROS Raspberry Pi aarch64 ABIv1 — EXPERIMENTAL
 
-This archive carries apkg (Shell) and PkgManager (Zune window) built with
-the Pi's own Developer SDK (Clang 20, ABIv1). It is a local build for
-testing, not a published release. It does not run on hosted Macaros
-aarch64 or on x86_64 AROS.
+Includes apkg, PkgManager and its icon. Built with Clang 20.1.0 and the native
+Pi Developer SDK. Compilation and linking checked; these 0.4.2 binaries have
+NOT been run on Raspberry Pi, physical or emulated. Available for user testing.
+Do not use this archive on hosted Macaros or x86_64 AROS.
+
+The reported Folio checksum failure remains unexplained. --keep-rejected
+collects the rejected file and diagnostic hashes; it does not bypass verification.
+The separate diagnostic archive supplied for Bohun remains unchanged.
 
 INSTALL
+Unpack, close PkgManager and let package operations finish. Copy apkg to C:.
+Keep PkgManager.info next to PkgManager and launch it from the icon or Shell:
+  Run PkgManager
+Keep existing SYS:Packages. Network operations require bsdsocket.library and
+ENV:SYS/Certificates/ca-bundle.crt. PkgManager needs muimaster.library; its
+ARexx port is optional. apkg self-update updates only apkg, not PkgManager.
 
-  1. Unpack the archive, e.g. into SYS:arospkg.
-  2. Copy apkg C:          (Shell use)
-  3. Start PkgManager from its icon, or in the Shell: Run PkgManager
-     Keep PkgManager.info next to PkgManager.
+NEW IN 0.4.2
+  apkg update
+  apkg outdated
+  apkg --json outdated
+  apkg --dry-run upgrade --all
+  apkg upgrade --all
+  PkgManager --updates
 
-Online operations (Update index, network install) need a TCP/IP stack
-(bsdsocket.library) and ENV:SYS/Certificates/ca-bundle.crt. Without them
-apkg and PkgManager can still work from a local catalogue and cached
-archives. PkgManager needs Zune (muimaster.library). Its ARexx port is
-optional: when RexxMast is not running, the window works without it.
+CLI and GUI share the update model. GUI shows installed -> available versions,
+blocked updates and their reasons. Upgrade previews protect modified files;
+rollback and recovery are retained. Ctrl-C cancels downloads; once files are
+changing the current transaction finishes before the group stops.
 
-Packages go into SYS:Packages unless another root is given
-(apkg --root DIR ...). Downloads are checked against the catalogue's
-SHA-256; a mismatch stops the installation and is never skipped.
+TO COLLECT A FAILED DOWNLOAD
+  apkg --plain --keep-rejected install folio >SYS:folio-result.txt
+Send folio-result.txt and the file named in the diagnostic output. A rejected
+archive is never installed or reused as verified cache.
 
-Verify the files with SHA256SUMS. See BUILD.txt for the commit.
+See BUILD.txt and SHA256SUMS for provenance and checksums.
+Release notes: https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.2
 Licences: LICENSE and licenses/.

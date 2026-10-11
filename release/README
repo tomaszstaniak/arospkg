@@ -17,7 +17,7 @@ INSTALL
 Keep your existing SYS:Packages when upgrading. Versions 0.3.x need this
 manual copy to reach 0.4.
 
-PkgManager is included in the x86_64 ABIv11 archive. Keep the unpacked
+PkgManager is included in the x86_64 ABIv11 and experimental Pi archives. Keep the unpacked
 drawer and start it from there with:
 
      Run PkgManager
@@ -32,8 +32,7 @@ BUILDS
   x86_64-aros-v11    apkg and PkgManager
   i386-aros-v0       apkg
   x86_64-aros-v1     apkg, experimental (mainline AROS)
-0.4.0 (unchanged, in release 0.4.0):
-  aarch64-aros-raspi apkg for native AROS on Raspberry Pi, ABIv1
+  aarch64-aros-raspi apkg and PkgManager, experimental (native Pi, ABIv1)
 
 A hosted Macaros aarch64 build remains available in release 0.3.1.
 
@@ -41,9 +40,10 @@ Downloads: https://github.com/tomaszstaniak/arospkg/releases
 
 x86_64 ABIv11 has the most test coverage, on AROS One 1.3 under QEMU.
 The i386 and mainline archives were checked under QEMU; the release notes
-say what was run on each. There is no 0.4.1 or
-0.4.2 build for the Pi: none could be tested there. The Pi build of 0.4.0
-was checked with a local catalogue and cached archives under QEMU raspi3b.
+say what was run on each. The experimental Pi build of 0.4.2 was compiled
+and linked, but not run on Pi. It is available for user testing; the Folio
+checksum failure remains unexplained. The Pi CLI of 0.4.0 was checked with
+a local catalogue and cached archives under QEMU raspi3b.
 
 For online operations you need working networking and the certificate
 bundle ENV:SYS/Certificates/ca-bundle.crt. PkgManager needs Zune.
