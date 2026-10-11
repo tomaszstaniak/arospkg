@@ -21,37 +21,19 @@
 #include "../libpkg/zip.h"
 #include "../libpkg/sha256.h"
 #include "../libpkg/util.h"
+#include "../libpkg/release.h"
 #include <proto/dos.h>
 #include <dos/dos.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define LATEST "https://github.com/tomaszstaniak/arospkg/releases/latest/download/"
+#define LATEST PKG_RELEASE_LATEST
 
 static const char *from_s, *sums_s, *fail_s;
 void su_test_from(const char *u) { from_s = u; }
 void su_test_sums(const char *f) { sums_s = f; }
 void su_test_fail(const char *w) { fail_s = w; }
-
-/* The archive name's target part for this build, or NULL. Kept beside the
-   checks the index uses: this build's own CPU and ABI, nothing else. */
-static const char *target(void)
-{
-    const char *a = pkg_arch(), *b = pkg_abi();
-#ifdef PKG_TARGET
-    /* A build that names its own archive: the native Raspberry Pi build is
-       aarch64 like the hosted one, but whether either runs on the other's
-       system is not established, so neither may take the other's. */
-    (void)a; (void)b;
-    return PKG_TARGET;
-#endif
-    if (!strcmp(a, "x86_64") && !strcmp(b, "v11")) return "x86_64-aros-v11";
-    if (!strcmp(a, "x86_64") && !strcmp(b, "v1"))  return "x86_64-aros-v1";
-    if (!strcmp(a, "i386")   && !strcmp(b, "v0"))  return "i386-aros-v0";
-    if (!strcmp(a, "aarch64"))                     return "aarch64-aros";
-    return NULL;
-}
 
 /* The file this process was loaded from: its PROGDIR: and its name. Never
    another copy found on the command path. */
@@ -62,21 +44,6 @@ static int self_path(char *out, size_t n)
     if (!GetProgramDir() || !NameFromLock(GetProgramDir(), (STRPTR)out, (LONG)n)) return -1;
     if (!AddPart((STRPTR)out, FilePart((STRPTR)name), (LONG)n)) return -1;
     return u_exists(out) ? 0 : -1;
-}
-
-/* 1.2.3[-x]: numbers first; a release outranks its own pre-releases. */
-static int vercmp(const char *a, const char *b)
-{
-    while (*a || *b) {
-        long x = strtol(a, (char **)&a, 10), y = strtol(b, (char **)&b, 10);
-        if (x != y) return x < y ? -1 : 1;
-        if (*a == '.' && *b == '.') { a++; b++; continue; }
-        if (*a == *b) return 0;                 /* both ended */
-        if (!*a) return 1;                      /* a is the release, b a pre-release */
-        if (!*b) return -1;
-        return strcmp(a, b) < 0 ? -1 : 1;
-    }
-    return 0;
 }
 
 /* The temporary directory; T: when the system has it. */
@@ -119,6 +86,15 @@ static int fetch(const char *url, const char *dest, long max, char why[240])
     return 0;
 }
 
+/* Said wherever the manager's own version comes up: self-update replaces
+   this apkg and nothing else, and the window is a separate program. */
+static void pkg_note(void)
+{
+    pr_text("apkg self-update replaces only this apkg. PkgManager is a separate program: "
+            "take it from the release archive (" PKG_RELEASE_PAGE "), or use its "
+            "\"Check for a newer version\" in About.", 2);
+}
+
 static int checking;                     /* --check: the wording of a failure */
 
 static int fail(const char *what, const char *detail)
@@ -136,10 +112,10 @@ int apkg_self_update(const char *current, const char *root, int check_only)
 {
     char self[512], fresh[520], prev[520], lockf[512];
     char sums[PKG_MAXPATH], zip[PKG_MAXPATH], build[PKG_MAXPATH];
-    char url[1024], why[240], zwhy[160], name[160], member[200], ver[40], suffix[40];
+    char url[1024], why[240], zwhy[160], name[160], member[200], ver[40];
     char want_zip[65] = "", want_bin[65] = "", got[65];
-    const char *t = target(), *base = from_s ? from_s : LATEST;
-    char *list = NULL, *line, *b = NULL;
+    const char *t = pkg_release_target(), *base = from_s ? from_s : LATEST;
+    char *list = NULL;
     int rc = 10, c, found = 0;
     struct FileInfoBlock *fib;
     LONG prot = 0;
@@ -166,20 +142,28 @@ int apkg_self_update(const char *current, const char *root, int check_only)
         list = u_read_all(sums, NULL);
     }
     /* "<sha256>  arospkg-<version>.<target>.zip", one archive per target */
-    snprintf(suffix, sizeof suffix, ".%s.zip", t);
-    for (line = list; line && *line; line = b ? b + 1 : NULL) {
-        char sha[80], fn[200];
-        size_t fl, sl = strlen(suffix);
-        b = strchr(line, '\n');
-        if (sscanf(line, "%79s %199s", sha, fn) == 2 && strlen(sha) == 64 &&
-            !strncmp(fn, "arospkg-", 8) && (fl = strlen(fn)) > 8 + sl &&
-            !strcmp(fn + fl - sl, suffix) && fl - sl - 8 < sizeof ver) {
-            found++;
-            snprintf(want_zip, sizeof want_zip, "%s", sha);
-            snprintf(name, sizeof name, "%s", fn);
-            snprintf(ver, sizeof ver, "%.*s", (int)(fl - sl - 8), fn + 8);
+    {
+        pkg_release r;
+        found = pkg_release_pick(list, t, &r);
+        snprintf(want_zip, sizeof want_zip, "%s", r.sha256);
+        snprintf(name, sizeof name, "%s", r.archive);
+        snprintf(ver, sizeof ver, "%s", r.version);
+        if (!found && check_only) {
+            /* Not a failure of the question: the answer is that there is
+               nothing newer for this machine. The Pi stayed on 0.4.0 when
+               0.4.1 had no archive for it, and that is what --check says. */
+            char line[400];
+            snprintf(line, sizeof line, "apkg %s", current);
+            pr_heading(line);
+            pr_field("Location", self, -1);
+            snprintf(line, sizeof line, "%s, with no archive for %s",
+                     r.other_version[0] ? r.other_version : "unknown version", t);
+            pr_field("Latest stable release", line, -1);
+            putchar('\n');
+            printf("No newer apkg for this machine. This one stays as it is.\n");
+            pkg_note();
+            rc = 0; goto out;
         }
-        if (!b) break;
     }
     if (found != 1) {
         rc = fail(found ? "the release lists more than one archive for this target"
@@ -187,7 +171,7 @@ int apkg_self_update(const char *current, const char *root, int check_only)
         goto out;
     }
 
-    c = vercmp(current, ver);
+    c = pkg_release_vercmp(current, ver);
     {
         char line[600];
         snprintf(line, sizeof line, "apkg %s", current);
@@ -200,9 +184,14 @@ int apkg_self_update(const char *current, const char *root, int check_only)
     if (c >= 0) {
         if (c == 0) { pr_word(PR_GREEN, "Up to date"); putchar('\n'); }
         else printf("This apkg is newer than the latest stable release.\n");
+        if (check_only) pkg_note();
         rc = 0; goto out;
     }
-    if (check_only) { printf("A newer release is available. Install it with: apkg self-update\n"); rc = 0; goto out; }
+    if (check_only) {
+        printf("A newer release is available. Install it with: apkg self-update\n");
+        pkg_note();
+        rc = 0; goto out;
+    }
 
     /* A package operation in progress may start apkg again from this file:
        leave the file alone until it has finished. */
@@ -287,7 +276,7 @@ int apkg_self_update(const char *current, const char *root, int check_only)
     pr_field("Previous version", prev, -1);
     /* This process is still the old code; only the file has changed. */
     pr_text("The new version runs from the next apkg command.", 2);
-    pr_text("PkgManager is updated separately, from the release archive.", 2);
+    pkg_note();
     rc = 0;
 out:
     if (fresh[0]) u_delete(fresh);         /* gone already after a swap */
