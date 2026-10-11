@@ -56,8 +56,10 @@ it and click **Remove**.
 
 The line above the list shows when the catalogue was last updated and how
 many installed programs have updates. Choose **Updates (N)** in the state
-selector to see only those; the details show the installed and the new
-version. Select one and click **Upgrade** to see its plan and confirm.
+selector to see only those. For an installed package the Version column
+shows the installed version and, where there is a newer one, what it would
+become (`1.0 -> 1.1`); the details say the same and give the reason when an
+update is blocked. Select one and click **Upgrade** to see its plan and confirm.
 `Run PkgManager --updates` opens the window on that list.
 
 Select an installed package and click **Open folder**, then launch the

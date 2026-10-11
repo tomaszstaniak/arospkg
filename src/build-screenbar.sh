@@ -15,7 +15,7 @@ SCREENBAR_DIR=${SCREENBAR_DIR:-$HERE/../../aros-screenbar/aros-screenbar-public}
     echo "No ScreenBar SDK at $SCREENBAR_DIR: set SCREENBAR_DIR to a ScreenBar checkout" >&2; exit 1; }
 L=$HERE/libpkg
 SRC="$HERE/screenbar/pkgupdates.c $SCREENBAR_DIR/src/provider.c $L/updates.c $L/updates_io.c $L/util.c
-     $L/entries.c $L/listing.c $L/json.c $L/req.c $L/upgrade.c $L/err.c $L/build.c $L/sha256.c"
+     $L/entries.c $L/listing.c $L/json.c $L/req.c $L/upgrade.c $L/err.c $L/build.c $L/sha256.c $L/bigstack.c"
 case "${TARGET:-abiv11}" in
 abiv11)
     TC=${TC:-$HOME/Work/AROS/toolchain}; SDK=${SDK:-$HOME/Work/AROS/sdk}

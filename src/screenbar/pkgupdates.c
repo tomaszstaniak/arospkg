@@ -29,6 +29,7 @@
 #include <string.h>
 #include <time.h>
 
+static const char version[] __attribute__((used)) = "$VER: PkgUpdates 0.4.2 (11.10.2026)";
 #define PKGMANAGER_PORT "PKGMANAGER"   /* src/pkgmanager/rexxcmd.h, RX_PORTNAME */
 
 struct RxsLib *RexxSysBase;
@@ -98,12 +99,65 @@ static void quoted(char *out, size_t n, const char *s)
     out[k++] = '"'; out[k] = 0;
 }
 
+/* The ARexx request in flight, if any. The item's loop must keep publishing
+   while PkgManager answers: the host drops an item after five seconds
+   without an update, and PkgManager answers only when its window loop gets
+   to the message, which a long operation or a requester can delay. So the
+   request is sent and its answer collected by the loop, never waited for. */
+static struct { struct MsgPort *port; struct RexxMsg *rm; time_t sent; } ask;
+
+static void ask_free(void)
+{
+    if (ask.rm) {
+        if (ask.rm->rm_Result1 == 0 && ask.rm->rm_Result2) DeleteArgstring((UBYTE *)ask.rm->rm_Result2);
+        DeleteArgstring((UBYTE *)ask.rm->rm_Args[0]);
+        DeleteRexxMsg(ask.rm);
+    }
+    if (ask.port) DeleteMsgPort(ask.port);
+    ask.port = NULL; ask.rm = NULL;
+}
+
+/* Called every turn of the loop: takes the answer if it has come. */
+static void ask_poll(void)
+{
+    if (!ask.port || !GetMsg(ask.port)) return;
+    logline("action: the running PkgManager answered OUTDATED SHOW, rc=%ld", (long)ask.rm->rm_Result1);
+    ask_free();
+}
+
+/* On exit. The message belongs to PkgManager until it is replied, so it
+   cannot be freed before that. Wait a while; if no answer comes, leave the
+   message and its port allocated, the port set to ignore the late reply, so
+   the answer lands in memory that is still valid instead of signalling a
+   task that has gone. A few hundred bytes, only if PkgManager is stuck. */
+static void ask_finish(void)
+{
+    int i;
+    if (!ask.port) return;
+    for (i = 0; i < 100 && !GetMsg(ask.port); i++) Delay(5);
+    if (i < 100) { logline("action: answer collected at exit"); ask_free(); return; }
+    Forbid();
+    if (!GetMsg(ask.port)) {
+        ask.port->mp_Flags = PA_IGNORE;
+        Permit();
+        logline("action: no answer from PkgManager in 10 s; its request is left allocated");
+        ask.port = NULL; ask.rm = NULL;
+        return;
+    }
+    Permit();
+    ask_free();
+}
+
 /* The one action. A running PkgManager is asked over its ARexx port to show
    its Updates filter (OUTDATED SHOW), so a second window is not opened;
    otherwise PkgManager is started with --updates, detached. */
 static void open_pkgmanager(const char *pkgmanager, const char *root, int custom_root)
 {
-    struct MsgPort *pm;
+    struct MsgPort *pm = NULL;
+    if (ask.port) {
+        logline("action: ignored, PkgManager has not answered the last one (%lds)", (long)(time(NULL) - ask.sent));
+        return;
+    }
     if (RexxSysBase) {
         struct MsgPort *reply = CreateMsgPort();
         struct RexxMsg *rm = reply ? CreateRexxMsg(reply, NULL, NULL) : NULL;
@@ -114,19 +168,14 @@ static void open_pkgmanager(const char *pkgmanager, const char *root, int custom
             if (pm) PutMsg(pm, &rm->rm_Node);
             Permit();
             if (pm) {
-                /* The message and its reply port live until the answer. */
-                WaitPort(reply); GetMsg(reply);
-                logline("action: asked the running PkgManager (OUTDATED SHOW), rc=%ld", (long)rm->rm_Result1);
-                if (rm->rm_Result1 == 0 && rm->rm_Result2) DeleteArgstring((UBYTE *)rm->rm_Result2);
+                ask.port = reply; ask.rm = rm; ask.sent = time(NULL);
+                logline("action: asked the running PkgManager (OUTDATED SHOW)");
+                return;
             }
             DeleteArgstring((UBYTE *)rm->rm_Args[0]);
-            DeleteRexxMsg(rm);
-            DeleteMsgPort(reply);
-            if (pm) return;
-        } else {
-            if (rm) DeleteRexxMsg(rm);
-            if (reply) DeleteMsgPort(reply);
         }
+        if (rm) DeleteRexxMsg(rm);
+        if (reply) DeleteMsgPort(reply);
     }
     {
         char cmd[3 * PKG_MAXPATH], qp[PKG_MAXPATH + 8], qr[PKG_MAXPATH + 8];
@@ -151,7 +200,7 @@ static void usage(void)
            "A ScreenBar item counting updates for installed packages. Ctrl-C ends it.\n");
 }
 
-int main(int argc, char **argv)
+static int real_main(int argc, char **argv)
 {
     const char *root = "SYS:Packages", *label = "Updates", *pkgmanager = "PkgManager";
     char index[PKG_MAXPATH], installed[PKG_MAXPATH], text[SB_TEXT_SIZE] = "checking";
@@ -209,15 +258,25 @@ int main(int argc, char **argv)
             if (st == SB_OK) logline("registered token=%u", (unsigned)sb.token);
             else retry_at = now + 5;
         } else st = SB_ABSENT;
+        ask_poll();
         if (st == SB_OK && action == SB_ACTION_PRIMARY) open_pkgmanager(pkgmanager, root, custom_root);
         if (st == SB_STALE || st == SB_STOPPED) { logline("host restarted or dropped the item (%d); registering again", st); retry_at = now; }
         if (st == SB_INVALID || st == SB_VERSION) { logline("host refused the item (%d)", st); rc = 10; break; }
         Delay(50);    /* one second: well inside the five-second lease */
     }
     sb_client_close(&sb);       /* unregisters and frees the reply port */
+    ask_finish();
     pkg_updates_free(&u);
     if (RexxSysBase) CloseLibrary((struct Library *)RexxSysBase);
     logline("clean exit rc=%d", rc);
     if (logf) fclose(logf);
     return rc;
+}
+
+/* The model's requirement check keeps a few kilobytes on the stack; started
+   from an icon this program would have the default 4 KB. The same swap as
+   apkg and PkgManager. */
+int main(int argc, char **argv)
+{
+    return pkg_run_with_stack(real_main, argc, argv);
 }

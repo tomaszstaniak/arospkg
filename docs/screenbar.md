@@ -6,7 +6,9 @@ of ScreenBar's executable-provider SDK, which is experimental (protocol 1,
 revision 0.x of ScreenBar's module contract): both may change.
 
 arospkg and PkgManager do not need it, and nothing installs it: start it
-yourself, and it stops with Ctrl-C (or `Break`).
+yourself, and it stops with Ctrl-C (or `Break`). It is not in the release
+archives while ScreenBar itself has no release; build it as described
+below.
 
 ```text
 Run >NIL: PkgUpdates
@@ -38,6 +40,12 @@ root's lock, so it never waits for, or blocks, apkg.
 The item's one action, **Open PkgManager**, asks a running PkgManager
 (through its ARexx port) to come forward on the Updates list; with no
 PkgManager running it starts `PkgManager --updates` with the same root.
+The request is not waited for: the item goes on being published while
+PkgManager gets round to answering, so a busy PkgManager does not make it
+drop off the strip. A second click before the answer is ignored. If
+PkgUpdates is stopped while a request is still unanswered, it waits up to
+ten seconds for the answer and otherwise leaves that one request allocated
+(a few hundred bytes) rather than free memory PkgManager still holds.
 
 If ScreenBar is not running, or is restarted, PkgUpdates keeps going and
 registers again within about five seconds.
