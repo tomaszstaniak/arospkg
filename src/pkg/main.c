@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <proto/exec.h>
+#include <dos/dos.h>
 
 /* APKG_TEST_VERSION lets a self-update test build call itself older than the
    release it updates to; a release never sets it. */
@@ -226,7 +228,9 @@ static void usage(void)
            "  install <id>      Install a package\n"
            "  list              List installed packages\n"
            "  update            Refresh the package catalogue\n"
+           "  outdated          List installed packages with updates\n"
            "  upgrade <id>      Install a newer version or revision\n"
+           "  upgrade --all     Upgrade every package that can be upgraded now\n"
            "  rollback <id>     Restore the previous package revision\n"
            "  remove <id>       Remove a package; keep locally modified files\n"
            "  verify <id>       Check installed files for changes\n"
@@ -239,7 +243,8 @@ static void usage(void)
            "  --root <dir>      Package directory (default: SYS:Packages)\n"
            "  --plain           Disable formatting and progress output\n"
            "  --color=<mode>    Colour output: auto, always or never\n"
-           "  --json            Output search and list results as JSON\n"
+           "  --json            Output search, list and outdated results as JSON\n"
+           "  --all             With outdated: every installed package and its state\n"
            "  --verbose         Also show download addresses and file locations\n"
            "  --version         Show version and build information\n"
            "  --about           Show author, project and licence information\n"
@@ -248,6 +253,7 @@ static void usage(void)
            "  --help-testing    Show testing options\n\n"
            "Example:\n"
            "  apkg update\n"
+           "  apkg outdated\n"
            "  apkg search soliton\n"
            "  apkg install soliton\n");
 }
@@ -299,13 +305,24 @@ static void usage_all(void)
  * the callback fires and that cancelling does exactly what pkg.h promises. */
 static const char *cancel_at = NULL;
 static int show_progress = 0;
+static int show_progress_lines = 0;  /* print the stages (rich or plain text) */
+static int stop_requested_late;      /* Ctrl-C arrived when it could no longer stop anything */
 static void cli_progress(void *u, const pkg_progress_ev *ev, int *cancel)
 {
     (void)u;
+    /* Ctrl-C asks the library to stop. It honours that only while nothing
+       has been changed (the download, and right after verification); once a
+       transaction exists the request is ignored and the operation finishes,
+       because a half-done one is what recovery would have to clean up. The
+       signal is consumed here, so it is asked once per press. */
+    if (SetSignal(0L, SIGBREAKF_CTRL_C) & SIGBREAKF_CTRL_C) {
+        if (ev->can_cancel) *cancel = 1;
+        else stop_requested_late = 1;
+    }
     if (show_progress)
         printf("progress %s %s %lu/%lu cancel=%s\n", ev->id, ev->phase, ev->done, ev->total,
                ev->can_cancel ? "yes" : "no");
-    else pr_progress(ev->id, ev->phase, ev->done, ev->total);
+    else if (show_progress_lines) pr_progress(ev->id, ev->phase, ev->done, ev->total);
     /* Set regardless of can_cancel on purpose: the test is that the LIBRARY
        ignores it where it said it would, not that this caller is polite. */
     if (cancel_at && strcmp(ev->phase, cancel_at) == 0) *cancel = 1;
@@ -463,6 +480,209 @@ static void heading2(const char *verb, const char *id, const char *v)
     pr_heading(t);
 }
 
+/* ------------------------------------------------------------- outdated */
+
+/* "1.2-aros3", or "-" when the catalogue offers nothing to compare. */
+static void ver_cell(char *out, size_t n, const char *v, long rev)
+{
+    if (!*v) snprintf(out, n, "-");
+    else rev_label(out, n, v, rev);
+}
+
+static const char *state_text(pkg_upd_state s)
+{
+    switch (s) {
+    case PKG_UPD_AVAILABLE:       return "update available";
+    case PKG_UPD_BLOCKED:         return "update blocked";
+    case PKG_UPD_CURRENT:         return "up to date";
+    case PKG_UPD_NEWER_INSTALLED: return "newer than the catalogue";
+    case PKG_UPD_INCOMPARABLE:    return "cannot compare versions";
+    case PKG_UPD_AMBIGUOUS:       return "several catalogue entries";
+    case PKG_UPD_NOT_IN_INDEX:    return "not in the catalogue";
+    case PKG_UPD_OTHER_TARGET:    return "no build for this target";
+    case PKG_UPD_NO_CATALOGUE:    return "no catalogue";
+    }
+    return "?";
+}
+
+/* The one line `apkg update` ends with, and the line under `outdated`:
+   how many, and the command that shows or does more. */
+static void updates_summary(const pkg_updates *u, const char *root)
+{
+    char line[900], cmd[PKG_MAXPATH + 40];
+    if (!u->installed) { pr_text("No packages are installed.", 0); return; }
+    if (!u->newer) {
+        snprintf(line, sizeof line, "No updates: the catalogue offers nothing newer for the %d installed package%s.",
+                 u->installed, u->installed == 1 ? "" : "s");
+        pr_text(line, 0);
+        return;
+    }
+    cmd_hint(cmd, sizeof cmd, root, "outdated");
+    if (u->blocked)
+        snprintf(line, sizeof line, "%d update%s available for installed packages (%d blocked). See them: %s",
+                 u->newer, u->newer == 1 ? "" : "s", u->blocked, cmd);
+    else
+        snprintf(line, sizeof line, "%d update%s available for installed packages. See them: %s",
+                 u->newer, u->newer == 1 ? "" : "s", cmd);
+    pr_text(line, 0);
+}
+
+/* Exit status: 0 the check ran (whether or not anything is newer); 10 no
+   catalogue, one that cannot be read, or the root cannot be read; 5 usage.
+   Documented in docs/guide/using.md. */
+static int outdated(pkg_ctx *c, const char *index, const char *root, int all, int json)
+{
+    pkg_updates u; pkg_err e; int i, w = 2, shown = 0, rc;
+    char line[900], a[80], b[80], cmd[PKG_MAXPATH + 40];
+
+    memset(&e, 0, sizeof e);
+    if (pkg_updates_get(c, index, 1, &u, &e) != PKG_OK) { show(&e); return 10; }
+    rc = u.catalogue == PKG_CAT_OK ? 0 : 10;
+    if (json) {
+        char *js = pkg_updates_json(&u);
+        if (js) fputs(js, stdout); else { printf("{ \"error\": \"out of memory\" }\n"); rc = 10; }
+        free(js);
+        pkg_updates_free(&u);
+        return rc;
+    }
+    if (u.catalogue != PKG_CAT_OK) {
+        cmd_hint(cmd, sizeof cmd, root, "update");
+        fputs(pr_color(PR_RED), stdout);
+        snprintf(line, sizeof line, u.catalogue == PKG_CAT_MISSING
+                 ? "No catalogue on this machine, so updates cannot be checked. Fetch it: %s"
+                 : "The catalogue cannot be read, so updates cannot be checked. Fetch it again: %s", cmd);
+        pr_text(line, 0);
+        fputs(pr_off(), stdout);
+        if (u.catalogue_error[0]) pr_text(u.catalogue_error, 2);
+        pkg_updates_free(&u);
+        return rc;
+    }
+    for (i = 0; i < u.n; i++)
+        if ((all || u.rows[i].newer) && (int)strlen(u.rows[i].id) > w) w = (int)strlen(u.rows[i].id);
+    if (w > 24) w = 24;
+    snprintf(line, sizeof line, "%s for installed packages", all ? "Status" : "Updates");
+    pr_heading(line);
+    if (u.catalogue_when[0]) {
+        snprintf(line, sizeof line, "Catalogue updated %s%s", u.catalogue_when,
+                 u.catalogue_stale ? " -- more than two weeks ago; apkg update refreshes it" : "");
+        if (u.catalogue_stale) { fputs(pr_color(PR_YELLOW), stdout); pr_text(line, 0); fputs(pr_off(), stdout); }
+        else pr_text(line, 0);
+    }
+    for (i = 0; i < u.n; i++) {
+        const pkg_update_row *r = &u.rows[i];
+        int col = r->state == PKG_UPD_AVAILABLE ? PR_GREEN : r->state == PKG_UPD_BLOCKED ? PR_YELLOW :
+                  r->state == PKG_UPD_CURRENT ? -1 : PR_YELLOW;
+        if (!all && !r->newer) continue;
+        if (!shown++)
+            printf("%s  %-*s  %-14s %-14s %s%s\n", pr_bold(), w, "Package", "Installed", "Available", "State", pr_off());
+        ver_cell(a, sizeof a, r->installed_version, r->installed_revision);
+        ver_cell(b, sizeof b, r->available_version, r->available_revision);
+        printf("  %-*s  %-14s %-14s ", w, r->id, a, b);
+        if (col < 0) fputs(state_text(r->state), stdout); else pr_word(col, state_text(r->state));
+        putchar('\n');
+        /* The reason under the row: a refusal the user can act on, never a
+           bare word. An available update needs none. */
+        if (r->state != PKG_UPD_AVAILABLE && r->state != PKG_UPD_CURRENT) pr_text(r->why, 4);
+        else if (r->state == PKG_UPD_AVAILABLE && !strcmp(r->requirements, "undetermined"))
+            pr_text("some of its system requirements could not be checked", 4);
+    }
+    if (shown) putchar('\n');
+    updates_summary(&u, root);
+    if (u.ready) {
+        cmd_hint(cmd, sizeof cmd, root, "upgrade <id>");
+        snprintf(line, sizeof line, "Upgrade one: %s", cmd);
+        pr_text(line, 0);
+        cmd_hint(cmd, sizeof cmd, root, "upgrade --all");
+        snprintf(line, sizeof line, "Upgrade all that can be: %s", cmd);
+        pr_text(line, 0);
+    }
+    if (!all) {
+        int other = 0;
+        for (i = 0; i < u.n; i++)
+            if (u.rows[i].state != PKG_UPD_CURRENT && !u.rows[i].newer) other++;
+        if (other) {
+            cmd_hint(cmd, sizeof cmd, root, "outdated --all");
+            snprintf(line, sizeof line, "%d installed package%s could not be compared with the catalogue: %s",
+                     other, other == 1 ? "" : "s", cmd);
+            pr_text(line, 0);
+        }
+    }
+    if (u.pending) pr_text("Uncommitted transactions exist; the next apkg that changes something recovers them first.", 0);
+    pkg_updates_free(&u);
+    return rc;
+}
+
+/* `upgrade --all`: every package that can be upgraded now, one after the
+ * other. Each is its own transaction with its own preview, protection of
+ * changed files, rollback record and recovery, exactly as `apkg upgrade <id>`;
+ * the group is not atomic, and the report says what happened to each. A
+ * Ctrl-C stops before the next package, never inside a transaction. */
+static volatile int stop_group;
+
+static int upgrade_all(pkg_ctx *c, const char *index, const char *root, pkg_stop stop, int *failed)
+{
+    pkg_updates u; pkg_err e; int i, done = 0, n = 0;
+    char a[80], b[80], line[900];
+    memset(&e, 0, sizeof e);
+    *failed = 0;
+    if (pkg_updates_get(c, index, 1, &u, &e) != PKG_OK) { show(&e); return -1; }
+    if (u.catalogue != PKG_CAT_OK) {
+        pkg_updates_free(&u);
+        pr_text("No readable catalogue, so there is nothing to upgrade to. Run apkg update first.", 0);
+        return -1;
+    }
+    pr_heading("Upgrade plan");
+    for (i = 0; i < u.n; i++) {
+        const pkg_update_row *r = &u.rows[i];
+        if (!r->newer) continue;
+        ver_cell(a, sizeof a, r->installed_version, r->installed_revision);
+        ver_cell(b, sizeof b, r->available_version, r->available_revision);
+        if (r->state == PKG_UPD_AVAILABLE) { n++; snprintf(line, sizeof line, "%s %s -> %s", r->id, a, b); }
+        else snprintf(line, sizeof line, "%s %s -> %s: skipped, %s", r->id, a, b, r->why);
+        pr_text(line, 2);
+    }
+    if (!n) {
+        pr_text(u.newer ? "Nothing can be upgraded now." : "No updates: everything installed is current.", 0);
+        pkg_updates_free(&u);
+        return 0;
+    }
+    snprintf(line, sizeof line, "%d package%s, one at a time. Each one is checked against the files you "
+             "changed before it is touched; one that fails leaves the others as they are.", n, n == 1 ? "" : "s");
+    pr_text(line, 0);
+    for (i = 0; i < u.n; i++) {
+        const pkg_update_row *r = &u.rows[i];
+        pkg_status st;
+        if (r->state != PKG_UPD_AVAILABLE) continue;
+        if (stop_group || (SetSignal(0L, SIGBREAKF_CTRL_C) & SIGBREAKF_CTRL_C)) {
+            stop_group = 1;
+            snprintf(line, sizeof line, "Stopped before %s (Ctrl-C); %d of %d done.", r->id, done, n);
+            pr_text(line, 0);
+            break;
+        }
+        putchar('\n');
+        snprintf(doing, sizeof doing, "upgrade %s", r->id);
+        doing_id = r->id; cancel_noun = "Upgrade";
+        memset(&e, 0, sizeof e);
+        st = pkg_upgrade(c, index, r->id, stop, &e);
+        pr_end_line();
+        if (st == PKG_OK) { done++; print_installed(c, index, r->id, "Upgraded"); }
+        else { (*failed)++; show(&e); if (st == PKG_E_CANCELLED) stop_group = 1; }
+    }
+    putchar('\n');
+    snprintf(line, sizeof line, "Upgraded %d of %d%s%d failed or stopped.", done, n,
+             *failed ? "; " : "", *failed);
+    if (!*failed) snprintf(line, sizeof line, "Upgraded %d of %d.", done, n);
+    pr_text(line, 0);
+    {
+        char cmd[PKG_MAXPATH + 40];
+        cmd_hint(cmd, sizeof cmd, root, "outdated");
+        snprintf(line, sizeof line, "What is left: %s", cmd);
+        if (done < n) pr_text(line, 0);
+    }
+    pkg_updates_free(&u);
+    return done;
+}
+
 static int real_main(int argc, char **argv)
 {
     const char *root = "SYS:Packages";
@@ -474,7 +694,7 @@ static int real_main(int argc, char **argv)
     const char *report = NULL, *run_id = NULL, *machine = "unspecified";
     const char *index_url = PKG_INDEX_URL;
     const char *arg2 = NULL;
-    int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0;
+    int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0, all = 0;
     pkg_ctx *c = NULL;
     pkg_err e;
     pkg_status st;
@@ -498,6 +718,7 @@ static int real_main(int argc, char **argv)
             pkg_set_verify_name(argv[++i]);
         else if (!strcmp(argv[i], "--all-abi")) pkg_set_abi_show_all(1);
         else if (!strcmp(argv[i], "--json")) json = 1;
+        else if (!strcmp(argv[i], "--all")) all = 1;
         else if (!strcmp(argv[i], "--verbose")) pkg_set_verbose(1);
         else if (!strcmp(argv[i], "--plain")) plain = 1;
         else if (!strcmp(argv[i], "--color=auto")) color = PR_COLOR_AUTO;
@@ -584,7 +805,8 @@ static int real_main(int argc, char **argv)
         pkg_mode mode = PKG_OPEN_WRITE;
         if (!strcmp(cmd, "list") || !strcmp(cmd, "info") || !strcmp(cmd, "show") ||
             !strcmp(cmd, "search") || !strcmp(cmd, "requires") ||
-            !strcmp(cmd, "verify") || !strcmp(cmd, "open") || dry) mode = PKG_OPEN_READ;   /* a dry run never recovers */
+            !strcmp(cmd, "verify") || !strcmp(cmd, "open") || !strcmp(cmd, "outdated") ||
+            dry) mode = PKG_OPEN_READ;   /* a dry run never recovers */
         else if (!strcmp(cmd, "doctor")) mode = retry ? PKG_OPEN_DOCTOR : PKG_OPEN_READ;
         st = pkg_open(root, mode, &c, &e);
     }
@@ -599,13 +821,18 @@ static int real_main(int argc, char **argv)
         return 10;
     }
 
-    if (show_progress || cancel_at || pr_wants_progress()) pkg_set_progress(c, cli_progress, NULL);
+    /* Always: the callback is also where Ctrl-C is seen. Whether it prints
+       is decided as before. */
+    show_progress_lines = !json && (show_progress || cancel_at || pr_wants_progress());
+    pkg_set_progress(c, cli_progress, NULL);
 
     {
         int r = 0, u = 0, pending;
         pkg_recovery_counts(c, &r, &u);
+        /* Never mixed into JSON: outdated --json carries the pending count. */
+        if (json) r = 0;
         if (r) printf("recovered %d interrupted transaction(s)\n", r);
-        pending = pkg_pending_txns(c);
+        pending = json ? 0 : pkg_pending_txns(c);
         if (pending)
             printf("WARNING: %d uncommitted transaction(s) exist. What follows is\n"
                    "         what is on disk, not a settled state. A mutating\n"
@@ -649,6 +876,39 @@ static int real_main(int argc, char **argv)
                 }
                 pkg_entries_free(&es);
             } else printf(" the package catalogue\n");
+            {
+                /* What the new catalogue means for what is installed: the
+                   same count `apkg outdated` lists. */
+                pkg_updates u; pkg_err e3; memset(&e3, 0, sizeof e3);
+                if (pkg_updates_get(c, index, 1, &u, &e3) == PKG_OK) { updates_summary(&u, root); pkg_updates_free(&u); }
+            }
+        }
+    } else if (!strcmp(cmd, "outdated")) {
+        int rc = outdated(c, index, root, all, json);
+        pkg_close(c);
+        return rc;
+    } else if (!strcmp(cmd, "upgrade") && all && !arg) {
+        int failed = 0, done;
+        if (dry) {
+            /* The plan of each, from the same dry run `apkg --dry-run upgrade <id>` prints. */
+            pkg_updates u; int k, any = 0;
+            st = pkg_updates_get(c, index, 1, &u, &e);
+            if (st == PKG_OK) {
+                for (k = 0; k < u.n; k++) {
+                    char *out = NULL; pkg_err e4; memset(&e4, 0, sizeof e4);
+                    if (u.rows[k].state != PKG_UPD_AVAILABLE) continue;
+                    any = 1;
+                    if (pkg_dry_run(c, index, "upgrade", u.rows[k].id, fetch, &out, &e4) == PKG_OK) fputs(out, stdout);
+                    else show(&e4);
+                    free(out);
+                }
+                if (!any) printf("nothing can be upgraded now\n");
+                pkg_updates_free(&u);
+            }
+        } else {
+            done = upgrade_all(c, index, root, stop, &failed);
+            pkg_close(c);
+            return done < 0 ? 10 : failed ? 10 : 0;
         }
     } else if (!strcmp(cmd, "search") && json) {
         pkg_entries es; int hidden = 0;
@@ -789,6 +1049,9 @@ static int real_main(int argc, char **argv)
     }
 
     if (st != PKG_OK) show(&e);
+    if (stop_requested_late)
+        pr_text("Ctrl-C came after files were already being changed; the operation was finished "
+                "rather than left half done.", 0);
 
     write_report(report, run_id, machine, cmd, arg, root, stop, st, &e);
 
