@@ -95,6 +95,7 @@ and keywords can be written `FIELD state` or `FIELD=state`.
 | `CANCEL` | `[<job>]` | `requested`, or `declined` for a job waiting for confirmation | `NOTCANCELLABLE`, `FINISHED`, `NOJOB` |
 | `QUIT` | | `closing`; the same as the close gadget | |
 | `LASTERROR` | | why this script's last command failed: `CODE text`; empty after a success. Ask right after the failure | |
+| `OUTDATED` | `[SHOW]` | the updates of installed packages, one `name value` line each: `catalogue` (`ok`, `missing`, `unreadable`), `updated`, `stale`, `installed`, `newer`, `ready`, `blocked`, and `packages` with the ids that have something newer. `SHOW` also brings the window forward on the Updates list | |
 
 `INFO` fields: `id version revision state installedversion installedrevision
 summary category arch abi kind size requires canupgrade canrollback
@@ -110,6 +111,12 @@ show` prints. `INFO` describes a package built for another target too;
 `state` is `installed` or `available`. `requires` lists the machine
 requirements as the catalogue names them. `canupgrade` and `canrollback` are
 `1` or `0`, answered as the window's buttons are.
+
+`OUTDATED` answers from the same reading of the catalogue and the installed
+packages as `apkg outdated` and the window's Updates list; it downloads
+nothing. `newer` counts updates found, `ready` those that can be started
+now, `blocked` those this machine cannot take. `canupgrade` in `INFO` is the
+window's Upgrade button: 1 only for an update that can be started now.
 
 `LIST` reads the catalogue as PkgManager last fetched it. `LIST INSTALLED`
 reads the record of installed packages, including any the catalogue no

@@ -54,6 +54,12 @@ Click **Update index** to refresh the catalogue, select an application,
 read its requirements and click **Install**. To uninstall it later, select
 it and click **Remove**.
 
+The line above the list shows when the catalogue was last updated and how
+many installed programs have updates. Choose **Updates (N)** in the state
+selector to see only those; the details show the installed and the new
+version. Select one and click **Upgrade** to see its plan and confirm.
+`Run PkgManager --updates` opens the window on that list.
+
 Select an installed package and click **Open folder**, then launch the
 program inside. The default location is `SYS:Packages/<id>/`.
 
@@ -79,12 +85,14 @@ apkg open soliton
 
 | Command | What it does |
 |---|---|
-| `apkg update` | Refresh the available-software catalogue; does not upgrade installed programs. |
+| `apkg update` | Refresh the available-software catalogue and say how many installed programs have updates; does not upgrade them. |
+| `apkg outdated` | List installed programs with updates: installed and available version, and whether the update can be installed now. |
 | `apkg search` | List available packages. Add a word to search. |
 | `apkg list` | List installed packages. |
 | `apkg verify soliton` | Check installed files against the package record. |
 | `apkg remove soliton` | Remove the package, keeping locally changed files and files it did not install. |
 | `apkg upgrade soliton` | Install a newer version or packaging revision, when available. |
+| `apkg upgrade --all` | Show the plan, then upgrade every package that can be, one at a time, reporting each. |
 | `apkg rollback soliton` | Return to the previous revision, if its archive is still cached. |
 | `apkg open soliton` | Open the package's drawer in Wanderer. |
 | `apkg self-update` | Replace this apkg with the latest stable release; `--check` only reports. |
@@ -163,6 +171,8 @@ Start at [`docs/README.md`](docs/README.md):
   and an [application folder format](docs/rfc/0002-application-folder.md),
   both proposals;
 - [ARexx interface](docs/arexx.md);
+- [ScreenBar item](docs/screenbar.md): an optional update counter for
+  ScreenBar's experimental provider SDK;
 - [release notes](https://github.com/tomaszstaniak/arospkg/releases)
   for changes and known limitations.
 

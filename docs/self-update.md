@@ -48,6 +48,14 @@ version; an older `apkg.old` is replaced). Your packages, the catalogue and
 running, `self-update` refuses; try again when it has finished.
 
 PkgManager is not updated by this. Take it from the release archive.
+Every answer of `self-update` says so. In PkgManager, **About** > **Check
+for a newer version** asks the same question for the window: it reads the
+latest release's `SHA256SUMS` and says whether a newer PkgManager exists,
+and where to get it. It does not replace the running window.
+
+When the latest stable release has no archive for this machine, as for the
+Raspberry Pi with 0.4.1, `--check` says there is no newer apkg for it and
+exits 0; `self-update` refuses and changes nothing.
 
 `update` and `upgrade` keep their meaning: `apkg update` refreshes the
 package catalogue, `apkg upgrade <id>` updates an installed package.

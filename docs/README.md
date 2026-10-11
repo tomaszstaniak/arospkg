@@ -21,6 +21,7 @@ available in 0.3.1. See the downloads for each target's test coverage.
 ## Integrate and develop
 
 - [ARexx interface](arexx.md)
+- [ScreenBar item](screenbar.md): PkgUpdates, an optional update counter
 - [Build from source](../README.md#building)
 - [Package format RFC](rfc/0001-package-format.md)
 - [Application folder RFC](rfc/0002-application-folder.md)
