@@ -411,7 +411,9 @@ static void show(const pkg_err *e)
 {
     char head[400];
     pr_end_line();
-    if (doing[0] && e->status == PKG_E_CANCELLED)
+    if (doing[0] && e->status == PKG_E_CANCELLED && !doing_id)
+        snprintf(head, sizeof head, "%s cancelled", cancel_noun ? cancel_noun : "Operation");
+    else if (doing[0] && e->status == PKG_E_CANCELLED)
         /* libpkg's summary ("download cancelled") only repeats the word;
            anything it says beyond that is in the detail line. */
         snprintf(head, sizeof head, "%s cancelled: %s%s%s", cancel_noun ? cancel_noun : "Operation",
@@ -624,13 +626,14 @@ static int outdated(pkg_ctx *c, const char *index, const char *root, int all, in
  * Ctrl-C stops before the next package, never inside a transaction. */
 static volatile int stop_group;
 
-static int upgrade_all(pkg_ctx *c, const char *index, const char *root, pkg_stop stop, int *failed)
+static int upgrade_all(pkg_ctx *c, const char *index, const char *root, pkg_stop stop, int *failed,
+                       int *stopped, pkg_status *last)
 {
     pkg_updates u; pkg_err e; int i, done = 0, n = 0;
     char a[80], b[80], line[900];
     memset(&e, 0, sizeof e);
-    *failed = 0;
-    if (pkg_updates_get(c, index, 1, &u, &e) != PKG_OK) { show(&e); return -1; }
+    *failed = 0; *stopped = 0; *last = PKG_OK;
+    if ((*last = pkg_updates_get(c, index, 1, &u, &e)) != PKG_OK) { show(&e); return -1; }
     if (u.catalogue != PKG_CAT_OK) {
         pkg_updates_free(&u);
         pr_text("No readable catalogue, so there is nothing to upgrade to. Run apkg update first.", 0);
@@ -658,8 +661,10 @@ static int upgrade_all(pkg_ctx *c, const char *index, const char *root, pkg_stop
         const pkg_update_row *r = &u.rows[i];
         pkg_status st;
         if (r->state != PKG_UPD_AVAILABLE) continue;
-        if (stop_group || (SetSignal(0L, SIGBREAKF_CTRL_C) & SIGBREAKF_CTRL_C)) {
-            stop_group = 1;
+        /* A Ctrl-C that came while the previous package was changing files
+           was consumed there and could not stop it; it still ends the group. */
+        if (stop_group || stop_requested_late || (SetSignal(0L, SIGBREAKF_CTRL_C) & SIGBREAKF_CTRL_C)) {
+            stop_group = 1; *stopped = 1;
             snprintf(line, sizeof line, "Stopped before %s (Ctrl-C); %d of %d done.", r->id, done, n);
             pr_text(line, 0);
             break;
@@ -671,12 +676,13 @@ static int upgrade_all(pkg_ctx *c, const char *index, const char *root, pkg_stop
         st = pkg_upgrade(c, index, r->id, stop, &e);
         pr_end_line();
         if (st == PKG_OK) { done++; print_installed(c, index, r->id, "Upgraded"); }
-        else { (*failed)++; show(&e); if (st == PKG_E_CANCELLED) stop_group = 1; }
+        else { (*failed)++; *last = st; show(&e); if (st == PKG_E_CANCELLED) stop_group = 1; }
     }
     putchar('\n');
     snprintf(line, sizeof line, "Upgraded %d of %d%s%d failed or stopped.", done, n,
              *failed ? "; " : "", *failed);
-    if (!*failed) snprintf(line, sizeof line, "Upgraded %d of %d.", done, n);
+    if (!*failed && *stopped) snprintf(line, sizeof line, "Upgraded %d of %d; stopped.", done, n);
+    else if (!*failed) snprintf(line, sizeof line, "Upgraded %d of %d.", done, n);
     pr_text(line, 0);
     {
         char cmd[PKG_MAXPATH + 40];
@@ -699,6 +705,7 @@ static int real_main(int argc, char **argv)
     const char *report = NULL, *run_id = NULL, *machine = "unspecified";
     const char *index_url = PKG_INDEX_URL;
     const char *arg2 = NULL;
+    int group_rc = -1, shown = 0;    /* upgrade --all: its own exit status; errors already shown */
     int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0, all = 0;
     pkg_ctx *c = NULL;
     pkg_err e;
@@ -896,7 +903,8 @@ static int real_main(int argc, char **argv)
         pkg_close(c);
         return rc;
     } else if (!strcmp(cmd, "upgrade") && all && !arg) {
-        int failed = 0, done;
+        int failed = 0, stopped = 0, done;
+        shown = 1;      /* each package's error was shown as it happened */
         if (dry) {
             /* The plan of each, from the same dry run `apkg --dry-run upgrade <id>` prints. */
             pkg_updates u; int k, any = 0;
@@ -907,16 +915,19 @@ static int real_main(int argc, char **argv)
                     if (u.rows[k].state != PKG_UPD_AVAILABLE) continue;
                     any = 1;
                     if (pkg_dry_run(c, index, "upgrade", u.rows[k].id, fetch, &out, &e4) == PKG_OK) fputs(out, stdout);
-                    else show(&e4);
+                    else { show(&e4); failed++; st = e4.status; e = e4; }
                     free(out);
                 }
                 if (!any) printf("nothing can be upgraded now\n");
                 pkg_updates_free(&u);
-            }
+            } else show(&e);
+            group_rc = st != PKG_OK || failed ? 10 : 0;
         } else {
-            done = upgrade_all(c, index, root, stop, &failed);
-            pkg_close(c);
-            return done < 0 ? 10 : failed ? 10 : 0;
+            /* Falls through to the common end, for the late Ctrl-C notice
+               and --report; the status is the last failure, if any. */
+            done = upgrade_all(c, index, root, stop, &failed, &stopped, &st);
+            if (st == PKG_OK && stopped) st = PKG_E_CANCELLED;
+            group_rc = done < 0 || failed || stopped ? 10 : 0;
         }
     } else if (!strcmp(cmd, "search") && json) {
         pkg_entries es; int hidden = 0;
@@ -1056,7 +1067,7 @@ static int real_main(int argc, char **argv)
         return 5;
     }
 
-    if (st != PKG_OK) show(&e);
+    if (st != PKG_OK && !shown) show(&e);
     if (stop_requested_late)
         pr_text("Ctrl-C came after files were already being changed; the operation was finished "
                 "rather than left half done.", 0);
@@ -1075,6 +1086,7 @@ static int real_main(int argc, char **argv)
     }
 
     pkg_close(c);
+    if (group_rc >= 0) return group_rc;
     return st == PKG_OK ? 0 : 10;
 }
 

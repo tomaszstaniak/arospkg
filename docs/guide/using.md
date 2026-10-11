@@ -120,15 +120,18 @@ file you changed would be overwritten, is left as it was and the others
 continue. The group is not undone as a whole. `apkg --dry-run upgrade
 --all` prints each package's dry run and changes nothing. Its exit status
 is 0 when every planned upgrade succeeded (or there was nothing to do) and
-10 when any failed or was stopped.
+10 when any failed or was stopped; the dry run exits with 10 when any
+package's dry run failed.
 
 ### Ctrl-C, redirection and terminals
 
 Ctrl-C stops an install or upgrade while that is still free: during the
 download, or right after the archive has been verified. Once files are
 being changed it is not acted on; the operation finishes, and apkg says
-that the Ctrl-C came too late to stop it. `upgrade --all` also stops before
-the next package. A command that was stopped can simply be run again.
+that the Ctrl-C came too late to stop it. `upgrade --all` then stops before
+the next package, and exits with 10. Ctrl-C during `apkg update` stops the
+download and keeps the catalogue you had. A command that was stopped can
+simply be run again.
 
 Output redirected to a file (`apkg outdated >RAM:updates.txt`) is plain
 text, as is output with `--plain`. In a terminal that tells apkg what it
@@ -143,7 +146,7 @@ replaces the apkg executable you started and keeps the previous copy as
 `apkg.old`. It does not update PkgManager: take PkgManager from the release
 archive. In PkgManager, **About** > **Check for a newer version** says
 whether a newer release exists. When the latest release has no archive for
-your machine (as for Raspberry Pi with 0.4.1), `--check` says so and your
+your machine (as for Raspberry Pi since 0.4.1), `--check` says so and your
 apkg stays as it is.
 
 ## Remove

@@ -1025,10 +1025,19 @@ pkg_status pkg_update(pkg_ctx *c, const char *index_url, pkg_err *e)
 
     snprintf(dest, sizeof dest, "%s/db/index.json", c->root);
     if (pkg_verbose()) printf("  from %s\n", index_url);
+    /* Cancellable throughout: the catalogue in use is replaced only after
+       the new one has arrived and parsed, so stopping the download changes
+       nothing. */
+    net_set_progress(c->progress ? net_prog_shim : NULL, c);
     if (net_fetch(index_url, dest, INDEX_MAX, why) != 0) {
+        net_set_progress(NULL, NULL);
         net_close();
+        if (strcmp(why, "cancelled") == 0)
+            return pkg_fail(e, PKG_E_CANCELLED, "catalogue update cancelled",
+                            "The catalogue you had is untouched.", "");
         return pkg_fail(e, PKG_E_NETWORK, "the index could not be fetched", why, index_url);
     }
+    net_set_progress(NULL, NULL);
     net_close();
 
     snprintf(part, sizeof part, "%s.part", dest);
