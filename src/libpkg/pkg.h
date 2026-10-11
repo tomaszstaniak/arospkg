@@ -410,6 +410,86 @@ typedef struct {
 pkg_status pkg_details_get(pkg_ctx *, const char *index_path, const char *id,
                            pkg_details *, pkg_err *);
 
+/* ---------------------------------------------------------------- updates */
+
+/* Installed packages set against the catalogue: the one model behind
+ * `apkg outdated`, the summary after `apkg update`, PkgManager's "Update
+ * available" state and the ScreenBar widget, so no two of them can count
+ * differently.
+ *
+ * It reads the catalogue and the registry and nothing else: no download, no
+ * staging. A newer version is decided by upgrade_allowed() (upgrade.h), and
+ * the catalogue entry by index_select_variant() for the installed CPU and
+ * ABI, exactly as `apkg upgrade` decides them. Two questions are kept apart:
+ * whether the catalogue has something newer (`newer`), and whether an
+ * upgrade could be started now (PKG_UPD_AVAILABLE). Neither says the
+ * upgrade will succeed: conflicts with files the user changed are found by
+ * the preview, which needs the new archive. */
+typedef enum {
+    PKG_UPD_AVAILABLE = 0,   /* newer, and nothing known stops an upgrade      */
+    PKG_UPD_BLOCKED,         /* newer, but this machine or the entry stops it   */
+    PKG_UPD_CURRENT,         /* the catalogue offers what is installed          */
+    PKG_UPD_NEWER_INSTALLED, /* installed is newer: never a silent downgrade    */
+    PKG_UPD_INCOMPARABLE,    /* versions that cannot be ordered without guessing */
+    PKG_UPD_AMBIGUOUS,       /* several entries for the installed target        */
+    PKG_UPD_NOT_IN_INDEX,    /* the catalogue does not list the id               */
+    PKG_UPD_OTHER_TARGET,    /* listed, but not for the installed CPU and ABI    */
+    PKG_UPD_NO_CATALOGUE     /* no catalogue, or one that cannot be read        */
+} pkg_upd_state;
+
+typedef struct {
+    char id[PKG_MAXID];
+    char installed_version[64]; long installed_revision;
+    char arch[16]; char abi[8];        /* the installed target */
+    char available_version[64]; long available_revision;  /* "" when none */
+    long size;                         /* download bytes of the catalogue entry, or -1 */
+    pkg_upd_state state;
+    int  newer;                        /* AVAILABLE or BLOCKED */
+    char requirements[16];             /* "satisfied", "missing", "undetermined",
+                                          "none", "not checked" */
+    char why[240];                     /* the reason, in the user's words */
+} pkg_update_row;
+
+typedef enum { PKG_CAT_OK = 0, PKG_CAT_MISSING, PKG_CAT_UNREADABLE } pkg_cat_state;
+
+/* After this many days without a successful `apkg update` the catalogue is
+   called stale: an empty list then says little about what is current. */
+#define PKG_CATALOGUE_STALE_DAYS 14
+
+typedef struct {
+    pkg_cat_state catalogue;
+    char catalogue_error[160];
+    /* The date of the catalogue file. apkg update replaces it only after a
+       download that parsed, so this is the last successful refresh, read from
+       the machine's clock (local time). 0 and "" when unknown. */
+    long catalogue_time;               /* seconds since 1970, machine's local clock */
+    char catalogue_when[24];           /* "2026-10-11 10:25" */
+    int  catalogue_stale;
+    int  installed;                    /* registry entries read */
+    int  newer, ready, blocked;        /* counts over rows */
+    int  pending;                      /* uncommitted transactions (pkg_updates_get only) */
+    pkg_update_row *rows; int n, cap;  /* one per installed package, by id */
+} pkg_updates;
+
+/* `probe` 1 also probes requirements of the newer entries on this machine
+ * (opens libraries; no network); 0 leaves them "not checked" and never
+ * blocks on them. PKG_OK also when there is no catalogue: that is a state
+ * of the answer (out->catalogue), not a failure of the question. */
+pkg_status pkg_updates_get(pkg_ctx *, const char *index_path, int probe,
+                           pkg_updates *out, pkg_err *);
+/* The same without a context, for a reader that must not take the root's
+ * lock or run recovery (the ScreenBar widget). Read-only. */
+pkg_status pkg_updates_scan(const char *root, const char *index_path, int probe,
+                            pkg_updates *out, pkg_err *);
+void        pkg_updates_free(pkg_updates *);
+const char *pkg_upd_word(pkg_upd_state);   /* "available", "blocked", ... */
+const char *pkg_cat_word(pkg_cat_state);   /* "ok", "missing", "unreadable" */
+/* The answer as one JSON object (caller frees), the form `apkg outdated
+   --json` prints and integrations read. NULL when out of memory. */
+char       *pkg_updates_json(const pkg_updates *);
+/* The row for `id`, or NULL. */
+const pkg_update_row *pkg_updates_find(const pkg_updates *, const char *id);
+
 /* NULL clears it. See pkg_progress for what cancelling can and cannot do. */
 void       pkg_set_progress(pkg_ctx *, pkg_progress, void *user);
 

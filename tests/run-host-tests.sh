@@ -36,6 +36,12 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_zip" \
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_rexxcmd" \
     "$HERE/test_rexxcmd.c" "$HERE/../src/pkgmanager/rexxcmd.c"
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_updates" \
+    "$HERE/test_updates.c" "$SRC/updates.c" "$SRC/entries.c" "$SRC/json.c" "$SRC/listing.c" \
+    "$SRC/req.c" "$SRC/upgrade.c" "$SRC/err.c"
+"$OUT/test_updates" "$OUT/updates.json"
+python3 -c "import json,sys; d=json.load(open(sys.argv[1])); assert d['ready']==3 and len(d['packages'])==12, d" "$OUT/updates.json"
+
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_hint" \
     "$HERE/test_hint.c" "$HERE/../src/pkg/hint.c"
 "$OUT/test_hint"
