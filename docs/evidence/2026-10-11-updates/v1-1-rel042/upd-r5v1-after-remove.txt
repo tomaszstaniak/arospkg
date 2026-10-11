@@ -1,0 +1,15 @@
+{ "schema": 1,
+  "catalogue": { "state": "ok", "error": "", "updated": "2026-10-11 17:39", "updated_time": 1791740377, "stale": false },
+  "installed": 8, "newer": 2, "ready": 1, "blocked": 1, "pending_transactions": 0,
+  "packages": [
+    { "id": "upa", "installed_version": "1.0", "installed_revision": 1, "available_version": "1.1", "available_revision": 1, "arch": "x86_64", "abi": "v1", "state": "available", "newer": true, "size": 338, "requirements": "none", "reason": "" },
+    { "id": "upc", "installed_version": "1.0", "installed_revision": 1, "available_version": "1.0", "available_revision": 1, "arch": "x86_64", "abi": "v1", "state": "current", "newer": false, "size": 338, "requirements": "not checked", "reason": "up to date" },
+    { "id": "upd", "installed_version": "2.0", "installed_revision": 1, "available_version": "1.5", "available_revision": 1, "arch": "x86_64", "abi": "v1", "state": "newer-installed", "newer": false, "size": 338, "requirements": "not checked", "reason": "installed is version 2.0, newer than the 1.5 the index offers: apkg does not go back to an older version" },
+    { "id": "upe", "installed_version": "1.0", "installed_revision": 1, "available_version": "1.1", "available_revision": 1, "arch": "x86_64", "abi": "v1", "state": "blocked", "newer": true, "size": 338, "requirements": "missing", "reason": "this system does not provide what the newer version needs: arospkg-test-missing.library" },
+    { "id": "upf", "installed_version": "1.0a", "installed_revision": 1, "available_version": "1.0b", "available_revision": 1, "arch": "x86_64", "abi": "v1", "state": "incomparable", "newer": false, "size": 338, "requirements": "not checked", "reason": "installed is version 1.0a, the index offers 1.0b: only versions of numbers and dots are ordered, so this is refused rather than guessed (remove and install to change version)" },
+    { "id": "upg", "installed_version": "1.0", "installed_revision": 1, "available_version": "", "available_revision": 0, "arch": "x86_64", "abi": "v1", "state": "not-in-catalogue", "newer": false, "size": -1, "requirements": "not checked", "reason": "the catalogue does not list it" },
+    { "id": "uph", "installed_version": "1.0", "installed_revision": 1, "available_version": "", "available_revision": 0, "arch": "x86_64", "abi": "v1", "state": "ambiguous", "newer": false, "size": -1, "requirements": "not checked", "reason": "the catalogue lists 2 builds of it for x86_64/v1; apkg refuses rather than picks one" },
+    { "id": "upi", "installed_version": "1.0", "installed_revision": 1, "available_version": "", "available_revision": 0, "arch": "x86_64", "abi": "v1", "state": "other-target", "newer": false, "size": -1, "requirements": "not checked", "reason": "the catalogue lists it only for x86_64/v11, not for the installed x86_64/v1" }
+  ]
+}
+rc=0

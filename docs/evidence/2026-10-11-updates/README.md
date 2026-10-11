@@ -85,6 +85,35 @@ Run 1 (`v11-1-run1/`) and run 2 with the final binaries (`v11-1-run2/`):
   output complete; the whole fixture script passes as on v11 (exit codes,
   hashes, JSON).
 
+## 0.4.2 release runs (same day, after review)
+
+A review of the branch found that `upgrade --all` went on after a Ctrl-C
+that came while a package was changing files and then exited 0; that the
+group's dry run and `--report` ignored failures; that PkgUpdates ran on the
+caller's stack and waited synchronously for PkgManager's ARexx answer; and
+that a failed scan read as an empty machine in PkgManager. All fixed
+(commits d8ea3bb..bbefb2f), and `apkg update` became cancellable. The
+archives in release 0.4.2 were built from bbefb2f with tools/make-rc.sh;
+every run below used the archive's own binaries unless it says otherwise.
+
+| run | system | binaries | what |
+|---|---|---|---|
+| `v11-2-rel042/` | AROS One 1.3, pool v11-2 | apkg/PkgManager of 20d5e09, PkgUpdates of b15be7e | updates suite; Ctrl-C in `upgrade --all`, in `apkg update` and in a package download; a network install (sdlpop); PkgManager Version column and Cancel during Update index; PkgUpdates with the real ScreenBar and `tests/holdport` holding the ARexx answer 60 s |
+| `v1-1-rel042/` | mainline v1-20260923, pool v1-1 | apkg of bbefb2f | updates suite; `apkg update`; Ctrl-C during it (before bbefb2f it read "socket error 4", `screens/eintr-before-fix.png`) ; redirected `--all-abi search` |
+| `v0-2-rel042/` | AROS i386 ABIv0, pool v0-2 | apkg of bbefb2f | updates suite; `apkg update`; Ctrl-C during a download; a network install (antiword) |
+| `v11-1-rel042-final/` | AROS One 1.3, pool v11-1 | apkg and PkgManager of bbefb2f | updates suite; Ctrl-C in `apkg update`, in a download and in `upgrade --all`; PkgManager Updates (2), Upgrade from the list with preview and confirm, then Updates (1) |
+
+PkgUpdates is unchanged between b15be7e and bbefb2f (same binary hash,
+30d12fef...). What holdport showed: with the answer held 61 s the item stayed
+on the strip and was never re-registered; a second click while waiting was
+ignored; Ctrl-C while waiting left the request allocated after 10 s and the
+program ended cleanly; holdport replied to it later and the system went on
+working (`upd-r3-sb.log`).
+
+In every suite run the counts were the same: 29 steps exit 0, 4 exit 10
+(no catalogue twice, unreadable catalogue, `upgrade --all` with the
+conflict), 1 exit 5 (usage), and all four hash checks PASS.
+
 ## What these tests did NOT show
 
 - Nothing ran on a Raspberry Pi, real or emulated; the Pi build is checked
@@ -93,11 +122,10 @@ Run 1 (`v11-1-run1/`) and run 2 with the final binaries (`v11-1-run2/`):
   mainline is likely (same pre-fix stdcio) but not confirmed.
 - The Pi checksum failure is not explained; `--keep-rejected` only collects
   evidence.
-- Ctrl-C during a download (the cancellable phase) was not exercised by a
-  key press in this run; the cancel mechanism itself is the library's
-  existing one. The late case was exercised in Limpet; in the plain CON
-  Shell it was not repeated.
-- PkgManager and PkgUpdates were not run on mainline v1.
+- Ctrl-C was pressed in the CON Shell for the 0.4.2 runs; in Limpet only
+  the late case was tried, with the earlier build.
+- PkgManager and PkgUpdates were not run on mainline v1 or i386 (neither
+  is built for them). PkgUpdates is not in the release archives.
 - Real network upgrades were not part of the fixture runs (archives from
   the cache); the real catalogue was only fetched.
 - Nothing on real hardware; no performance measurement.

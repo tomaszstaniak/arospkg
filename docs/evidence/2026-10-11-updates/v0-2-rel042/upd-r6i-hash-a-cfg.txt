@@ -1,0 +1,2 @@
+PASS assert-hash SYS:PkgUpd/Upa/config.txt
+rc=0

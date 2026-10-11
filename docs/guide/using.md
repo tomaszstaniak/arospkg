@@ -2,8 +2,9 @@
 
 Install programs with apkg in the Shell or PkgManager on the desktop.
 [Choose the archive for your CPU and ABI](../../README.md#downloads).
-0.4.0 is available for x86_64 ABIv11, i386 ABIv0 and native Raspberry Pi
-aarch64 ABIv1. The older experimental builds are also linked there.
+0.4.2 is available for x86_64 ABIv11 and i386 ABIv0, and as an
+experimental build for mainline x86_64 ABIv1; the native Raspberry Pi
+build stays at 0.4.0.
 
 ## Install apkg
 

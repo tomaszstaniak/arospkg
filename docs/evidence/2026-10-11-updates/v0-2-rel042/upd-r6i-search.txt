@@ -1,0 +1,13 @@
+upa                  1.1        i386      updates fixture upa
+upb                  1.0        i386      updates fixture upb
+upc                  1.0        i386      updates fixture upc
+upd                  1.5        i386      updates fixture upd
+upe                  1.1        i386      updates fixture upe
+upf                  1.0b       i386      updates fixture upf
+uph                  1.1        i386      updates fixture uph
+uph                  1.1        i386      updates fixture uph
+
+1 package(s) hidden: built for another CPU or ABI, or for one this
+client cannot judge, so not known to run here. apkg show <id> says
+why; --all-abi lists them.
+rc=0

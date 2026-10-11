@@ -1,0 +1,12 @@
+upa 1.1-aros1
+  updates fixture upa
+  category:     test/fixture
+  target:       i386, ABI v0
+  compatibility: native -- built for this machine: i386, ABIv0, the i386 release line
+  download:     1 KB from https://example.invalid/upa-1.1-1.zip
+  sha256:       e508a3e8a0c84cf03568e8fb0094b147ffadfb66c5c5f5eb96819ecc62981f94
+  requirements: none stated
+  installed:    1.0-aros1 (i386), in SYS:PkgUpd/upa, since 2026-10-11T17:44:58Z
+  upgrade:      available, 1.0-aros1 -> 1.1-aros1
+  roll back:    no -- no upgrade of this package is recorded, or its record is gone
+rc=0

@@ -1,0 +1,18 @@
+start PkgManager 0.4.2 sha256 cab07671964c7a32e23987f6c6674e2408ddfae40856cd4854592c8ddf51fc59 root RAM:dl: ARexx port PKGMANAGER
+refill (start) term="" rows=110 shown=110 installed=1 keep=- updates=0 ready=0 blocked=0 catalogue=ok when=2026-10-11 17:15
+update pressed
+job 1 update - from window
+event  download 0/136385 can_cancel=1 cancel_button=enabled
+event  download 1378/136385 can_cancel=1 cancel_button=enabled
+event  download 2756/136385 can_cancel=1 cancel_button=enabled
+event  download 4134/136385 can_cancel=1 cancel_button=enabled
+event  download 5512/136385 can_cancel=1 cancel_button=enabled
+event  download 6890/136385 can_cancel=1 cancel_button=enabled
+event  download 8268/136385 can_cancel=1 cancel_button=enabled
+cancel pressed for 
+event  download 9646/136385 can_cancel=1 cancel_button=enabled
+done update  status=14 catalogue update cancelled
+job 1 update - cancelled CANCELLED: catalogue update cancelled -- The catalogue you had is untouched.
+refill (done) term="" rows=110 shown=110 installed=1 keep=- updates=0 ready=0 blocked=0 catalogue=ok when=2026-10-11 17:15
+worker task gone 0 ms after done
+quit

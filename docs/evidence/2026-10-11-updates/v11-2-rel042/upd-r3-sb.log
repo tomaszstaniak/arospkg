@@ -1,0 +1,13 @@
+17:21:11 start root=SYS:PkgUpd recheck=900s rexx=yes
+17:21:11 count: catalogue=ok when=2026-10-11 17:11 installed=8 newer=2 ready=1 blocked=1 -> "2 available (1 blocked)"
+17:21:11 registered token=1
+17:23:15 action: asked the running PkgManager (OUTDATED SHOW)
+17:23:20 action: the running PkgManager answered OUTDATED SHOW, rc=0
+17:23:22 action: started "PkgManager" --updates --root "SYS:PkgUpd" (rc 0)
+17:24:29 action: asked the running PkgManager (OUTDATED SHOW)
+17:25:30 action: the running PkgManager answered OUTDATED SHOW, rc=0
+17:26:10 action: asked the running PkgManager (OUTDATED SHOW)
+17:26:18 action: ignored, PkgManager has not answered the last one (8s)
+17:26:36 Ctrl-C
+17:26:46 action: no answer from PkgManager in 10 s; its request is left allocated
+17:26:46 clean exit rc=0

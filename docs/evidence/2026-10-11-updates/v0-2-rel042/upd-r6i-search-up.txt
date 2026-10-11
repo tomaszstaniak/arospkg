@@ -1,0 +1,2 @@
+upa                  1.1        i386      updates fixture upa
+rc=0
