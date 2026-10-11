@@ -65,7 +65,10 @@ cat2 = {"schema": 1, "source": "updates test 2", "packages": [
     dict(entry("uph", "1.1", 1, new["h"]), url="https://example.invalid/uph-other.zip"),
     entry("upi", "1.1", 1, new["i"], b=other_abi),
 ]}
-for name, cat in (("idx1.json", cat1), ("idx2.json", cat2)):
+# For the Ctrl-C test of upgrade --all: two updates that both apply cleanly.
+cat3 = {"schema": 1, "source": "updates test 3", "packages": [
+    entry("upa", "1.1", 1, new["a"]), entry("upc", "1.1", 1, new["c"])]}
+for name, cat in (("idx1.json", cat1), ("idx2.json", cat2), ("idx3.json", cat3)):
     with open(os.path.join(out, name), "w") as f:
         json.dump(cat, f, indent=1)
 with open(os.path.join(out, "badidx.json"), "w") as f:
@@ -83,7 +86,7 @@ L = [f"""; The updates model on AROS, run {run}. Written by tests/make-updates-f
 ; Each step writes its own RESULTS: file; nothing is printed to the console.
 FAILAT 1000
 Protect SYS:UPDT/apkg +e
-Delete {ROOT} "SYS:Pkg Upd S" SYS:PkgUpdN SYS:PkgUpdB ALL FORCE QUIET
+Delete {ROOT} "SYS:Pkg Upd S" SYS:PkgUpdN SYS:PkgUpdB SYS:PkgUpdG ALL FORCE QUIET
 MakeDir {ROOT}
 MakeDir {ROOT}/cache
 """]
@@ -135,6 +138,15 @@ L.append('SYS:UPDT/apkg --root "SYS:Pkg Upd S" --index SYS:UPDT/idx1.json --plai
 L.append('Copy SYS:UPDT/idx2.json "SYS:Pkg Upd S/db/index.json"')
 step("space-root", 'SYS:UPDT/apkg --root "SYS:Pkg Upd S" outdated')
 step("usage", "SYS:UPDT/apkg outdated extra")
+L.append("; prepared for the interactive Ctrl-C test of upgrade --all (see the README of the run):")
+L.append(";   SYS:UPDT/apkg --root SYS:PkgUpdG --slow 1500 upgrade --all   then Ctrl-C while upa is being installed")
+L.append("MakeDir SYS:PkgUpdG\nMakeDir SYS:PkgUpdG/cache")
+for p in "ac":
+    L.append(f"Copy SYS:UPDT/a/{p}-old.zip SYS:PkgUpdG/cache/up{p}.zip")
+    L.append(f"SYS:UPDT/apkg --root SYS:PkgUpdG --index SYS:UPDT/idx1.json --plain install up{p} >NIL:")
+    L.append(f"Copy SYS:UPDT/a/{p}-new.zip SYS:PkgUpdG/cache/up{p}.new.zip")
+L.append("Copy SYS:UPDT/idx3.json SYS:PkgUpdG/db/index.json")
+step("group-before", "SYS:UPDT/apkg --root SYS:PkgUpdG --plain outdated")
 L.append(f'Echo >{R}-done.txt "done"')
 with open(os.path.join(out, "updates.script"), "w") as f:
     f.write("\n".join(L) + "\n")
