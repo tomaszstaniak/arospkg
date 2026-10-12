@@ -1,0 +1,9 @@
+Installing dirtree 40.8
+Downloading 59 KiB
+Verifying archive
+Installing files
+
+Installed dirtree 40.8
+  Location: RAM:IR/dirtree
+  Open folder: apkg --root "RAM:IR" open dirtree
+rc 0

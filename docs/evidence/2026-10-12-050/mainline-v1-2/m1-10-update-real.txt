@@ -1,0 +1,7 @@
+Updating the package catalogue
+Could not update the package catalogue: no network
+  https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v2.j
+  son
+  cannot open bsdsocket.library -- is the network stack running? Try: Execute
+  SYS:System/Network/AROSTCP/S/startnet
+rc 10

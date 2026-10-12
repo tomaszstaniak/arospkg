@@ -1,0 +1,3 @@
+shell stack: 40960
+icon: type 3 stack 8388608
+OpenWorkbenchObjectA: TRUE; tasks named Folio before: 38

@@ -171,6 +171,39 @@ post_install_notes = [
 ]
 ```
 
+### `[launch]`: how it is started
+
+Optional, for an application: which file is the program, and whether it is
+a Workbench or a Shell program. With it, `apkg run <id>`, PkgManager's
+**Run** and ARexx `RUN` can start it; without it they say so and Open
+folder is what remains. The full design is
+[RFC 0002](../rfc/0002-application-folder.md).
+
+| field | type | required | meaning and constraints |
+|---|---|---|---|
+| `executable` | string | yes | The program, relative to the package's drawer (`subdir`): `"Folio"`, `"C/DirTree"`. Not absolute, no `:`, `\`, `..`, `.` or empty component, printable ASCII without `"`. Not an icon, not the drawer. |
+| `mode` | string | yes | `"workbench"`: started as a double-click on its icon starts it, with the icon's stack and tool types; the archive must have `<executable>.info` beside the program, a tool icon (classic or PNG). `"shell"`: started as a Shell command with the arguments the user gives. |
+| `working_directory` | string | no | Shell mode: where it starts, relative to the drawer. Default: the drawer holding the program. A Workbench program always starts in its own drawer, so in workbench mode only that default is accepted. |
+
+No other key is accepted, by `mkindex.py` or by the client. Stack size and
+tool types are not fields: they stay in the program's icon.
+
+<!-- validate: fragment -->
+```toml
+[launch]
+executable = "Micropolis"
+mode       = "workbench"
+```
+
+Where it goes: `index-v2.json` carries it as `launch` (with
+`working_directory` written out); `index.json` never does. `apkg-pack
+build` writes `<drawer>/application.json` from it into the archive; for an
+archive without that file (an upload you did not build), apkg writes it
+into the drawer at installation and records the table in the registry
+entry, so a rollback writes it again. An `application.json` already in an
+archive must say the same as the manifest: `mkindex.py` and `apkg-pack
+check` refuse it otherwise.
+
 ### `[source]`
 
 Optional, recommended for anything built from source. It records where the

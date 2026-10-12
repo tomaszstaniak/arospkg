@@ -1,0 +1,5 @@
+arospkg
+  State: not-installed
+  Start: not described
+  It is not installed.
+rc 5

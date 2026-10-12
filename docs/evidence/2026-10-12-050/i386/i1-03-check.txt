@@ -1,0 +1,6 @@
+dirtree
+  State: can be started
+  Start: Shell command
+  Program: RAM:IR/dirtree/C/DirTree
+  Directory: RAM:IR/dirtree/C
+  Starts as a Shell command.

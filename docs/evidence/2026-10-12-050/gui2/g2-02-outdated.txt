@@ -1,0 +1,9 @@
+Updates for installed packages
+Catalogue updated 2026-10-12 03:16
+  Package  Installed      Available      State
+  folio  0.4.1-aros1    0.4.1-aros2    update available
+
+1 update available for installed packages. See them: apkg --root "RAM:PM2"
+outdated
+Upgrade one: apkg --root "RAM:PM2" upgrade <id>
+Upgrade all that can be: apkg --root "RAM:PM2" upgrade --all

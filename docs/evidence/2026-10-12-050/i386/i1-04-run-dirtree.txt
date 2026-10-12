@@ -1,0 +1,9 @@
+Directory tree "RAM:i/cases" on Monday 12-Oct-26
+
+cases
++--shelltool
+`--wbtool
+
+
+dirtree ended with return code 0.
+rc 0

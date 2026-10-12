@@ -1,0 +1,7 @@
+where: started from a Shell
+where: current directory RAM Disk:r1/cases/My Tool/Data Files
+where: PROGDIR: RAM Disk:r1/cases/My Tool
+where: stack 262144
+where: arg 1: [fail]
+mytool ended with return code 7.
+rc 7

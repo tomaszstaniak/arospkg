@@ -1,0 +1,1 @@
+Started grafx2 from its icon (stack 8388608 bytes from GrafX2.info).

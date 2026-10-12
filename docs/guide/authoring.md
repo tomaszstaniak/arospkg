@@ -94,6 +94,44 @@ post_install_notes = [
 At most 8 lines of 159 characters, printable ASCII without `"` or `\`.
 apkg already says where the program was installed and how to start it.
 
+### Say how it starts
+
+Add a `[launch]` table and users can start the program with `apkg run`
+and PkgManager's **Run**, even when they did not start it from Wanderer
+before. Name the program and say whether it is a Workbench or a Shell
+program; nothing else. The stack and tool types stay in the program's icon,
+which is what a Workbench start uses.
+
+<!-- validate: fragment -->
+```toml
+[launch]
+executable = "Micropolis"     # relative to the drawer
+mode       = "workbench"      # needs Micropolis.info beside it, a tool icon
+```
+
+The three kinds this was tested with on AROS One:
+
+| program | `[launch]` | why |
+|---|---|---|
+| Folio, GrafX2 (need an 8 MiB stack) | `executable = "Folio"`, `mode = "workbench"` | the icon sets the stack, so no `Stack` command is needed |
+| grep | `executable = "Grep"`, `mode = "shell"` | a command-line tool: arguments come from the user, its return code goes back to the caller |
+| DirTree | `executable = "C/DirTree"`, `mode = "shell"` | the program is in a sub-drawer; it starts there unless `working_directory` says otherwise |
+
+`apkg-pack check` reports what it found: the program, its CPU, the icon and
+the stack it sets:
+
+```text
+xRick.arospkg.toml: note: launch: xRick.info sets the stack: 262144 bytes
+```
+
+and refuses what would not start: a program that is not in the drawer, one
+for another CPU, a Workbench start without a tool icon, a path leaving the
+drawer. `build` writes `application.json` into the drawer in the ZIP, so a
+user who unpacks it by hand can still `apkg run` it. Leave `[launch]` out
+for a package with nothing to start (a library, a data set); everything
+else works as before. Details: [metadata guide](metadata.md) and
+[RFC 0002](../rfc/0002-application-folder.md).
+
 ### 3. Check and build
 
 ```text

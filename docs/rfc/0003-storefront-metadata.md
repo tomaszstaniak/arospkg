@@ -24,6 +24,7 @@ something to look at. It does not answer them.
 
 ## 2. Pictures: proposed fields
 
+<!-- proposal -->
 ```toml
 [[media]]                       # proposed; not accepted by the catalogue
 type    = "screenshot"          # "icon", "screenshot"
@@ -57,6 +58,7 @@ Rules a client would follow:
 
 ## 3. Offers: proposed fields
 
+<!-- proposal -->
 ```toml
 [offer]                         # proposed; not accepted by the catalogue
 price    = "9.99"               # a decimal string, never computed with

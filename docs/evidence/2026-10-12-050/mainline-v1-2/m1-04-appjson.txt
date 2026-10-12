@@ -1,0 +1,2 @@
+TYPE: can't open RAM:MR/arospkg/application.json
+object not found

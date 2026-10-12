@@ -79,7 +79,7 @@ and keywords can be written `FIELD state` or `FIELD=state`.
 
 | command | arguments | result on success | typical errors |
 |---|---|---|---|
-| `VERSION` | | `PkgManager 0.3 ARexx 1 sha256 <hex>` | |
+| `VERSION` | | `PkgManager 0.5.0 ARexx 1 sha256 <hex>` | |
 | `HELP` | | every command name, space separated | |
 | `LIST` | `[INSTALLED] [MATCH <text>]` | package ids, space separated; empty when none | `NOINDEX` |
 | `INFO` | `<package> [FIELD <name>]` | one `name value` line per field, or only the value of `FIELD` | `NOTFOUND`, `BADARGS` (unknown field) |
@@ -95,6 +95,8 @@ and keywords can be written `FIELD state` or `FIELD=state`.
 | `CANCEL` | `[<job>]` | `requested`, or `declined` for a job waiting for confirmation | `NOTCANCELLABLE`, `FINISHED`, `NOJOB` |
 | `QUIT` | | `closing`; the same as the close gadget | |
 | `LASTERROR` | | why this script's last command failed: `CODE text`; empty after a success. Ask right after the failure | |
+| `RUN` | `<package>` | job number; the job's `message` says what was started, as the Run button does. Starting needs the package's description (see [using arospkg](guide/using.md#start-a-program)); a Shell program gets a console window of its own | `NOTFOUND`, `BUSY`, `CLOSING`; the job fails with `CANNOTRUN`, `REQUIRES` or `CONFLICT` (another CPU or ABI) |
+| `VERIFY` | `<package>` | job number; the job's `message` gives the counts (as installed, changed locally, missing, not the package's) | `NOTFOUND`, `BUSY`, `CLOSING` |
 | `OUTDATED` | `[SHOW]` | the updates of installed packages, one `name value` line each: `catalogue` (`ok`, `missing`, `unreadable`), `updated`, `stale`, `installed`, `newer`, `ready`, `blocked`, and `packages` with the ids that have something newer. `SHOW` also brings the window forward on the Updates list | |
 
 `INFO` fields: `id version revision state installedversion installedrevision

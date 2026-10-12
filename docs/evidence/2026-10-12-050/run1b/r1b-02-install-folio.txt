@@ -1,0 +1,12 @@
+Installing folio 0.4.1-aros1
+Verifying archive
+Installing files
+
+Installed folio 0.4.1-aros1
+  Location: RAM:My Root/folio
+  Open folder: apkg --root "RAM:My Root" open folio
+
+Notes from the package
+  Launch from the Folio icon, which sets an 8 MiB stack. Shell: Stack 8388608.
+  Opening external web links requires openurl.library.
+rc 0

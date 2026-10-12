@@ -1,0 +1,3 @@
+Could not start RAM:r1/cases/elfwrong: built for another system
+  Its program file is built for i386; this machine is x86_64.
+rc 10

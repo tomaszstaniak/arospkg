@@ -73,6 +73,7 @@ Folio.info                   the drawer icon, beside the drawer as usual
 
 ## 4. The manifest table
 
+<!-- validate: none -->
 ```toml
 [launch]
 executable = "Folio"          # relative to the drawer (subdir)

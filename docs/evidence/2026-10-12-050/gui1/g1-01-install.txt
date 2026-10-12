@@ -1,0 +1,25 @@
+Installing folio 0.4.1-aros1
+Verifying archive
+Installing files
+
+Installed folio 0.4.1-aros1
+  Location: RAM:PM/folio
+  Open folder: apkg --root "RAM:PM" open folio
+
+Notes from the package
+  Launch from the Folio icon, which sets an 8 MiB stack. Shell: Stack 8388608.
+  Opening external web links requires openurl.library.
+Installing grep 2.0
+Verifying archive
+Installing files
+
+Installed grep 2.0
+  Location: RAM:PM/grep
+  Open folder: apkg --root "RAM:PM" open grep
+Installing grafx2 2.9-aros5
+Verifying archive
+Installing files
+
+Installed grafx2 2.9-aros5
+  Location: RAM:PM/grafx2
+  Open folder: apkg --root "RAM:PM" open grafx2

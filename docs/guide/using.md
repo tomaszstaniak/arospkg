@@ -1,10 +1,12 @@
 # Using arospkg
 
-Install programs with apkg in the Shell or PkgManager on the desktop.
+Install programs with apkg in the Shell or PkgManager on the desktop, start
+them, keep them up to date and remove them.
 [Choose the archive for your CPU and ABI](../../README.md#downloads).
-0.4.2 is available for x86_64 ABIv11 and i386 ABIv0, and as
-experimental builds for mainline x86_64 ABIv1 and native Raspberry Pi
-aarch64 ABIv1. The Pi build is compiled and linked, but not runtime-tested.
+0.5.0 is stable for x86_64 ABIv11 (AROS One); i386 ABIv0, mainline x86_64
+ABIv1 and native Raspberry Pi aarch64 ABIv1 are experimental builds whose
+test coverage is in the [release notes](../../release/notes-0.5.0.md). The
+Pi build is compiled and linked, but not runtime-tested.
 
 ## Install apkg
 
@@ -21,10 +23,10 @@ Check that the version and ABI match the archive you downloaded.
 Keep your existing `SYS:Packages`. Versions 0.3.x require this manual
 upgrade to 0.4.
 
-PkgManager is included in the x86_64 ABIv11 and experimental Raspberry Pi archives.
-Keep its unpacked folder on disk. To use the graphical interface, run
-`Run PkgManager` from that folder. Click **Update index**, select a package
-and click **Install**.
+PkgManager is included in the x86_64 ABIv11, mainline and Raspberry Pi
+archives. Keep its unpacked folder on disk. To use the graphical interface,
+double-click its icon or run `Run PkgManager` from that folder. Click
+**Update index**, select a package and click **Install**.
 
 ## Find and install a program
 
@@ -47,6 +49,51 @@ Installed zunecalc 1.0
 `apkg open zunecalc` opens that drawer in Wanderer. In PkgManager, select
 the package and press **Open folder**. With `--root`, the printed command
 carries the same root, so it can be copied as it is.
+
+## Start a program
+
+```text
+apkg run folio
+apkg run folio Work:Docs/manual.pdf
+apkg run grep -c TODO Work:notes.txt
+apkg run --check grafx2
+```
+
+A package that says how it is started can be started by name, from the
+Shell or with PkgManager's **Run** button. There are two kinds:
+
+- **Workbench programs** start exactly as a double-click on their icon
+  starts them: with the stack and tool types set in the icon, in their own
+  drawer. You do not need to type `Stack` first. Files after the name are
+  passed as if you had dropped them on the program (Folio opens the PDF).
+  apkg says `Started folio from its icon (stack 8388608 bytes from
+  Folio.info)` only once the program's process has appeared; if it does
+  not appear within 20 seconds, apkg says so instead of claiming success.
+- **Shell programs** run in your Shell window, in the directory the package
+  names, with the words after the name as their arguments. apkg returns
+  the program's return code, so `apkg run grep ...` can be used in scripts.
+  PkgManager starts them in a console window of their own.
+
+`apkg run --check <id>` says whether and how it would start, and why not,
+without starting anything (return code 0: it can be started, 5: it
+cannot). `--json` gives the same as one JSON object.
+
+Before starting, apkg checks the drawer's description, that the program is
+there, that it is built for this machine (a description can be wrong, so
+the program file itself is checked too), that a Workbench program has its
+icon, and that the libraries the package names are present. It refuses
+with the reason: *it does not say how to start it* (use Open folder: older
+packages and many archives from AROS Archives say nothing about starting),
+*its program X is missing*, *built for another system*, *a Workbench start
+needs the program's icon*, or *this machine does not have X.library*.
+
+The description is the file `application.json` in the program's drawer.
+It travels with the drawer, so a drawer you unpacked or moved yourself
+starts by path, without any installation records:
+
+```text
+apkg run "Work:My Apps/Folio"
+```
 
 ## Keep things up to date
 
@@ -151,13 +198,53 @@ whether a newer release exists. When the latest release has no archive for
 your machine, `--check` says so and your
 apkg stays as it is.
 
+## Check the installed files
+
+```text
+apkg verify folio
+```
+
+compares every installed file with what was installed: as installed,
+changed locally, missing, or in the drawer without being the package's.
+It repairs nothing. PkgManager's **Verify** shows the same at the top of the
+details.
+
 ## Remove
 
 ```text
 apkg remove zunecalc
 ```
 
-Files you changed, and files apkg did not install, are kept; apkg lists them.
+Files you changed, and files apkg did not install, are kept; apkg lists
+them, and so does PkgManager after **Remove**.
+
+## PkgManager
+
+- The state selector filters the list: **All**, **Installed**, **Not
+  installed**, **Updates (N)** and, when the demonstration storefront is
+  present, **Demo store**.
+- The details start with what matters first and stay in view: the version
+  installed, whether it runs on this machine and how it starts. Below them
+  are the location, updates, notes from the package and the requirements.
+- **Run**, **Open folder**, **Verify**, **Upgrade** (with the plan shown
+  first, and your confirmation), **Roll back** and **Remove** act on the
+  selected installed package. Downloads, checks and starts run on a worker
+  process, so the window keeps answering; **Cancel** stops a download.
+- Without a catalogue, or with one that cannot be read, PkgManager still
+  lists what is installed, and Run, Open folder, Verify, Roll back and
+  Remove still work.
+- Some applications show pictures beside the details: their icon, a
+  screenshot and small thumbnails, with a line saying where the pictures
+  come from. In 0.5.0 these are a **demonstration**: a few real screenshots
+  shipped with PkgManager in its `Demo` drawer, not pictures from the
+  catalogue. An application without pictures shows text only.
+- **Demo store** lists one fictional paid application with a price. **Buy...**
+  shows how buying could work in a later version. It is marked
+  "Demo -- purchasing is not available yet": nothing can be bought, nothing
+  is installed, and no data is asked for or sent. See
+  [RFC 0003](../rfc/0003-storefront-metadata.md).
+- PkgManager's ARexx port (`PKGMANAGER`) has `RUN <id>` and `VERIFY <id>`
+  besides the earlier commands; see [the ARexx page](../arexx.md).
 
 ## When a download does not match the catalogue
 
