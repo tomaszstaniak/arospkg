@@ -80,6 +80,9 @@ static void launch_tables(void)
     CHECK(parse_launch("{\"launch\":{\"executable\":\"bin/F\",\"mode\":\"workbench\",\"working_directory\":\"bin\"}}",
                        &l, why, sizeof why) == 1, "workbench with its own drawer stated");
     CHECK(parse_launch("{\"launch\":[1]}", &l, why, sizeof why) == -1, "not a table");
+    CHECK(parse_launch("{\"launch\":{\"working_directory\":\"executable\",\"executable\":\"bin/Prog\",\"mode\":\"shell\"}}",
+                       &l, why, sizeof why) == -1 || !strcmp(l.executable, "bin/Prog"),
+          "a value equal to a key name is not taken for that key");
 }
 
 static void descriptions(void)

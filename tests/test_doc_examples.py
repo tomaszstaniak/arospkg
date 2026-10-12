@@ -20,7 +20,9 @@ be preceded by a marker saying what it is, and is checked accordingly:
 
 Every ```toml block in docs/rfc/ must be marked `<!-- proposal -->`, must
 parse, and must NOT pass as a current manifest -- a proposal that the current
-validator accepts could be mistaken for a supported format.
+validator accepts could be mistaken for a supported format. An implemented
+RFC may instead show a block with `<!-- validate: none -->`, for reading; the
+checked example of an implemented field is the one in docs/guide/.
 """
 import json, re, subprocess, sys, tempfile, tomllib
 from pathlib import Path
@@ -145,8 +147,12 @@ for path in sorted((HERE / "docs/rfc").glob("*.md")):
         if lang != "toml":
             continue
         where = f"{rel}:{line}"
+        if mk == "none":
+            checked += 1
+            continue
         if mk != "proposal":
-            fail(where, "a TOML example in an RFC must be marked <!-- proposal -->"); continue
+            fail(where, "a TOML example in an RFC must be marked <!-- proposal --> "
+                        "(or <!-- validate: none --> in an implemented RFC)"); continue
         checked += 1
         try:
             m = tomllib.loads(text)

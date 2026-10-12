@@ -19,6 +19,7 @@
 #include "slow.h"
 #include "sha256.h"
 
+#include <errno.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/bsdsocket.h>
@@ -155,6 +156,19 @@ static size_t dechunk(char *b, size_t len)
     return out;
 }
 
+/* A Ctrl-C that arrived while connecting: the name lookup, connect and the
+   TLS handshake fail with the stack's EINTR (or the break is still
+   pending), and without this check they read as a network failure ("cannot
+   resolve", "handshake failed -0x6c00", seen in Limpet and CON: on AROS One,
+   2026-10-12). Only with a progress callback, which is what makes a
+   download cancellable at all. */
+static int break_seen(void)
+{
+    if (!prog_cb) return 0;
+    if (SetSignal(0L, 0L) & SIGBREAKF_CTRL_C) return 1;
+    return SocketBase && Errno() == EINTR;
+}
+
 /* Returns 1 = body, 2 = redirect in `loc`, 0 = failure. */
 static int fetch_once(const char *host, const char *path, str *body,
                       char *loc, size_t locn, long max_bytes, char why[240])
@@ -165,7 +179,10 @@ static int fetch_once(const char *host, const char *path, str *body,
     char req[4096], *hdr_end, *stline, *b;
     size_t blen;
 
-    if ((s = tcp_connect(host, why)) < 0) goto out;
+    if ((s = tcp_connect(host, why)) < 0) {
+        if (break_seen()) snprintf(why, 240, "cancelled");
+        goto out;
+    }
     {   /* Normally the host we asked for. A test can substitute another name,
            and then the handshake must fail -- that is the only way to show the
            check is doing anything. */
@@ -173,14 +190,18 @@ static int fetch_once(const char *host, const char *path, str *body,
         if (!want || !*want) want = host;
         if (want != host)
             printf("  (test) requiring the certificate to match %s\n", want);
-        if (!(t = tls_start(s, host, want, CAFILE, why))) goto out;
+        if (!(t = tls_start(s, host, want, CAFILE, why))) {
+            if (break_seen()) snprintf(why, 240, "cancelled");
+            goto out;
+        }
     }
 
     snprintf(req, sizeof req,
              "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: arospkg/0.2\r\n"
              "Accept: */*\r\nConnection: close\r\n\r\n", path, host);
     if (tls_write(t, req, strlen(req)) <= 0) {
-        snprintf(why, 240, "cannot send the request to %s", host);
+        if (break_seen()) snprintf(why, 240, "cancelled");
+        else snprintf(why, 240, "cannot send the request to %s", host);
         goto out;
     }
 

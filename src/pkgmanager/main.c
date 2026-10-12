@@ -35,7 +35,6 @@ static Object *app, *win, *str_search, *cyc_cat, *cyc_state, *lst, *txt_detail,
               *grp_media, *pg_shot, *pic_shot, *txt_noshot, *txt_caption, *grp_thumbs,
               *pic_thumb[DEMO_MAXSHOTS], *txt_provenance, *pg_icon, *pic_icon;
 static char demo_path[PKG_MAXPATH] = "PROGDIR:Demo/storefront.json";
-static int buy_showing;           /* the purchase preview is open (demo only) */
 static int auto_yes;              /* --yes: confirm requesters without asking; for tests */
 static pkg_entries rows;          /* the whole query; the list shows a filtered view */
 static job cur;
@@ -70,7 +69,10 @@ static struct { rexx_msg *m; long job; char field[24]; } waits[MAXWAITS];
  * clears before that message is even sent: in between, a new job could be
  * started and the old outcome would be read as the new job's. */
 static int in_flight;
-static int busy_now(void) { return in_flight || confirming; }
+static int buy_showing;           /* the purchase preview is open (demo only) */
+/* The purchase preview borrows the confirmation window, so while it is open
+   nothing may start that would need that window for a plan. */
+static int busy_now(void) { return in_flight || confirming || buy_showing; }
 
 /* --log <file>: every event the window acted on, one line each, for a run
  * that has to prove what the window did rather than show a screenshot of
@@ -578,6 +580,7 @@ static void buy_close(void)
     SetAttrs(btn_proceed, MUIA_ShowMe, TRUE, TAG_DONE);
     SetAttrs(btn_decline, MUIA_Text_Contents, (IPTR)"Cancel", TAG_DONE);
     logline("demo purchase preview closed");
+    show_detail();
 }
 
 /* The detail pane for a demo offer: what it is, first, and that it is not
@@ -1660,9 +1663,14 @@ static int real_main(int argc, char **argv)
                                 Child, (pic_icon = DtpicObject, End),
                                 Child, (RectangleObject, End),
                             End),
+                            /* Three lines always: the row must not change
+                               height with its content or with whether an
+                               icon is shown (on mainline without one, it
+                               kept the height of a single line). */
                             Child, (txt_head = TextObject,
                                 MUIA_Text_Contents, (IPTR)"",
                                 MUIA_Text_SetMin, FALSE,
+                                MUIA_FixHeightTxt, (IPTR)"A\nA\nA",
                             End),
                         End),
                         /* Not of fixed height: it takes whatever the

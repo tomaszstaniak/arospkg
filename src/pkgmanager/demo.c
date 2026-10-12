@@ -22,7 +22,14 @@ const char *demo_banner(void) { return banner; }
 int  demo_noffers(void) { return noffers; }
 demo_offer *demo_offer_at(int i) { return i >= 0 && i < noffers ? &offers[i] : NULL; }
 
-int demo_is_offer(const pkg_entry *e) { return e && strcmp(e->kind, "demo-offer") == 0; }
+/* By identity, never by a field: a catalogue entry could carry any kind,
+   and must not be taken for an offer (or an offer for a package). */
+int demo_is_offer(const pkg_entry *e)
+{
+    int i;
+    for (i = 0; e && i < noffers; i++) if (&offers[i].e == e) return 1;
+    return 0;
+}
 
 demo_offer *demo_offer_of(const pkg_entry *e)
 {

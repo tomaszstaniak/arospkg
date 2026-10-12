@@ -176,8 +176,10 @@ def launch_problems(drawer, m):
         problems.append(f"launch.executable: {launch['executable']} is an Amiga 68k hunk file, "
                         f"not a program for {m.get('arch')}")
     elif launch["mode"] == "shell":
-        notes.append(f"launch.executable: {launch['executable']} is not an ELF program; the client "
-                     "runs it only as a Shell script (protection bit s)")
+        # apkg installs files without the s protection bit, so a script
+        # would never be accepted as a program after installation.
+        problems.append(f"launch.executable: {launch['executable']} is not an ELF program; a Shell "
+                        "script cannot be the program of a package (apkg does not set the s bit)")
     else:
         problems.append(f"launch.executable: {launch['executable']} is not a program "
                         "(no ELF header); Workbench cannot start it")

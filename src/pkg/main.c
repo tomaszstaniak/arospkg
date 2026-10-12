@@ -776,6 +776,16 @@ static int real_main(int argc, char **argv)
     memset(&e, 0, sizeof e);
 
     for (i = 1; i < argc; i++) {
+        /* After `run <id>` every word is the program's, options included:
+           `apkg run folio --help` must not print apkg's help. */
+        if (cmd && arg && !strcmp(cmd, "run")) {
+            if (nrest >= (int)(sizeof rest / sizeof rest[0])) {
+                printf("apkg run: at most %d arguments can be passed on\n", (int)(sizeof rest / sizeof rest[0]) - 1);
+                return 5;
+            }
+            rest[nrest++] = argv[i];
+            continue;
+        }
         if (!strcmp(argv[i], "--root") && i + 1 < argc)        hint_root = root = argv[++i];
         else if (!strcmp(argv[i], "--index") && i + 1 < argc)  index = argv[++i];
         else if (!strcmp(argv[i], "--index-url") && i + 1 < argc) index_url = argv[++i];
@@ -839,6 +849,7 @@ static int real_main(int argc, char **argv)
             if (!arg) arg = argv[i];
             else if (!arg2) arg2 = argv[i];
             if (nrest < (int)(sizeof rest / sizeof rest[0])) rest[nrest++] = argv[i];
+            else { printf("apkg: too many words on the command line\n"); return 5; }
         }
     }
     if (!cmd) { usage(); return 5; }

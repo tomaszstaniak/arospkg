@@ -121,12 +121,19 @@ int js_member(const char *js, const js_tok *t, int ntok, int obj, const char *na
 {
     int i, len = (int)strlen(name);
     if (obj < 0 || obj >= ntok || t[obj].type != JS_OBJ) return -1;
+    int is_key = 1;
     i = obj + 1;
+    /* The object's children alternate key, value. Only keys are compared:
+       a string value equal to `name` ({"a":"mode","mode":"shell"}) is not
+       the member. */
     while (i < ntok && t[i].start < t[obj].end) {
-        if (t[i].parent == obj && t[i].type == JS_STR &&
-            t[i].end - t[i].start == len &&
-            strncmp(js + t[i].start, name, (size_t)len) == 0)
-            return (i + 1 < ntok) ? i + 1 : -1;
+        if (t[i].parent == obj) {
+            if (is_key && t[i].type == JS_STR &&
+                t[i].end - t[i].start == len &&
+                strncmp(js + t[i].start, name, (size_t)len) == 0)
+                return (i + 1 < ntok) ? i + 1 : -1;
+            is_key = !is_key;
+        }
         i = skip(t, ntok, i);
     }
     return -1;

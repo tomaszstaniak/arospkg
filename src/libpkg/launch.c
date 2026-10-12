@@ -249,6 +249,11 @@ pkg_status pkg_app_info_get(pkg_ctx *c, const char *what, pkg_app_info *a, pkg_e
             if (u_exists(iconpath) && (dob = GetDiskObject((STRPTR)a->program)) != NULL) {
                 type = dob->do_Type;
                 if (type == WBTOOL) a->stack = dob->do_StackSize;
+                /* With a CLI tool type, workbench.library starts the program
+                   as a Shell command with the default stack, not the
+                   icon's (openworkbenchobjecta.c, HandleTool). */
+                if (type == WBTOOL && dob->do_ToolTypes && FindToolType(dob->do_ToolTypes, (STRPTR)"CLI"))
+                    type = -2;
                 FreeDiskObject(dob);
             }
             CloseLibrary(IconBase);
@@ -258,6 +263,12 @@ pkg_status pkg_app_info_get(pkg_ctx *c, const char *what, pkg_app_info *a, pkg_e
                 snprintf(why, sizeof why, "A Workbench start needs the program's icon, %s.info, "
                          "and it is missing.", d.launch.executable);
                 return set_state(a, PKG_RUN_MISSING, why);
+            }
+            if (type == -2) {
+                snprintf(why, sizeof why, "%s.info has the tool type CLI, so Workbench would start it "
+                         "as a Shell command with the default stack; use shell mode, or remove CLI.",
+                         d.launch.executable);
+                return set_state(a, PKG_RUN_INVALID, why);
             }
             if (type != WBTOOL) {
                 snprintf(why, sizeof why, "%s.info is not a program icon (type %d), so Workbench "
@@ -292,17 +303,20 @@ pkg_status pkg_app_info_get(pkg_ctx *c, const char *what, pkg_app_info *a, pkg_e
 }
 
 /* Tasks with this name, ready or waiting. Processes started by Workbench
-   are named after the program file. */
+   are named after the program file. Under Disable, not Forbid: exec moves
+   tasks between these lists from interrupts (rom/exec/signal.c). On an SMP
+   exec a task running on another core is in a private list this cannot
+   see, so the caller also asks FindTask, which looks there. */
 static int tasks_named(const char *name)
 {
     struct Node *n;
     int k = 0;
-    Forbid();
+    Disable();
     for (n = SysBase->TaskReady.lh_Head; n->ln_Succ; n = n->ln_Succ)
         if (n->ln_Name && strcmp(n->ln_Name, name) == 0) k++;
     for (n = SysBase->TaskWait.lh_Head; n->ln_Succ; n = n->ln_Succ)
         if (n->ln_Name && strcmp(n->ln_Name, name) == 0) k++;
-    Permit();
+    Enable();
     return k;
 }
 
@@ -403,14 +417,15 @@ pkg_status pkg_run(pkg_ctx *c, const char *what, const char *const *args, int na
             return pkg_fail(e, PKG_E_LAUNCH, "Workbench refused to start it", "", a.program);
         for (ticks = 0; ticks < RUN_CONFIRM_TICKS; ticks += 10) {
             if ((after = tasks_named(base)) > before) break;
+            if (before == 0 && FindTask((CONST_STRPTR)base)) { after = 1; break; }
             Delay(10);
         }
         if (after <= before) {
-            snprintf(r->how, sizeof r->how, "Workbench took the request, but no %s process appeared "
+            snprintf(r->how, sizeof r->how, "Workbench took the request, but no %s process was seen "
                      "within %d seconds.", base, RUN_CONFIRM_TICKS / 50);
             return pkg_fail(e, PKG_E_LAUNCH, "not seen running",
-                            "It may have failed to load. Try its icon in the drawer; Open folder shows it.",
-                            a.program);
+                            "It may have failed to load, or it ended at once. Try its icon in the drawer; "
+                            "Open folder shows it.", a.program);
         }
         r->confirmed = 1;
         if (a.stack > 0)
@@ -467,9 +482,19 @@ pkg_status pkg_run(pkg_ctx *c, const char *what, const char *const *args, int na
         tags[k].ti_Tag = TAG_DONE;
         /* The new process inherits the caller's current directory, so the
            caller moves there for the duration of the call. */
+        /* The program shares our output handle. On mainline before
+           da9bbd01b5 (the pool's v1 base among them) its stdcio.library
+           writes back the handle's flags as they were when it opened, and
+           a handle not in write mode then loses whatever is buffered at the
+           next Flush: with apkg's output redirected to a file, the
+           program's lines and apkg's own report after it came out empty
+           (~/Work/AROS/CLAUDE.md). Flushing ours and writing nothing first
+           puts the handle in write mode for both, before and after. */
+        if (flags & PKG_RUN_WAIT) { fflush(stdout); FPuts(Output(), (CONST_STRPTR)""); Flush(Output()); }
         old = CurrentDir(wd);
         rc = SystemTagList((CONST_STRPTR)cmd, tags);
         CurrentDir(old);
+        if (flags & PKG_RUN_WAIT) FPuts(Output(), (CONST_STRPTR)"");
         UnLock(wd);
         free(cmd);
         if (rc == -1) {

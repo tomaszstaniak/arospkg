@@ -464,6 +464,9 @@ def check_members(m, names, where="the archive"):
             problems.append(f"member {rel[:60]}...: path inside the package longer than {PKGPATH_MAX} bytes")
         if rel is not None and not n.endswith("/"):
             files += 1
+    launch = m.get("launch")
+    if isinstance(launch, dict) and (sub + "/" if sub else "") + APP_FILE not in names:
+        files += 1          # the client writes application.json into the drawer
     if files > FILES_MAX:
         problems.append(f"subdir: {files} files; the client installs at most {FILES_MAX}")
     if m.get("icon") and m["icon"] not in names:
@@ -595,7 +598,7 @@ def main():
             "kind": m["kind"], "subdir": m.get("subdir", ""),
             "icon": m.get("icon", ""),
             "install": m.get("install", {}),
-            # This port's release counter (docs/reference/metadata.md): absent means
+            # This port's release counter (docs/guide/metadata.md): absent means
             # the first packaging, and the client shows nothing for it. It was
             # never emitted before openloco stated one, so every upgrade test
             # ran on hand-written indexes.
