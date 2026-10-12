@@ -1,4 +1,0 @@
-Could not start RAM:m/cases/v11tool: built for another system
-  It is built for ABIv11, current distributions such as AROS One; this machine
-  runs ABIv1, mainline AROS.
-rc 10

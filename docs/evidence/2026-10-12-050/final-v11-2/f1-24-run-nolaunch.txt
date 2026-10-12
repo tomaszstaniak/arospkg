@@ -1,5 +1,0 @@
-Could not start grep: it does not say how to start it
-  RAM:Root2/grep
-  It does not say how to start it (no application.json). Open folder shows its
-  files.
-rc 10

@@ -176,7 +176,7 @@ before it has failed at all could read a finished script's leftover, if its
 port and task happen to land at the same addresses.
 
 PkgManager never sets a variable in the calling script. A version that set `RC2` that way crashed RexxMast after about thirty calls
-made from inside a `PROCEDURE`; see `docs/spikes/arexx/`.
+made from inside a `PROCEDURE`.
 
 ## Jobs
 

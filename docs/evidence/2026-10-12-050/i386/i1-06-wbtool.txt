@@ -1,2 +1,0 @@
-Started wbtool from its icon (stack 150000 bytes from where.info).
-rc 0

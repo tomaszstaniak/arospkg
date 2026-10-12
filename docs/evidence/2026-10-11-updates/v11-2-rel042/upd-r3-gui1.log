@@ -1,4 +1,0 @@
-start PkgManager 0.4.2 sha256 cab07671964c7a32e23987f6c6674e2408ddfae40856cd4854592c8ddf51fc59 root SYS:PkgUpd: ARexx port PKGMANAGER
-refill (start) term="" rows=8 shown=8 installed=7 keep=- updates=2 ready=1 blocked=1 catalogue=ok when=2026-10-11 17:11
-worker task gone 0 ms after done
-quit

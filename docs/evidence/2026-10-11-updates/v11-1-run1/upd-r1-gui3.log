@@ -1,9 +1,0 @@
-start PkgManager 0.4.1 sha256 3730b20e2c6f851b2e6be0a3b5b098dc826c1f3e758e5dee67a2899eb0416324 root SYS:PkgUpdN: no ARexx port: none.library cannot be opened
-refill (start): no index
-update pressed
-job 1 update - from window
-done update  status=0
-job 1 update - done: index updated 
-refill (done) term="" rows=110 shown=110 installed=0 keep=- updates=0 ready=0 blocked=0 catalogue=ok when=2026-10-11 11:08
-worker task gone 0 ms after done
-quit

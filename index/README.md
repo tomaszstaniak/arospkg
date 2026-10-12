@@ -1,14 +1,13 @@
-# Candidates
+# Local catalogue candidates
 
-Packages imported from the AROS Archives catalogue by
-`tools/import_catalogue.py`, not yet reviewed.
+Maintainer tools generate candidates here for review. They are not included in
+Git or in the catalogue downloaded by users. Generate them with:
 
-- `candidates.json`: every catalogue entry offered, with the alternatives
-  that were not chosen.
-- `candidates/<id>.<arch>.toml`: a skeleton manifest, `status = "skeleton"`,
-  or one marked `excluded` with its reason.
+```sh
+python3 tools/import_catalogue.py --out index
+```
 
-Nothing here is published. A reviewed and tested manifest moves to
-`manifests/` in [arospkg-index](https://github.com/tomaszstaniak/arospkg-index),
-which holds the approved manifests and the index clients read. See
-`docs/guide/packaging.md`, sections 6B and 7.
+candidates.json and candidates/ are inputs to fetch.py and candidate_index.py.
+Approved manifests belong in the separate arospkg-index repository; mkindex.py
+publishes only those approved manifests. Local candidates are not proof that a
+package installs or runs.

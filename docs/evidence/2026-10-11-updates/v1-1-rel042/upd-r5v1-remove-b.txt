@@ -1,6 +1,0 @@
-Removing upb 1.0-aros1
-
-Removed upb 1.0-aros1
-  Kept files in SYS:PkgUpd/upb:
-    Prog (you changed it)
-rc=0

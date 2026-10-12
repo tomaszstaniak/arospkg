@@ -1,3 +1,0 @@
-Could not start arospkg: not installed
-  It is not installed.
-rc 10

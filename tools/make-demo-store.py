@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build PkgManager's demonstration storefront: Demo/storefront.json and its
-pictures, from the sources listed in docs/demo-store/sources.json.
+pictures, from the sources listed in assets/source/demo-store/sources.json.
 
     make-demo-store.py OUT_DIR
 
@@ -14,9 +14,7 @@ they were taken; the fictional paid application has a MOCKUP picture drawn
 here, which says so in the picture itself. Nothing is invented to look like
 a screenshot of a program.
 
-Needs netpbm (pngtopam, pamcut, pamscale, pnmtopng, pbmtext). pamcut is used
-for cutting rather than sips, whose --cropOffset 0 0 centres the crop
-(~/Work/AROS/CLAUDE.md).
+Needs netpbm (pngtopam, pamcut, pamscale, pnmtopng, pbmtext). pamcut provides explicit crop offsets for reproducible thumbnails.
 """
 import json
 import subprocess
@@ -25,7 +23,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-SOURCES = ROOT / "docs/demo-store/sources.json"
+SOURCES = ROOT / "assets/source/demo-store/sources.json"
 SHOT, THUMB, ICON = (320, 200), (80, 50), (48, 48)
 
 

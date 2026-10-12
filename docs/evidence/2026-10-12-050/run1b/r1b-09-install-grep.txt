@@ -1,8 +1,0 @@
-Installing grep 2.0
-Verifying archive
-Installing files
-
-Installed grep 2.0
-  Location: RAM:My Root/grep
-  Open folder: apkg --root "RAM:My Root" open grep
-rc 0

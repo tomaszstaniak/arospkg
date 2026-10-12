@@ -1,7 +1,0 @@
-10:54:59 start root=SYS:PkgUpd recheck=900s rexx=yes
-10:54:59 count: catalogue=ok when=2026-10-11 10:50 installed=8 newer=1 ready=0 blocked=1 -> "1 available, 1 blocked"
-10:54:59 registered token=2
-10:55:22 action: started "SYS:UPDT/PkgManager" --updates --root "SYS:PkgUpd" (rc 0)
-11:09:50 count: catalogue=ok when=2026-10-11 11:09 installed=8 newer=0 ready=0 blocked=0 -> "up to date"
-11:10:48 Ctrl-C
-11:10:48 clean exit rc=0

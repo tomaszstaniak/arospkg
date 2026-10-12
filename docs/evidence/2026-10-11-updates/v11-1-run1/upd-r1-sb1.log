@@ -1,7 +1,0 @@
-10:52:53 start root=SYS:PkgUpd recheck=900s rexx=yes
-10:52:53 count: catalogue=ok when=2026-10-11 10:50 installed=8 newer=1 ready=0 blocked=1 -> "1 available, 1 blocked"
-10:52:53 registered token=1
-10:53:28 action: asked the running PkgManager (OUTDATED SHOW), rc=0
-10:54:20 registered token=1
-10:54:46 Ctrl-C
-10:54:46 clean exit rc=0

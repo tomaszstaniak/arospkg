@@ -29,5 +29,4 @@ show available and blocked updates. They are not public applications.
 
 ![Group upgrade cancellation](upgrade-all-stop.png)
 
-Source logs and original names: [release test evidence](../../evidence/2026-10-11-updates/README.md).
 ScreenBar/PkgUpdates is an internal demonstration, not a dependency or release requirement.

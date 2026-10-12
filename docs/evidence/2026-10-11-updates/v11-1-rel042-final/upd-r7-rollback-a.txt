@@ -1,9 +1,0 @@
-rolling upa back to 1.0-aros1
-Installing files
-plan for SYS:PkgUpd/upa: 0 add, 1 replace, 0 remove, 0 kept, 2 unchanged
-  replace    Prog
-
-Rolled back upa 1.0-aros1
-  Location: SYS:PkgUpd/upa
-  Open folder: apkg --root "SYS:PkgUpd" open upa
-rc=0

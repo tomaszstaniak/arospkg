@@ -189,8 +189,6 @@ Start at [`docs/README.md`](docs/README.md):
   [storefront metadata](docs/rfc/0003-storefront-metadata.md) (proposal; the
   0.5.0 pictures and Demo store demonstrate it);
 - [ARexx interface](docs/arexx.md);
-- [ScreenBar item](docs/screenbar.md): an optional update counter for
-  ScreenBar's experimental provider SDK;
 - [release notes](https://github.com/tomaszstaniak/arospkg/releases)
   for changes and known limitations.
 
@@ -200,11 +198,12 @@ Start at [`docs/README.md`](docs/README.md):
   (`PkgManager`).
 - `tools/`: host scripts that import the AROS Archives catalogue, check
   archives and generate the index.
-- `index/`: candidates imported from the catalogue and not yet reviewed.
+- `index/`: locally generated candidates, excluded from Git and the public catalogue.
   Approved manifests and the index are in arospkg-index.
 - `tests/`: host unit tests, the scripts run on AROS, and pinned fixtures.
 - `examples/arexx/`: ARexx scripts for PkgManager.
 - `release/`: the README and licences shipped in the release archive.
+- `assets/source/demo-store/`: source images and metadata for the GUI demonstration.
 
 ## Building
 

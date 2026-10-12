@@ -1,10 +1,7 @@
 # arospkg 0.5.0 screenshots
 
-AROS One 1.3, x86_64 ABIv11, QEMU (TCG), 1024x768, 2026-10-12. Unaltered
-captures of the binaries in the 0.5.0 release archive
-(`arospkg-0.5.0.x86_64-aros-v11.zip`; apkg `e7432440...`, PkgManager
-`28cc388e...`, as in its BUILD.txt): pool slot v11-2 for the window and the
-Shell, v11-3 (ABIv11 2026.09) for Limpet 0.3.0.
+Screenshots from arospkg 0.5.0 on AROS One 1.3, x86_64 ABIv11,
+1024x768. Terminal examples use Limpet 0.3.0.
 
 What is real and what is a demonstration:
 
@@ -60,6 +57,5 @@ What is real and what is a demonstration:
 ![A fictional offer](demo-offer.png)
 ![Buy: how a purchase could work; nothing is bought](demo-buy-preview.png)
 
-Source files, logs and the rest of the run: [evidence](../../evidence/2026-10-12-050/README.md).
 The ScreenBar update counter is an internal demonstration and is not shown
 here.

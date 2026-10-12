@@ -1,2 +1,0 @@
-apkg outdated: it takes no package; it lists all of them
-rc=5

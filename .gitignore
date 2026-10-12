@@ -34,3 +34,9 @@ __pycache__/
 /docs/zune-frontend-brief.md
 /release/UPLOAD.txt
 /release/archives-*/
+
+# Private work records and generated maintainer candidate data.
+/docs/evidence/
+/skills/
+/index/candidates.json
+/index/candidates/

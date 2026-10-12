@@ -1,3 +1,0 @@
-Directory "SYS:KR1008/root2/cache" on Thursday 10/08/26:
-folio.zip.rejected       28848659 ---rwed Today       02:00:57
-1 file - 56346 blocks used

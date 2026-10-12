@@ -1,6 +1,0 @@
-{ "schema": 1,
-  "catalogue": { "state": "missing", "error": "", "updated": "", "updated_time": 0, "stale": false },
-  "installed": 0, "newer": 0, "ready": 0, "blocked": 0, "pending_transactions": 0,
-  "packages": []
-}
-rc=10

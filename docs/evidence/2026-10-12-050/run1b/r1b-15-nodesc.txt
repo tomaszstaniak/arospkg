@@ -1,6 +1,0 @@
-nodesc
-  State: no-description
-  Start: not described
-  It does not say how to start it (no application.json). Open folder shows its
-  files.
-rc 5

@@ -29,6 +29,6 @@ This updates **apkg only**. Download the archive to update PkgManager.
 
 From 0.3.x: unpack the appropriate archive and copy `apkg` to `C:`. Keep your existing `SYS:Packages`.
 
-[User guide](https://github.com/tomaszstaniak/arospkg/blob/main/docs/guide/using.md) · [Screenshots](https://github.com/tomaszstaniak/arospkg/blob/main/docs/screenshots/0.5.0/README.md) · [Test results and limitations](https://github.com/tomaszstaniak/arospkg/blob/main/docs/evidence/2026-10-12-050/README.md)
+[User guide](https://github.com/tomaszstaniak/arospkg/blob/main/docs/guide/using.md) · [Screenshots](https://github.com/tomaszstaniak/arospkg/blob/main/docs/screenshots/0.5.0/README.md)
 
 Checksums are in the attached `SHA256SUMS`.

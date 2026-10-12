@@ -15,8 +15,7 @@ neither.
 
 Every command and output below comes from one real run, on 2026-09-29, of
 Micropolis 0.1.0-rc3. The package is our own port, published as a GitHub
-release. The run's files are in
-[`reports/2026-09-29-docs-walk/`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/).
+release. This is a worked example from an older release; use the authoring guide for the current workflow.
 
 ## How it works today, in one paragraph
 
@@ -211,7 +210,7 @@ the requirements:
    and reports strings that are never opened.
 2. Drop what every AROS has (`dos`, `exec`, `intuition`, `graphics`, …).
 3. Check the rest against the systems you target. For a ZIP,
-   `tools/survey.py` compares them with the AROS One 1.3 lists. Check devices
+   Compare them with the libraries available on the target system. Check devices
    too.
 4. Do not write `min_version` unless you know the version the program needs.
    The archive does not record the versions it was built against, and a guessed
@@ -451,8 +450,7 @@ the ReadMe says so. The walk started it from a Shell:
 1.AROS:Walk/micropolis> Run >NIL: <NIL: Micropolis CITY.CTY
 ```
 
-The city window opened with the map drawn
-([`s3-running.png`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/s3-running.png)).
+The city window opened with the map drawn.
 "Started" means it opened and ran. It does not mean every feature was tried.
 
 ### 5.4 Save something
@@ -460,12 +458,10 @@ The city window opened with the map drawn
 Save the way a user would, and where a user would, including the program's
 own drawer if it offers that. In the walk, S opened the save requester on
 `SYS:Micropolis`, a drawer the port has built in and which does not exist
-when arospkg installs the game
-([`s4-save-requester.png`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/s4-save-requester.png)).
+when arospkg installs the game.
 The drawer field was changed by hand to `SYS:Walk/micropolis`, and the city
 saved as `MyTown.cty`. The game wrote `MyTown.cty.info` beside it, and its
-title bar confirmed the save
-([`s7-saved.png`](https://github.com/tomaszstaniak/arospkg/tree/v0.3.1/docs/reports/2026-09-29-docs-walk/s7-saved.png)). A default
+title bar confirmed the save. A default
 like that is worth reporting to the program's author. To show
 how removal treats an installed file that has changed, a line was also
 added to `ReadMe.txt`:
@@ -527,8 +523,7 @@ Before `status = "approved"`:
 - [ ] `installs_on` and `runs_on` name only systems where this was done
 
 Write the evidence into a comment at the top of the manifest: the system,
-the `apkg` build and what was run. For the index's own reports, see how
-`arospkg-index/reports/` does it.
+the `apkg` build and what was run. Retain detailed test logs in your own development workspace.
 
 ## 6A. An author publishing their own archive
 
@@ -567,8 +562,7 @@ seen it.
 3. **Look inside.** Find the drawer (`subdir`) and the drawer icon (`icon`).
    Read the ReadMe: an archive that asks you to copy something into `LIBS:`,
    `Fonts:` or `C:` cannot be installed by 0.3.
-   For a ZIP, `tools/survey.py <archive>` prints the layout and the
-   library names it finds. It does not read LHA.
+   Inspect the archive layout and the libraries required by its program.
 4. **ABI.** Use the file name marker. When in doubt, run it: a wrong ABI
    crashes at startup.
 5. **Requirements and dependencies**, as in section 3. Set
@@ -601,7 +595,7 @@ skeleton ──review, test──▶ approved manifest ──mkindex.py──▶
   (every package) and `../arospkg-index/index.json` (the packages it already
   listed, within what clients up to 0.3.2 read; see the metadata reference).
 - **Publishing** means committing the manifest and the regenerated index in
-  arospkg-index, optionally with a report under `reports/`, and pushing.
+  arospkg-index and pushing. Keep internal run reports outside the repository.
   Clients after 0.3.2 fetch
   `https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v2.json`
   with `apkg update`; 0.3.2 and earlier fetch `index.json` at the same place.

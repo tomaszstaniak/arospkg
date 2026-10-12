@@ -1,8 +1,0 @@
-folio
-  State: can be started
-  Start: Workbench, from its icon
-  Program: RAM:My Root/folio/Folio
-  Stack: 8388608 bytes, from the program's icon
-  Requirements: satisfied
-  Starts from its icon, as a double-click would.
-rc 0

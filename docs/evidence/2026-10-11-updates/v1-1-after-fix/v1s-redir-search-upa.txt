@@ -1,1 +1,0 @@
-upa                  1.1        x86_64    updates fixture upa

@@ -1,3 +1,0 @@
-Could not start RAM:r1/cases/missing: it cannot be started as described
-  Its program Nope is missing.
-rc 10

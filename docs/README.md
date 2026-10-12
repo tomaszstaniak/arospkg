@@ -1,35 +1,30 @@
 # arospkg documentation
 
-Current release: **0.4.2**, for x86_64 ABIv11 and i386 ABIv0, with experimental
-mainline x86_64 ABIv1 and native Raspberry Pi aarch64 ABIv1 builds. PkgManager
-is included in the x86_64 ABIv11 and Pi archives. The Pi build is compile/link
-verified only. Hosted Macaros remains at 0.3.1. See each target's test coverage.
+Current release: **0.5.0**. Start with the guide for your task.
 
-[0.4.2 screenshots on AROS One](screenshots/0.4.2/README.md).
+## Using the manager
 
-## Install and use
+- [Install and use](guide/using.md)
+- [Update apkg and PkgManager](self-update.md)
+- [Screenshots](screenshots/0.5.0/README.md)
+- [Downloads and release notes](https://github.com/tomaszstaniak/arospkg/releases)
 
-- [Install arospkg](../README.md#install)
-- [Find, install, open and remove programs](guide/using.md)
-- [Update apkg itself](self-update.md)
-- [Release notes and downloads](https://github.com/tomaszstaniak/arospkg/releases)
+## Publishing an application
 
-## Prepare and publish packages
+- [Authoring guide](guide/authoring.md): prepare, validate and submit a package.
+- [Metadata reference](guide/metadata.md)
+- [Packaging walkthrough](guide/packaging.md): an older worked example.
 
-- [Authoring guide](guide/authoring.md): create a manifest, check, pack and submit.
-- [Packaging guide](guide/packaging.md): archive layout and installation checks.
-- [Metadata reference](guide/metadata.md): fields, types and limits.
+## Development and integration
 
-## Integrate and develop
-
-- [ARexx interface](arexx.md)
-- [ScreenBar item](screenbar.md): PkgUpdates, an optional update counter
 - [Build from source](../README.md#building)
-- [Package format RFC](rfc/0001-package-format.md)
-- [Application folder RFC](rfc/0002-application-folder.md)
+- [ARexx interface](arexx.md)
+- [Application folder format](rfc/0002-application-folder.md): implemented schema.
+- Proposals: [package format](rfc/0001-package-format.md) and
+  [storefront metadata](rfc/0003-storefront-metadata.md).
 
-The RFCs are proposals. Use the authoring guide and metadata reference for
-the supported format.
+The storefront proposal is demonstrated locally in PkgManager; purchasing is not
+available. Supported package fields are defined in the metadata reference.
 
-The packaging guide includes output from earlier releases. Documentation
-examples are checked by `tests/test_doc_examples.py`.
+Public docs contain maintained guides and selected product screenshots. Keep
+agent prompts, planning notes and raw run logs in a separate private workspace.

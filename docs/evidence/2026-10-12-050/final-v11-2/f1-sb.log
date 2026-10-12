@@ -1,5 +1,0 @@
-03:48:21 start root=RAM:PG recheck=900s rexx=yes
-03:48:21 count: catalogue=ok when=2026-10-12 03:42 installed=3 newer=1 ready=1 blocked=0 -> "1 available"
-03:48:21 registered token=1
-03:49:43 count: catalogue=ok when=2026-10-12 03:42 installed=3 newer=0 ready=0 blocked=0 -> "up to date"
-03:50:23 count: catalogue=ok when=2026-10-12 03:42 installed=3 newer=1 ready=1 blocked=0 -> "1 available"

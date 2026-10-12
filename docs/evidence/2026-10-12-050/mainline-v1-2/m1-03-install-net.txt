@@ -1,7 +1,0 @@
-Installing arospkg 0.4.2
-Could not install arospkg: no network
-  https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4
-  .2.x86_64-aros-v1.zip
-  cannot open bsdsocket.library -- is the network stack running? Try: Execute
-  SYS:System/Network/AROSTCP/S/startnet
-rc 10

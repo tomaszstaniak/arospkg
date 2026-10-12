@@ -1,7 +1,0 @@
-where: started from a Shell
-where: current directory RAM Disk:i/cases/shelltool
-where: PROGDIR: RAM Disk:i/cases/shelltool
-where: stack 262144
-where: arg 1: [x y]
-shelltool ended with return code 0.
-rc 0

@@ -1,6 +1,0 @@
-Updating the package catalogue
-
-Updated the package catalogue: 110 packages for this system
-  43 more are for other systems (apkg --all-abi search)
-No updates: the catalogue offers nothing newer for the 8 installed packages.
-rc=0

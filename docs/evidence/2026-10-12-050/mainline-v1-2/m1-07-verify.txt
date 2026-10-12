@@ -1,2 +1,0 @@
-apkg: not installed
-  arospkg

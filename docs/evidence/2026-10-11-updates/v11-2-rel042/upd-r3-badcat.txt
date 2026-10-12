@@ -1,4 +1,0 @@
-The catalogue cannot be read, so updates cannot be checked. Fetch it again:
-apkg --root "SYS:PkgUpdB" update
-  the catalogue is not a valid index
-rc=10

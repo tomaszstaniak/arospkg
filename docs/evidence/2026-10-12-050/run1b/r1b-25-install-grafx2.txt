@@ -1,8 +1,0 @@
-Installing grafx2 2.9-aros5
-Verifying archive
-Installing files
-
-Installed grafx2 2.9-aros5
-  Location: RAM:My Root/grafx2
-  Open folder: apkg --root "RAM:My Root" open grafx2
-rc 0

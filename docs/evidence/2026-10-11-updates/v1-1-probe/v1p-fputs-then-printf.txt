@@ -1,2 +1,0 @@
-fputs first
-printf second

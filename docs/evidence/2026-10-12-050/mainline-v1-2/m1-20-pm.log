@@ -1,7 +1,0 @@
-start PkgManager 0.5.0 sha256 ed2bf76368b1ee85a4684c81d407b2d6303d23b8c11024bbc791883d42f764ee root RAM:MR: ARexx port PKGMANAGER
-refill (start) term="" rows=1 shown=1 installed=0 keep=- updates=0 ready=0 blocked=0 catalogue=ok when=2026-10-12 03:28
-install pressed for arospkg
-job 1 install arospkg from window
-done install arospkg status=12 no network
-job 1 install arospkg failed NETWORK: no network (https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.x86_64-aros-v1.zip) -- cannot open bsdsocket.library -- is the network stack running? Try: Execute SYS:System/Network/AROSTCP/S/startnet
-refill (done) term="" rows=1 shown=1 installed=0 keep=arospkg updates=0 ready=0 blocked=0 catalogue=ok when=2026-10-12 03:28

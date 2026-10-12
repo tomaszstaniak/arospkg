@@ -1,8 +1,0 @@
-apkg 0.5.0
-  abi     v1
-  binary  3f19d21af8051abe32df852bca5717e3afdb3bbf1ce0811a371a370f277f3b17
-  source  2b0bb0417ef24ec0
-  cc      10.5.0
-  tc      /Volumes/arosmain/toolchain-mainline
-  sdk     /Volumes/arosmain/build/bin/pc-x86_64/AROS/Developer
-  tls     Mbed TLS 3.6.7

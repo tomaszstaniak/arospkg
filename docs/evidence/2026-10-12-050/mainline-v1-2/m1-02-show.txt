@@ -1,9 +1,0 @@
-arospkg 0.4.2
-  Package manager for AROS (0.4.2 mainline build, for this test)
-  category:     utility/system
-  target:       x86_64, ABI v1
-  compatibility: native -- built for this machine: x86_64, ABIv1, mainline AROS
-  download:     353 KB from https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.x86_64-aros-v1.zip
-  sha256:       371978d03defd6754ed62750823c8cc69de0521e3db55c43aa3886192d825fbb
-  requirements: none stated
-  installed:    no

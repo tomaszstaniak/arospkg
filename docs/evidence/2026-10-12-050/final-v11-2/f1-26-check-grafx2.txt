@@ -1,7 +1,0 @@
-grafx2
-  State: can be started
-  Start: Workbench, from its icon
-  Program: RAM:My Root/grafx2/GrafX2
-  Stack: 8388608 bytes, from the program's icon
-  Requirements: satisfied
-  Starts from its icon, as a double-click would.

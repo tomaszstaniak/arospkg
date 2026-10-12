@@ -1,6 +1,0 @@
-Status for installed packages
-Catalogue updated 2026-10-11 17:45
-  Package   Installed      Available      State
-  antiword  0.37           0.37           up to date
-
-No updates: the catalogue offers nothing newer for the 1 installed package.

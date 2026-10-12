@@ -1,6 +1,0 @@
-Installing folio 0.4.1-aros1
-Downloading 28172 KiB
-Could not install folio: the download does not match the index
-  https://github.com/tomaszstaniak/aros-foliopdf/releases/download/v0.4.1/Folio
-  -0.4.1-aros1.aarch64-aros-raspi.zip
-  693ebe244eaa8ef6b1e7fa7ce22217ea70b43261b79aa665fd96c6e03a1f5fe0
