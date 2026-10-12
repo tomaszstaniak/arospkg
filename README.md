@@ -6,23 +6,28 @@ Both use the same catalogue and installed packages.
 
 ## Downloads
 
-**[Download 0.4.2 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.x86_64-aros-v11.zip)**
-· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.4.2)
-· [i386 ABIv0 (0.4.2)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.i386-aros-v0.zip)
-· [Mainline x86_64 ABIv1 (0.4.2, experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.x86_64-aros-v1.zip)
-· [Raspberry Pi (0.4.2, experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.4.2/arospkg-0.4.2.aarch64-aros-raspi.zip)
+**[Download 0.5.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.5.0)
+· [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.i386-aros-v0.zip)
+· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.x86_64-aros-v1.zip)
+· [Raspberry Pi (experimental, untested on a Pi)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.aarch64-aros-raspi.zip)
 
-New in 0.4.2: `apkg outdated` lists installed programs with updates and
-says why one cannot be installed here; `apkg upgrade --all` upgrades them
-one at a time; PkgManager has an Updates list. Ctrl-C stops any download.
-On 0.4.0 or 0.4.1, `apkg self-update` installs it (PkgManager comes from
-the archive). New in 0.4.1: upgrades across upstream versions.
+New in 0.5.0: **start what you installed**. `apkg run folio` and
+PkgManager's **Run** start an application as its package describes: a
+Workbench program from its icon, with its stack and tool types, a Shell
+program in your Shell. PkgManager gains Verify, keeps listing installed
+packages without a catalogue, and says which files a removal kept. Its
+pictures and *Demo store* are a **demonstration** of a possible future,
+clearly marked: nothing can be bought. On 0.4.x, `apkg self-update`
+installs the new apkg; PkgManager comes from the archive.
 
-[Screenshots of 0.4.2 on AROS One](docs/screenshots/0.4.2/README.md).
+[Screenshots of 0.5.0 on AROS One](docs/screenshots/0.5.0/README.md) ·
+[0.4.2 screenshots](docs/screenshots/0.4.2/README.md).
 
-The Raspberry Pi archive includes apkg and PkgManager. It is an experimental
-build for user testing: compiled and linked with the native Pi SDK, but not
-runtime-tested on Pi. The reported Folio checksum failure remains unexplained.
+The mainline and Raspberry Pi archives include apkg and PkgManager. The Pi
+build is compiled and linked with the native Pi SDK but was not run on a Pi;
+please report what works. The reported Folio checksum failure on a Pi
+remains unexplained.
 
 ## Install
 
@@ -42,10 +47,10 @@ apkg update
 No compiler, Installer script or separate TLS libraries are needed.
 
 Keep the extracted drawer somewhere permanent, not `RAM:`, if using
-PkgManager (included in the ABIv11 and experimental Pi archives). Installing
+PkgManager (included in the ABIv11, mainline and Pi archives). Installing
 packages requires a working network connection.
 
-**Upgrading from 0.3.x?** Install 0.4.2 manually using the commands above.
+**Upgrading from 0.3.x?** Install 0.5.0 manually using the commands above.
 Keep `SYS:Packages`; it contains your installed programs and package records.
 
 ## Use the graphical interface
@@ -68,8 +73,10 @@ become (`1.0 -> 1.1`); the details say the same and give the reason when an
 update is blocked. Select one and click **Upgrade** to see its plan and confirm.
 `Run PkgManager --updates` opens the window on that list.
 
-Select an installed package and click **Open folder**, then launch the
-program inside. The default location is `SYS:Packages/<id>/`.
+Select an installed package and click **Run** to start it, or **Open
+folder** to see its drawer (the default location is `SYS:Packages/<id>/`).
+**Verify** checks its files. Run is offered for packages that say how they
+start; the details say how, or why not.
 
 ![PkgManager: the catalogue, with GrafX2 selected](docs/images/pkgmanager.png)
 
@@ -102,6 +109,7 @@ apkg open soliton
 | `apkg upgrade soliton` | Install a newer version or packaging revision, when available. |
 | `apkg upgrade --all` | Show the plan, then upgrade every package that can be, one at a time, reporting each. |
 | `apkg rollback soliton` | Return to the previous revision, if its archive is still cached. |
+| `apkg run folio [file]` | Start an installed application as its package describes; `--check` says whether and how. |
 | `apkg open soliton` | Open the package's drawer in Wanderer. |
 | `apkg self-update` | Replace this apkg with the latest stable release; `--check` only reports. |
 
@@ -175,9 +183,11 @@ Start at [`docs/README.md`](docs/README.md):
   approved index entry, tested on AROS;
 - [metadata reference](docs/guide/metadata.md): every field, and who
   checks it;
-- RFCs for an [embedded package manifest](docs/rfc/0001-package-format.md)
-  and an [application folder format](docs/rfc/0002-application-folder.md),
-  both proposals;
+- RFCs: the [embedded package manifest](docs/rfc/0001-package-format.md)
+  (proposal), the [application folder format](docs/rfc/0002-application-folder.md)
+  (implemented: how `apkg run` starts a program) and
+  [storefront metadata](docs/rfc/0003-storefront-metadata.md) (proposal; the
+  0.5.0 pictures and Demo store demonstrate it);
 - [ARexx interface](docs/arexx.md);
 - [ScreenBar item](docs/screenbar.md): an optional update counter for
   ScreenBar's experimental provider SDK;
@@ -208,20 +218,24 @@ TC=/path/to/toolchain SDK=/path/to/sdk sh src/build.sh       # apkg
 TC=/path/to/toolchain SDK=/path/to/sdk sh src/build-gui.sh   # PkgManager
 ```
 
+`src/build-gui-mainline.sh` and `src/build-gui-raspi.sh` build PkgManager
+for mainline and the Pi. `tools/make-demo-store.py` builds the demo
+storefront that the archives ship in `Demo/`.
+
 `src/build-mainline.sh`, `src/build-i386.sh`, `src/build-aarch64.sh`
 (hosted) and `src/build-raspi.sh` (native Raspberry Pi) build other targets
 with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.
 
-The 0.4.2 archives were made from the release commit with
-`README=release/README TARGETS="x86_64-aros-v11 i386-aros-v0 x86_64-aros-v1" sh tools/make-rc.sh 0.4.2`.
+The 0.5.0 archives were made from the release commit with
+`README=release/README TARGETS="x86_64-aros-v11 i386-aros-v0 x86_64-aros-v1 aarch64-aros-raspi" sh tools/make-rc.sh 0.5.0`.
 Despite its name, this script packages stable releases too; without
 `TARGETS` it builds all four targets and needs all four toolchains.
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
 The published release descriptions are kept in `release/notes-<version>.md`
-([0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
+([0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
 builds, then use it for the GitHub release notes.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,
