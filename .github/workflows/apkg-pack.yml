@@ -4,7 +4,8 @@ name: apkg-pack
 on:
   push:
     paths: ["tools/apkg-pack", "tools/mkindex.py", "tools/catalogue.py", "tools/publish_github.py",
-            "tools/make-apkg-pack.py", "tests/test_apkg_pack*.py", "tests/test_publish_github.py",
+            "tools/make-apkg-pack.py", "tools/ci_check_index.py", "tests/test_ci_check.py",
+            "tests/test_apkg_pack*.py", "tests/test_publish_github.py",
             ".github/workflows/apkg-pack.yml"]
   pull_request:
   workflow_dispatch:
@@ -24,6 +25,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python tests/test_apkg_pack_standalone.py
+      - run: python tests/test_ci_check.py
       - run: python tests/test_apkg_pack.py
       # The stand-in gh is a POSIX script; submit --pr is not tested on Windows.
       - run: python tests/test_publish_github.py

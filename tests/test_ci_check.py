@@ -38,12 +38,14 @@ def check(repo, files):
     return r.returncode, r.stdout + r.stderr
 
 
-def scenario(change):
+def scenario(change, setup=None):
     """A repository whose base has demo 1.0, then `change` applied on top."""
     d = Path(tempfile.mkdtemp())
     (d / "manifests").mkdir()
     a = archive()
     (d / "manifests/demo.x86_64.v11.toml").write_text(manifest(a))
+    if setup:
+        setup(d)
     git(d, "init", "-q"); git(d, "add", "-A"); git(d, "commit", "-qm", "base"); git(d, "tag", "base")
     files = change(d, a)
     git(d, "add", "-A"); git(d, "commit", "-qm", "change")
@@ -84,6 +86,34 @@ def two(d, a):
 code, out = scenario(two)
 if code:
     fails.append(f"new version from another URL: {code} {out}")
+
+# Comment-only edits must not fetch unchanged archives.
+def comment_only(d, a):
+    p = d / "manifests/demo.x86_64.v11.toml"
+    p.write_text("# Documentation cleanup\n" + p.read_text() + "\n")
+    return {}
+code, out = scenario(comment_only)
+if code or "cannot download" in out:
+    fails.append(f"comment-only manifest: {code} {out}")
+
+def base_override(d):
+    (d / "overrides").mkdir()
+    (d / "overrides/demo.x86_64.v11.toml").write_text('summary = "Overridden"\n')
+
+def override_comment(d, a):
+    p = d / "overrides/demo.x86_64.v11.toml"
+    p.write_text("# Documentation cleanup\n" + p.read_text())
+    return {}
+code, out = scenario(override_comment, base_override)
+if code or "cannot download" in out:
+    fails.append(f"comment-only override: {code} {out}")
+
+def remove_override(d, a):
+    (d / "overrides/demo.x86_64.v11.toml").unlink()
+    return {}
+code, out = scenario(remove_override, base_override)
+if code == 0 or "cannot download" not in out:
+    fails.append(f"removed override must check: {code} {out}")
 
 if fails:
     print("\n".join(fails)); print(f"CI-CHECK: {len(fails)} failed"); sys.exit(1)

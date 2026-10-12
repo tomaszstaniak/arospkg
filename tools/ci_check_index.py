@@ -3,7 +3,7 @@
 
     ci_check_index.py INDEX_DIR [--base REF] [--out-dir DIR] [--cache DIR]
 
-For every manifest changed since REF (all of them without --base): download
+For every manifest whose TOML data changed since REF (all without --base): download
 the archive at its url, within the client's limits, and check that its size
 and SHA-256 are the manifest's; then generate both catalogue files with
 mkindex.py into OUT_DIR, which also checks subdir and icon against the
@@ -47,13 +47,27 @@ def released(index_dir, base):
     return out
 
 
+def metadata_changed(index_dir, path, base):
+    """Comments/formatting are not changes; invalid data still needs checking."""
+    old = subprocess.run(["git", "show", f"{base}:{path}"], cwd=index_dir,
+                         capture_output=True, text=True)
+    try:
+        before = tomllib.loads(old.stdout) if old.returncode == 0 else None
+        current = index_dir / path
+        after = tomllib.loads(current.read_text(encoding="utf-8")) if current.exists() else None
+        return before != after
+    except (OSError, UnicodeError, tomllib.TOMLDecodeError):
+        return True
+
+
 def changed(index_dir, base):
-    out = subprocess.run(["git", "diff", "--name-only", "--diff-filter=AMR", f"{base}...HEAD", "--",
-                          "manifests/", "overrides/"],
+    ancestor = subprocess.run(["git", "merge-base", base, "HEAD"], cwd=index_dir,
+                              capture_output=True, text=True, check=True).stdout.strip()
+    out = subprocess.run(["git", "diff", "--name-only", "-z", "--diff-filter=AMRD",
+                          f"{ancestor}..HEAD", "--", "manifests/", "overrides/"],
                          cwd=index_dir, capture_output=True, text=True, check=True).stdout
-    names = set()
-    for line in out.splitlines():
-        names.add(Path(line).name)
+    names = {Path(path).name for path in out.split("\0") if path
+             and metadata_changed(index_dir, path, ancestor)}
     return sorted(index_dir / "manifests" / n for n in names if (index_dir / "manifests" / n).exists())
 
 
