@@ -7,6 +7,7 @@
 #include "rexxcmd.h"
 #include "../about.h"
 #include "../libpkg/verify.h"
+#include "demo.h"
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/intuition.h>
@@ -19,17 +20,22 @@
 #include <stdarg.h>
 #include <strings.h>
 
-#define PM_VERSION "0.4.2"
+#define PM_VERSION "0.5.0"
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
-       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN,
-       ID_CHECK };
+       ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN, ID_RUN, ID_VERIFY,
+       ID_CHECK, ID_BUY, ID_THUMB0, ID_THUMB1, ID_THUMB2, ID_THUMB3 };
 
 static Object *app, *win, *str_search, *cyc_cat, *cyc_state, *lst, *txt_detail,
               *txt_status, *gauge, *btn_install, *btn_remove, *btn_update, *btn_cancel,
               *btn_upgrade, *btn_rollback, *win_confirm, *txt_confirm, *btn_proceed, *btn_decline,
               *win_about, *btn_about, *btn_about_close, *btn_open,
-              *txt_catalogue, *btn_check, *txt_release;
+              *txt_catalogue, *btn_check, *txt_release,
+              *btn_run, *btn_verify, *txt_head, *btn_buy,
+              *grp_media, *pg_shot, *pic_shot, *txt_noshot, *txt_caption, *grp_thumbs,
+              *pic_thumb[DEMO_MAXSHOTS], *txt_provenance, *pg_icon, *pic_icon;
+static char demo_path[PKG_MAXPATH] = "PROGDIR:Demo/storefront.json";
+static int buy_showing;           /* the purchase preview is open (demo only) */
 static int auto_yes;              /* --yes: confirm requesters without asking; for tests */
 static pkg_entries rows;          /* the whole query; the list shows a filtered view */
 static job cur;
@@ -97,19 +103,30 @@ AROS_UFH3S(void, display_func,
            and where a newer one waits, what it would become. The hook is
            called for one row at a time and MUI draws it before the next, so
            one buffer serves every row. */
+        /* Versions are written as everywhere else -- apkg list, outdated,
+           show and the detail header: rev_label, "0.4.1-aros2". */
         static char ver[140];
+        char a[70], b[70];
         array[0] = e->id; array[1] = e->version;
-        if (u && u->installed_version[0]) {
-            if (u->newer && strcmp(u->installed_version, u->available_version) == 0)
-                snprintf(ver, sizeof ver, "%s r%ld -> r%ld", u->installed_version,
-                         u->installed_revision, u->available_revision);
-            else if (u->newer)
-                snprintf(ver, sizeof ver, "%s -> %s", u->installed_version, u->available_version);
-            else
-                snprintf(ver, sizeof ver, "%s", u->installed_version);
+        if (demo_is_offer(e)) {
+            /* The price stands where a version would; the state says what
+               it is, so a screenshot of the list cannot be misread. */
+            u = NULL;
+        } else if (u && u->installed_version[0]) {
+            rev_label(a, sizeof a, u->installed_version, u->installed_revision);
+            rev_label(b, sizeof b, u->available_version, u->available_revision);
+            if (u->newer) snprintf(ver, sizeof ver, "%s -> %s", a, b);
+            else snprintf(ver, sizeof ver, "%s", a);
+            array[1] = ver;
+        } else if (e->installed) {
+            rev_label(ver, sizeof ver, e->installed_version, e->installed_revision);
+            array[1] = ver;
+        } else {
+            rev_label(ver, sizeof ver, e->version, e->revision);
             array[1] = ver;
         }
-        array[2] = (char *)(u && u->state == PKG_UPD_AVAILABLE ? "\33bupdate available" :
+        array[2] = (char *)(demo_is_offer(e) ? "\33bdemo offer" :
+                            u && u->state == PKG_UPD_AVAILABLE ? "\33bupdate available" :
                             u && u->state == PKG_UPD_BLOCKED ? "update blocked" :
                             e->installed ? "installed" : (e->ours ? "" : "other ABI"));
         array[3] = e->summary;
@@ -146,9 +163,11 @@ static STRPTR cat_entries[MAXCAT + 2];
 static char  cat_chosen[32];
 /* The fourth entry is relabelled with the count on every refill. */
 static char upd_label[32] = "Updates";
+/* The fifth, "Demo store", is there only when the demo storefront loaded:
+   its offers are never mixed into the catalogue's views. */
 static STRPTR state_entries[] = { (STRPTR)"All", (STRPTR)"Installed", (STRPTR)"Not installed",
-                                  (STRPTR)upd_label, NULL };
-enum { ST_ALL, ST_INSTALLED, ST_NOT_INSTALLED, ST_UPDATES };
+                                  (STRPTR)upd_label, NULL, NULL };
+enum { ST_ALL, ST_INSTALLED, ST_NOT_INSTALLED, ST_UPDATES, ST_DEMO };
 
 static void top_category(const char *cat, char *out, size_t n)
 {
@@ -199,6 +218,7 @@ static int passes_filters(const pkg_entry *e)
         if (strcmp(top, cat_chosen) != 0) return 0;
     }
     GetAttr(MUIA_Cycle_Active, cyc_state, &st);
+    if (st == ST_DEMO) return 0;          /* the demo store shows its offers only */
     if (st == ST_INSTALLED && !e->installed) return 0;
     if (st == ST_NOT_INSTALLED && e->installed) return 0;
     if (st == ST_UPDATES) {
@@ -206,6 +226,13 @@ static int passes_filters(const pkg_entry *e)
         if (!u || !u->newer) return 0;
     }
     return 1;
+}
+
+static int passes_filters_is_demo(void)
+{
+    IPTR st = 0;
+    GetAttr(MUIA_Cycle_Active, cyc_state, &st);
+    return st == ST_DEMO;
 }
 
 static int passes_filters_is_updates(void)
@@ -253,6 +280,8 @@ static void show_catalogue(void)
 }
 
 static void show_detail(void);
+static int no_catalogue;          /* the rows are the registry's alone: why (a pkg_status) */
+static pkg_err nocat_err;
 
 /* Re-read the index and the registry, rebuild the category cycle, and show
  * the rows that pass the filters. The old rows stay alive until the list
@@ -287,6 +316,25 @@ static void refill(const char *term, const char *keep_id, const char *why)
         pkg_err e2; memset(&e2, 0, sizeof e2);
         if (pkg_query(c, index_path, NULL, &all, NULL, &e2) != PKG_OK) all.n = 0;
     }
+    /* Without a readable catalogue the machine still has what is installed,
+       and Run, Open folder, Verify, Remove and Roll back need no catalogue:
+       the rows come from the registry alone. */
+    no_catalogue = 0;
+    if (st != PKG_OK) {
+        pkg_err e2; memset(&e2, 0, sizeof e2);
+        if (pkg_installed(c, NULL, &fresh, &e2) == PKG_OK) {
+            no_catalogue = st;
+            nocat_err = e;
+            st = PKG_OK;
+            if (term && *term) {
+                /* The search still applies, over the ids. */
+                int a, b = 0;
+                for (a = 0; a < fresh.n; a++)
+                    if (strstr(fresh.v[a].id, term)) fresh.v[b++] = fresh.v[a];
+                fresh.n = b;
+            }
+        }
+    }
     pkg_close(c);
 
     SetAttrs(lst, MUIA_List_Quiet, TRUE, TAG_DONE);
@@ -303,10 +351,27 @@ static void refill(const char *term, const char *keep_id, const char *why)
             if (keep_id && strcmp(rows.v[i].id, keep_id) == 0) again = shown;
             shown++;
         }
+        {
+            IPTR stv = 0;
+            GetAttr(MUIA_Cycle_Active, cyc_state, &stv);
+            if (stv == ST_DEMO)
+                for (i = 0; i < demo_noffers(); i++) {
+                    demo_offer *o = demo_offer_at(i);
+                    DoMethod(lst, MUIM_List_InsertSingle, (IPTR)&o->e, MUIV_List_Insert_Bottom);
+                    if (keep_id && strcmp(o->e.id, keep_id) == 0) again = shown;
+                    shown++;
+                }
+        }
         logline("refill (%s) term=\"%s\" rows=%d shown=%d installed=%d keep=%s updates=%d ready=%d blocked=%d catalogue=%s when=%s",
                 why, term ? term : "", rows.n, shown, inst, keep_id ? keep_id : "-",
                 upd.newer, upd.ready, upd.blocked, pkg_cat_word(upd.catalogue), upd.catalogue_when);
-        if (rows.n == 0 && hidden == 0 && !(term && *term))
+        if (no_catalogue)
+            snprintf(msg, sizeof msg, "%d installed package%s shown; %s", shown, shown == 1 ? "" : "s",
+                     no_catalogue == PKG_E_NOT_FOUND ? "no catalogue yet -- press Update index"
+                                                     : "the catalogue cannot be read -- press Update index");
+        else if (passes_filters_is_demo())
+            snprintf(msg, sizeof msg, "%s: %d fictional offer%s", demo_banner(), shown, shown == 1 ? "" : "s");
+        else if (rows.n == 0 && hidden == 0 && !(term && *term))
             snprintf(msg, sizeof msg, "the index lists no packages");
         else if (shown == 0 && passes_filters_is_updates())
             snprintf(msg, sizeof msg, "%s", upd.installed ? "no updates for the installed packages" : "nothing is installed");
@@ -370,9 +435,211 @@ static void search_acknowledged(void)
 /* The panel a person reads before pressing Install: what it is, what it
  * needs from this machine (probed now, not copied from the index), and how
  * much comes down the wire. */
+/* ------------------------------------------------------------ pictures */
+
+/* The picture panel has fixed places (demo.h): a picture is checked against
+ * its place before it is handed to the datatype, so one that would not fit,
+ * is missing or is not a PNG shows as a line of text instead and never
+ * changes the window's layout. Pictures are local files, read on this task;
+ * nothing is downloaded. */
+/* Two buffers per place, used in turn. Zune's Dtpic keeps the pointer it
+   was given and reloads only when the new name differs from the string at
+   that pointer: refilling the same buffer made both strings equal, and the
+   old picture stayed (seen on AROS One 1.3, 2026-10-12). */
+static char shot_name[2][PKG_MAXPATH], icon_name[2][PKG_MAXPATH];
+static char thumb_name[DEMO_MAXSHOTS][2][PKG_MAXPATH];
+static int shot_flip, icon_flip, thumb_flip[DEMO_MAXSHOTS];
+static char caption[200], provenance[220], noshot[200];
+static const demo_media *media_now;
+static int shot_now;
+
+static int pic_ok(const char *path, int maxw, int maxh, char *why, size_t n)
+{
+    unsigned char head[24];
+    long size = -1;
+    LONG got = 0;
+    int w, h;
+    BPTR fh = path[0] ? Open((CONST_STRPTR)path, MODE_OLDFILE) : BNULL;
+    if (fh) {
+        got = Read(fh, head, sizeof head);
+        if (Seek(fh, 0, OFFSET_END) >= 0) size = Seek(fh, 0, OFFSET_BEGINNING);
+        Close(fh);
+    }
+    return demo_png_check(head, got > 0 ? (size_t)got : 0, size, maxw, maxh, &w, &h, why, n);
+}
+
+static void show_shot(int i)
+{
+    char why[160];
+    const demo_media *m = media_now;
+    if (!m || i < 0 || i >= m->nshots) return;
+    shot_now = i;
+    if (pic_ok(m->shots[i].file, DEMO_SHOT_W, DEMO_SHOT_H, why, sizeof why) == 0) {
+        shot_flip ^= 1;
+        snprintf(shot_name[shot_flip], sizeof shot_name[0], "%s", m->shots[i].file);
+        SetAttrs(pic_shot, MUIA_Dtpic_Name, (IPTR)shot_name[shot_flip], TAG_DONE);
+        SetAttrs(pg_shot, MUIA_Group_ActivePage, 0, TAG_DONE);
+    } else {
+        snprintf(noshot, sizeof noshot, "Picture not shown:\n%s", why);
+        SetAttrs(txt_noshot, MUIA_Text_Contents, (IPTR)noshot, TAG_DONE);
+        SetAttrs(pg_shot, MUIA_Group_ActivePage, 1, TAG_DONE);
+        logline("picture %s not shown: %s", m->shots[i].file, why);
+    }
+    snprintf(caption, sizeof caption, "%s%s (%d of %d)", m->mockup ? "\33bMOCKUP\33n " : "",
+             m->shots[i].caption, i + 1, m->nshots);
+    SetAttrs(txt_caption, MUIA_Text_Contents, (IPTR)caption, TAG_DONE);
+}
+
+/* `icon_file`: the installed program's own icon when it is a PNG icon (as
+   Folio's and GrafX2's are), else the demo set's. */
+static void show_media(const char *id, const char *icon_file)
+{
+    char why[160];
+    int i;
+    media_now = demo_media_for(id);
+    if (!media_now) {
+        /* No pictures: text only. The program's own icon is still shown
+           when it is installed and has a PNG icon. */
+        if (icon_file && icon_file[0] && pic_ok(icon_file, DEMO_ICON_W, DEMO_ICON_H, why, sizeof why) == 0) {
+            icon_flip ^= 1;
+            snprintf(icon_name[icon_flip], sizeof icon_name[0], "%s", icon_file);
+            SetAttrs(pic_icon, MUIA_Dtpic_Name, (IPTR)icon_name[icon_flip], TAG_DONE);
+            SetAttrs(pg_icon, MUIA_Group_ActivePage, 0, TAG_DONE);
+        } else SetAttrs(pg_icon, MUIA_Group_ActivePage, 1, TAG_DONE);
+        SetAttrs(grp_media, MUIA_ShowMe, FALSE, TAG_DONE);
+        return;
+    }
+    for (i = 0; i < DEMO_MAXSHOTS; i++) {
+        int on = i < media_now->nshots
+                 && pic_ok(media_now->shots[i].thumb, DEMO_THUMB_W, DEMO_THUMB_H, why, sizeof why) == 0;
+        if (on) {
+            thumb_flip[i] ^= 1;
+            snprintf(thumb_name[i][thumb_flip[i]], sizeof thumb_name[0][0], "%s", media_now->shots[i].thumb);
+            SetAttrs(pic_thumb[i], MUIA_Dtpic_Name, (IPTR)thumb_name[i][thumb_flip[i]], TAG_DONE);
+        }
+        SetAttrs(pic_thumb[i], MUIA_ShowMe, on, TAG_DONE);
+    }
+    snprintf(provenance, sizeof provenance, "%s", media_now->provenance);
+    SetAttrs(txt_provenance, MUIA_Text_Contents, (IPTR)provenance, TAG_DONE);
+    if (icon_file && icon_file[0] && pic_ok(icon_file, DEMO_ICON_W, DEMO_ICON_H, why, sizeof why) == 0) {
+        icon_flip ^= 1;
+        snprintf(icon_name[icon_flip], sizeof icon_name[0], "%s", icon_file);
+        SetAttrs(pic_icon, MUIA_Dtpic_Name, (IPTR)icon_name[icon_flip], TAG_DONE);
+        SetAttrs(pg_icon, MUIA_Group_ActivePage, 0, TAG_DONE);
+    } else if (media_now->icon[0] && pic_ok(media_now->icon, DEMO_ICON_W, DEMO_ICON_H, why, sizeof why) == 0) {
+        icon_flip ^= 1;
+        snprintf(icon_name[icon_flip], sizeof icon_name[0], "%s", media_now->icon);
+        SetAttrs(pic_icon, MUIA_Dtpic_Name, (IPTR)icon_name[icon_flip], TAG_DONE);
+        SetAttrs(pg_icon, MUIA_Group_ActivePage, 0, TAG_DONE);
+    } else {
+        SetAttrs(pg_icon, MUIA_Group_ActivePage, 1, TAG_DONE);
+    }
+    if (media_now->nshots) show_shot(0);
+    else {
+        snprintf(noshot, sizeof noshot, "No screenshots for this application.");
+        SetAttrs(txt_noshot, MUIA_Text_Contents, (IPTR)noshot, TAG_DONE);
+        SetAttrs(pg_shot, MUIA_Group_ActivePage, 1, TAG_DONE);
+        SetAttrs(txt_caption, MUIA_Text_Contents, (IPTR)"", TAG_DONE);
+    }
+    SetAttrs(grp_media, MUIA_ShowMe, TRUE, TAG_DONE);
+}
+
+/* The purchase preview: what buying could look like, said to be a demo in
+   its first line, with nothing to fill in and only a Close button. It
+   reuses the confirmation window, without Proceed. */
+static void buy_preview(const demo_offer *o)
+{
+    static char text[1400];
+    snprintf(text, sizeof text,
+             "\33b%s\33n\n"
+             "Nothing is bought, installed or sent from here.\n\n"
+             "%s\n%s %s, sold by %s\n\n"
+             "How buying could work in a later version:\n"
+             "1. PkgManager shows the seller, the price and the licence terms.\n"
+             "2. You pay on the seller's own web page, in your browser.\n"
+             "   PkgManager would never ask for card or account details.\n"
+             "3. The seller gives you a licence or a download; PkgManager then\n"
+             "   installs the package as it installs any other.\n\n"
+             "This window asks for nothing and has no way to pay.",
+             demo_banner(), o->name, o->price, o->currency, o->seller);
+    buy_showing = 1;
+    SetAttrs(btn_proceed, MUIA_ShowMe, FALSE, TAG_DONE);
+    SetAttrs(btn_decline, MUIA_Text_Contents, (IPTR)"Close", TAG_DONE);
+    SetAttrs(win_confirm, MUIA_Window_Title, (IPTR)"PkgManager: demo purchase", MUIA_Window_Open, TRUE, TAG_DONE);
+    SetAttrs(txt_confirm, MUIA_Floattext_Text, (IPTR)text, TAG_DONE);
+    logline("demo purchase preview for %s (%s %s); nothing bought", o->e.id, o->price, o->currency);
+    status(demo_banner());
+}
+
+static void buy_close(void)
+{
+    buy_showing = 0;
+    SetAttrs(win_confirm, MUIA_Window_Open, FALSE, MUIA_Window_Title, (IPTR)"PkgManager: confirm", TAG_DONE);
+    SetAttrs(btn_proceed, MUIA_ShowMe, TRUE, TAG_DONE);
+    SetAttrs(btn_decline, MUIA_Text_Contents, (IPTR)"Cancel", TAG_DONE);
+    logline("demo purchase preview closed");
+}
+
+/* The detail pane for a demo offer: what it is, first, and that it is not
+   a package. */
+static void show_offer(const demo_offer *o)
+{
+    static char head[400], body[1200];
+    snprintf(head, sizeof head, "\33b%s\33n   %s %s\n\33b%s\33n\nNot in the catalogue; it cannot be installed.",
+             o->name, o->price, o->currency, demo_banner());
+    snprintf(body, sizeof body, "%s\n\nSeller: %s\nPrice: %s %s (fictional)\nCategory: %s\n\n%s",
+             o->e.summary, o->seller, o->price, o->currency, o->e.category, o->description);
+    SetAttrs(txt_head, MUIA_Text_Contents, (IPTR)head, TAG_DONE);
+    SetAttrs(txt_detail, MUIA_Floattext_Text, (IPTR)body, TAG_DONE);
+    SetAttrs(btn_install,  MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_remove,   MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_upgrade,  MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_run,      MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_verify,   MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_buy,      MUIA_Disabled, busy_now(), TAG_DONE);
+    show_media(o->e.id, NULL);
+}
+
+/* The last Verify, kept for the package it was made for and shown in its
+   detail pane until another package is verified or anything is changed. */
+static struct { char id[PKG_MAXID]; char text[2048]; } last_verify;
+
+static void verify_store(const char *id, pkg_status st, const pkg_verify_result *v,
+                         const char *listing, const char *why)
+{
+    size_t k;
+    snprintf(last_verify.id, sizeof last_verify.id, "%s", id);
+    if (st != PKG_OK) {
+        snprintf(last_verify.text, sizeof last_verify.text, "\33bVerify:\33n could not check -- %s\n", why);
+        return;
+    }
+    k = (size_t)snprintf(last_verify.text, sizeof last_verify.text,
+                         "\33bVerify:\33n %s\n%d file%s as installed, %d changed locally, %d missing, "
+                         "%d in the drawer that are not the package's; drawer icon: %s\n",
+                         v->changed || v->missing ? "differences found" : "every file is as installed",
+                         v->ok, v->ok == 1 ? "" : "s", v->changed, v->missing, v->unknown, v->icon);
+    /* Only the lines that need attention; "ok" lines would bury them. */
+    if (listing) {
+        const char *p = listing;
+        int shown = 0;
+        while (*p && k + 80 < sizeof last_verify.text) {
+            size_t n = strcspn(p, "\n");
+            if (strncmp(p, "ok", 2) != 0 && shown < 12) {
+                k += (size_t)snprintf(last_verify.text + k, sizeof last_verify.text - k, "  %.*s\n", (int)n, p);
+                shown++;
+            }
+            p += n; if (*p) p++;
+        }
+    }
+}
+
 static void show_detail(void)
 {
-    static char buf[4096];
+    static char buf[6144], head[700];
+    char icon_file[PKG_MAXPATH] = "";
+    int run_ready;
     char reqs[1024] = "";
     pkg_entry *e = selected();
     pkg_details det;
@@ -385,8 +652,16 @@ static void show_detail(void)
         SetAttrs(btn_upgrade,  MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(btn_run,      MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(btn_verify,   MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(btn_buy,      MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(txt_head, MUIA_Text_Contents, (IPTR)"", TAG_DONE);
+        SetAttrs(grp_media, MUIA_ShowMe, FALSE, TAG_DONE);
+        SetAttrs(pg_icon, MUIA_Group_ActivePage, 1, TAG_DONE);
         return;
     }
+    if (demo_is_offer(e)) { show_offer(demo_offer_of(e)); return; }
+    SetAttrs(btn_buy, MUIA_Disabled, TRUE, TAG_DONE);
     memset(&det, 0, sizeof det);
     {
         /* Whether it runs here comes from the same call `apkg show` and
@@ -413,12 +688,47 @@ static void show_detail(void)
         char ver[80];
         rev_label(ver, sizeof ver, e->installed ? e->installed_version : e->version,
                   e->installed ? e->installed_revision : e->revision);
-        k = (size_t)snprintf(buf, sizeof buf, "\33b%s\33n %s   %s\n",
-                             e->id, ver,
-                             e->installed ? "\33binstalled\33n" : (e->ours ? "" : "\33bother ABI\33n"));
+        /* The header stays in view whatever the pane below scrolls to, and
+           whatever the picture panel beside it holds: what it is, whether
+           it is installed, whether it runs here and how it starts. */
+        snprintf(head, sizeof head, "\33b%s\33n %s   %s\n", e->id, ver,
+                 e->installed ? "\33binstalled\33n" : (e->ours ? "not installed" : "\33bother ABI\33n"));
+        buf[0] = 0; k = 0;
         /* Where it is, from its registry entry: what Open folder opens. */
         if (e->installed && det.installed_dir[0])
             k += (size_t)snprintf(buf + k, sizeof buf - k, "location: %s\n", det.installed_dir);
+    }
+    /* Whether Run can start it, from the same call as `apkg run --check`:
+       the drawer's own description, checked on the disk now. */
+    run_ready = 0;
+    if (e->installed) {
+        size_t k2;
+        pkg_app_info ai;
+        pkg_ctx *c = NULL; pkg_err err; memset(&err, 0, sizeof err);
+        memset(&ai, 0, sizeof ai);
+        if (pkg_open(root, PKG_OPEN_READ, &c, &err) == PKG_OK) {
+            if (pkg_app_info_get(c, e->id, &ai, &err) == PKG_OK) {
+                run_ready = ai.state == PKG_RUN_READY;
+                if (ai.program[0]) snprintf(icon_file, sizeof icon_file, "%s.info", ai.program);
+                k2 = strlen(head);
+                if (run_ready && ai.launch.mode == PKG_LAUNCH_WORKBENCH && ai.stack > 0)
+                    snprintf(head + k2, sizeof head - k2, "start: from its icon, stack %ld bytes\n", ai.stack);
+                else if (run_ready && ai.launch.mode == PKG_LAUNCH_WORKBENCH)
+                    snprintf(head + k2, sizeof head - k2, "start: from its icon\n");
+                else if (run_ready)
+                    snprintf(head + k2, sizeof head - k2, "start: as a Shell command, in a window of its own\n");
+                else if (ai.state == PKG_RUN_NO_DESCRIPTION)
+                    snprintf(head + k2, sizeof head - k2, "start: not described by the package -- use Open folder\n");
+                else
+                    snprintf(head + k2, sizeof head - k2, "\33bcannot start:\33n %s\n", ai.why);
+                logline("detail %s: run %s%s%s", e->id, pkg_run_word(ai.state), run_ready ? "" : " why=", run_ready ? "" : ai.why);
+            }
+            pkg_close(c);
+        }
+    } else if (det.in_index && det.launch.mode != PKG_LAUNCH_NONE) {
+        size_t k2 = strlen(head);
+        snprintf(head + k2, sizeof head - k2, "start: %s, once installed\n",
+                 det.launch.mode == PKG_LAUNCH_WORKBENCH ? "from its icon" : "as a Shell command");
     }
     {
         /* The two questions the buttons need, answered by the library. */
@@ -483,19 +793,36 @@ static void show_detail(void)
         snprintf(buf + k, sizeof buf - k, "\33b%s\33n\n%s\n",
                  det.in_index ? "Notes from the package" : "Notes recorded at installation",
                  det.in_index ? det.notes : det.notes_recorded);
+    {
+        size_t k2 = strlen(head);
+        if (det.compat == PKG_COMPAT_NATIVE)
+            snprintf(head + k2, sizeof head - k2, "compatibility: native");
+        else
+            snprintf(head + k2, sizeof head - k2, "\33bcompatibility: %s\33n -- %s", pkg_compat_word(det.compat), det.compat_why);
+    }
     k = strlen(buf);
-    if (det.compat == PKG_COMPAT_NATIVE)
-        k += (size_t)snprintf(buf + k, sizeof buf - k, "compatibility: native\n");
-    else
-        k += (size_t)snprintf(buf + k, sizeof buf - k, "\33bcompatibility: %s\33n -- %s\n", pkg_compat_word(det.compat), det.compat_why);
     if (det.compat != PKG_COMPAT_NATIVE)
         snprintf(buf + k, sizeof buf - k, "requirements: not checked");
     else if (e->requires[0])
         snprintf(buf + k, sizeof buf - k, "requirements: %s, probed now:\n%s", det.requirements, reqs[0] ? reqs : e->requires);
     else
         snprintf(buf + k, sizeof buf - k, "requirements: none stated");
+    if (e->installed && !strcmp(last_verify.id, e->id)) {
+        /* First, where it is seen without scrolling: it answers the button
+           that was just pressed. */
+        size_t vl = strlen(last_verify.text), bl = strlen(buf);
+        if (vl + bl + 2 < sizeof buf) {
+            memmove(buf + vl + 1, buf, bl + 1);
+            memcpy(buf, last_verify.text, vl);
+            buf[vl] = '\n';
+        }
+    }
+    SetAttrs(txt_head, MUIA_Text_Contents, (IPTR)head, TAG_DONE);
     SetAttrs(txt_detail, MUIA_Floattext_Text, (IPTR)buf, TAG_DONE);
+    show_media(e->id, icon_file);
     SetAttrs(btn_open, MUIA_Disabled, busy_now() || !e->installed, TAG_DONE);
+    SetAttrs(btn_run, MUIA_Disabled, busy_now() || !run_ready, TAG_DONE);
+    SetAttrs(btn_verify, MUIA_Disabled, busy_now() || !e->installed, TAG_DONE);
     SetAttrs(btn_install, MUIA_Disabled, busy_now() || e->installed || !e->ours, TAG_DONE);
     SetAttrs(btn_remove,  MUIA_Disabled, busy_now() || !e->installed, TAG_DONE);
 }
@@ -531,6 +858,8 @@ static void busy(int on)
         SetAttrs(btn_upgrade,  MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
         SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(btn_run,      MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(btn_verify,   MUIA_Disabled, TRUE, TAG_DONE);
     } else show_detail();
 }
 
@@ -543,6 +872,8 @@ static const char *opname(job_kind k)
     case JOB_PREVIEW_UPGRADE: case JOB_UPGRADE: return "upgrade";
     case JOB_PREVIEW_ROLLBACK: case JOB_ROLLBACK: return "rollback";
     case JOB_CHECK_RELEASE: return "check";
+    case JOB_VERIFY: return "verify";
+    case JOB_RUN: return "run";
     default: return "none";
     }
 }
@@ -605,6 +936,8 @@ static int start(job_kind kind, const char *id)
            kind == JOB_UPGRADE ? "upgrading..." : kind == JOB_ROLLBACK ? "rolling back..." :
            kind == JOB_PREVIEW_UPGRADE ? "working out what the upgrade would do..." :
            kind == JOB_CHECK_RELEASE ? "asking for the latest release..." :
+           kind == JOB_VERIFY ? "checking the installed files..." :
+           kind == JOB_RUN ? "starting..." :
            "working out what the rollback would do...");
     if (job_start(&cur) != 0) { busy(0); status("could not start the worker process"); return -1; }
     in_flight = 1;
@@ -692,9 +1025,9 @@ static int on_message(pm_msg *m)
     if (m->kind == PM_DONE) {
         static const char *verb[] = { "none", "install", "remove", "update",
                                       "preview upgrade", "upgrade", "preview rollback", "rollback",
-                                      "check for a newer version" };
+                                      "check for a newer version", "verify", "start" };
         static const char *past[] = { "", "installed", "removed", "index updated",
-                                      "", "upgraded", "", "rolled back", "checked" };
+                                      "", "upgraded", "", "rolled back", "checked", "verified", "started" };
         job_kind kind = cur.kind;
         rx_job *j = active;
         char line[160], why[640];
@@ -732,6 +1065,31 @@ static int on_message(pm_msg *m)
             if (quit_pending) return 1;
             busy(0);
             status(m->status == PKG_OK ? "release checked: see About" : "could not check for a newer version");
+            return 0;
+        }
+        if (kind == JOB_VERIFY || kind == JOB_RUN) {
+            /* Neither changes anything, so the list stays as it is; the
+               outcome goes to the status line, and verify's to the detail
+               pane, where it stays while the package is selected. */
+            char text[300];
+            if (kind == JOB_VERIFY) {
+                verify_store(cur.id, m->status, &m->ver, m->listing, why);
+                if (m->status == PKG_OK)
+                    snprintf(text, sizeof text, "verified %s: %d as installed, %d changed locally, %d missing, %d not the package's",
+                             cur.id, m->ver.ok, m->ver.changed, m->ver.missing, m->ver.unknown);
+            } else if (m->status == PKG_OK) {
+                snprintf(text, sizeof text, "%s", m->run.how);
+            }
+            if (m->listing) FreeVec(m->listing);
+            m->listing = NULL;
+            if (j) {
+                if (m->status == PKG_OK) finish(j, RXJ_DONE, "", text);
+                else finish(j, RXJ_FAILED, rx_statusword(m->status), why);
+            }
+            if (quit_pending) return 1;
+            busy(0);
+            if (m->status == PKG_OK) status(text);
+            else show_err(verb[kind], m->status, &m->err);
             return 0;
         }
         if (kind == JOB_PREVIEW_UPGRADE || kind == JOB_PREVIEW_ROLLBACK) {
@@ -806,7 +1164,23 @@ static int on_message(pm_msg *m)
         }
         /* After the refill, which writes its own count: the outcome is what
            the user is waiting to read. */
-        if (m->status == PKG_OK && kind != JOB_UPDATE) status(line);
+        if (m->status == PKG_OK && kind == JOB_REMOVE && (m->rem.kept || m->rem.others || m->rem.icon[0])) {
+            /* What removal promises is to keep what the user changed or
+               added; say what that was, as apkg remove does. */
+            static char kept[600];
+            size_t k = (size_t)snprintf(kept, sizeof kept, "removed %s; kept in %s:", cur.id,
+                                        m->rem.dir[0] ? m->rem.dir : "its drawer");
+            int i;
+            for (i = 0; i < m->rem.named && k + 40 < sizeof kept; i++)
+                k += (size_t)snprintf(kept + k, sizeof kept - k, " %s (changed)", m->rem.names[i]);
+            for (i = 0; i < m->rem.others_named && k + 40 < sizeof kept; i++)
+                k += (size_t)snprintf(kept + k, sizeof kept - k, " %s (yours)", m->rem.other_names[i]);
+            if (m->rem.icon[0] && k + 40 < sizeof kept)
+                snprintf(kept + k, sizeof kept - k, " and the changed drawer icon");
+            logline("%s", kept);
+            status(kept);
+        }
+        else if (m->status == PKG_OK && kind != JOB_UPDATE) status(line);
         else if (m->status == PKG_OK) status(past[kind]);
         else show_err(verb[kind], m->status, &m->err);
     }
@@ -1032,6 +1406,7 @@ static void rx_start(rexx_msg *m, const rx_req *r)
 {
     job_kind kind = r->cmd == RXC_UPDATE ? JOB_UPDATE : r->cmd == RXC_INSTALL ? JOB_INSTALL :
                     r->cmd == RXC_REMOVE ? JOB_REMOVE : r->cmd == RXC_UPGRADE ? JOB_PREVIEW_UPGRADE :
+                    r->cmd == RXC_RUN ? JOB_RUN : r->cmd == RXC_VERIFY ? JOB_VERIFY :
                     JOB_PREVIEW_ROLLBACK;
     rx_job *j;
     if (quit_pending || rexx_quit) { rx_fail(m, RX_RC_ERROR, "CLOSING PkgManager is closing"); return; }
@@ -1154,6 +1529,7 @@ static void rexx_dispatch(rexx_msg *m, const char *line)
     case RXC_SHOW:         rx_show(m, &r); break;
     case RXC_OUTDATED:     rx_outdated(m, &r); break;
     case RXC_UPDATE: case RXC_INSTALL: case RXC_REMOVE: case RXC_UPGRADE: case RXC_ROLLBACK:
+    case RXC_RUN: case RXC_VERIFY:
         rx_start(m, &r); break;
     case RXC_JOB: case RXC_WAIT: rx_jobcmd(m, &r); break;
     case RXC_CANCEL:       rx_cancel(m, &r); break;
@@ -1202,6 +1578,7 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc) /* tests */
             pkg_test_break_download(atol(argv[++i]), 2);
         else if (!strcmp(argv[i], "--yes")) auto_yes = 1;        /* tests: no requester to click */
+        else if (!strcmp(argv[i], "--demo") && i + 1 < argc) snprintf(demo_path, sizeof demo_path, "%s", argv[++i]);
         else if (!strcmp(argv[i], "--updates") || !strcasecmp(argv[i], "UPDATES")) start_updates = 1;
         else if (!strcmp(argv[i], "--rexxlib") && i + 1 < argc) rexxlib = argv[++i];  /* tests: a machine without ARexx */
         else if (!strcmp(argv[i], "--test-nomem") && i + 1 < argc) {                   /* tests: allocation failures */
@@ -1212,6 +1589,13 @@ static int real_main(int argc, char **argv)
         }
 
     snprintf(index_path, sizeof index_path, "%s/db/index.json", root);
+    {
+        /* The demo storefront is optional: without it the window has no
+           pictures and no Demo store, and says nothing more about it. */
+        char why[200];
+        if (demo_load(demo_path, why, sizeof why) == 0) state_entries[ST_DEMO] = (STRPTR)"Demo store";
+        else logline("no demo storefront: %s", why);
+    }
     display_hook.h_Entry = (HOOKFUNC)AROS_ASMSYMNAME(display_func);
     cat_entries[0] = (STRPTR)"All categories"; cat_entries[1] = NULL;
 
@@ -1227,7 +1611,7 @@ static int real_main(int argc, char **argv)
     app = ApplicationObject,
         MUIA_Application_Title,       (IPTR)"PkgManager",
         MUIA_Application_Author,      (IPTR)AROSPKG_AUTHOR,
-        MUIA_Application_Version,     (IPTR)"$VER: PkgManager " PM_VERSION " (11.10.2026)",
+        MUIA_Application_Version,     (IPTR)"$VER: PkgManager " PM_VERSION " (12.10.2026)",
         MUIA_Application_Description, (IPTR)"Install software from AROS Archives",
         MUIA_Application_Base,        (IPTR)"PKGMANAGER",
         SubWindow, (win = WindowObject,
@@ -1263,17 +1647,71 @@ static int real_main(int argc, char **argv)
                         MUIA_List_DisplayHook, (IPTR)&display_hook,
                     End),
                 End),
-                Child, (txt_detail = FloattextObject,
-                    MUIA_Frame, MUIV_Frame_ReadList,
-                    MUIA_FixHeightTxt, (IPTR)"\n\n\n\n\n\n\n\n",
-                    MUIA_Floattext_Text, (IPTR)"",
+                /* Details on the left, pictures on the right. The picture
+                   panel has fixed places (demo.h) and is hidden for a
+                   package without pictures, so the text takes the width;
+                   at 800x600, the default size, everything fits a 1024x768
+                   screen with the list keeping about nine rows. */
+                Child, (HGroup,
+                    Child, (VGroup,
+                        Child, (HGroup,
+                            Child, (pg_icon = PageGroup,
+                                MUIA_FixWidth, DEMO_ICON_W, MUIA_FixHeight, DEMO_ICON_H,
+                                Child, (pic_icon = DtpicObject, End),
+                                Child, (RectangleObject, End),
+                            End),
+                            Child, (txt_head = TextObject,
+                                MUIA_Text_Contents, (IPTR)"",
+                                MUIA_Text_SetMin, FALSE,
+                            End),
+                        End),
+                        /* Not of fixed height: it takes whatever the
+                           picture panel beside it leaves, so the header
+                           above stays at the top. */
+                        Child, (txt_detail = FloattextObject,
+                            MUIA_Frame, MUIV_Frame_ReadList,
+                            MUIA_Floattext_Text, (IPTR)"",
+                        End),
+                    End),
+                    Child, (grp_media = VGroup,
+                        MUIA_ShowMe, FALSE,
+                        MUIA_Frame, MUIV_Frame_Group,
+                        MUIA_HorizWeight, 0,
+                        Child, (pg_shot = PageGroup,
+                            MUIA_FixWidth, DEMO_SHOT_W, MUIA_FixHeight, DEMO_SHOT_H,
+                            Child, (pic_shot = DtpicObject, End),
+                            Child, (txt_noshot = TextObject,
+                                MUIA_Text_Contents, (IPTR)"",
+                                MUIA_Text_PreParse, (IPTR)"\33c",
+                            End),
+                        End),
+                        Child, (txt_caption = TextObject,
+                            MUIA_Text_Contents, (IPTR)"",
+                            MUIA_Text_SetMin, FALSE,
+                        End),
+                        Child, (grp_thumbs = HGroup,
+                            Child, (pic_thumb[0] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
+                            Child, (pic_thumb[1] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
+                            Child, (pic_thumb[2] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
+                            Child, (pic_thumb[3] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
+                            Child, HSpace(0),
+                        End),
+                        Child, (txt_provenance = TextObject,
+                            MUIA_Text_Contents, (IPTR)"",
+                            MUIA_Text_SetMin, FALSE,
+                            MUIA_Font, MUIV_Font_Tiny,
+                        End),
+                    End),
                 End),
                 Child, (HGroup,
                     Child, (btn_install  = SimpleButton("Install")),
+                    Child, (btn_run      = SimpleButton("Run")),
+                    Child, (btn_open     = SimpleButton("Open folder")),
+                    Child, (btn_verify   = SimpleButton("Verify")),
                     Child, (btn_upgrade  = SimpleButton("Upgrade")),
                     Child, (btn_rollback = SimpleButton("Roll back")),
                     Child, (btn_remove   = SimpleButton("Remove")),
-                    Child, (btn_open     = SimpleButton("Open folder")),
+                    Child, (btn_buy      = SimpleButton("Buy...")),
                     Child, (btn_cancel   = SimpleButton("Cancel")),
                 End),
                 Child, (gauge = GaugeObject,
@@ -1344,6 +1782,11 @@ static int real_main(int argc, char **argv)
     DoMethod(btn_install, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_INSTALL);
     DoMethod(btn_remove,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_REMOVE);
     DoMethod(btn_open,    MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_OPEN);
+    DoMethod(btn_run,     MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_RUN);
+    DoMethod(btn_verify,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_VERIFY);
+    DoMethod(btn_buy,     MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_BUY);
+    for (i = 0; i < DEMO_MAXSHOTS; i++)
+        DoMethod(pic_thumb[i], MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_THUMB0 + i);
     DoMethod(btn_cancel,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_CANCEL);
     DoMethod(btn_upgrade, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_UPGRADE);
     DoMethod(btn_rollback,MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ROLLBACK);
@@ -1360,6 +1803,9 @@ static int real_main(int argc, char **argv)
     SetAttrs(btn_upgrade,  MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_rollback, MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_run,      MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_verify,   MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_buy,      MUIA_Disabled, TRUE, MUIA_ShowMe, FALSE, TAG_DONE);
     SetAttrs(win, MUIA_Window_Open, TRUE, TAG_DONE);
     if (start_updates) SetAttrs(cyc_state, MUIA_NoNotify, TRUE, MUIA_Cycle_Active, ST_UPDATES, TAG_DONE);
     refill("", NULL, start_updates ? "start updates" : "start");
@@ -1386,6 +1832,7 @@ static int real_main(int argc, char **argv)
             GetAttr(MUIA_Cycle_Active, cyc_state, &st);
             snprintf(cat_chosen, sizeof cat_chosen, "%s", a ? cat_names[a - 1] : "");
             logline("filter category=%s state=%s", cat_chosen[0] ? cat_chosen : "all", state_entries[st]);
+            SetAttrs(btn_buy, MUIA_ShowMe, st == ST_DEMO, TAG_DONE);
             refill_keep("filter");
         } break;
         case ID_SELECT:  show_detail(); break;
@@ -1393,12 +1840,18 @@ static int real_main(int argc, char **argv)
         case ID_INSTALL: { pkg_entry *e = selected(); if (e) { logline("install pressed for %s", e->id); begin(JOB_INSTALL, e->id, "window"); } } break;
         case ID_REMOVE:  { pkg_entry *e = selected(); if (e) { logline("remove pressed for %s", e->id); begin(JOB_REMOVE, e->id, "window"); } } break;
         case ID_OPEN:    { pkg_entry *e = selected(); if (e) open_folder(e->id); } break;
+        case ID_RUN:     { pkg_entry *e = selected(); if (e) { logline("run pressed for %s", e->id); begin(JOB_RUN, e->id, "window"); } } break;
+        case ID_VERIFY:  { pkg_entry *e = selected(); if (e) { logline("verify pressed for %s", e->id); begin(JOB_VERIFY, e->id, "window"); } } break;
         case ID_UPGRADE: { pkg_entry *e = selected(); if (e) { logline("upgrade pressed for %s", e->id); begin(JOB_PREVIEW_UPGRADE, e->id, "window"); } } break;
         case ID_ROLLBACK:{ pkg_entry *e = selected(); if (e) { logline("rollback pressed for %s", e->id); begin(JOB_PREVIEW_ROLLBACK, e->id, "window"); } } break;
         case ID_CHECK:   logline("check for a newer version pressed"); begin(JOB_CHECK_RELEASE, NULL, "window"); break;
         case ID_CANCEL:  if (in_flight) { cur.cancel = 1; if (active) active->cancel_asked = 1; status("cancelling..."); logline("cancel pressed for %s", cur.id); } break;
         case ID_PROCEED: proceed("confirmed"); break;
-        case ID_DECLINE: decline("declined"); break;
+        case ID_DECLINE: if (buy_showing) buy_close(); else decline("declined"); break;
+        case ID_BUY:     { pkg_entry *e = selected(); demo_offer *o = demo_offer_of(e);
+                           if (o && demo_is_offer(e)) buy_preview(o); } break;
+        case ID_THUMB0: case ID_THUMB1: case ID_THUMB2: case ID_THUMB3:
+            show_shot((int)(ret - ID_THUMB0)); break;
         default: break;
         }
         if (sigs) {

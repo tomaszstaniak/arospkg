@@ -29,7 +29,7 @@
 #include <string.h>
 #include <time.h>
 
-static const char version[] __attribute__((used)) = "$VER: PkgUpdates 0.4.2 (11.10.2026)";
+static const char version[] __attribute__((used)) = "$VER: PkgUpdates 0.5.0 (12.10.2026)";
 #define PKGMANAGER_PORT "PKGMANAGER"   /* src/pkgmanager/rexxcmd.h, RX_PORTNAME */
 
 struct RxsLib *RexxSysBase;

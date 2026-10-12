@@ -37,6 +37,8 @@ static const cmddef cmds[] = {
     { RXC_QUIT,         "QUIT",         0, { 0 }, 0 },
     { RXC_LASTERROR,    "LASTERROR",    0, { 0 }, 0 },
     { RXC_OUTDATED,     "OUTDATED",     1, { A_SWITCH_SHOW }, 0 },
+    { RXC_RUN,          "RUN",          1, { A_POS_PKG }, 1 },
+    { RXC_VERIFY,       "VERIFY",       1, { A_POS_PKG }, 1 },
 };
 #define NCMDS (int)(sizeof cmds / sizeof cmds[0])
 
@@ -268,6 +270,7 @@ const char *rx_statusword(pkg_status s)
     case PKG_E_NETWORK:        return "NETWORK";
     case PKG_E_REQUIRES:       return "REQUIRES";
     case PKG_E_CANCELLED:      return "CANCELLED";
+    case PKG_E_LAUNCH:         return "CANNOTRUN";
     }
     return "FAILED";
 }

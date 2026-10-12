@@ -10,7 +10,7 @@
 
 typedef enum { JOB_NONE, JOB_INSTALL, JOB_REMOVE, JOB_UPDATE,
                JOB_PREVIEW_UPGRADE, JOB_UPGRADE, JOB_PREVIEW_ROLLBACK, JOB_ROLLBACK,
-               JOB_CHECK_RELEASE } job_kind;
+               JOB_CHECK_RELEASE, JOB_VERIFY, JOB_RUN } job_kind;
 
 struct pm_msg_s;
 
@@ -48,6 +48,10 @@ typedef struct pm_msg_s {
     pkg_err        err;
     pkg_plan       plan;        /* filled for the preview jobs */
     pkg_release    rel;         /* filled for JOB_CHECK_RELEASE */
+    pkg_verify_result ver;      /* JOB_VERIFY: the counts */
+    char          *listing;     /* JOB_VERIFY: one line per file, AllocVec'd; the window frees it */
+    pkg_run_result run;         /* JOB_RUN: what was started */
+    pkg_removal    rem;         /* JOB_REMOVE: what was kept in place */
 } pm_msg;
 
 /* Start the worker process for `j`. Returns 0 on success; the worker will

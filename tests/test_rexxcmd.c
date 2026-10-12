@@ -107,7 +107,7 @@ int main(void)
     bad("JOB 3x", "BADARGS ID must be a job number");
     bad("CANCEL 1 2", "BADARGS CANCEL: unexpected argument");
 
-    CHECK(!strcmp(rx_help(), "VERSION HELP LIST INFO REQUIREMENTS SHOW UPDATE INSTALL REMOVE UPGRADE ROLLBACK JOB WAIT CANCEL QUIT LASTERROR OUTDATED"));
+    CHECK(!strcmp(rx_help(), "VERSION HELP LIST INFO REQUIREMENTS SHOW UPDATE INSTALL REMOVE UPGRADE ROLLBACK JOB WAIT CANCEL QUIT LASTERROR OUTDATED RUN VERIFY"));
 
     /* replies: every field as "name value" lines, or one bare value */
     {

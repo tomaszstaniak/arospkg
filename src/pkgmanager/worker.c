@@ -12,6 +12,7 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <dos/dostags.h>
+#include <stdlib.h>
 #include <string.h>
 
 static job *current;
@@ -68,11 +69,34 @@ static void worker_main(void)
        lock, so it never waits for, or blocks, a package operation. */
     if (j->kind == JOB_CHECK_RELEASE) {
         st = pkg_release_check(NULL, NULL, j->current, &j->done->rel, &e);
+    } else if (j->kind == JOB_VERIFY || j->kind == JOB_RUN) {
+        /* Both only read the root: no lock, so neither waits for, or holds
+           up, an install in another program. Verify hashes every file, which
+           takes seconds for a large package, and a Workbench start is
+           confirmed by watching for the process; neither belongs on the
+           window's task. */
+        if ((st = pkg_open(j->root, PKG_OPEN_READ, &c, &e)) == PKG_OK) {
+            if (j->kind == JOB_VERIFY) {
+                char *listing = NULL;
+                st = pkg_verify(c, j->id, &j->done->ver, &listing, &e);
+                if (listing) {
+                    size_t n = strlen(listing) + 1;
+                    if ((j->done->listing = (char *)AllocVec(n, MEMF_PUBLIC)) != NULL)
+                        memcpy(j->done->listing, listing, n);
+                    free(listing);
+                }
+            } else {
+                st = pkg_run(c, j->id, NULL, 0, 0, &j->done->run, &e);
+            }
+            pkg_close(c);
+        }
     } else if ((st = pkg_open(j->root, PKG_OPEN_WRITE, &c, &e)) == PKG_OK) {
         pkg_set_progress(c, on_progress, j);
         switch (j->kind) {
         case JOB_INSTALL:  st = pkg_install(c, j->index, j->id, PKG_STOP_NONE, &e); break;
-        case JOB_REMOVE:   st = pkg_remove(c, j->id, PKG_STOP_NONE, &e); break;
+        case JOB_REMOVE:   st = pkg_remove(c, j->id, PKG_STOP_NONE, &e);
+                           if (st == PKG_OK) pkg_last_removal(c, &j->done->rem);
+                           break;
         case JOB_UPDATE:   st = pkg_update(c, j->index_url, &e); break;
         case JOB_UPGRADE:  st = pkg_upgrade(c, j->index, j->id, PKG_STOP_NONE, &e); break;
         case JOB_ROLLBACK: st = pkg_rollback(c, j->id, PKG_STOP_NONE, &e); break;
