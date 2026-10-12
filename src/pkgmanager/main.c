@@ -33,7 +33,8 @@ static Object *app, *win, *str_search, *cyc_cat, *cyc_state, *lst, *txt_detail,
               *txt_catalogue, *btn_check, *txt_release,
               *btn_run, *btn_verify, *txt_head, *btn_buy,
               *grp_media, *pg_shot, *pic_shot, *txt_noshot, *txt_caption, *grp_thumbs,
-              *pic_thumb[DEMO_MAXSHOTS], *txt_provenance, *pg_icon, *pic_icon;
+              *pic_thumb[DEMO_MAXSHOTS], *txt_provenance, *pg_icon, *pic_icon,
+              *box_shot, *box_icon, *box_thumb[DEMO_MAXSHOTS];
 static char demo_path[PKG_MAXPATH] = "PROGDIR:Demo/storefront.json";
 static int auto_yes;              /* --yes: confirm requesters without asking; for tests */
 static pkg_entries rows;          /* the whole query; the list shows a filtered view */
@@ -470,6 +471,26 @@ static int pic_ok(const char *path, int maxw, int maxh, char *why, size_t n)
     return demo_png_check(head, got > 0 ? (size_t)got : 0, size, maxw, maxh, &w, &h, why, n);
 }
 
+/* A new picture object for every change. Setting MUIA_Dtpic_Name on a
+   shown Dtpic left the old picture on screen in some cases on AROS One 1.3
+   (2026-10-12: the offer showed Folio's screenshot, then its thumbnail),
+   while a new object always loads its file when it is set up. Each picture
+   sits alone in a small group, so it is swapped without touching the
+   layout around it. */
+static Object *replace_pic(Object *box, Object *old, const char *name, int thumb)
+{
+    Object *n = MUI_NewObject(MUIC_Dtpic, MUIA_Dtpic_Name, (IPTR)name,
+                              thumb ? MUIA_InputMode : TAG_IGNORE, MUIV_InputMode_RelVerify, TAG_DONE);
+    if (!n) return old;
+    DoMethod(box, MUIM_Group_InitChange);
+    if (old) { DoMethod(box, OM_REMMEMBER, (IPTR)old); MUI_DisposeObject(old); }
+    DoMethod(box, OM_ADDMEMBER, (IPTR)n);
+    DoMethod(box, MUIM_Group_ExitChange);
+    if (thumb)
+        DoMethod(n, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_THUMB0 + (thumb - 1));
+    return n;
+}
+
 static void show_shot(int i)
 {
     char why[160];
@@ -479,7 +500,7 @@ static void show_shot(int i)
     if (pic_ok(m->shots[i].file, DEMO_SHOT_W, DEMO_SHOT_H, why, sizeof why) == 0) {
         shot_flip ^= 1;
         snprintf(shot_name[shot_flip], sizeof shot_name[0], "%s", m->shots[i].file);
-        SetAttrs(pic_shot, MUIA_Dtpic_Name, (IPTR)shot_name[shot_flip], TAG_DONE);
+        pic_shot = replace_pic(box_shot, pic_shot, shot_name[shot_flip], 0);
         SetAttrs(pg_shot, MUIA_Group_ActivePage, 0, TAG_DONE);
     } else {
         snprintf(noshot, sizeof noshot, "Picture not shown:\n%s", why);
@@ -505,7 +526,7 @@ static void show_media(const char *id, const char *icon_file)
         if (icon_file && icon_file[0] && pic_ok(icon_file, DEMO_ICON_W, DEMO_ICON_H, why, sizeof why) == 0) {
             icon_flip ^= 1;
             snprintf(icon_name[icon_flip], sizeof icon_name[0], "%s", icon_file);
-            SetAttrs(pic_icon, MUIA_Dtpic_Name, (IPTR)icon_name[icon_flip], TAG_DONE);
+            pic_icon = replace_pic(box_icon, pic_icon, icon_name[icon_flip], 0);
             SetAttrs(pg_icon, MUIA_Group_ActivePage, 0, TAG_DONE);
         } else SetAttrs(pg_icon, MUIA_Group_ActivePage, 1, TAG_DONE);
         SetAttrs(grp_media, MUIA_ShowMe, FALSE, TAG_DONE);
@@ -518,25 +539,24 @@ static void show_media(const char *id, const char *icon_file)
            old picture after a new name on AROS One 1.3 (the offer showed
            Folio's thumbnail), while a hidden one loads its picture afresh
            when it is shown, in Dtpic's setup. */
-        SetAttrs(pic_thumb[i], MUIA_ShowMe, FALSE, TAG_DONE);
         if (on) {
             thumb_flip[i] ^= 1;
             snprintf(thumb_name[i][thumb_flip[i]], sizeof thumb_name[0][0], "%s", media_now->shots[i].thumb);
-            SetAttrs(pic_thumb[i], MUIA_Dtpic_Name, (IPTR)thumb_name[i][thumb_flip[i]], TAG_DONE);
-            SetAttrs(pic_thumb[i], MUIA_ShowMe, TRUE, TAG_DONE);
+            pic_thumb[i] = replace_pic(box_thumb[i], pic_thumb[i], thumb_name[i][thumb_flip[i]], i + 1);
         }
+        SetAttrs(box_thumb[i], MUIA_ShowMe, on, TAG_DONE);
     }
     snprintf(provenance, sizeof provenance, "%s", media_now->provenance);
     SetAttrs(txt_provenance, MUIA_Text_Contents, (IPTR)provenance, TAG_DONE);
     if (icon_file && icon_file[0] && pic_ok(icon_file, DEMO_ICON_W, DEMO_ICON_H, why, sizeof why) == 0) {
         icon_flip ^= 1;
         snprintf(icon_name[icon_flip], sizeof icon_name[0], "%s", icon_file);
-        SetAttrs(pic_icon, MUIA_Dtpic_Name, (IPTR)icon_name[icon_flip], TAG_DONE);
+        pic_icon = replace_pic(box_icon, pic_icon, icon_name[icon_flip], 0);
         SetAttrs(pg_icon, MUIA_Group_ActivePage, 0, TAG_DONE);
     } else if (media_now->icon[0] && pic_ok(media_now->icon, DEMO_ICON_W, DEMO_ICON_H, why, sizeof why) == 0) {
         icon_flip ^= 1;
         snprintf(icon_name[icon_flip], sizeof icon_name[0], "%s", media_now->icon);
-        SetAttrs(pic_icon, MUIA_Dtpic_Name, (IPTR)icon_name[icon_flip], TAG_DONE);
+        pic_icon = replace_pic(box_icon, pic_icon, icon_name[icon_flip], 0);
         SetAttrs(pg_icon, MUIA_Group_ActivePage, 0, TAG_DONE);
     } else {
         SetAttrs(pg_icon, MUIA_Group_ActivePage, 1, TAG_DONE);
@@ -1665,7 +1685,9 @@ static int real_main(int argc, char **argv)
                         Child, (HGroup,
                             Child, (pg_icon = PageGroup,
                                 MUIA_FixWidth, DEMO_ICON_W, MUIA_FixHeight, DEMO_ICON_H,
-                                Child, (pic_icon = DtpicObject, End),
+                                Child, (box_icon = VGroup, MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+                                    MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
+                                    Child, (pic_icon = DtpicObject, End), End),
                                 Child, (RectangleObject, End),
                             End),
                             /* Three lines always: the row must not change
@@ -1692,7 +1714,9 @@ static int real_main(int argc, char **argv)
                         MUIA_HorizWeight, 0,
                         Child, (pg_shot = PageGroup,
                             MUIA_FixWidth, DEMO_SHOT_W, MUIA_FixHeight, DEMO_SHOT_H,
-                            Child, (pic_shot = DtpicObject, End),
+                            Child, (box_shot = VGroup, MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+                                MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
+                                Child, (pic_shot = DtpicObject, End), End),
                             Child, (txt_noshot = TextObject,
                                 MUIA_Text_Contents, (IPTR)"",
                                 MUIA_Text_PreParse, (IPTR)"\33c",
@@ -1703,10 +1727,18 @@ static int real_main(int argc, char **argv)
                             MUIA_Text_SetMin, FALSE,
                         End),
                         Child, (grp_thumbs = HGroup,
-                            Child, (pic_thumb[0] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
-                            Child, (pic_thumb[1] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
-                            Child, (pic_thumb[2] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
-                            Child, (pic_thumb[3] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End),
+                            Child, (box_thumb[0] = VGroup, MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+                                MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
+                                Child, (pic_thumb[0] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End), End),
+                            Child, (box_thumb[1] = VGroup, MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+                                MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
+                                Child, (pic_thumb[1] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End), End),
+                            Child, (box_thumb[2] = VGroup, MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+                                MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
+                                Child, (pic_thumb[2] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End), End),
+                            Child, (box_thumb[3] = VGroup, MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+                                MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
+                                Child, (pic_thumb[3] = DtpicObject, MUIA_InputMode, MUIV_InputMode_RelVerify, End), End),
                             Child, HSpace(0),
                         End),
                         Child, (txt_provenance = TextObject,
