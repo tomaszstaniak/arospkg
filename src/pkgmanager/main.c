@@ -514,12 +514,17 @@ static void show_media(const char *id, const char *icon_file)
     for (i = 0; i < DEMO_MAXSHOTS; i++) {
         int on = i < media_now->nshots
                  && pic_ok(media_now->shots[i].thumb, DEMO_THUMB_W, DEMO_THUMB_H, why, sizeof why) == 0;
+        /* Hidden first, then named, then shown: a shown thumbnail kept its
+           old picture after a new name on AROS One 1.3 (the offer showed
+           Folio's thumbnail), while a hidden one loads its picture afresh
+           when it is shown, in Dtpic's setup. */
+        SetAttrs(pic_thumb[i], MUIA_ShowMe, FALSE, TAG_DONE);
         if (on) {
             thumb_flip[i] ^= 1;
             snprintf(thumb_name[i][thumb_flip[i]], sizeof thumb_name[0][0], "%s", media_now->shots[i].thumb);
             SetAttrs(pic_thumb[i], MUIA_Dtpic_Name, (IPTR)thumb_name[i][thumb_flip[i]], TAG_DONE);
+            SetAttrs(pic_thumb[i], MUIA_ShowMe, TRUE, TAG_DONE);
         }
-        SetAttrs(pic_thumb[i], MUIA_ShowMe, on, TAG_DONE);
     }
     snprintf(provenance, sizeof provenance, "%s", media_now->provenance);
     SetAttrs(txt_provenance, MUIA_Text_Contents, (IPTR)provenance, TAG_DONE);
