@@ -1,7 +1,8 @@
-arospkg 0.4.2
+arospkg 0.5.0
 =============
 
-Install software with apkg in the Shell or PkgManager on the desktop.
+Find, install, start, update and remove software for AROS, with apkg in
+the Shell or PkgManager on the desktop.
 
 INSTALL
 -------
@@ -14,36 +15,34 @@ INSTALL
      apkg --version
      apkg update
 
-Keep your existing SYS:Packages when upgrading. Versions 0.3.x need this
-manual copy to reach 0.4.
+On 0.4.x, "apkg self-update" replaces apkg instead; PkgManager is always
+taken from this archive. Keep your existing SYS:Packages. Versions 0.3.x
+need the manual copy above.
 
-PkgManager is included in the x86_64 ABIv11 and experimental Pi archives. Keep the unpacked
-drawer and start it from there with:
+PkgManager is included in the x86_64 ABIv11, mainline and Pi archives.
+Keep the unpacked drawer and start PkgManager from its icon, or:
 
      Run PkgManager
 
-Click Update index, select a package and click Install. Open folder takes
-you to the installed program. Start it from its icon.
+Click Update index, select a package and click Install, then Run.
 
 BUILDS
 ------
 
-0.4.2:
-  x86_64-aros-v11    apkg and PkgManager
-  i386-aros-v0       apkg
-  x86_64-aros-v1     apkg, experimental (mainline AROS)
-  aarch64-aros-raspi apkg and PkgManager, experimental (native Pi, ABIv1)
-
-A hosted Macaros aarch64 build remains available in release 0.3.1.
+0.5.0:
+  x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
+  i386-aros-v0       apkg: checked under QEMU, see the release notes
+  x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
+  aarch64-aros-raspi apkg and PkgManager: experimental, compiled and
+                     linked, NOT run on a Raspberry Pi. Please test and
+                     report what works.
 
 Downloads: https://github.com/tomaszstaniak/arospkg/releases
 
 x86_64 ABIv11 has the most test coverage, on AROS One 1.3 under QEMU.
-The i386 and mainline archives were checked under QEMU; the release notes
-say what was run on each. The experimental Pi build of 0.4.2 was compiled
-and linked, but not run on Pi. It is available for user testing; the Folio
-checksum failure remains unexplained. The Pi CLI of 0.4.0 was checked with
-a local catalogue and cached archives under QEMU raspi3b.
+What was run on each other build is in the release notes. Nothing was run
+on real hardware. The Folio checksum failure reported on a Pi remains
+unexplained; --keep-rejected keeps such a download for a report.
 
 For online operations you need working networking and the certificate
 bundle ENV:SYS/Certificates/ca-bundle.crt. PkgManager needs Zune.
@@ -54,38 +53,49 @@ START HERE
   apkg search game        find packages
   apkg show soliton       view details and requirements
   apkg install soliton    download, verify and install
+  apkg run folio          start an installed application
   apkg open soliton       open the installed drawer in Wanderer
   apkg list               list installed packages
+  apkg verify folio       check the installed files
   apkg remove soliton     remove it, keeping changed and additional files
 
 Packages go into SYS:Packages by default. To use another root, put it
 before the command:
 
   apkg --root "Work:Packages" install soliton
-  apkg --root "Work:Packages" open soliton
+  apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.5.0
+------------
+
+- apkg run <id> [files] and PkgManager's Run start an application as its
+  package describes: a Workbench program from its icon (its stack and
+  tool types, so no Stack command is needed; files are passed as if
+  dropped on it), a Shell program in your Shell with its return code.
+  apkg run --check says whether and why not. A package that does not say
+  how it starts still has Open folder. The description is application.json
+  in the program's drawer, so "apkg run Work:Apps/Folio" also works for a
+  drawer unpacked by hand.
+- PkgManager: Run, Verify (the result at the top of the details), the
+  files kept by Remove, installed packages listed even without a
+  catalogue, and versions written the same way everywhere (0.4.1-aros2).
+  ARexx: RUN and VERIFY.
+- DEMONSTRATION ONLY: pictures beside the details (a few real screenshots
+  shipped in the Demo drawer, not from the catalogue) and a Demo store
+  with one fictional paid application. "Demo -- purchasing is not
+  available yet": nothing can be bought or installed from it, and no data
+  is asked for or sent.
+- apkg-pack checks and writes the start information for authors.
+- Ctrl-C while connecting is reported as cancelled, not as a network
+  error.
 
 NEW IN 0.4.2
 ------------
 
-- apkg outdated lists installed packages with a newer version in the
-  catalogue, and says why one that exists cannot be installed here
-  (another CPU or ABI, a missing library). Nothing is downloaded to make
-  the list. --all lists every installed package; --json is for scripts.
-  apkg update ends with the number of updates.
-- apkg upgrade --all shows the plan, then upgrades one package at a time
-  and reports each. A package that fails leaves the others as they are;
-  the group is not undone as a whole.
-- Ctrl-C stops a download, including apkg update. Once files are being
-  changed the operation finishes and apkg says so.
-- Output redirected to a file is complete on mainline AROS, where
-  apkg search >file used to come out empty.
-- PkgManager: an Updates (N) filter, update state and installed version
-  in the list, the catalogue's date above it, and About > Check for a
-  newer version. ARexx: OUTDATED.
-- --keep-rejected keeps a download that failed its checksum, for a bug
-  report.
+- apkg outdated, apkg upgrade --all, the Updates (N) list, Ctrl-C during
+  downloads, About > Check for a newer version, --keep-rejected.
 
 NEW IN 0.4.1
 ------------
