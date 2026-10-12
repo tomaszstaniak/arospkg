@@ -1,4 +1,5 @@
 #include "internal.h"
+#include "app.h"
 #include "entries.h"
 
 static void net_prog_shim(void *user, unsigned long done, unsigned long total, int *cancel);
@@ -47,7 +48,7 @@ char *registry_text(const char *id, const char *version, long revision,
                     const char *icon_state, const char *icon_sha, long icon_size,
                     const char *icon_member,
                     const char *prev_registry, const char *prev_archive,
-                    const char *notes)
+                    const char *notes, const pkg_launch *launch)
 {
     size_t cap = 4096 + PKG_NOTES_MAX * 2 + (size_t)n * 400 + (size_t)nreq * 400;
     char *buf = (char *)malloc(cap);
@@ -109,6 +110,10 @@ char *registry_text(const char *id, const char *version, long revision,
         }
         js_raw(&o, "]");
     }
+    /* How it is started, as the catalogue said at installation. The drawer's
+       application.json is what starts it; this copy lets a rollback, which
+       re-extracts an archive that may not carry the file, write it again. */
+    if (launch && launch->mode != PKG_LAUNCH_NONE) { js_raw(&o, ",\n  "); launch_emit(&o, launch); }
     js_raw(&o, ",\n  "); js_key(&o, "contents"); js_raw(&o, " [");
     for (i = 0; i < n; i++) {
         js_raw(&o, i ? ",\n    { " : "\n    { ");
@@ -120,6 +125,25 @@ char *registry_text(const char *id, const char *version, long revision,
     js_raw(&o, "\n  ]\n}\n");
     if (o.fail) { free(buf); return NULL; }
     return buf;
+}
+
+int app_stage(const char *staging, const char *id, const char *version, long revision,
+              const char *arch, const char *abi, const req_ent *reqs, int nreq,
+              const pkg_launch *l)
+{
+    char path[PKG_MAXPATH];
+    char *txt;
+    int rc;
+    if (!l || l->mode == PKG_LAUNCH_NONE) return 0;
+    u_join(path, sizeof path, staging, PKG_APP_FILE);
+    /* The archive's own copy stands: apkg-pack wrote it from the same
+       manifest the catalogue entry came from, and the catalogue's checks
+       compare the two before an entry is published. */
+    if (u_exists(path)) return 0;
+    if (!(txt = app_text(id, version, revision, arch, abi, reqs, nreq, l))) return -1;
+    rc = u_write_atomicish(path, txt);
+    free(txt);
+    return rc ? -1 : 0;
 }
 
 /* An EMPTY directory of the package's name is not an obstacle and must not be
@@ -276,6 +300,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     char version[64] = "", arch[16] = "", url[512] = "", want_sha[65] = "", want_abi[16] = "";
     char subdir[128] = "", archive[PKG_MAXPATH], staging[PKG_MAXPATH];
     char notes[PKG_NOTES_MAX] = "";
+    pkg_launch launch;
     char dest[PKG_MAXPATH], regpath[PKG_MAXPATH], tid[64], why[160];
     long want_size = 0, revision = 0;
     inv_ent *inv = NULL;
@@ -339,6 +364,11 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     js_str(idx, t, js_member(idx, t, ntok, found, "subdir"),  subdir,  sizeof subdir);
     want_size = js_long(idx, t, js_member(idx, t, ntok, found, "size"), -1);
     revision  = js_long(idx, t, js_member(idx, t, ntok, found, "revision"), 0);
+    /* A launch table this client cannot use is left out: the package still
+       installs, and Open folder still works, as for one that has none. */
+    if (launch_from_object(idx, t, ntok, js_member(idx, t, ntok, found, "launch"),
+                           &launch, why, sizeof why) != 1)
+        memset(&launch, 0, sizeof launch);
 
     {
         pkg_status a;
@@ -432,6 +462,9 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
         goto out;
     }
     prog(c, "extract", 1, 1, 0);
+    if (app_stage(staging, id, version, revision, arch, want_abi, reqs, nreq, &launch) != 0) {
+        st = pkg_fail(e, PKG_E_IO, "cannot write the application description", "", staging); goto out;
+    }
 
     inv = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV);
     if (!inv) { st = pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id); goto out; }
@@ -556,7 +589,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
                         icon_src[0] ? (icon_managed ? "installed" : "kept-existing")
                                     : "none",
                         icon_managed ? icon_sha : "", icon_managed ? icon_size : -1,
-                        icon_src, "", "", notes);
+                        icon_src, "", "", notes, &launch);
     if (!reg || u_write_atomicish(regpath, reg) != 0) {
         st = pkg_fail(e, PKG_E_IO, "cannot write the registry entry", "", regpath); goto out;
     }

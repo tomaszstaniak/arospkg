@@ -20,6 +20,7 @@
  * survives its cleanup: db/previous/<id>.json and cache/previous/<id>.<ext>.
  */
 #include "internal.h"
+#include "app.h"
 #include "upgrade.h"
 #include "util.h"
 #include "json.h"
@@ -65,6 +66,14 @@ int swap_read_registry(const char *path, rev_info *r, inv_ent *inv, int *ninv, c
     r->size = js_long(js, t, js_member(js, t, n, 0, "archive_size"), -1);
     /* A rollback writes the previous revision's record again: its notes too. */
     if (notes_from_element(js, t, n, 0, r->notes, sizeof r->notes) < 0) r->notes[0] = 0;
+    {
+        char why[200];
+        if (launch_from_object(js, t, n, js_member(js, t, n, 0, "launch"), &r->launch, why, sizeof why) != 1)
+            memset(&r->launch, 0, sizeof r->launch);
+        /* Only the declarations, for the drawer's description; the verdicts
+           in the registry belong to the install that made them. */
+        if (req_parse(js, t, n, 0, r->app_reqs, MAXREQ, &r->app_nreq, why, sizeof why) != 0) r->app_nreq = 0;
+    }
     ic = js_member(js, t, n, 0, "icon");
     if (ic >= 0) {
         member(js, t, n, ic, "state",  r->icon_state, sizeof r->icon_state);
@@ -115,6 +124,9 @@ pkg_status swap_read_index(const char *index_path, const char *id,
     member(js, t, n, found, "subdir", r->subdir, sizeof r->subdir);
     member(js, t, n, found, "icon",   r->icon_member, sizeof r->icon_member);
     if (notes_from_element(js, t, n, found, r->notes, sizeof r->notes) < 0) r->notes[0] = 0;
+    if (launch_from_object(js, t, n, js_member(js, t, n, found, "launch"), &r->launch, why, sizeof why) != 1)
+        memset(&r->launch, 0, sizeof r->launch);
+    if (req_parse(js, t, n, found, r->app_reqs, MAXREQ, &r->app_nreq, why, sizeof why) != 0) r->app_nreq = 0;
     if (req_parse(js, t, n, found, reqs, MAXREQ, nreq, why, sizeof why) != 0) {
         free(t); free(js);
         return pkg_fail(e, PKG_E_REQUIRES, "this package's system requirements are not readable", why, id);
@@ -211,6 +223,10 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
         st = pkg_fail(e, PKG_E_ARCHIVE, "the archive was rejected", why, to_archive); goto fail_staging;
     }
     prog(c, "extract", 1, 1, 0);
+    if (app_stage(staging, id, to->version, to->revision, to->arch[0] ? to->arch : from->arch,
+                  to->abi[0] ? to->abi : from->abi, to->app_reqs, to->app_nreq, &to->launch) != 0) {
+        st = pkg_fail(e, PKG_E_IO, "cannot write the application description", "", staging); goto fail_staging;
+    }
     newinv = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV);
     live   = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV);
     result = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV);
@@ -424,7 +440,7 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
                         to->icon_member,
                         is_rollback ? "" : prev_reg,
                         is_rollback ? "" : prev_arc,
-                        to->notes);
+                        to->notes, &to->launch);
     if (!reg || u_write_atomicish(regpath, reg) != 0) { st = pkg_fail(e, PKG_E_IO, "cannot write the registry entry", "", regpath); goto out; }
     STOP(PKG_STOP_AFTER_REGISTRY);
     STOP(PKG_STOP_BEFORE_COMMIT);

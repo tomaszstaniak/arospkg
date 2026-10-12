@@ -37,7 +37,8 @@ typedef enum {
     /* Appended, not inserted: --expect in the test scripts names these by
      * number, so renumbering would silently re-point every existing test. */
     PKG_E_REQUIRES,        /* the MACHINE does not provide something needed */
-    PKG_E_CANCELLED        /* the caller's progress callback asked to stop  */
+    PKG_E_CANCELLED,       /* the caller's progress callback asked to stop  */
+    PKG_E_LAUNCH           /* the application cannot be started as described */
 } pkg_status;
 
 typedef struct {
@@ -94,6 +95,24 @@ typedef struct {
 } pkg_verify_result;
 
 typedef struct { pkg_entry *v; int n, cap; } pkg_entries;   /* zero-init */
+
+/* How an application is started: the `launch` table of its package
+ * manifest (docs/rfc/0002-application-folder.md), carried by the catalogue,
+ * recorded in the registry and written into the drawer as application.json.
+ * Only what the program's icon cannot say: which file is the program, and
+ * whether it is a Workbench or a Shell program. Stack and tool types stay in
+ * the icon, which is authoritative for a Workbench start. */
+typedef enum {
+    PKG_LAUNCH_NONE = 0,       /* no description: Open folder is all there is */
+    PKG_LAUNCH_WORKBENCH,      /* as a double-click on the program's icon does */
+    PKG_LAUNCH_SHELL           /* as a Shell command, in the working directory */
+} pkg_launch_mode;
+
+typedef struct {
+    pkg_launch_mode mode;
+    char executable[256];      /* relative to the drawer */
+    char workdir[256];         /* relative to the drawer; "." when not stated */
+} pkg_launch;
 
 /* Progress for a front end. One event per step: the phase -- "download",
  * "verify", "extract", "publish" -- the package it concerns, done/total in
@@ -275,6 +294,68 @@ pkg_status pkg_verify(pkg_ctx *, const char *id, pkg_verify_result *, char **lis
  * there; PKG_E_IO: no desktop, or it would not open it. Changes nothing. */
 pkg_status pkg_open_folder(pkg_ctx *, const char *id, char *where, size_t n, pkg_err *);
 
+/* ------------------------------------------------------------ starting */
+
+/* Whether an installed application can be started, and how: `apkg run`,
+ * PkgManager's Run button and ARexx RUN all ask this, so a button can never
+ * offer what the command would refuse. Everything is checked on the disk
+ * now -- the description, the program, its icon, its CPU and the libraries
+ * it names -- and nothing is started or changed. */
+typedef enum {
+    PKG_RUN_READY = 0,         /* it can be started as described              */
+    PKG_RUN_NO_DESCRIPTION,    /* the drawer says nothing about starting it    */
+    PKG_RUN_INVALID,           /* the description is there but unusable        */
+    PKG_RUN_MISSING,           /* the program, its icon or a directory is gone */
+    PKG_RUN_INCOMPATIBLE,      /* built for another CPU or ABI                 */
+    PKG_RUN_REQUIRES,          /* a library it needs is not on this machine    */
+    PKG_RUN_NOT_INSTALLED      /* no registry entry, or no drawer              */
+} pkg_run_state;
+
+typedef struct {
+    pkg_run_state state;
+    char why[240];               /* the reason, in the user's words */
+    char id[PKG_MAXID];
+    char name[64];               /* what to call it: the description's name, or the id */
+    char version[64];
+    long revision;
+    char drawer[PKG_MAXPATH];    /* the application drawer */
+    char program[PKG_MAXPATH];   /* the program, full path ("" when unknown) */
+    char workdir[PKG_MAXPATH];   /* the current directory it gets */
+    pkg_launch launch;
+    long stack;                  /* from the program's icon; 0 without one */
+    char requirements[16];       /* "satisfied", "missing", "undetermined", "none" */
+} pkg_app_info;
+
+/* `what` is an installed package's id, or the path of an application drawer
+ * (anything with ':' or '/'), which needs no registry and no context: the
+ * description travels with the drawer. `c` may be NULL for a path.
+ * PKG_OK whenever the question could be answered; the answer, including
+ * "cannot be started", is in `info`. */
+pkg_status pkg_app_info_get(pkg_ctx *c, const char *what, pkg_app_info *info, pkg_err *);
+const char *pkg_run_word(pkg_run_state);   /* "ready", "no-description", ... */
+
+/* Start it. Workbench mode asks workbench.library to start the program as
+ * from its icon (icon stack and tool types; its own drawer as the current
+ * directory), with `args` as Workbench arguments (files to open). Shell mode
+ * runs it as a command in the working directory, with `args` quoted; with
+ * PKG_RUN_WAIT it uses the caller's console and waits for it, otherwise it
+ * gets a console window of its own and runs on.
+ *
+ * workbench.library loads the program on its own process and reports a
+ * failure to nobody, so success is only claimed for what was seen: a new
+ * process of the program's name (`confirmed`), or a Shell command's return
+ * code. PKG_E_LAUNCH, with the reason, when it cannot be started. */
+#define PKG_RUN_WAIT 1
+typedef struct {
+    pkg_launch_mode mode;
+    int  confirmed;      /* workbench: a new process of that name appeared */
+    int  waited;         /* shell + PKG_RUN_WAIT: rc is the command's       */
+    long rc;
+    char how[200];       /* what was done, in the user's words */
+} pkg_run_result;
+pkg_status pkg_run(pkg_ctx *c, const char *what, const char *const *args, int nargs,
+                   int flags, pkg_run_result *, pkg_err *);
+
 /* What the last pkg_remove left in place, for the front end to say: files
  * of the package that were changed locally (up to 10 named; all of them in
  * `list_file`), the drawer itself when anything is still in it, and a
@@ -408,6 +489,10 @@ typedef struct {
     char notes[PKG_NOTES_MAX];
     char notes_recorded[PKG_NOTES_MAX];
     int  notes_bad;
+    /* How the catalogue says it is started; mode NONE when it does not say,
+       or says something this client cannot use (launch_bad 1). */
+    pkg_launch launch;
+    int  launch_bad;
 } pkg_details;
 
 /* PKG_E_NOT_FOUND when neither the index nor the registry knows `id`. */

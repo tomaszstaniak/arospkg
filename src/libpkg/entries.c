@@ -2,6 +2,7 @@
 #include "entries.h"
 #include "json.h"
 #include "listing.h"
+#include "app.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -303,6 +304,14 @@ int details_from_index(const char *json, size_t len, const char *id,
         member_str(json, t, ntok, el, "source",  d->source,  sizeof d->source);
         member_str(json, t, ntok, el, "license", d->license, sizeof d->license);
         if (notes_from_element(json, t, ntok, el, d->notes, sizeof d->notes) < 0) d->notes_bad = 1;
+        {
+            char why[200];
+            int v = js_member(json, t, ntok, el, "launch");
+            if (v >= 0 && launch_from_object(json, t, ntok, v, &d->launch, why, sizeof why) != 1) {
+                memset(&d->launch, 0, sizeof d->launch);
+                d->launch_bad = 1;
+            }
+        }
         d->compat = pkg_compat_of(e->arch, e->abi, my_arch, my_abi, d->compat_why, sizeof d->compat_why);
         e->ours = d->compat == PKG_COMPAT_NATIVE;
         d->in_index = 1;

@@ -23,7 +23,7 @@
 #ifdef APKG_TEST_VERSION
 static const char *VERSION = "apkg " APKG_TEST_VERSION;
 #else
-static const char *VERSION = "apkg 0.4.2";
+static const char *VERSION = "apkg 0.5.0";
 #endif
 
 /* `show`: the library's account of one package, laid out for a person. The
@@ -236,6 +236,8 @@ static void usage(void)
            "  verify <id>       Check installed files for changes\n"
            "  info <id>         Show the installed package record\n"
            "  doctor            Report installation and recovery problems\n"
+           "  run <id> [file]   Start an installed application (optionally with a file)\n"
+           "  run --check <id>  Say whether and how it would start, without starting it\n"
            "  open <id>         Open an installed package's drawer on the desktop\n"
            "  self-update       Replace this apkg with the latest stable release\n"
            "  self-update --check  Say whether there is a newer one\n\n"
@@ -694,6 +696,64 @@ static int upgrade_all(pkg_ctx *c, const char *index, const char *root, pkg_stop
     return done;
 }
 
+static const char *launch_mode_text(pkg_launch_mode m)
+{
+    return m == PKG_LAUNCH_WORKBENCH ? "Workbench, from its icon"
+         : m == PKG_LAUNCH_SHELL ? "Shell command" : "not described";
+}
+
+/* apkg run: start it, or with --check (or --json) say whether and how it
+   would start. The same pkg_app_info the window's Run button reads, so the
+   command and the button cannot disagree. A Shell program run here uses
+   this console and its return code becomes apkg's (*rc). */
+static pkg_status run_app(pkg_ctx *c, const char *what, const char *const *args, int nargs,
+                          int check, int json, pkg_err *e, int *rc)
+{
+    pkg_app_info a;
+    pkg_run_result r;
+    pkg_status st;
+    char line[400];
+
+    *rc = 0;
+    if (check || json) {
+        st = pkg_app_info_get(c, what, &a, e);
+        if (st != PKG_OK) return st;
+        if (json) {
+            printf("{\"id\": "); jstr(a.id);
+            printf(", \"state\": "); jstr(pkg_run_word(a.state));
+            printf(", \"mode\": ");
+            jstr(a.launch.mode == PKG_LAUNCH_WORKBENCH ? "workbench" : a.launch.mode == PKG_LAUNCH_SHELL ? "shell" : "");
+            printf(", \"drawer\": "); jstr(a.drawer);
+            printf(", \"program\": "); jstr(a.program);
+            printf(", \"stack\": %ld, \"requirements\": ", a.stack); jstr(a.requirements);
+            printf(", \"why\": "); jstr(a.why);
+            printf("}\n");
+        } else {
+            pr_heading(a.name);
+            pr_field("State", a.state == PKG_RUN_READY ? "can be started" : pkg_run_word(a.state),
+                     a.state == PKG_RUN_READY ? PR_GREEN : PR_YELLOW);
+            pr_field("Start", launch_mode_text(a.launch.mode), -1);
+            if (a.program[0]) pr_field("Program", a.program, -1);
+            if (a.launch.mode == PKG_LAUNCH_SHELL) pr_field("Directory", a.workdir, -1);
+            if (a.stack > 0) {
+                snprintf(line, sizeof line, "%ld bytes, from the program's icon", a.stack);
+                pr_field("Stack", line, -1);
+            }
+            if (strcmp(a.requirements, "none")) pr_field("Requirements", a.requirements, -1);
+            pr_text(a.why, 2);
+        }
+        /* The answer is the output; "cannot be started" is not an error of
+           the question. A script reads the return code: 0 ready, 5 not. */
+        if (a.state != PKG_RUN_READY) *rc = 5;
+        return PKG_OK;
+    }
+    st = pkg_run(c, what, args, nargs, PKG_RUN_WAIT, &r, e);
+    if (st != PKG_OK) return st;
+    pr_text(r.how, 0);
+    if (r.waited && r.rc > 0) *rc = (int)r.rc;
+    return PKG_OK;
+}
+
 static int real_main(int argc, char **argv)
 {
     const char *root = "SYS:Packages";
@@ -705,6 +765,8 @@ static int real_main(int argc, char **argv)
     const char *report = NULL, *run_id = NULL, *machine = "unspecified";
     const char *index_url = PKG_INDEX_URL;
     const char *arg2 = NULL;
+    const char *rest[16];            /* every word after the command: run passes them on */
+    int nrest = 0;
     int group_rc = -1, shown = 0;    /* upgrade --all: its own exit status; errors already shown */
     int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0, all = 0;
     pkg_ctx *c = NULL;
@@ -773,8 +835,11 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--help-testing")) { usage_testing(); return 0; }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) { usage(); return 0; }
         else if (!cmd) cmd = argv[i];
-        else if (!arg) arg = argv[i];
-        else if (!arg2) arg2 = argv[i];
+        else {
+            if (!arg) arg = argv[i];
+            else if (!arg2) arg2 = argv[i];
+            if (nrest < (int)(sizeof rest / sizeof rest[0])) rest[nrest++] = argv[i];
+        }
     }
     if (!cmd) { usage(); return 5; }
     /* Once, before the first line this command prints. */
@@ -807,6 +872,18 @@ static int real_main(int argc, char **argv)
        it never opens the root: no recovery, no lock of its own. */
     if (!strcmp(cmd, "self-update")) return apkg_self_update(VERSION + 5, root, check);
 
+    /* A drawer given by path needs no package root: the description travels
+       with the drawer (RFC 0002), so an application unpacked by hand starts
+       the same way. */
+    if (!strcmp(cmd, "run") && arg && strpbrk(arg, ":/")) {
+        int rc = 0;
+        snprintf(doing, sizeof doing, "start %s", arg);
+        doing_id = arg;
+        st = run_app(NULL, arg, rest + 1, nrest - 1, check, json, &e, &rc);
+        if (st != PKG_OK) { show(&e); return 10; }
+        return rc;
+    }
+
     if (!strcmp(cmd, "unlock")) {
         st = pkg_unlock(root, &e);
         if (st != PKG_OK) { show(&e); return 10; }
@@ -819,6 +896,7 @@ static int real_main(int argc, char **argv)
         if (!strcmp(cmd, "list") || !strcmp(cmd, "info") || !strcmp(cmd, "show") ||
             !strcmp(cmd, "search") || !strcmp(cmd, "requires") ||
             !strcmp(cmd, "verify") || !strcmp(cmd, "open") || !strcmp(cmd, "outdated") ||
+            !strcmp(cmd, "run") ||
             dry) mode = PKG_OPEN_READ;   /* a dry run never recovers */
         else if (!strcmp(cmd, "doctor")) mode = retry ? PKG_OPEN_DOCTOR : PKG_OPEN_READ;
         st = pkg_open(root, mode, &c, &e);
@@ -1061,6 +1139,12 @@ static int real_main(int argc, char **argv)
         cancel_noun = "Opening";
         st = pkg_open_folder(c, arg, where, sizeof where, &e);
         if (st == PKG_OK) printf("Opened %s\n", where);
+    } else if (!strcmp(cmd, "run")) {
+        if (!arg) { printf("apkg run: which application?\n"); pkg_close(c); return 5; }
+        snprintf(doing, sizeof doing, "start %s", arg);
+        doing_id = arg;
+        st = run_app(c, arg, rest + 1, nrest - 1, check, json, &e, &group_rc);
+        if (st != PKG_OK) group_rc = -1;
     } else {
         printf("apkg: unknown command '%s'\n", cmd);
         pkg_close(c);

@@ -67,7 +67,13 @@ char *registry_text(const char *id, const char *version, long revision,
                     const char *icon_state, const char *icon_sha, long icon_size,
                     const char *icon_member,
                     const char *prev_registry, const char *prev_archive,
-                    const char *notes);
+                    const char *notes, const pkg_launch *launch);
+/* Write application.json into a staged tree from the catalogue's launch
+   table, unless the archive brought its own (which then stands). Returns 0,
+   or -1 when the file could not be written. */
+int   app_stage(const char *staging, const char *id, const char *version, long revision,
+                const char *arch, const char *abi, const req_ent *reqs, int nreq,
+                const pkg_launch *l);
 /* What upgrade, rollback, verify and a dry run need to know about a revision,
  * read from a registry entry or from an index entry (swap.c). */
 typedef struct {
@@ -80,6 +86,9 @@ typedef struct {
     char icon_member[128];
     char icon_state[24], icon_sha[65];
     char notes[PKG_NOTES_MAX];   /* post_install_notes, '\n'-joined */
+    pkg_launch launch;           /* how it is started; mode NONE when not said */
+    req_ent app_reqs[MAXREQ];    /* requires_system, for application.json only */
+    int  app_nreq;
     char prev_registry[PKG_MAXPATH], prev_archive[PKG_MAXPATH];
 } rev_info;
 int        swap_read_registry(const char *path, rev_info *, inv_ent *, int *ninv, char **text_out);

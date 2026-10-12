@@ -15,6 +15,15 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_sha256" \
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_req" \
     "$HERE/test_req.c" "$SRC/req.c" "$SRC/json.c" "$SRC/err.c"
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_app" \
+    "$HERE/test_app.c" "$SRC/app.c" "$SRC/json.c" "$SRC/req.c" "$SRC/err.c"
+"$OUT/test_app"
+
+python3 "$HERE/../tools/make-demo-store.py" "$OUT/demostore" >/dev/null
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_demo" \
+    "$HERE/test_demo.c" "$HERE/../src/pkgmanager/demo.c" "$SRC/json.c"
+"$OUT/test_demo" "$OUT/demostore"
+
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_icon" \
     "$HERE/test_icon.c" "$SRC/icon.c"
 
@@ -22,7 +31,7 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_listing" \
     "$HERE/test_listing.c" "$SRC/listing.c"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_entries" \
-    "$HERE/test_entries.c" "$SRC/entries.c" "$SRC/json.c" "$SRC/listing.c"
+    "$HERE/test_entries.c" "$SRC/entries.c" "$SRC/json.c" "$SRC/listing.c" "$SRC/app.c" "$SRC/req.c" "$SRC/err.c"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_upgrade" \
     "$HERE/test_upgrade.c" "$SRC/upgrade.c"
@@ -34,14 +43,14 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_zip" \
     "$HERE/test_zip.c" "$SRC/zip.c" "$HERE/host_util.c" -lz
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_rexxcmd" \
-    "$HERE/test_rexxcmd.c" "$HERE/../src/pkgmanager/rexxcmd.c" "$SRC/updates.c" "$SRC/entries.c" \
+    "$HERE/test_rexxcmd.c" "$HERE/../src/pkgmanager/rexxcmd.c" "$SRC/updates.c" "$SRC/entries.c" "$SRC/app.c" \
     "$SRC/json.c" "$SRC/listing.c" "$SRC/req.c" "$SRC/upgrade.c" "$SRC/err.c"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_release" "$HERE/test_release.c" "$SRC/release.c"
 "$OUT/test_release"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_updates" \
-    "$HERE/test_updates.c" "$SRC/updates.c" "$SRC/entries.c" "$SRC/json.c" "$SRC/listing.c" \
+    "$HERE/test_updates.c" "$SRC/updates.c" "$SRC/entries.c" "$SRC/app.c" "$SRC/json.c" "$SRC/listing.c" \
     "$SRC/req.c" "$SRC/upgrade.c" "$SRC/err.c"
 "$OUT/test_updates" "$OUT/updates.json"
 python3 -c "import json,sys; d=json.load(open(sys.argv[1])); assert d['ready']==3 and len(d['packages'])==12, d" "$OUT/updates.json"
@@ -56,7 +65,7 @@ for f in json entries; do
     $CC -O1 -Wall -Wextra -std=gnu99 -Dmalloc=t_malloc -c -o "$OUT/big-$f.o" "$SRC/$f.c"
 done
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_bigindex" \
-    "$HERE/test_bigindex.c" "$OUT/big-json.o" "$OUT/big-entries.o" "$SRC/listing.c"
+    "$HERE/test_bigindex.c" "$OUT/big-json.o" "$OUT/big-entries.o" "$SRC/listing.c" "$SRC/app.c" "$SRC/req.c" "$SRC/err.c"
 "$OUT/test_bigindex" --errors
 for n in 170 2000 5000; do
     python3 "$HERE/fixtures/make-big-index.py" $n "$OUT/big-$n.json"

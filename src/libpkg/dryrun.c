@@ -8,6 +8,7 @@
  * -- an archive into the cache, which is not the installation.
  */
 #include "internal.h"
+#include "app.h"
 #include "verify.h"
 #include "util.h"
 #include "sha256.h"
@@ -138,6 +139,10 @@ static pkg_status dry_install(pkg_ctx *c, const char *index_path, const char *id
     if (arc_extract(archive, staging, to.subdir, 64L*1024*1024, 256L*1024*1024, NULL, NULL, why) != 0) {
         u_deltree(sroot);
         rep_add(r, "would be refused: the archive was rejected -- %s\n", why); return PKG_OK;
+    }
+    /* The plan counts the description the install would write. */
+    if (app_stage(staging, id, to.version, to.revision, to.arch, to.abi, to.app_reqs, to.app_nreq, &to.launch) != 0) {
+        u_deltree(sroot); return pkg_fail(e, PKG_E_IO, "cannot write the application description", "", staging);
     }
     inv = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV);
     if (!inv || inv_of_tree(staging, "", inv, &ninv, MAXINV) != 0) { free(inv); u_deltree(sroot); return pkg_fail(e, PKG_E_IO, "cannot inventory the staged tree", "", staging); }

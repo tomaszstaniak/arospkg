@@ -24,6 +24,7 @@ const char *pkg_strstatus(pkg_status s)
     case PKG_E_NETWORK:        return "network error";
     case PKG_E_REQUIRES:       return "system requirement not met";
     case PKG_E_CANCELLED:      return "cancelled";
+    case PKG_E_LAUNCH:         return "cannot be started";
     }
     return "?";
 }
