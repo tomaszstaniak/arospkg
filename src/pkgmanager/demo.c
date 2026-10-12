@@ -219,6 +219,13 @@ int demo_png_check(const unsigned char *h, size_t n, long file_size,
     }
     *w = (int)((unsigned long)h[16] << 24 | (unsigned long)h[17] << 16 | (unsigned long)h[18] << 8 | h[19]);
     *hh = (int)((unsigned long)h[20] << 24 | (unsigned long)h[21] << 16 | (unsigned long)h[22] << 8 | h[23]);
+    /* Truecolour only (PNG colour type 2 or 6). A palette PNG did not load
+       through the picture datatype on AROS One 1.3 (2026-10-12), and Dtpic
+       then left the previous picture on screen, so a mockup showed as a
+       real screenshot of another program. Refused here, it shows as text. */
+    if (n < 26 || (h[25] != 2 && h[25] != 6)) {
+        snprintf(why, whyn, "the picture is not a truecolour PNG"); return -1;
+    }
     if (*w <= 0 || *hh <= 0 || *w > max_w || *hh > max_h) {
         snprintf(why, whyn, "the picture is %dx%d; this panel shows at most %dx%d", *w, *hh, max_w, max_h);
         return -1;

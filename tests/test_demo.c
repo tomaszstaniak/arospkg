@@ -23,8 +23,8 @@ int main(int argc, char **argv)
     char path[512], why[200];
     const demo_media *m;
     demo_offer *o;
-    unsigned char png[24] = { 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 13, 'I', 'H', 'D', 'R',
-                              0, 0, 1, 64, 0, 0, 0, 200 };
+    unsigned char png[26] = { 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 13, 'I', 'H', 'D', 'R',
+                              0, 0, 1, 64, 0, 0, 0, 200, 8, 2 };
     int w, h;
 
     if (argc != 2) { printf("usage: test_demo DIR\n"); return 2; }
@@ -63,6 +63,10 @@ int main(int argc, char **argv)
     CHECK(demo_png_check(png, sizeof png, -1, 320, 200, &w, &h, why, sizeof why) != 0 && strstr(why, "missing"),
           "a missing file says so");
     CHECK(demo_png_check(png, sizeof png, 600L * 1024, 320, 200, &w, &h, why, sizeof why) != 0, "a file too large");
+    png[25] = 3;
+    CHECK(demo_png_check(png, sizeof png, 1000, 320, 200, &w, &h, why, sizeof why) != 0 && strstr(why, "truecolour"),
+          "a palette PNG is refused");
+    png[25] = 2;
     png[1] = 'X';
     CHECK(demo_png_check(png, sizeof png, 1000, 320, 200, &w, &h, why, sizeof why) != 0 && strstr(why, "not a PNG"),
           "not a PNG");

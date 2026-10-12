@@ -39,7 +39,7 @@ def cut_scale(src, box, size):
     x, y, w, h = box
     pam = run(["pamcut", "-left", str(x), "-top", str(y), "-width", str(w), "-height", str(h)], pam)
     pam = run(["pamscale", "-width", str(size[0]), "-height", str(size[1])], pam)
-    return run(["pnmtopng", "-compression", "9"], pam)
+    return run(["pnmtopng", "-force", "-compression", "9"], pam)
 
 
 def mockup_png(size, label, colour):
@@ -56,7 +56,8 @@ def mockup_png(size, label, colour):
         bg = Path(d) / "bg.ppm"
         bg.write_bytes(run(["ppmmake", colour, str(w), str(h)]))
         res = run(["pnmpaste", "-", str((w - lw) // 2), str((h - lh) // 2), str(bg)], lab)
-    return run(["pnmtopng", "-compression", "9"], res)
+    # -force: truecolour, never a palette (see demo_png_check in demo.c).
+    return run(["pnmtopng", "-force", "-compression", "9"], res)
 
 
 def pam_size(data):
@@ -77,7 +78,7 @@ def main():
         # Two short lines rather than one long one: the panel is 320 pixels
         # wide and a cut provenance line would hide where a picture is from.
         import textwrap
-        prov = "\n".join(textwrap.wrap(m["provenance"], 56)[:3])
+        prov = "\n".join(textwrap.wrap(m["provenance"], 46)[:3])
         entry = {"id": m["id"], "kind": m["kind"], "provenance": prov, "screenshots": []}
         d = out / "media" / m["id"]
         d.mkdir(parents=True, exist_ok=True)

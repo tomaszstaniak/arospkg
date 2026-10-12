@@ -457,7 +457,7 @@ static int shot_now;
 
 static int pic_ok(const char *path, int maxw, int maxh, char *why, size_t n)
 {
-    unsigned char head[24];
+    unsigned char head[26];
     long size = -1;
     LONG got = 0;
     int w, h;
