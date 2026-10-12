@@ -1,0 +1,2 @@
+Started folio from its icon (stack 8388608 bytes from Folio.info).
+rc 0

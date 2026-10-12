@@ -1,0 +1,4 @@
+no game data: cannot read SYS:bt/data/burntime.pack (Open failed (dos error 205))
+This program carries none of Burntime's data.
+Make burntime.pack from your own copy of Burntime with the packer (see ReadMe) and put it in SYS:bt/data/
+or say where it is: MakeDir ENV:Burntime ENVARC:Burntime, then SetEnv SAVE Burntime/Data <drawer>, or `data <drawer>` when starting it.

@@ -4,7 +4,7 @@
     {
       "id": "folio",
       "kind": "screenshot",
-      "provenance": "Real screenshots: Folio 0.4.1 started by apkg (prototype and PkgManager's Run), AROS One 1.3 x86_64 (QEMU), 2026-10-12",
+      "provenance": "Real screenshots of Folio 0.4.1 started by apkg, AROS One 1.3 x86_64 (QEMU), 2026-10-12",
       "screenshots": [
         {
           "source": "docs/demo-store/sources/folio-0.4.1-v11-2-20261012-pages12.png",
@@ -14,7 +14,7 @@
             832,
             520
           ],
-          "caption": "Folio 0.4.1 with a 12-page test PDF"
+          "caption": "A 12-page test PDF"
         },
         {
           "source": "docs/demo-store/sources/folio-0.4.1-v11-2-20261012-start-screen.png",
@@ -24,7 +24,7 @@
             830,
             519
           ],
-          "caption": "Folio's start screen with recently opened PDFs"
+          "caption": "Start screen, recent PDFs"
         }
       ],
       "icon": "docs/demo-store/sources/folio-icon-from-0.4.1-archive.png"
@@ -33,7 +33,7 @@
       "id": "grafx2",
       "kind": "screenshot",
       "icon": "docs/demo-store/sources/grafx2-icon-from-2.9r5-archive.png",
-      "provenance": "Real screenshot: GrafX2 2.9 revision 5 started by apkg run, AROS One 1.3 x86_64 (QEMU), 2026-10-12",
+      "provenance": "Real screenshot of GrafX2 2.9 r5 started by apkg run, AROS One 1.3 x86_64 (QEMU), 2026-10-12",
       "screenshots": [
         {
           "source": "docs/demo-store/sources/grafx2-2.9r5-v11-2-20261012-start.png",
@@ -43,7 +43,7 @@
             648,
             405
           ],
-          "caption": "GrafX2 2.9 just after starting, with its splash"
+          "caption": "Just started, with its splash"
         }
       ]
     },
@@ -55,7 +55,7 @@
         {
           "label": "MOCKUP - Example Paint Studio",
           "colour": "#5a7fa8",
-          "caption": "Mockup: there is no such program"
+          "caption": "No such program exists"
         }
       ]
     }

@@ -1,0 +1,4 @@
+Could not start RAM:r1/cases/badpath: it cannot be started as described
+  application.json: launch.executable: "../where" leads out of the drawer
+  ('..')
+rc 10

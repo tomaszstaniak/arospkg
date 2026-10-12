@@ -1,0 +1,1 @@
+{"id": "folio", "state": "ready", "mode": "workbench", "drawer": "RAM:My Root/folio", "program": "RAM:My Root/folio/Folio", "stack": 8388608, "requirements": "satisfied", "why": "Starts from its icon, as a double-click would."}

@@ -1,0 +1,3 @@
+Could not start RAM:r1/cases/i386desc: built for another system
+  It is built for i386; this machine is x86_64.
+rc 10

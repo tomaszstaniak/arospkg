@@ -1,0 +1,36 @@
+start PkgManager 0.5.0 sha256 50dbf2828bd363db766a03df4327bf05efe6a5556940f1084a35e10499cb4a56 root RAM:PG: ARexx port PKGMANAGER
+refill (start) term="" rows=3 shown=3 installed=3 keep=- updates=1 ready=1 blocked=0 catalogue=ok when=2026-10-12 03:42
+detail folio: run ready
+detail folio: installed 0.4.1-aros1, index 0.4.1-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+upgrade pressed for folio
+job 1 upgrade folio from window
+event folio download 0/28551729 can_cancel=1 cancel_button=enabled
+done preview upgrade folio status=12 cannot fetch the archive
+job 1 upgrade folio failed NETWORK: cannot fetch the archive (https://example.invalid/arospkg-tests/Folio-0.4.1-r2-test.zip) -- cannot resolve example.invalid
+detail folio: run ready
+detail folio: installed 0.4.1-aros1, index 0.4.1-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+upgrade pressed for folio
+job 2 upgrade folio from window
+event folio verify 1/1 can_cancel=1 cancel_button=enabled
+event folio extract 0/28551729 can_cancel=0 cancel_button=disabled
+event folio extract 1/1 can_cancel=0 cancel_button=disabled
+done preview upgrade folio status=0
+plan upgrade folio: 0.4.1-aros1 -> 0.4.1-aros2 allowed=1 add=0 replace=1 remove=0 kept=0 unchanged=15 conflicts=0
+upgrade folio declined
+job 2 upgrade folio declined: nothing changed
+detail folio: run ready
+detail folio: installed 0.4.1-aros1, index 0.4.1-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+filter category=all state=Installed
+refill (filter) term="" rows=3 shown=3 installed=3 keep=folio updates=1 ready=1 blocked=0 catalogue=ok when=2026-10-12 03:42
+detail folio: run ready
+detail folio: installed 0.4.1-aros1, index 0.4.1-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail folio: run ready
+detail folio: installed 0.4.1-aros1, index 0.4.1-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+detail folio: run ready
+detail folio: installed 0.4.1-aros1, index 0.4.1-aros2, can_upgrade=1 can_rollback=0 why=no upgrade of this package is recorded, or its record is gone
+filter category=all state=Not installed
+refill (filter) term="" rows=3 shown=0 installed=3 keep=folio updates=1 ready=1 blocked=0 catalogue=ok when=2026-10-12 03:42
+filter category=all state=Updates (1)
+refill (filter) term="" rows=3 shown=1 installed=3 keep=- updates=1 ready=1 blocked=0 catalogue=ok when=2026-10-12 03:42
+filter category=all state=Demo store
+refill (filter) term="" rows=3 shown=1 installed=3 keep=- updates=1 ready=1 blocked=0 catalogue=ok when=2026-10-12 03:42

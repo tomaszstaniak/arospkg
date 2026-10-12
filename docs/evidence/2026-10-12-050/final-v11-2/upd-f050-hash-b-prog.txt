@@ -1,0 +1,2 @@
+PASS assert-hash SYS:PkgUpd/Upb/Prog
+rc=0

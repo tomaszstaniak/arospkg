@@ -1,0 +1,1 @@
+{"id": "grep", "state": "ready", "mode": "shell", "drawer": "RAM:t/grep", "program": "RAM:t/grep/Grep", "stack": 8192, "requirements": "none", "why": "Starts as a Shell command."}

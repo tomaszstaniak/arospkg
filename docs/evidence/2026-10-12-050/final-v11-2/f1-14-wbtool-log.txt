@@ -1,0 +1,6 @@
+where: started from Workbench
+where: current directory RAM Disk:r1/cases/wbtool
+where: PROGDIR: RAM Disk:r1/cases/wbtool
+where: stack 200000
+where: wbarg 1: RAM Disk:r1 / pages12.pdf
+where: tooltype WHERE_TEST=yes

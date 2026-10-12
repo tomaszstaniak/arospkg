@@ -1,0 +1,3 @@
+Could not start RAM:r1/cases/wbnoicon: it cannot be started as described
+  A Workbench start needs the program's icon, where.info, and it is missing.
+rc 10

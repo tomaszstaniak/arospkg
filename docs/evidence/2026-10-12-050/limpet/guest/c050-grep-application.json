@@ -1,0 +1,1 @@
+{"schema": 1, "id": "grep", "version": "2.0", "targets": [ { "os": "aros", "arch": "x86_64", "abi": "v11" } ], "launch": { "executable": "Grep", "mode": "shell" } }
