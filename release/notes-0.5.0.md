@@ -45,6 +45,24 @@ From 0.3.x, or by hand: download and unpack the archive, close PkgManager, copy 
 
 ## Test coverage
 
-TEST-COVERAGE
+All under QEMU (TCG); **nothing in this release was run on real hardware.** Evidence: [docs/evidence/2026-10-12-050](https://github.com/tomaszstaniak/arospkg/blob/main/docs/evidence/2026-10-12-050/README.md).
+
+**x86_64 ABIv11, AROS One 1.3** (pool slot v11-2), with the archive's binaries (apkg `e7432440…`, PkgManager `28cc388e…`):
+
+- `apkg run`: Folio (with a PDF) and GrafX2 started from their icons with their 8 MiB stack from a 40960-byte Shell; grep as a Shell command, its return code passed on (0 and 5); a program in a drawer with spaces, arguments with `"` and `*`; a Workbench tool with a tool type and a document; and the refusals: no description, missing program, a path with `..`, a description for i386, an i386 program file, a Workbench start without an icon, an unknown key, not installed. A package installed from a catalogue without a launch table still installs; Run says it does not say how to start it.
+- The main path: install Folio, start it by `apkg run` and by PkgManager's Run, open a PDF, upgrade to a controlled test revision (the same program repackaged as revision 2, not published) with the plan shown first and a changed README kept, roll back (the start description is restored), Verify (a user's file reported as not the package's), Remove (changed and added files kept and listed). GrafX2 and grep through the same window.
+- The 0.4.2 regression suite on the release apkg, with the same results as in 0.4.2: `outdated` (text, `--all`, `--plain`, `--json`, redirected), the selection of CPU and ABI, every update state, `upgrade --all`, its dry run and report, a conflicting user file, rollback and recovery, no catalogue and an unreadable one, a root with a space.
+- Ctrl-C: during the catalogue's connection (now "cancelled", not a network error), during a package download (nothing left in the cache), and while the first package of `upgrade --all` was being installed (it finished, the second did not start, exit 10).
+- PkgManager: Installed and Updates filters, the pictures panel with switching thumbnails, an application without pictures, the Demo store and the purchase preview, ARexx RUN.
+
+**Limpet 0.3.0 on ABIv11 2026.09** (pool slot v11-3), with the release apkg, compared with the system console: colours and word-wrapping in narrow and wide windows, redirected output byte-identical to the console's, `--json` output without escape codes, Ctrl-C during the catalogue download with one prompt afterwards, `apkg run grep`, Ctrl-C into it. The double prompt reported with 0.4.2 came from Limpet 0.2.1 and is fixed in Limpet 0.3.0. One small fault: in a narrow window the summary line of `apkg update` is broken mid-word.
+
+**i386 ABIv0** (pool slot v0-2), apkg built from the release source: an install over the network from AROS Archives (DirTree, whose program is in a sub-drawer), and `apkg run` in Shell and Workbench mode.
+
+**x86_64 ABIv1, mainline nightly 2026-09-23** (pool slot v1-2), the archive's binaries: PkgManager starts and lists a catalogue; `apkg run` starts a mainline tool and refuses an ABIv11 one with the reason. **Not shown: an install over the network** — this test slot has no network configured, and the slot that has one was in use by another session for the whole run. 0.4.2 fetched the public catalogue on mainline.
+
+**Raspberry Pi**: compiled and linked only. The self-update target of a Pi build was checked on the host against this release's `SHA256SUMS`: it selects `arospkg-0.5.0.aarch64-aros-raspi.zip`.
+
+Known limits: a Shell program started from PkgManager keeps PkgManager's drawer in use until it ends (AROS's SystemTagList copies the caller's home directory); a Workbench program that ends within a fraction of a second is reported as not seen; Remove asks no confirmation (as before) and keeps your files.
 
 Use the `SHA256SUMS` from this release to verify your download.
