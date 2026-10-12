@@ -122,6 +122,94 @@ def elf_facts(drawer):
     return arches, ver
 
 
+def icon_facts(path):
+    """(kind, type, stack) of a .info file: kind "classic" (a DiskObject),
+    "png" (a PNG icon with an icOn chunk, as AROS writes them) or None when
+    it is neither. type is the Workbench object type (3 = a program) or None
+    when the icon does not say (a PNG icon without ATTR_TYPE takes its type
+    from the file beside it). The layouts are AROS icon.library's
+    (workbench/libs/icon/diskobjio.c, diskobjPNGio.c)."""
+    data = path.read_bytes()
+    if len(data) >= 78 and data[:2] == b"\xe3\x10":
+        return "classic", data[48], int.from_bytes(data[74:78], "big", signed=True)
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        i, typ, stack = 8, None, 0
+        while i + 8 <= len(data):
+            n, tag = int.from_bytes(data[i:i + 4], "big"), data[i + 4:i + 8]
+            if tag == b"icOn":
+                d, j = data[i + 8:i + 8 + n], 0
+                while j + 8 <= len(d):
+                    attr, val = int.from_bytes(d[j:j + 4], "big"), int.from_bytes(d[j + 4:j + 8], "big")
+                    if attr in (0x80001008, 0x8000100a, 0x8000100b):    # strings
+                        end = d.find(b"\0", j + 4)
+                        j = (end if end >= 0 else len(d)) + 1
+                        continue
+                    if attr == 0x80001009:
+                        stack = val
+                    elif attr == 0x8000100f:
+                        typ = val
+                    j += 8
+                return "png", typ, stack
+            i += 12 + n
+        return "png", None, 0
+    return None, None, 0
+
+
+def launch_problems(drawer, m):
+    """[launch] against the drawer: the program is there and is a program for
+    the manifest's CPU, and a Workbench start has a program icon to start
+    from. Returns (problems, notes)."""
+    launch = m.get("launch")
+    if not isinstance(launch, dict) or mkindex.check_launch(launch):
+        return [], []           # mkindex.check reports the table itself
+    problems, notes = [], []
+    exe = drawer / launch["executable"]
+    if not exe.is_file():
+        return [], []           # mkindex.check_members names the missing file
+    head = exe.read_bytes()[:20]
+    if head[:4] == b"\x7fELF":
+        got = EM_ARCH.get(int.from_bytes(head[18:20], "big" if head[5] == 2 else "little"), "another CPU")
+        if m.get("arch") and got != m["arch"]:
+            problems.append(f"launch.executable: {launch['executable']} is built for {got}; "
+                            f"the manifest says {m['arch']}")
+    elif head[:4] == b"\x00\x00\x03\xf3":
+        problems.append(f"launch.executable: {launch['executable']} is an Amiga 68k hunk file, "
+                        f"not a program for {m.get('arch')}")
+    elif launch["mode"] == "shell":
+        notes.append(f"launch.executable: {launch['executable']} is not an ELF program; the client "
+                     "runs it only as a Shell script (protection bit s)")
+    else:
+        problems.append(f"launch.executable: {launch['executable']} is not a program "
+                        "(no ELF header); Workbench cannot start it")
+    icon = drawer / (launch["executable"] + ".info")
+    if icon.is_file():
+        kind, typ, stack = icon_facts(icon)
+        if kind is None:
+            problems.append(f"launch: {icon.name} is not an icon file this tool can read "
+                            "(neither a DiskObject nor a PNG icon)")
+        elif typ not in (None, 3):
+            problems.append(f"launch: {icon.name} is not a program icon (type {typ}); "
+                            "Workbench would not start the program from it")
+        else:
+            notes.append(f"launch: {icon.name} sets the stack: {stack} bytes" if stack
+                         else f"launch: {icon.name} sets no stack; the desktop's default applies")
+    elif launch["mode"] == "shell":
+        notes.append(f"launch: no {launch['executable']}.info; the Shell's stack applies")
+    own = drawer / APP_FILE_NAME
+    if own.is_file():
+        problems += mkindex.app_description_problems(m, own.read_bytes(), f"{drawer.name}/{APP_FILE_NAME}")
+    return problems, notes
+
+
+APP_FILE_NAME = mkindex.APP_FILE
+
+
+def app_json_bytes(m):
+    """application.json as apkg-pack writes it into an archive."""
+    import json
+    return (json.dumps(mkindex.app_description(m), indent=2) + "\n").encode("ascii")
+
+
 def tree_names(drawer, icon):
     """The member names the drawer would have in an archive."""
     names, sizes = set(), {}
@@ -160,6 +248,17 @@ def read_embedded(data):
         text = subprocess.run(["lha", "pq", str(a), ".arospkg/manifest.toml"],
                               capture_output=True, check=True).stdout.decode("utf-8")
         return text, names
+
+
+def read_member(data, name):
+    """One member's bytes from a ZIP or LHA archive."""
+    if data[:4] == b"PK\x03\x04":
+        return zipfile.ZipFile(io.BytesIO(data)).read(name)
+    with tempfile.TemporaryDirectory() as d:
+        a = Path(d) / "a.lha"
+        a.write_bytes(data)
+        import subprocess
+        return subprocess.run(["lha", "pq", str(a), name], capture_output=True, check=True).stdout
 
 
 def parse_author(text, where):
@@ -290,6 +389,17 @@ def check_drawer(drawer, m, where):
     if arches and m.get("arch") and arches != {m["arch"]}:
         problems.append(f"arch: {m['arch']!r}, but the drawer holds ELF files for "
                         f"{', '.join(sorted(arches))}")
+    lp, notes = launch_problems(drawer, m)
+    problems += lp
+    for n in notes:
+        print(f"{where}: note: {n}")
+    if "launch" in m:
+        # The description goes into the archive, so the client has it even
+        # when the drawer is unpacked by hand.
+        names.add(f"{drawer.name}/{APP_FILE_NAME}")
+    elif (drawer / APP_FILE_NAME).is_file():
+        problems.append(f"{drawer.name}/{APP_FILE_NAME}: the drawer says how to start it, the manifest "
+                        "has no [launch]; add [launch] to the manifest and let apkg-pack write the file")
     return report(problems, where), names, sizes
 
 
@@ -308,7 +418,14 @@ def cmd_check(a):
     if text is None:
         fail(f"{p}: no .arospkg/manifest.toml in the archive")
     m = parse_author(text, f"{p.name}:.arospkg/manifest.toml")
-    rc = report(mkindex.check(m, "author") + mkindex.check_members(m, names), p.name)
+    more = []
+    app_member = f"{m.get('subdir')}/{APP_FILE_NAME}" if m.get("subdir") else APP_FILE_NAME
+    if app_member in names:
+        more = mkindex.app_description_problems(m, read_member(data, app_member), f"{p.name}:{app_member}")
+    elif "launch" in m:
+        more = [f"{p.name}: the manifest has [launch] but the archive has no {app_member}; "
+                "build it with apkg-pack build"]
+    rc = report(mkindex.check(m, "author") + mkindex.check_members(m, names) + more, p.name)
     if rc == 0:
         print(f"ok: {m['id']} {m['version']} for {m['arch']}/{m['abi']}; "
               f"{len(data)} bytes, sha256 {hashlib.sha256(data).hexdigest()}")
@@ -341,11 +458,12 @@ def cmd_build(a):
             zi.external_attr = 0o644 << 16
             zi.compress_type = zipfile.ZIP_DEFLATED
             z.writestr(zi, data if data is not None else src.read_bytes(), compresslevel=9)
+        app_member = f"{drawer.name}/{APP_FILE_NAME}"
         for n in sorted(names):
             if n.endswith("/"):
                 add(n)
-            elif n == m.get("icon"):
-                add(n, src=drawer.parent / n)
+            elif n == app_member and "launch" in m:
+                add(n, data=app_json_bytes(m))
             else:
                 add(n, src=drawer.parent / n)
         add(".arospkg/")

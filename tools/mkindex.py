@@ -100,6 +100,31 @@ REVISION_MAX = 2**31 - 1
 NOTES_LINES, NOTES_LINE = 8, 159
 
 
+# [launch]: how an installed application is started (docs/rfc/0002). The
+# same rules as the client's reader (src/libpkg/app.c launch_from_object): a
+# table the client would refuse must not be published, because it would
+# turn Run into an error on every machine.
+LAUNCH_KEYS = ("executable", "mode", "working_directory")
+LAUNCH_MODES = ("workbench", "shell")
+LAUNCH_PATH_MAX = 255
+# The file the client reads inside the drawer, written by apkg-pack into an
+# archive or by the client at installation (src/libpkg/app.h PKG_APP_FILE).
+APP_FILE = "application.json"
+APP_SCHEMA = 1
+
+# index.json is for clients up to 0.3.2. It keeps the packages it already
+# lists plus every build of the package manager itself, so a client without
+# self-update can always find its way to a current apkg. It carries only the
+# fields those clients read (src/libpkg/entries.c, ops.c, req.c at v0.3.2),
+# and stays under OLD_CLIENT_BUDGET of what they can hold: the margin is for
+# the entries it keeps growing (requirements, longer URLs), and running into
+# it is a decision for a person, not a reason to cut entries silently.
+OLD_CLIENT_FIELDS = ("id", "version", "revision", "summary", "category", "arch", "abi", "kind",
+                     "url", "size", "sha256", "subdir", "icon", "requires_system", "source", "license")
+OLD_CLIENT_ALWAYS = ("arospkg",)
+OLD_CLIENT_BUDGET = 0.80
+
+
 # Filled in from the uploaded file when a package is submitted, never written
 # by its author: what the author's copy says could only disagree with the file.
 PUBLICATION_FIELDS = ("url", "size", "sha256", "status")
@@ -154,7 +179,105 @@ def check(m, stage="index"):
     problems += check_strings(m)
     problems += check_requires(m.get("requires_system", []))
     problems += check_notes(m.get("post_install_notes"))
+    problems += check_launch(m.get("launch"))
     return problems
+
+
+def launch_path_problem(rel):
+    """RFC 0002 section 6 for one relative path; None when acceptable.
+    The same rules as app_path_ok() in src/libpkg/app.c."""
+    if not isinstance(rel, str) or not rel:
+        return "empty or not a string"
+    if len(rel) > LAUNCH_PATH_MAX:
+        return f"longer than {LAUNCH_PATH_MAX} characters"
+    if rel.startswith("/"):
+        return f"{rel!r} is absolute; give it relative to the drawer"
+    if ":" in rel:
+        return f"{rel!r} names a volume (':'); give it relative to the drawer"
+    if "\\" in rel:
+        return f"{rel!r} uses '\\'; AROS paths use '/'"
+    if not PLAIN.match(rel):
+        return f"{rel!r} has a character the client cannot carry (control, '\"' or non-ASCII)"
+    for part in rel.split("/"):
+        if part == "":
+            return f"{rel!r} has an empty component"
+        if part == "..":
+            return f"{rel!r} leads out of the drawer ('..')"
+        if part == "." and rel != ".":
+            return f"{rel!r} has a '.' component; write the path without it"
+    return None
+
+
+def launch_normal(launch):
+    """The table as the client reads it: working_directory filled in."""
+    exe = launch["executable"]
+    wd = launch.get("working_directory", exe.rsplit("/", 1)[0] if "/" in exe else ".")
+    return {"executable": exe, "mode": launch["mode"], "working_directory": wd}
+
+
+def check_launch(launch):
+    """[launch], against what the client accepts."""
+    if launch is None:
+        return []
+    if not isinstance(launch, dict):
+        return ["launch: not a table; write [launch] with executable and mode"]
+    problems = []
+    extra = set(launch) - set(LAUNCH_KEYS)
+    if extra:
+        problems.append(f"launch: unknown key(s) {', '.join(sorted(extra))}; the client refuses a table "
+                        f"it does not fully understand (known: {', '.join(LAUNCH_KEYS)})")
+    exe = launch.get("executable")
+    why = launch_path_problem(exe)
+    if why:
+        problems.append(f"launch.executable: {why}")
+    elif exe == "." or exe.endswith(".info"):
+        problems.append(f"launch.executable: {exe!r} is not a program; name the program file "
+                        "(its icon stays beside it)")
+    if launch.get("mode") not in LAUNCH_MODES:
+        problems.append(f"launch.mode: {launch.get('mode')!r}; use \"workbench\" (as from its icon) "
+                        "or \"shell\" (as a Shell command)")
+    if "working_directory" in launch:
+        why = launch_path_problem(launch["working_directory"])
+        if why:
+            problems.append(f"launch.working_directory: {why}")
+    if not problems and launch["mode"] == "workbench":
+        own = exe.rsplit("/", 1)[0] if "/" in exe else "."
+        if launch.get("working_directory", own) != own:
+            problems.append(f"launch.working_directory: a Workbench start runs in the program's own "
+                            f"drawer ({own!r}); leave working_directory out, or use mode = \"shell\"")
+    return problems
+
+
+def app_description(m):
+    """application.json for a manifest with [launch], as the client writes it
+    (src/libpkg/app.c app_text), so a file apkg-pack puts in an archive and
+    one the client writes at installation read the same."""
+    out = {"schema": APP_SCHEMA, "id": m["id"], "version": m["version"]}
+    if m.get("revision"):
+        out["revision"] = int(m["revision"])
+    out["targets"] = [{"os": "aros", "arch": m["arch"], "abi": m.get("abi") or ""}]
+    out["requires_system"] = [{k: r[k] for k in ("type", "id", "min_version") if r.get(k)}
+                              for r in m.get("requires_system", [])]
+    out["launch"] = launch_normal(m["launch"])
+    return out
+
+
+def app_description_problems(m, data, where):
+    """An application.json shipped in an archive must say what the manifest
+    says: the catalogue and the drawer would otherwise start it differently."""
+    try:
+        got = json.loads(data)
+    except Exception as exc:
+        return [f"{where}: not valid JSON ({exc}); let apkg-pack write it"]
+    if "launch" not in m:
+        return [f"{where}: the archive says how to start it, the manifest has no [launch]; "
+                "add the same [launch] to the manifest"]
+    want = app_description(m)
+    bad = [k for k in ("schema", "id", "version", "revision", "targets", "launch")
+           if got.get(k) != want.get(k)]
+    if bad:
+        return [f"{where}: differs from the manifest in {', '.join(bad)}; rebuild with apkg-pack"]
+    return []
 
 
 def check_notes(v):
@@ -345,6 +468,20 @@ def check_members(m, names, where="the archive"):
         problems.append(f"subdir: {files} files; the client installs at most {FILES_MAX}")
     if m.get("icon") and m["icon"] not in names:
         problems.append(f'icon: {m["icon"]!r} is not at that path in {where}')
+    launch = m.get("launch")
+    if isinstance(launch, dict) and not check_launch(launch):
+        prefix = sub + "/" if sub else ""
+        exe = prefix + launch["executable"]
+        if exe not in names:
+            problems.append(f"launch.executable: {launch['executable']!r} is not in {where} "
+                            f"(looked for {exe})")
+        elif launch["mode"] == "workbench" and exe + ".info" not in names:
+            problems.append(f"launch: a Workbench start needs the program's icon, "
+                            f"{launch['executable']}.info, beside it in {where}; without one Workbench "
+                            "starts it as a Shell command with the default stack")
+        wd = launch_normal(launch)["working_directory"]
+        if wd != "." and prefix + wd + "/" not in names and not any(n.startswith(prefix + wd + "/") for n in names):
+            problems.append(f"launch.working_directory: {wd!r} is not a drawer in {where}")
     if sub and not any(n.startswith(sub + "/") for n in names):
         problems.append(f'subdir: {sub!r} is not in {where}')
     return problems
@@ -364,7 +501,20 @@ def check_archive(m, cache):
         names = archive_names(hits[0])
     except Exception as exc:
         return [], [f"{name}: cannot list ({exc}): subdir and icon unchecked"]
-    return check_members(m, names), []
+    problems = check_members(m, names)
+    app = (m["subdir"] + "/" if m.get("subdir") else "") + APP_FILE
+    if app in names:
+        problems += app_description_problems(m, archive_member(hits[0], app), f"{name}:{app}")
+    return problems, []
+
+
+def archive_member(path, member):
+    """One member's bytes, from a ZIP or (through lhasa) an LHA."""
+    import subprocess
+    import zipfile
+    if path.open("rb").read(4) == b"PK\x03\x04":
+        return zipfile.ZipFile(path).read(member)
+    return subprocess.run(["lha", "pq", str(path), member], capture_output=True, check=True).stdout
 
 
 def main():
@@ -458,6 +608,8 @@ def main():
             # Shown after installing, by show and in the window. Older
             # clients skip unknown keys (tests/fixtures: checked with 0.3.2).
             **({"post_install_notes": m["post_install_notes"]} if m.get("post_install_notes") else {}),
+            # How it is started (RFC 0002); clients before 0.5 skip it.
+            **({"launch": launch_normal(m["launch"])} if m.get("launch") else {}),
         })
 
     # Closure. An approved manifest may name a dependency that does not exist;
@@ -493,9 +645,12 @@ def main():
         # new, so it stays out, and index.json keeps one entry per (id, arch),
         # which is all clients up to 0.3.2 were tested with.
         keep = {(p["id"], p["arch"], p.get("abi")) for p in prev.get("packages", [])}
-        old_packages = [p for p in packages if (p["id"], p["arch"], p["abi"]) in keep]
+        old_packages = [p for p in packages if (p["id"], p["arch"], p["abi"]) in keep
+                        or p["id"] in OLD_CLIENT_ALWAYS]
     else:
         old_packages = packages
+    # Only what those clients read; everything else costs them values.
+    old_packages = [{k: p[k] for k in OLD_CLIENT_FIELDS if k in p} for p in old_packages]
     texts = {}
     for path, pkgs in ((v2_path, packages), (old_path, old_packages)):
         texts[path] = json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": pkgs},
@@ -528,6 +683,18 @@ def main():
                         f"nothing is shortened: decide which to drop from it by hand")
     if len(old_packages) < len(packages):
         print(f"  {len(packages) - len(old_packages)} package(s) only in index-v2.json")
+    old_ntok = json_values(json.loads(texts[old_path]))
+    if old_ntok > OLD_CLIENT_BUDGET * OLD_CLIENT_MAXTOK:
+        stop.append(f"index.json would hold {old_ntok} values, past the {int(OLD_CLIENT_BUDGET * 100)}% "
+                    f"margin kept below the {OLD_CLIENT_MAXTOK} clients up to 0.3.2 read. Decide by hand "
+                    "which packages it stops listing; the package manager's own entries must stay")
+    # The way out for clients without self-update: every build of the
+    # package manager that index-v2.json has must be in index.json too.
+    have_old = {(p["id"], p["arch"], p.get("abi")) for p in old_packages}
+    for p in packages:
+        if p["id"] in OLD_CLIENT_ALWAYS and (p["id"], p["arch"], p["abi"]) not in have_old:
+            stop.append(f"index.json lacks {p['id']} {p['arch']}/{p['abi']}: clients up to 0.3.2 "
+                        "would have no way to a current version")
     if stop:
         for why in stop:
             print(f"\nNOT WRITTEN: {why}")

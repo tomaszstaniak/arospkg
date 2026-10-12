@@ -125,6 +125,62 @@ with tempfile.TemporaryDirectory() as d:
     if r.returncode or '"id": "xrick"' not in v2 or '"category": "game/action"' not in v2:
         fails.append(f"mkindex on the submitted manifest, with the override: {r.stdout}")
 
+# [launch]: the program and its icon are checked in the drawer, and the
+# archive gets application.json from the manifest.
+with tempfile.TemporaryDirectory() as d:
+    import json, struct, zipfile
+    d = Path(d)
+    dr = d / "Tool"
+    dr.mkdir()
+    (dr / "Tool").write_bytes(elf())
+    (d / "Tool.info").write_bytes(b"\xe3\x10icon")
+    base = ('id = "tool"\nversion = "1.0"\nsummary = "A tool"\ncategory = "utility/misc"\nkind = "app"\n'
+            'arch = "x86_64"\nabi = "v11"\nsubdir = "Tool"\nicon = "Tool.info"\ndepends = []\n'
+            'depends_checked = true\n')
+    mf = d / "Tool.arospkg.toml"
+    mf.write_text(base + '\n[launch]\nexecutable = "Tool"\nmode = "workbench"\n')
+    code, out = run("check", dr)
+    if code == 0 or "needs the program's icon" not in out:
+        fails.append(f"launch: workbench without a program icon must be refused: {out}")
+    # A classic tool icon with a 262144-byte stack (do_Type 3 at 48, stack at 74).
+    icon = bytearray(78); icon[0:2] = b"\xe3\x10"; icon[48] = 3; icon[74:78] = struct.pack(">l", 262144)
+    (dr / "Tool.info").write_bytes(bytes(icon))
+    code, out = run("check", dr)
+    if code or "sets the stack: 262144 bytes" not in out:
+        fails.append(f"launch: a tool icon with a stack: {out}")
+    icon[48] = 2                                    # a drawer icon beside the program
+    (dr / "Tool.info").write_bytes(bytes(icon))
+    code, out = run("check", dr)
+    if code == 0 or "not a program icon" not in out:
+        fails.append(f"launch: a non-tool icon must be refused: {out}")
+    icon[48] = 3
+    (dr / "Tool.info").write_bytes(bytes(icon))
+    (dr / "Tool").write_bytes(elf(machine=3))
+    code, out = run("check", dr)
+    if code == 0 or "built for i386" not in out:
+        fails.append(f"launch: a program for another CPU must be refused: {out}")
+    (dr / "Tool").write_bytes(elf())
+    z = d / "tool.zip"
+    code, out = run("build", dr, "--output", z)
+    app = json.loads(zipfile.ZipFile(z).read("Tool/application.json")) if code == 0 else {}
+    if code or app.get("launch") != {"executable": "Tool", "mode": "workbench", "working_directory": "."} \
+            or app.get("targets") != [{"os": "aros", "arch": "x86_64", "abi": "v11"}]:
+        fails.append(f"launch: build must write application.json: {code} {out} {app}")
+    code, out = run("check", z)
+    if code:
+        fails.append(f"launch: the built archive must pass check: {out}")
+    # A drawer that already holds a different description is refused.
+    (dr / "application.json").write_text(json.dumps({**app, "launch": {**app["launch"], "mode": "shell"}}))
+    code, out = run("check", dr)
+    if code == 0 or "differs from the manifest" not in out:
+        fails.append(f"launch: a stale application.json must be refused: {out}")
+    (dr / "application.json").unlink()
+    # Without [launch], a package still packs, and has no description.
+    mf.write_text(base)
+    code, out = run("build", dr, "--output", d / "plain.zip")
+    if code or "Tool/application.json" in zipfile.ZipFile(d / "plain.zip").namelist():
+        fails.append(f"no launch: build as before, without application.json: {out}")
+
 if fails:
     print("\n".join(fails)); print(f"APKG-PACK: {len(fails)} failed"); sys.exit(1)
 print("APKG-PACK: init, check, build, submit and their refusals hold")

@@ -54,6 +54,43 @@ expect("requirement not ASCII", {"requires_system": [{"type": "library", "id": "
 expect("min_version bool", {"requires_system": [{"type": "library", "id": "a.library", "min_version": True}]},
        "min_version True")
 
+# [launch] (docs/rfc/0002): the same rules as the client's reader.
+L = lambda **kw: {"launch": {"executable": "Demo", "mode": "workbench", **kw}}
+expect("launch: workbench passes", L(), None)
+expect("launch: shell with a directory passes", {"launch": {"executable": "bin/Tool", "mode": "shell", "working_directory": "Data Files"}}, None)
+expect("launch: spaces pass", {"launch": {"executable": "My Tool", "mode": "shell"}}, None)
+expect("launch: not a table", {"launch": "Demo"}, "launch: not a table")
+expect("launch: no mode", {"launch": {"executable": "Demo"}}, "launch.mode")
+expect("launch: unknown mode", L(mode="cli"), "launch.mode")
+expect("launch: unknown key", L(arguments="-x"), "unknown key(s) arguments")
+expect("launch: absolute", L(executable="/Demo"), "is absolute")
+expect("launch: volume", L(executable="SYS:C/Dir"), "names a volume")
+expect("launch: parent", L(executable="../Demo"), "leads out of the drawer")
+expect("launch: dot component", L(executable="./Demo"), "'.' component")
+expect("launch: the icon", L(executable="Demo.info"), "is not a program")
+expect("launch: non-ASCII", L(executable="Démo"), "cannot carry")
+expect("launch: workbench elsewhere", L(working_directory="Data"), "own drawer")
+expect("launch: workbench in its own subdrawer", L(executable="bin/Demo", working_directory="bin"), None)
+
+# The archive must hold what [launch] names; a workbench start, the icon.
+names = {"Demo/", "Demo/Demo", "Demo/Demo.info", "Demo.info"}
+if mkindex.check_members({**GOOD, **L()}, names):
+    fails.append("launch members: a complete drawer was refused")
+if not any("not in" in p for p in mkindex.check_members({**GOOD, **L(executable="Other")}, names)):
+    fails.append("launch members: a missing program was accepted")
+if not any("needs the program's icon" in p for p in mkindex.check_members({**GOOD, **L()}, names - {"Demo/Demo.info"})):
+    fails.append("launch members: workbench without an icon was accepted")
+if mkindex.check_members({**GOOD, "launch": {"executable": "Demo", "mode": "shell"}}, names - {"Demo/Demo.info"}):
+    fails.append("launch members: shell mode needs no icon")
+# An application.json in an archive must say what the manifest says.
+good_app = json.dumps(mkindex.app_description({**GOOD, **L()}))
+if mkindex.app_description_problems({**GOOD, **L()}, good_app, "a"):
+    fails.append("application.json: the generated file disagrees with its own manifest")
+if not mkindex.app_description_problems({**GOOD, **L(mode="shell")}, good_app, "a"):
+    fails.append("application.json: a different mode was accepted")
+if not mkindex.app_description_problems(GOOD, good_app, "a"):
+    fails.append("application.json without [launch] in the manifest was accepted")
+
 expect("notes: plain lines pass", {"post_install_notes": ["Needs the original game data.", "Copy it into the drawer."]}, None)
 expect("notes: not a list", {"post_install_notes": "one line"}, "not a list of strings")
 expect("notes: nine lines", {"post_install_notes": ["x"] * 9}, "9 lines; maximum is 8")
@@ -117,9 +154,10 @@ if code == 0 or text != "PREVIOUS\n":
     fails.append(f"an unmet dependency: exit {code}")
 
 many = {f"p{i:03}.x86_64.toml": toml({**GOOD, "id": f"p{i:03}"}) for i in range(260)}
-# Without an index.json yet, both files take everything, so both must fit.
+# Without an index.json yet, both files take everything, so both must fit
+# within the margin kept below what clients up to 0.3.2 read.
 code, text, out = run(many)
-if code == 0 or text != "PREVIOUS\n" or "index.json is larger than clients up to 0.3.2" not in out:
+if code == 0 or text != "PREVIOUS\n" or "clients up to 0.3.2 read" not in out:
     fails.append(f"a first index.json past the old clients' capacity: exit {code}")
 # index.json keeps the one package it listed; the other 259 go to v2 only.
 code, text, out = run(many, ["p000"])
@@ -132,7 +170,7 @@ elif old[0]["sha256"] != "a" * 64:
 # If the packages index.json already lists outgrow it, nothing is written
 # and nothing is dropped by the tool.
 code, text, out = run(many, [f"p{i:03}" for i in range(260)])
-if code == 0 or text != "PREVIOUS\n" or "decide which to drop" not in out:
+if code == 0 or text != "PREVIOUS\n" or "by hand" not in out:
     fails.append(f"index.json outgrown by its own packages: exit {code}")
 
 # Two ABIs of one program for one CPU are two variants, both in index-v2.json;
@@ -143,6 +181,24 @@ abis = sorted(p["abi"] for p in json.loads(text)["packages"]) if code == 0 else 
 olds = [p["abi"] for p in json.loads(last_old)["packages"]] if code == 0 else []
 if abis != ["v1", "v11"] or olds != ["v11"]:
     fails.append(f"two ABI variants: exit {code}, v2 {abis}, index.json {olds}: {out}")
+
+# launch reaches index-v2.json, with the directory filled in, and never
+# index.json, which carries only what clients up to 0.3.2 read.
+code, text, out = run({"demo.x86_64.v11.toml": toml(GOOD) + '\n[launch]\nexecutable = "Demo"\nmode = "workbench"\n'}, ["demo"])
+v2 = json.loads(text)["packages"][0] if code == 0 else {}
+oldp = json.loads(last_old)["packages"][0] if code == 0 else {}
+if v2.get("launch") != {"executable": "Demo", "mode": "workbench", "working_directory": "."}:
+    fails.append(f"launch in index-v2.json: exit {code}, {v2.get('launch')}: {out}")
+if set(oldp) - set(mkindex.OLD_CLIENT_FIELDS):
+    fails.append(f"index.json carries fields old clients do not read: {sorted(set(oldp) - set(mkindex.OLD_CLIENT_FIELDS))}")
+
+# The package manager itself is always in index.json, so a client without
+# self-update can reach a current apkg, even when index.json never listed it.
+apk = toml({**GOOD, "id": "arospkg", "url": "https://example.invalid/arospkg.zip"})
+code, text, out = run({"demo.x86_64.v11.toml": toml(GOOD), "arospkg.x86_64.v11.toml": apk}, ["demo"])
+ids = sorted(p["id"] for p in json.loads(last_old)["packages"]) if code == 0 else []
+if ids != ["arospkg", "demo"]:
+    fails.append(f"arospkg always in index.json: exit {code}, {ids}: {out}")
 
 # An override is applied when the catalogue is made, not only on submission.
 code, text, out = run({"demo.x86_64.v11.toml": toml(GOOD)}, overrides={"demo.x86_64.v11.toml": 'category = "game/action"\n'})
