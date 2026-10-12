@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     CHECK(o && !strcmp(o->e.version, "9.99 EUR"), "the price shows where a version would");
     CHECK(o && demo_offer_of(&o->e) == o, "an offer is found from its row");
     m = demo_media_for("folio");
-    CHECK(m && m->nshots == 1 && !m->mockup && strstr(m->provenance, "Real screenshot"), "Folio's pictures are real and say so");
+    CHECK(m && m->nshots == 2 && !m->mockup && strstr(m->provenance, "Real screenshot"), "Folio's pictures are real and say so");
     CHECK(m && strstr(m->shots[0].file, "/media/folio/1.png"), "picture paths are made relative to the file");
     m = demo_media_for("demo-paintstudio");
     CHECK(m && m->mockup, "the offer's picture is a mockup");
