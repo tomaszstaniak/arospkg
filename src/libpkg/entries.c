@@ -438,7 +438,7 @@ void pkg_review_text(const pkg_details *d, char *out, size_t n)
         snprintf(out, n, "Listed -- published without the automatic review; the download is still "
                  "checked against its size and SHA-256");
     else
-        snprintf(out, n, "not stated -- this catalogue predates review records; run apkg update");
+        snprintf(out, n, "not stated -- this catalogue carries no review records");
 }
 
 void pkg_added_text(const pkg_details *d, char *out, size_t n)
