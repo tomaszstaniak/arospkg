@@ -373,10 +373,14 @@ What it checks, and what it leaves to a person, is in
 
 ## 5. Testing on AROS
 
-Approval requires that the package has been **installed, started and
-removed** on the target system. A hash and a clean unpack only show that the
-archive is intact. Test with the generated draft index and a root of your
-own, so the machine's real packages are not touched:
+Publication does not require that we start the program: an approved entry
+is **Listed**, and the automatic review decides whether it is **Reviewed**
+(see [Listed, Reviewed and runtime tests](metadata.md#listed-reviewed-and-runtime-tests)).
+A hash and a clean unpack only show that the archive is intact, so a test on
+the target system is still the only way to know that it runs. When you make
+one, record it as a runtime test, for the archive you ran. Test with the
+generated draft index and a root of your own, so the machine's real packages
+are not touched:
 
 ```
 apkg --root SYS:Walk --index RAM:index.json <command>
@@ -510,20 +514,23 @@ it aside. Section 2 explains why this matters for new versions.
 Before `status = "approved"`:
 
 - [ ] `size` and `sha256` were measured on the file downloaded from `url`
-- [ ] the archive's file name marker, `abi` and the test machine agree
+- [ ] the archive's file name marker and `abi` agree
 - [ ] `requires_system` comes from the binary and was filtered as in section 3
-- [ ] `show` says `native`, and every requirement is `satisfied`
-- [ ] it installs, from `url` itself, not only from a cached copy
-- [ ] it starts from its icon (and from a Shell, if the ReadMe says so)
-- [ ] something the user would save survives removal
-- [ ] removal leaves only what it should
-- [ ] `mkindex.py` publishes it, with `subdir` and `icon` checked against the
-      archive
+- [ ] `tools/review.py` passes on the downloaded file (the check of the pull
+      request runs it too)
 - [ ] the file named by `icon` is the drawer icon you meant
-- [ ] `installs_on` and `runs_on` name only systems where this was done
 
-Write the evidence into a comment at the top of the manifest: the system,
-the `apkg` build and what was run. Retain detailed test logs in your own development workspace.
+When it was run on a target, as in sections 5.1 to 5.5, also:
+
+- [ ] `show` said `native`, and every requirement was `satisfied`
+- [ ] it installed from `url` itself, not only from a cached copy
+- [ ] it started from its icon (and from a Shell, if the ReadMe says so)
+- [ ] something the user would save survived removal, and removal left only
+      what it should
+- [ ] a `[[test]]` in `runtime-tests/<id>.<arch>.<abi>.toml` names the
+      system, the date, the steps and the `sha256` of the archive you ran
+
+Retain detailed test logs in your own development workspace.
 
 ## 6A. An author publishing their own archive
 
@@ -567,11 +574,12 @@ seen it.
    crashes at startup.
 5. **Requirements and dependencies**, as in section 3. Set
    `depends_checked = true` only once you have looked.
-6. **Test** as in section 5. `tools/candidate_index.py OUT id…` writes a
-   test index of candidates without approving anything.
-7. **Approve**: set `status = "approved"`, write down the evidence, and
-   move the file from `index/candidates/` in this repository to `manifests/`
-   in arospkg-index.
+6. **Review**, and test where you can, as in section 5.
+   `tools/candidate_index.py OUT id…` writes a test index of candidates
+   without approving anything.
+7. **Approve**: set `status = "approved"` and move the file from
+   `index/candidates/` in this repository to `manifests/` in arospkg-index;
+   record any runtime test in `runtime-tests/`.
 8. **Exclude** instead, when a package cannot be supported. An
    `excluded = "<reason>"` line records the decision, so it does not stay
    an open skeleton.
@@ -579,7 +587,7 @@ seen it.
 ## 7. From draft to published
 
 ```
-skeleton ──review, test──▶ approved manifest ──mkindex.py──▶ index.json ──commit, push──▶ clients
+skeleton ──look, measure──▶ approved manifest ──mkindex.py──▶ index.json ──commit, push──▶ clients
 (arospkg: index/candidates/)   (arospkg-index: manifests/)      (arospkg-index)
 ```
 

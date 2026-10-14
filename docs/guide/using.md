@@ -107,12 +107,19 @@ apkg self-update
 ```
 
 `update` refreshes the catalogue and ends by saying how many installed
-packages have updates, with the command that lists them:
+packages have updates, and what the new catalogue brought for this system,
+with the commands that list them:
 
 ```text
 Updated the package catalogue: 110 packages for this system
 2 updates available for installed packages. See them: apkg outdated
+New applications (2): ferail, zgloom (back)
+New build for this system (1): grafx2
+Updated in the catalogue (3): limpet 0.4.0 -> 0.4.1, folio 0.4.1 -> 0.5, xrick 050500 -> 050500-aros1
+Full list: apkg recent --since-last-update
 ```
+
+See [What is new](#what-is-new) for what each line counts.
 
 `outdated` lists them: the installed version, the version the catalogue
 offers, and the state. Nothing is downloaded to make the list; it compares
@@ -171,6 +178,94 @@ is 0 when every planned upgrade succeeded (or there was nothing to do) and
 10 when any failed or was stopped; the dry run exits with 10 when any
 package's dry run failed.
 
+## What is new
+
+`apkg update` compares the catalogue it fetched with the one this machine
+had before, for this system (its CPU and ABI) only:
+
+- **new application**: the catalogue had no entry with this id at all.
+  Marked *back* when the catalogue first published it before your previous
+  update: it was removed and has returned;
+- **new build for this system**: the catalogue listed the application,
+  but not for this system; now it has a build you can install;
+- **updated**: the build for this system has another version or revision.
+  This is not counted as a new application.
+
+A new build for another CPU or ABI is not news here. Updating again with no
+change in the catalogue reports nothing new. A failed or cancelled update
+changes neither the catalogue nor the record of the last update. When this
+machine had no catalogue before, or the catalogue now comes from another
+address, nothing is called new: the summary lists the catalogue's five most
+recent additions instead and says why.
+
+```text
+apkg recent
+apkg recent --days 14
+apkg recent --since 2026-10-01 --builds
+apkg recent --since-last-update
+apkg recent --json --limit 0
+```
+
+`recent` lists the applications for this system that the catalogue added
+most recently, newest first, with the date the catalogue first published
+them. That date belongs to the catalogue: it is not the day your machine
+fetched it, and a new version, a new revision or a new review does not
+change it. An application whose build for this system came later than the
+application itself is a new build, listed by that build's date and only
+with `--builds`, where it is labelled. Applications the catalogue gives no
+date for are counted and not listed; a catalogue made before apkg 0.6 has
+no dates at all.
+
+- `--limit N`: at most N rows (default 10; 0 lists all).
+- `--days N`: published in the last N days, today included, by this
+  machine's date.
+- `--since YYYY-MM-DD`: published on or after that date. Not together with
+  `--days`.
+- `--builds`: also new builds for this system of older applications.
+- `--since-last-update`: what the last successful `apkg update` found, as
+  above, in full. `--limit N` keeps N rows of each kind. If the catalogue in
+  use is not the one that update fetched, it says so instead of listing.
+- `--json`: one JSON object and nothing else: `schema` (1), `mode`
+  (`recent` or `last-update`), `catalogue` (the address the last update
+  used), `refreshed`, `compared_with`, `first_catalogue`, `first_reason`,
+  `counts` (`new_applications`, `new_builds`, `updated`, `recently_added`,
+  `unknown_dates`), and `items`, each with `id`, `kind`
+  (`new-application`, `new-build`, `updated`, `recently-added`),
+  `returned`, `version`, `revision`, `old_version`, `old_revision`, `arch`,
+  `abi`, `first_added`, `app_first_added`, `installed` and `summary`.
+  `--since-last-update` adds `recorded` and `current`.
+
+Exit status of `recent`: 0 when it answered, also with nothing to list; 10
+when there is no catalogue, or for `--since-last-update` when no update was
+recorded or the catalogue was replaced since; 5 for a wrong combination of
+options.
+
+### Listed, Reviewed and runtime tests
+
+`apkg show <id>` says what has been checked about the build it describes:
+
+```text
+  status:       Reviewed -- the catalogue's automatic checks passed for this archive (suite 1, 2026-10-14): metadata, download, archive, paths, layout, cpu. Not decidable from the files: abi
+  runtime tests: AROS One 1.3 x86_64/v11, QEMU (KVM), 2026-09-29: passed (install, start, remove) -- window open after 15 s
+  added:        2026-09-29
+  catalogue:    https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v2.json
+```
+
+- **Listed**: the entry is published. Its download is still checked against
+  its size and SHA-256 before anything is installed, as for every package.
+- **Reviewed**: the catalogue's automatic checks passed for exactly this
+  archive and this entry: the entry's metadata, the downloaded size and
+  SHA-256, a readable archive, safe member names that cannot overwrite one
+  another, the drawer, icon and program the entry names, and the CPU its
+  programs were built for. The ABI cannot be read from the files and is
+  never guessed. Nobody installs or starts the program for this.
+- **Runtime tests** are a separate record: someone installed and started
+  these very bytes on the system named, on that date. A new archive starts
+  without any. None recorded means nobody recorded one, not that it fails.
+
+Neither is a reason to refuse an installation, and apkg asks for no extra
+confirmation for a package nobody has started.
+
 ### Ctrl-C, redirection and terminals
 
 Ctrl-C stops an install or upgrade while that is still free: during the
@@ -221,8 +316,19 @@ them, and so does PkgManager after **Remove**.
 ## PkgManager
 
 - The state selector filters the list: **All**, **Installed**, **Not
-  installed**, **Updates (N)** and, when the demonstration storefront is
-  present, **Demo store**.
+  installed**, **Updates (N)**, **Recently added**, **Last refresh** and,
+  when the demonstration storefront is present, **Demo store**.
+- **Recently added** lists the 25 newest applications and new builds for
+  this machine, newest first, with the catalogue's date in the State
+  column; the same list as `apkg recent --builds --limit 25`. **Last
+  refresh** lists what the last catalogue update brought, as
+  `apkg recent --since-last-update`. After **Update index** the line under
+  the list says how many new applications, new builds and updates it found.
+  A catalogue without dates, or no recorded update, is said as such, never
+  shown as "nothing new".
+- The details show the status (Listed or Reviewed), the runtime tests
+  recorded for this archive, when the catalogue first published it and
+  where the catalogue came from.
 - The details start with what matters first and stay in view: the version
   installed, whether it runs on this machine and how it starts. Below them
   are the location, updates, notes from the package and the requirements.

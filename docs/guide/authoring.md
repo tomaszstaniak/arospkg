@@ -187,11 +187,22 @@ apkg-pack submit <download-url> --index arospkg-index --dry-run
 
 ### 6. After you submit
 
-An automatic check downloads the archive again, compares it with the entry
-and applies the same rules. A maintainer reviews the entry and merges it.
-The catalogue is then regenerated, and users see the package the next time
-apkg or PkgManager refreshes its index. Nothing is published before the
-merge.
+An automatic check downloads the archive again and runs the catalogue's
+review on it: the entry's metadata, size and SHA-256, a readable archive,
+safe member names that cannot overwrite one another, the drawer, icon and
+program the entry names, and the CPU of the programs. A maintainer reads
+the entry and merges it. The catalogue is then regenerated, and users see
+the package the next time apkg or PkgManager refreshes its index. Nothing
+is published before the merge.
+
+A published entry is **Listed**. It becomes **Reviewed** when the review
+passed for its archive, and only then: the status is written by the
+catalogue's own workflow, for those exact bytes and that entry, and a pull
+request that writes it by hand is refused. Nobody has to install or start
+your program before it is published. If you or a maintainer did run it,
+that is recorded apart, as a runtime test with the system and the date (see
+[Notes for maintainers](#notes-for-maintainers)); a new archive starts
+without one.
 
 ### 7. The next release
 
@@ -216,10 +227,24 @@ is a working example. It keeps one description per target in
 
 - Archives without `.arospkg/manifest.toml`, including those already on
   AROS Archives, keep their maintainer-written manifests in `manifests/`.
-- A correction to an author's entry, or a test result such as `runs_on`,
-  goes in `overrides/` under the manifest's file name: any field except
-  id, arch, abi, url, size and sha256. It is applied each time the
-  catalogue is made and survives the author's next submission.
+- A correction to an author's entry goes in `overrides/` under the
+  manifest's file name: any field except id, arch, abi, url, size and
+  sha256. It is applied each time the catalogue is made and survives the
+  author's next submission.
+- A runtime test goes in `runtime-tests/<id>.<arch>.<abi>.toml`, one
+  `[[test]]` per test, naming the SHA-256 of the archive that was run (see
+  the [metadata reference](metadata.md#runtime-tests)). The catalogue shows
+  only the tests made with the bytes it currently offers.
+- `review/` and `history.json` are written by the publish workflow. Do not
+  edit them; the check refuses a pull request that does. After a change of
+  the review rules or of upstream files, run the publish workflow by hand
+  with *review_all*: every entry is reviewed again, and one that no longer
+  passes stays Listed and is named in the log.
+- When an upstream file changes under a published URL, the download no
+  longer matches the entry and installing it fails. Measure the new file,
+  then publish it under a new `revision` (same program version) or a new
+  `version`; the old runtime tests do not carry over. When the new file
+  cannot be reconciled, set `excluded = "<the reason>"` in the manifest.
 - A variant is its id, CPU and ABI: `xrick.x86_64.v11.toml` and
   `xrick.x86_64.v1.toml` can both be published. Older files named
   `<id>.<arch>.toml` are still read.

@@ -57,7 +57,7 @@ the 0.3 client does with it.
 
 | field | type | required | default | meaning and constraints |
 |---|---|---|---|---|
-| `status` | string | yes | none | `"approved"` is published; anything else is rejected. Generated candidates carry `"skeleton"`, which means nobody has reviewed them. There is no other status. |
+| `status` | string | yes | none | `"approved"` is published (the entry is **Listed**); anything else is rejected. Generated candidates carry `"skeleton"`, which means nobody has looked at them. There is no other status. It says nothing about whether the program was started: see [Listed, Reviewed and runtime tests](#listed-reviewed-and-runtime-tests). |
 | `excluded` | string | no | none | A reason. If present, the manifest is rejected as a deliberate exclusion, whatever else it says. |
 | `depends_checked` | boolean | yes, and it must be `true` | `false` | Someone has checked what the package needs from other packages. An empty `depends` with `depends_checked = false` means nobody has looked yet. It does not mean the package needs nothing. Not copied to the index. |
 | `upload_date`, `selected_by` | string | no | none | Where a generated candidate came from in the catalogue. Not copied to the index. |
@@ -137,6 +137,87 @@ A machine short of memory can report *missing* for a library that is there.
 | `installs_on` | array of strings | no | `[]` | copied | not read | Systems where the package was installed. |
 | `runs_on` | array of strings | no | `[]` | copied | not read | Systems where it was started. |
 | `does_not_run_on` | array of strings | no | `[]` | copied | not read | Systems where it is known not to run. |
+
+These are free-form claims, kept as they were. They are not bound to an
+archive and they do not make an entry Reviewed or runtime tested; a test
+that names the bytes it was made with goes in `runtime-tests/`.
+
+### Listed, Reviewed and runtime tests
+
+Three facts about one variant (`id`, `arch`, `abi`) and one archive, kept
+apart:
+
+| fact | written by | where | in the index |
+|---|---|---|---|
+| **Listed** | the maintainer, by merging an approved manifest | `manifests/` | every entry; `review.status` is `"listed"` unless the next row applies |
+| **Reviewed** | the publish workflow, from `tools/review.py` | `review/<id>.<arch>.<abi>.json` | `review.status` `"reviewed"`, with `suite`, `date`, `checked`, `unchecked` |
+| **Runtime tested** | the maintainer, after installing and starting it | `runtime-tests/<id>.<arch>.<abi>.toml` | `runtime_tests`, only the tests whose `sha256` is the entry's |
+
+**The review** (suite 1) checks, without installing or starting anything:
+
+- `metadata`: every rule of this reference (`mkindex.py`'s check);
+- `download`: the file at `url` has the entry's `size` and `sha256`;
+- `archive`: it is a ZIP or LHA that can be listed;
+- `paths`: no member name the client refuses (absolute, a volume, `..`,
+  control characters, too long), and no two members that would land on one
+  another: the same name twice, names that differ only in case (AROS file
+  systems compare names without case), or a file with the name of a drawer;
+- `layout`: `subdir`, `icon`, `launch.executable`, its icon for a Workbench
+  start, `launch.working_directory`, the file count, and an
+  `application.json` in the archive that agrees with the entry;
+- `cpu`: the ELF `e_machine` of the program named by `[launch]`, and of
+  the archive's programs, is the entry's `arch`; at least one ELF program is
+  for it. A file for another CPU beside it is reported, not refused. An
+  archive without ELF programs records `cpu` as unchecked;
+- `abi`: always unchecked. ELF headers do not record the AROS ABI, so
+  whether an x86_64 program is for ABIv1 or ABIv11 is not decided from the
+  files, and not guessed.
+
+The record (`review/<id>.<arch>.<abi>.json`, `schema` 1) holds the `suite`,
+the `date`, the `sha256` and `size` of the archive reviewed, the
+`manifest_digest` (SHA-256 of the entry with its override, as parsed: a
+comment or a reformatted line is no change, a changed value is), the
+`result`, each check with its `detail`, and what was `unchecked` and why.
+`mkindex.py` writes `"reviewed"` only when a passed record's `sha256`,
+`size` and `manifest_digest` are the entry's. New bytes or changed metadata
+make the entry Listed until it is reviewed again.
+
+A pull request that changes an entry's data has the changed variants
+reviewed; one that only changes comments has none. A pull request that
+edits `review/` or `history.json` fails. After a merge the publish workflow
+reviews again and commits the records. Its *review_all* run reviews every
+entry; an entry that no longer passes stays Listed, and the run goes on.
+
+<a id="runtime-tests"></a>**Runtime tests**, one file per variant:
+
+<!-- validate: none -->
+```toml
+[[test]]
+sha256  = "671d89c9b45c9358cd02faf379510ef8a49bf746119fa45f7b90c466575c3e98"
+date    = "2026-09-29"
+system  = "AROS One 1.3"
+arch    = "x86_64"
+abi     = "v11"
+machine = "QEMU (KVM)"
+result  = "passed"                      # or "failed"
+checked = ["install", "start", "remove"] # install, start, run, remove, upgrade, rollback, verify
+note    = "window open after 15 s"       # optional, plain ASCII, at most 159 characters
+```
+
+`arch` and `abi` must be the file's; `system`, `machine` and `note` follow
+the string rules above. A malformed file stops publication. A test whose
+`sha256` is not the entry's stays in the file and is not published: it was
+made with other bytes.
+
+**First publication dates.** `history.json` holds, for every variant and
+every application id, the UTC day the catalogue first published it and the
+commit. The publish workflow wrote it first from the git history of
+`index.json` and `index-v2.json` (`tools/catalogue_history.py bootstrap`;
+the repository's first commit, 2026-09-10, is the start of the catalogue);
+since then it adds each new variant on the day it first publishes it. A new version, a new revision, a new review, or a removal and return
+keep the first date. The index carries them as `first_added` (the variant)
+and `app_first_added` (the application, any variant), both absent when
+unknown. `mkindex.py` dates nothing without a history file.
 
 The values used so far are `"aros-one"` and `"mainline-x86_64"`. There is no
 fixed vocabulary, and nothing checks these claims. Write only what was done.
@@ -267,11 +348,20 @@ it matches `mkindex.py`'s output exactly:
   "install": {},
   "revision": 1,
   "source": "https://github.com/tomaszstaniak/aros-micropolis",
-  "license": "GPL-3.0-or-later with EA Section 7 terms; Micropolis Public Name License"
+  "license": "GPL-3.0-or-later with EA Section 7 terms; Micropolis Public Name License",
+  "review": { "status": "listed" },
+  "runtime_tests": []
 }
 ```
 
 `revision`, `source` and `license` appear only when the manifest gives them.
+`review` and `runtime_tests` are always present (clients before 0.6 skip
+them); `first_added` and `app_first_added` appear when `history.json`
+dates the entry. A reviewed entry reads, for example,
+`"review": { "status": "reviewed", "suite": 1, "date": "2026-10-14",
+"checked": ["metadata", "download", "archive", "paths", "layout", "cpu"],
+"unchecked": ["abi"] }`. `index.json`, for clients up to 0.3.2, carries
+none of these.
 `abi` is `null` when the manifest has none.
 
 **How the 0.3 client reads it**:
@@ -367,7 +457,8 @@ Other things under the root, all the client's:
 | `abi` value | ✔ `v1` or `v11` | equal to its own | that the binary really is that ABI |
 | one entry per (`id`, `arch`) | ✔ | refuses when several match | |
 | `sha256` form | ✔ | 64 characters | |
-| `size` and `sha256` match the file at `url` | none | ✔ on every download | measures them |
+| `size` and `sha256` match the file at `url` | review ✔ | ✔ on every download | measures them |
+| member names distinct, also without case; CPU of the programs | review ✔ | names ✔ before writing | |
 | `url` is HTTPS, reachable and stable | HTTPS ✔ | refuses anything but HTTPS; fetches it | chooses it |
 | `subdir` and `icon` exist in the archive | ✔ if the archive is cached | `icon` ✔; `subdir` is not checked, and members outside it are skipped | that `icon` is the drawer icon |
 | archive member paths and sizes | none | ✔ before writing anything | |
@@ -378,7 +469,7 @@ Other things under the root, all the client's:
 | index.json fits clients up to 0.3.2 (8192 values, 4 MiB); index-v2.json fits later ones | ✔ both files | 0.3.2 reports invalid JSON past it; later clients read up to 1048576 values, 16 MiB | |
 | `version`, `revision`, `summary`, `license`, `[source]` | `revision` range | display only | all of it |
 | `installs_on`, `runs_on`, `does_not_run_on` | none | none | only claims that were tested |
-| the program starts and keeps user data | none | none | ✔ |
+| the program starts and keeps user data | none | none | ✔, recorded in `runtime-tests/` |
 
 **Neither tool authenticates anything.** A SHA-256 in the index proves that a
 download is the file the index names. It does not prove who wrote the index,
