@@ -381,7 +381,13 @@ def check_requires(reqs):
 
 
 def archive_names(path):
-    """Member names in a ZIP or an LHA.
+    """Member names in a ZIP or an LHA, as a set."""
+    return set(archive_list(path))
+
+
+def archive_list(path):
+    """Member names in a ZIP or an LHA, in archive order, duplicates kept:
+    the review needs to see a name stored twice, which a set hides.
 
     The client picks its reader from the archive's first bytes, and since it
     reads LHA this tool has to as well: handing an LHA to zipfile raised
@@ -393,7 +399,7 @@ def archive_names(path):
     import zipfile
     head = path.open("rb").read(8)
     if head[:4] == b"PK\x03\x04":
-        return set(zipfile.ZipFile(path).namelist())
+        return zipfile.ZipFile(path).namelist()
     if head[2:3] == b"-" and head[6:7] == b"-":
         out = subprocess.run(["lha", "lq", str(path)], capture_output=True,
                              text=True, check=True).stdout
@@ -402,15 +408,31 @@ def archive_names(path):
         # otherwise. Anchoring on that keeps names containing spaces intact,
         # which splitting on whitespace would not.
         stamp = re.compile(r" [A-Z][a-z]{2} +\d{1,2} +(?:\d{2}:\d{2}|\d{4}) (.+)$")
-        names = set()
+        names = []
         for ln in out.splitlines():
             hit = stamp.search(ln)
             if hit:
-                names.add(hit.group(1))
+                # A link is listed as "name -> target"; the member is the name.
+                name = hit.group(1)
+                names.append(name.split(" -> ", 1)[0] if ln.startswith("l") else name)
         if not names:
             raise ValueError("lha listed no members")
         return names
     raise ValueError("not a ZIP or LHA archive")
+
+
+def archive_links(path):
+    """Members stored as symbolic links. The client installs none, and a
+    link can point anywhere, so the review refuses an archive that has one."""
+    import stat
+    import subprocess
+    import zipfile
+    if path.open("rb").read(4) == b"PK\x03\x04":
+        return [i.filename for i in zipfile.ZipFile(path).infolist()
+                if stat.S_ISLNK(i.external_attr >> 16)]
+    out = subprocess.run(["lha", "lq", str(path)], capture_output=True, text=True, check=True).stdout
+    return [ln.split(" -> ", 1)[0].rsplit(" ", 1)[-1] for ln in out.splitlines()
+            if ln.startswith("l") or " -> " in ln]
 
 
 # What the client refuses in an archive member (src/libpkg/ops.c), and its
@@ -520,6 +542,88 @@ def archive_member(path, member):
     return subprocess.run(["lha", "pq", str(path), member], capture_output=True, check=True).stdout
 
 
+# Runtime tests (runtime-tests/<id>.<arch>.<abi>.toml in arospkg-index): a
+# maintainer's record that a build was installed and started on a named
+# system. Each names the archive bytes it was made with; the catalogue
+# carries only the records for the bytes it currently offers, so a changed
+# archive never inherits a test.
+TEST_KEYS = ("sha256", "date", "system", "arch", "abi", "machine", "result", "checked", "note")
+TEST_RESULTS = ("passed", "failed")
+TEST_STEPS = ("install", "start", "run", "remove", "upgrade", "rollback", "verify")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def check_runtime_tests(tests, m):
+    """Problems with a runtime-tests file's [[test]] list for manifest m."""
+    if not isinstance(tests, list):
+        return ["test: not a list of [[test]] tables"]
+    problems = []
+    for i, t in enumerate(tests):
+        w = f"test[{i}]"
+        if not isinstance(t, dict):
+            problems.append(f"{w}: not a table"); continue
+        extra = set(t) - set(TEST_KEYS)
+        if extra:
+            problems.append(f"{w}: unknown key(s) {', '.join(sorted(extra))}")
+        for k in ("sha256", "date", "system", "arch", "abi", "machine", "result"):
+            if not isinstance(t.get(k), str) or not t[k]:
+                problems.append(f"{w}: {k} missing")
+        if isinstance(t.get("sha256"), str) and not SHA_RE.match(t["sha256"]):
+            problems.append(f"{w}: sha256 is not 64 hex characters")
+        if isinstance(t.get("date"), str) and not DATE_RE.match(t["date"]):
+            problems.append(f"{w}: date {t['date']!r} is not YYYY-MM-DD")
+        if t.get("result") not in TEST_RESULTS:
+            problems.append(f"{w}: result {t.get('result')!r}; use {' or '.join(TEST_RESULTS)}")
+        if (t.get("arch"), t.get("abi")) != (m.get("arch"), m.get("abi")):
+            problems.append(f"{w}: {t.get('arch')}/{t.get('abi')} is not this entry's {m.get('arch')}/{m.get('abi')}")
+        steps = t.get("checked", [])
+        if not isinstance(steps, list) or not steps or any(s not in TEST_STEPS for s in steps):
+            problems.append(f"{w}: checked must list steps from {', '.join(TEST_STEPS)}")
+        for k in ("system", "machine", "note"):
+            v = t.get(k)
+            if isinstance(v, str) and (not PLAIN.match(v) or len(v) > 159):
+                problems.append(f"{w}: {k} is not plain ASCII of at most 159 characters")
+    return problems
+
+
+def runtime_tests_for(runtime_dir, m):
+    """(tests for the current bytes, problems) from runtime_dir."""
+    if not runtime_dir:
+        return [], []
+    p = Path(runtime_dir) / variant_file(m)
+    if not p.is_file():
+        return [], []
+    try:
+        tests = tomllib.loads(p.read_text(encoding="utf-8")).get("test", [])
+    except Exception as exc:
+        return [], [f"runtime-tests/{p.name}: unparseable: {exc}"]
+    problems = [f"runtime-tests/{p.name}: {x}" for x in check_runtime_tests(tests, m)]
+    if problems:
+        return [], problems
+    current = [{k: t[k] for k in ("system", "arch", "abi", "machine", "date", "result", "checked", "note") if k in t}
+               for t in tests if t["sha256"] == m["sha256"]]
+    return sorted(current, key=lambda t: t["date"], reverse=True), []
+
+
+def review_for(review_dir, m):
+    """The catalogue's review object for m: reviewed only when a stored
+    record of the automatic suite applies to these bytes and this metadata."""
+    import review as rv
+    out = {"status": "listed"}
+    if not review_dir:
+        return out
+    p = Path(review_dir) / (variant_file(m)[:-5] + ".json")
+    try:
+        rec = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return out
+    if not rv.record_applies(rec, m):
+        return out
+    return {"status": "reviewed", "suite": rec["suite"], "date": rec["date"],
+            "checked": [c["name"] for c in rec.get("checks", [])],
+            "unchecked": [u["name"] for u in rec.get("unchecked", [])]}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -533,6 +637,12 @@ def main():
     ap.add_argument("--verbose", action="store_true", help="list every rejection")
     ap.add_argument("--cache", default=".cache/archives",
                     help="downloaded archives, to check subdir and icon against")
+    ap.add_argument("--history", help="history.json: first publication dates (catalogue_history.py); "
+                    "new variants are added with --today and written to OUT_DIR/history.json")
+    ap.add_argument("--review-dir", help="review records (review.py), one <id>.<arch>.<abi>.json each")
+    ap.add_argument("--runtime-dir", help="runtime-tests/<id>.<arch>.<abi>.toml: maintainer test records")
+    ap.add_argument("--today", help="the publication date for new variants (default: today, UTC)")
+    ap.add_argument("--commit", default="", help="the commit being published, recorded in history.json")
     args = ap.parse_args()
     if args.out:
         sys.exit("--out is gone: use --out-dir DIR, which gets index-v2.json and index.json")
@@ -576,6 +686,12 @@ def main():
 
         # A variant is its id, CPU and ABI: x86_64/v1 and x86_64/v11 builds of
         # one program are two entries, and the client picks its own.
+        tests, more = runtime_tests_for(args.runtime_dir, m)
+        if more:
+            rejected.append((f.name, more))
+            if approved: failed.add(f.name)
+            continue
+
         key = (m["id"].lower(), m["arch"], m["abi"])
         if key in seen:
             rejected.append((f.name, [f"duplicate (id, arch, abi) with {seen[key]}"]))
@@ -613,6 +729,10 @@ def main():
             **({"post_install_notes": m["post_install_notes"]} if m.get("post_install_notes") else {}),
             # How it is started (RFC 0002); clients before 0.5 skip it.
             **({"launch": launch_normal(m["launch"])} if m.get("launch") else {}),
+            # Listed or Reviewed (tools/review.py), and the runtime tests made
+            # with these very bytes. Clients before 0.6 skip both.
+            "review": review_for(args.review_dir, m),
+            "runtime_tests": tests,
         })
 
     # Closure. An approved manifest may name a dependency that does not exist;
@@ -636,6 +756,25 @@ def main():
 
     packages = sorted(published, key=lambda p: (p["id"], p["arch"]))
     outdir = Path(args.out_dir)
+    # First publication dates. Without a history nothing is dated: a date
+    # made up here would announce every package as new.
+    history = None
+    if args.history:
+        import catalogue_history as ch
+        from datetime import datetime, timezone
+        try:
+            history = ch.load(args.history)
+        except (OSError, ValueError) as exc:
+            sys.exit(f"{args.history}: {exc}. Create it with catalogue_history.py bootstrap; "
+                     "it is not made up from today's date")
+        day = args.today or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        new_keys = ch.update(history, packages, day, args.commit[:12])
+        for k in new_keys:
+            print(f"  first published: {k} ({day})")
+        for p in packages:
+            v, a = ch.dates_for(history, p)
+            if v: p["first_added"] = v
+            if a: p["app_first_added"] = a
     v2_path, old_path = outdir / "index-v2.json", outdir / "index.json"
     # Clients up to 0.3.2 fetch index.json and read at most OLD_CLIENT_MAXTOK
     # values. It keeps the packages it already lists, with their metadata
@@ -706,6 +845,8 @@ def main():
     # Each written beside and renamed over, so a failure half-way cannot leave
     # a truncated index where a good one was.
     outdir.mkdir(parents=True, exist_ok=True)
+    if history is not None:
+        texts[outdir / "history.json"] = ch.dump(history)
     for path, text in texts.items():
         tmp = path.with_name(path.name + ".part")
         tmp.write_text(text, encoding="utf-8")

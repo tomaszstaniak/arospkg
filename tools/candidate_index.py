@@ -2,9 +2,9 @@
 """Write a TEST index of candidates, for trying them on AROS before approval.
 
 Not the published index and never uploaded. mkindex.py publishes approved
-manifests only; this exists because approval now requires that a package has
-been installed, started and removed on the target, and that has to happen
-before there is an approved manifest to publish from.
+manifests only; this exists so that a candidate can be installed, started
+and removed on the target before there is an approved manifest, and the
+result recorded as a runtime test.
 
     candidate_index.py OUT id...
 """
