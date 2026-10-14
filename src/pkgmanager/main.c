@@ -87,6 +87,9 @@ static void logline(const char *fmt, ...)
     fputc('\n', logf); fflush(logf);
 }
 
+/* The state selector's entries, in order (state_entries below). */
+enum { ST_ALL, ST_INSTALLED, ST_NOT_INSTALLED, ST_UPDATES, ST_RECENT, ST_LAST, ST_DEMO };
+
 /* The news behind the two views, recomputed by every refill that shows one. */
 static pkg_news news;
 static int news_view;             /* ST_RECENT or ST_LAST while news holds that view */
@@ -153,9 +156,13 @@ AROS_UFH3S(void, display_func,
             const pkg_news_row *r = demo_is_offer(e) ? NULL : news_row(e);
             static char what[80];
             if (r) {
-                const char *d = r->kind == PKG_NEWS_BUILD ? r->first_added : r->app_first_added;
+                /* The date is when the catalogue first published it; an
+                   update has no date of its own, so it shows none. */
+                const char *d = r->kind == PKG_NEWS_BUILD ? r->first_added :
+                                r->kind == PKG_NEWS_UPDATED ? "" : r->app_first_added;
                 snprintf(what, sizeof what, "%s%s%s%s", r->kind == PKG_NEWS_BUILD ? "new build" :
-                         r->kind == PKG_NEWS_UPDATED ? "updated" : r->kind == PKG_NEWS_RECENT ? "added" :
+                         r->kind == PKG_NEWS_UPDATED ? "updated" :
+                         r->kind == PKG_NEWS_RECENT || news_view == ST_RECENT ? "added" :
                          r->returned ? "back" : "new",
                          d[0] ? " " : "", d, e->installed ? ", installed" : "");
                 array[2] = what;
@@ -202,7 +209,6 @@ static char upd_label[32] = "Updates";
 static STRPTR state_entries[] = { (STRPTR)"All", (STRPTR)"Installed", (STRPTR)"Not installed",
                                   (STRPTR)upd_label, (STRPTR)"Recently added", (STRPTR)"Last refresh",
                                   NULL, NULL };
-enum { ST_ALL, ST_INSTALLED, ST_NOT_INSTALLED, ST_UPDATES, ST_RECENT, ST_LAST, ST_DEMO };
 /* How many of the newest additions "Recently added" lists. */
 #define RECENT_ROWS 25
 

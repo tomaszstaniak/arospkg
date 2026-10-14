@@ -671,14 +671,15 @@ static void news_rows(const pkg_news *nw, int limit, int recent)
     if (w > 24) w = 24;
     for (i = 0; i < nw->n; i++) {
         const pkg_news_row *r = &nw->rows[i];
-        const char *date = r->kind == PKG_NEWS_BUILD ? r->first_added : r->app_first_added;
+        const char *date = r->kind == PKG_NEWS_BUILD ? r->first_added :
+                           r->kind == PKG_NEWS_UPDATED ? "" : r->app_first_added;
         if (limit > 0 && shown[r->kind]++ >= limit) continue;
         rev_label(v, sizeof v, r->version, r->revision);
         if (r->kind == PKG_NEWS_UPDATED) {
             rev_label(o, sizeof o, r->old_version, r->old_revision);
             snprintf(v + strlen(v), sizeof v - strlen(v), " (was %s)", o);
         }
-        printf("  %-10s  %-*s  %s\n", date[0] ? date : "no date", w, r->id, v);
+        printf("  %-10s  %-*s  %s\n", date[0] ? date : r->kind == PKG_NEWS_UPDATED ? "" : "no date", w, r->id, v);
         snprintf(line, sizeof line, "%s%s%s%s", news_label(r, recent), r->installed ? ", installed" : "",
                  r->summary[0] ? " -- " : "", r->summary);
         pr_text(line, 14);
