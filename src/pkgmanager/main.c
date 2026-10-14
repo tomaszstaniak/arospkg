@@ -87,6 +87,20 @@ static void logline(const char *fmt, ...)
     fputc('\n', logf); fflush(logf);
 }
 
+/* The news behind the two views, recomputed by every refill that shows one. */
+static pkg_news news;
+static int news_view;             /* ST_RECENT or ST_LAST while news holds that view */
+
+/* The news row for a list row: the same id and the same build. */
+static const pkg_news_row *news_row(const pkg_entry *e)
+{
+    int i;
+    for (i = 0; news_view && i < news.n; i++)
+        if (!strcmp(news.rows[i].id, e->id) && !strcmp(news.rows[i].arch, e->arch) && !strcmp(news.rows[i].abi, e->abi))
+            return &news.rows[i];
+    return NULL;
+}
+
 /* ------------------------------------------------------------ list display */
 
 AROS_UFH3S(void, display_func,
@@ -133,6 +147,20 @@ AROS_UFH3S(void, display_func,
                             u && u->state == PKG_UPD_BLOCKED ? "update blocked" :
                             e->installed ? "installed" : (e->ours ? "" : "other ABI"));
         array[3] = e->summary;
+        {
+            /* In the two news views the state column says what kind of
+               news it is, with the catalogue's date. */
+            const pkg_news_row *r = demo_is_offer(e) ? NULL : news_row(e);
+            static char what[80];
+            if (r) {
+                const char *d = r->kind == PKG_NEWS_BUILD ? r->first_added : r->app_first_added;
+                snprintf(what, sizeof what, "%s%s%s%s", r->kind == PKG_NEWS_BUILD ? "new build" :
+                         r->kind == PKG_NEWS_UPDATED ? "updated" : r->kind == PKG_NEWS_RECENT ? "added" :
+                         r->returned ? "back" : "new",
+                         d[0] ? " " : "", d, e->installed ? ", installed" : "");
+                array[2] = what;
+            }
+        }
     }
     AROS_USERFUNC_EXIT
 }
@@ -166,11 +194,24 @@ static STRPTR cat_entries[MAXCAT + 2];
 static char  cat_chosen[32];
 /* The fourth entry is relabelled with the count on every refill. */
 static char upd_label[32] = "Updates";
-/* The fifth, "Demo store", is there only when the demo storefront loaded:
-   its offers are never mixed into the catalogue's views. */
+/* "Recently added" and "Last refresh" list the shared news model (pkg_news
+   in pkg.h), the same answers as apkg recent: the first newest first, the
+   second by kind (new, new builds, updated), as apkg lists it. The last,
+   "Demo store", is there only when the demo storefront loaded: its offers
+   are never mixed into the catalogue's views. */
 static STRPTR state_entries[] = { (STRPTR)"All", (STRPTR)"Installed", (STRPTR)"Not installed",
-                                  (STRPTR)upd_label, NULL, NULL };
-enum { ST_ALL, ST_INSTALLED, ST_NOT_INSTALLED, ST_UPDATES, ST_DEMO };
+                                  (STRPTR)upd_label, (STRPTR)"Recently added", (STRPTR)"Last refresh",
+                                  NULL, NULL };
+enum { ST_ALL, ST_INSTALLED, ST_NOT_INSTALLED, ST_UPDATES, ST_RECENT, ST_LAST, ST_DEMO };
+/* How many of the newest additions "Recently added" lists. */
+#define RECENT_ROWS 25
+
+static IPTR state_now(void)
+{
+    IPTR st = 0;
+    GetAttr(MUIA_Cycle_Active, cyc_state, &st);
+    return st;
+}
 
 static void top_category(const char *cat, char *out, size_t n)
 {
@@ -222,6 +263,7 @@ static int passes_filters(const pkg_entry *e)
     }
     GetAttr(MUIA_Cycle_Active, cyc_state, &st);
     if (st == ST_DEMO) return 0;          /* the demo store shows its offers only */
+    if (st == ST_RECENT || st == ST_LAST) return news_row(e) != NULL;
     if (st == ST_INSTALLED && !e->installed) return 0;
     if (st == ST_NOT_INSTALLED && e->installed) return 0;
     if (st == ST_UPDATES) {
@@ -286,6 +328,52 @@ static void show_detail(void);
 static int no_catalogue;          /* the rows are the registry's alone: why (a pkg_status) */
 static pkg_err nocat_err;
 
+/* The news for the view in front, from the same calls as apkg recent and
+   apkg recent --since-last-update. A last refresh that does not describe
+   the catalogue in use lists nothing: its rows belong to another one. */
+static pkg_status news_st;
+static pkg_err news_err;
+static void news_fill(pkg_ctx *c, int have_catalogue)
+{
+    IPTR stv = state_now();
+    pkg_news_free(&news);
+    memset(&news, 0, sizeof news);
+    news_view = 0; news_st = PKG_OK;
+    if (!have_catalogue || (stv != ST_RECENT && stv != ST_LAST)) return;
+    memset(&news_err, 0, sizeof news_err);
+    if (stv == ST_RECENT) {
+        pkg_recent_opts o;
+        memset(&o, 0, sizeof o);
+        o.limit = RECENT_ROWS; o.builds = 1;
+        news_st = pkg_recent(c, index_path, &o, &news, &news_err);
+    } else news_st = pkg_news_last(c, index_path, &news, &news_err);
+    if (news_st == PKG_OK && (stv == ST_RECENT || (news.recorded && news.current))) news_view = (int)stv;
+}
+
+/* The line under the list for the two news views. Missing dates or a
+   missing record are said as such, never as "nothing new". */
+static void news_status(char *msg, size_t n, int shown)
+{
+    if (news_st != PKG_OK) { snprintf(msg, n, "%s", news_err.summary); return; }
+    if (state_now() == ST_LAST) {
+        if (!news.recorded) snprintf(msg, n, "no catalogue update recorded on this machine yet -- press Update index");
+        else if (!news.current) snprintf(msg, n, "the catalogue was replaced since the last recorded update -- press Update index");
+        else if (news.first) snprintf(msg, n, "update of %s: %s Recently added lists the newest.", news.when, news.first_why);
+        else if (!news.n) snprintf(msg, n, "update of %s: nothing new for this machine", news.when);
+        else snprintf(msg, n, "update of %s: %d new, %d new build%s, %d updated%s", news.when, news.apps,
+                      news.builds, news.builds == 1 ? "" : "s", news.updated, shown < news.n ? " (some filtered out)" : "");
+        return;
+    }
+    if (!news.n && news.unknown_dates)
+        snprintf(msg, n, "the catalogue gives no dates for its applications -- press Update index");
+    else if (!news.n) snprintf(msg, n, "no dated applications for this machine");
+    else {
+        size_t k = (size_t)snprintf(msg, n, "the %d most recently added for this machine, newest first", shown);
+        if (news.unknown_dates && k < n)
+            snprintf(msg + k, n - k, "; %d without a date not listed", news.unknown_dates);
+    }
+}
+
 /* Re-read the index and the registry, rebuild the category cycle, and show
  * the rows that pass the filters. The old rows stay alive until the list
  * has let go of them. Four outcomes are told apart on purpose: no index yet,
@@ -295,7 +383,7 @@ static pkg_err nocat_err;
 static void refill(const char *term, const char *keep_id, const char *why)
 {
     pkg_ctx *c = NULL; pkg_err e; pkg_status st;
-    pkg_entries fresh, all = {0}; int hidden = 0, i, again = -1, shown = 0, inst = 0;
+    pkg_entries fresh, all = {0}; int hidden = 0, i, k, again = -1, shown = 0, inst = 0;
     char msg[200];
 
     memset(&e, 0, sizeof e);
@@ -338,6 +426,7 @@ static void refill(const char *term, const char *keep_id, const char *why)
             }
         }
     }
+    news_fill(c, st == PKG_OK && !no_catalogue);
     pkg_close(c);
 
     SetAttrs(lst, MUIA_List_Quiet, TRUE, TAG_DONE);
@@ -349,11 +438,21 @@ static void refill(const char *term, const char *keep_id, const char *why)
         pkg_entries_free(&all);
         for (i = 0; i < rows.n; i++) {
             if (rows.v[i].installed) inst++;
-            if (!passes_filters(&rows.v[i])) continue;
+            /* The news views list in the news model's order, newest first. */
+            if (news_view || !passes_filters(&rows.v[i])) continue;
             DoMethod(lst, MUIM_List_InsertSingle, (IPTR)&rows.v[i], MUIV_List_Insert_Bottom);
             if (keep_id && strcmp(rows.v[i].id, keep_id) == 0) again = shown;
             shown++;
         }
+        for (k = 0; news_view && k < news.n; k++)
+            for (i = 0; i < rows.n; i++) {
+                if (strcmp(rows.v[i].id, news.rows[k].id) || strcmp(rows.v[i].arch, news.rows[k].arch)
+                    || strcmp(rows.v[i].abi, news.rows[k].abi) || !passes_filters(&rows.v[i])) continue;
+                DoMethod(lst, MUIM_List_InsertSingle, (IPTR)&rows.v[i], MUIV_List_Insert_Bottom);
+                if (keep_id && strcmp(rows.v[i].id, keep_id) == 0) again = shown;
+                shown++;
+                break;
+            }
         {
             IPTR stv = 0;
             GetAttr(MUIA_Cycle_Active, cyc_state, &stv);
@@ -376,6 +475,8 @@ static void refill(const char *term, const char *keep_id, const char *why)
             snprintf(msg, sizeof msg, "%s: %d fictional offer%s", demo_banner(), shown, shown == 1 ? "" : "s");
         else if (rows.n == 0 && hidden == 0 && !(term && *term))
             snprintf(msg, sizeof msg, "the index lists no packages");
+        else if (state_now() == ST_RECENT || state_now() == ST_LAST)
+            news_status(msg, sizeof msg, shown);
         else if (shown == 0 && passes_filters_is_updates())
             snprintf(msg, sizeof msg, "%s", upd.installed ? "no updates for the installed packages" : "nothing is installed");
         else if (shown == 0)
@@ -835,6 +936,22 @@ static void show_detail(void)
         snprintf(buf + k, sizeof buf - k, "requirements: %s, probed now:\n%s", det.requirements, reqs[0] ? reqs : e->requires);
     else
         snprintf(buf + k, sizeof buf - k, "requirements: none stated");
+    if (det.in_index) {
+        /* Two separate facts: what the catalogue's automatic checks found
+           about these bytes, and who started the program where. */
+        char text[600]; int i;
+        pkg_review_text(&det, text, sizeof text);
+        k = strlen(buf);
+        k += (size_t)snprintf(buf + k, sizeof buf - k, "\n\33bstatus:\33n %s\n", text);
+        if (!det.ntests && k < sizeof buf)
+            k += (size_t)snprintf(buf + k, sizeof buf - k, "runtime tests: none recorded for this archive\n");
+        for (i = 0; i < det.ntests && i < PKG_TESTS_MAX && k < sizeof buf; i++)
+            k += (size_t)snprintf(buf + k, sizeof buf - k, "runtime test: %s\n", det.tests[i]);
+        pkg_added_text(&det, text, sizeof text);
+        if (k < sizeof buf)
+            k += (size_t)snprintf(buf + k, sizeof buf - k, "added: %s\ncatalogue: %s", text,
+                                  det.catalogue[0] ? det.catalogue : "the catalogue file on this machine");
+    }
     if (e->installed && !strcmp(last_verify.id, e->id)) {
         /* First, where it is seen without scrolling: it answers the button
            that was just pressed. */
@@ -1024,6 +1141,8 @@ static void decline(const char *how)
 }
 
 /* Returns 1 when the window should now quit. */
+static void update_news_status(const char *done);
+
 static int on_message(pm_msg *m)
 {
     char info[80];
@@ -1209,10 +1328,38 @@ static int on_message(pm_msg *m)
             status(kept);
         }
         else if (m->status == PKG_OK && kind != JOB_UPDATE) status(line);
-        else if (m->status == PKG_OK) status(past[kind]);
+        else if (m->status == PKG_OK) update_news_status(past[kind]);
         else show_err(verb[kind], m->status, &m->err);
     }
     return 0;
+}
+
+/* After Update index: what the new catalogue brought for this machine, in
+   one line, from the record apkg recent --since-last-update reads. The
+   views behind it are Last refresh and Recently added. */
+static void update_news_status(const char *done)
+{
+    static char line[400];
+    pkg_ctx *c = NULL; pkg_err e; pkg_news nw;
+    memset(&e, 0, sizeof e);
+    memset(&nw, 0, sizeof nw);
+    if (pkg_open(root, PKG_OPEN_READ, &c, &e) == PKG_OK) {
+        pkg_news_last(c, index_path, &nw, &e);
+        pkg_close(c);
+    }
+    if (!nw.recorded || !nw.current)
+        snprintf(line, sizeof line, "%s; what is new in it could not be worked out", done);
+    else if (nw.first)
+        snprintf(line, sizeof line, "%s. %s Choose \"Recently added\" to see the newest.", done, nw.first_why);
+    else if (!nw.n)
+        snprintf(line, sizeof line, "%s; nothing new for this machine", done);
+    else
+        snprintf(line, sizeof line, "%s: %d new application%s, %d new build%s, %d updated -- choose \"Last refresh\" to list them",
+                 done, nw.apps, nw.apps == 1 ? "" : "s", nw.builds, nw.builds == 1 ? "" : "s", nw.updated);
+    logline("news after update: recorded=%d current=%d first=%d new=%d builds=%d updated=%d",
+            nw.recorded, nw.current, nw.first, nw.apps, nw.builds, nw.updated);
+    pkg_news_free(&nw);
+    status(line);
 }
 
 /* A close while a job runs: cancel it where cancelling is free, and leave
