@@ -1050,7 +1050,25 @@ pkg_status abi_check(const char *pkg_id, const char *want,
     return PKG_OK;
 }
 
+static pkg_status update_fetch(pkg_ctx *c, const char *index_url, pkg_err *e);
+
 pkg_status pkg_update(pkg_ctx *c, const char *index_url, pkg_err *e)
+{
+    /* The catalogue being replaced is read first: what is new is what the
+       new one has and this one did not. The record is written only after
+       the new catalogue is in place, so a failure or a cancel leaves both
+       the catalogue and the record of the last refresh as they were. */
+    news_prev prev;
+    pkg_status st;
+    news_before_update(c, &prev);
+    st = update_fetch(c, index_url, e);
+    if (st == PKG_OK && news_after_update(c, index_url, &prev) != 0 && pkg_verbose())
+        printf("  (what is new could not be recorded)\n");
+    news_prev_free(&prev);
+    return st;
+}
+
+static pkg_status update_fetch(pkg_ctx *c, const char *index_url, pkg_err *e)
 {
     char dest[PKG_MAXPATH], part[PKG_MAXPATH], why[240];
     if (net_open(why) != 0)
@@ -1303,6 +1321,7 @@ pkg_status pkg_details_get(pkg_ctx *c, const char *index_path, const char *id,
             }
         }
     }
+    if (d->in_index) details_catalogue(c, d);
     return PKG_OK;
 }
 

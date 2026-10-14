@@ -55,6 +55,11 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_updates" \
 "$OUT/test_updates" "$OUT/updates.json"
 python3 -c "import json,sys; d=json.load(open(sys.argv[1])); assert d['ready']==3 and len(d['packages'])==12, d" "$OUT/updates.json"
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_news" \
+    "$HERE/test_news.c" "$SRC/news.c" "$SRC/entries.c" "$SRC/json.c" "$SRC/listing.c" "$SRC/app.c" \
+    "$SRC/req.c" "$SRC/err.c"
+"$OUT/test_news"
+
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_hint" \
     "$HERE/test_hint.c" "$HERE/../src/pkg/hint.c"
 "$OUT/test_hint"
@@ -94,6 +99,8 @@ for t in test_sha256 test_req test_icon test_listing test_entries test_upgrade t
     echo "== $t"
     "$OUT/$t" || fail=1
 done
+echo "== test_review"
+python3 "$HERE/test_review.py" || fail=1
 echo "== test_mkindex"
 python3 "$HERE/test_mkindex.py" || fail=1
 python3 "$HERE/test_apkg_pack.py" || fail=1

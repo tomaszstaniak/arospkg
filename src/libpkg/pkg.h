@@ -395,7 +395,9 @@ pkg_status pkg_dry_run(pkg_ctx *, const char *index_path, const char *op, const 
 
 /* Listing: ids of installed packages, newline separated, caller frees. */
 /* Download the index to <root>/db/index.json. Networking is only ever entered
- * from here and from pkg_install; every other command works offline. */
+ * from here and from pkg_install; every other command works offline. After
+ * the new catalogue is in place, what changed for this machine is recorded
+ * in <root>/db/news.json (pkg_news_last reads it). */
 pkg_status pkg_update(pkg_ctx *, const char *index_url, pkg_err *);
 
 /* Substring match over id, summary and category in the local index. */
@@ -457,6 +459,8 @@ const char *pkg_arch(void);
 #define PKG_NOTES_LINE  159
 #define PKG_NOTES_MAX   (PKG_NOTES_LINES * (PKG_NOTES_LINE + 1) + 1)
 
+#define PKG_TESTS_MAX 4
+
 typedef struct {
     pkg_entry e;              /* the variant described; installed_* from the registry */
     int  in_index;            /* 0: only the registry knows it, or there is no index */
@@ -493,7 +497,34 @@ typedef struct {
        or says something this client cannot use (launch_bad 1). */
     pkg_launch launch;
     int  launch_bad;
+    /* What has been checked about this build's archive, two separate facts
+     * (docs/guide/metadata.md, "Listed, Reviewed, runtime tests"):
+     * `review` is "reviewed" when the catalogue's automatic checks passed
+     * for these very bytes, "listed" when it is published without that,
+     * and "" when the catalogue says neither (one made before 0.6).
+     * Runtime tests are a maintainer's record of installing and starting
+     * these bytes on a named system; none means nobody recorded one, not
+     * that it fails. */
+    char review[12];
+    int  review_suite;
+    char review_date[11];
+    char review_checked[96];       /* "metadata, download, archive, paths, layout, cpu" */
+    char review_unchecked[64];     /* what the files cannot decide: "abi" */
+    int  ntests;                   /* runtime tests for these bytes; the first PKG_TESTS_MAX described */
+    char tests[PKG_TESTS_MAX][200];
+    /* When the catalogue first published this build and the application
+       (any build), as YYYY-MM-DD; "" when the catalogue does not say. */
+    char first_added[11];
+    char app_first_added[11];
+    /* The address the catalogue in use was fetched from, as recorded by the
+       last apkg update; "" when unknown (fetched by an apkg before 0.6). */
+    char catalogue[512];
 } pkg_details;
+
+/* The review status and the dates of `d` as one line each, in the words
+   apkg show and PkgManager both use. */
+void pkg_review_text(const pkg_details *d, char *out, size_t n);
+void pkg_added_text(const pkg_details *d, char *out, size_t n);
 
 /* PKG_E_NOT_FOUND when neither the index nor the registry knows `id`. */
 pkg_status pkg_details_get(pkg_ctx *, const char *index_path, const char *id,
@@ -578,6 +609,75 @@ const char *pkg_cat_word(pkg_cat_state);   /* "ok", "missing", "unreadable" */
 char       *pkg_updates_json(const pkg_updates *);
 /* The row for `id`, or NULL. */
 const pkg_update_row *pkg_updates_find(const pkg_updates *, const char *id);
+
+/* ------------------------------------------------------------------- news */
+
+/* What is new in the catalogue for THIS machine (its CPU and ABI): the one
+ * model behind the summary after `apkg update`, `apkg recent` and
+ * PkgManager's "Recently added", so no two of them can count differently.
+ *
+ * Two kinds of date are kept apart. The catalogue's own: `first_added` (this
+ * build) and `app_first_added` (the application, any build), the day the
+ * catalogue first published them, YYYY-MM-DD in UTC, "" when it does not
+ * say -- never filled in from a file date. And this machine's: what changed
+ * between the catalogue it had and the one the last successful update
+ * fetched, recorded in <root>/db/news.json by pkg_update. A failed or
+ * cancelled update changes neither the catalogue nor that record. */
+typedef enum {
+    PKG_NEWS_APP = 0,       /* the catalogue had no entry with this id before   */
+    PKG_NEWS_BUILD,         /* it had the application, not a build for here     */
+    PKG_NEWS_UPDATED,       /* the build for here has another version/revision  */
+    PKG_NEWS_RECENT         /* first catalogue on this machine: recent additions */
+} pkg_news_kind;
+
+typedef struct {
+    pkg_news_kind kind;
+    int  returned;                      /* APP: published before, removed, now back */
+    int  installed;                     /* a registry entry exists for this id */
+    char id[PKG_MAXID];
+    char version[64];     long revision;
+    char old_version[64]; long old_revision;   /* UPDATED: what it was */
+    char arch[16]; char abi[8];
+    char summary[160];
+    char first_added[11];               /* "" unknown */
+    char app_first_added[11];           /* "" unknown */
+} pkg_news_row;
+
+typedef struct {
+    int  recorded;          /* pkg_news_last: a refresh was recorded at all       */
+    int  current;           /* pkg_news_last: it describes the catalogue in use   */
+    int  first;             /* nothing earlier to compare with; rows are RECENT   */
+    char first_why[120];    /* why, in the user's words, when first               */
+    char when[24];          /* the refresh, machine's local clock, "2026-10-14 10:25" */
+    char previous[24];      /* the catalogue it was compared with, by its date    */
+    char catalogue[512];    /* the address it was fetched from                    */
+    char catalogue_sha256[65];  /* the catalogue file it describes               */
+    int  apps, builds, updated, recent;   /* rows per kind */
+    int  unknown_dates;     /* pkg_recent: applications for here with no date     */
+    pkg_news_row *rows; int n, cap;
+} pkg_news;
+
+/* apkg recent. `limit` 0 = all; `since` "" = no lower bound, else
+   YYYY-MM-DD compared with the catalogue's dates; `builds` also lists new
+   builds for this machine of applications first published earlier. */
+typedef struct { int limit; char since[11]; int builds; } pkg_recent_opts;
+
+/* Applications for this machine, newest first by app_first_added (and, with
+   builds, new builds by first_added). Unknown dates are counted in
+   out->unknown_dates and never listed. PKG_E_NOT_FOUND without a catalogue. */
+pkg_status pkg_recent(pkg_ctx *, const char *index_path, const pkg_recent_opts *,
+                      pkg_news *out, pkg_err *);
+/* What the last successful apkg update found. out->recorded 0 when none was
+   recorded; out->current 0 when the catalogue in use is not the one it
+   describes (replaced by other means since). PKG_OK in both cases. */
+pkg_status pkg_news_last(pkg_ctx *, const char *index_path, pkg_news *out, pkg_err *);
+void        pkg_news_free(pkg_news *);
+const char *pkg_news_word(pkg_news_kind);   /* "new-application", "new-build", ... */
+/* As one JSON object (caller frees); `mode` "recent" or "last-update".
+   `limit` > 0 keeps at most that many rows of each kind. */
+char       *pkg_news_json(const pkg_news *, const char *mode, int limit);
+/* The machine's date `days` days ago, YYYY-MM-DD, for --days. */
+void        pkg_days_ago(int days, char out[11]);
 
 /* NULL clears it. See pkg_progress for what cancelling can and cannot do. */
 void       pkg_set_progress(pkg_ctx *, pkg_progress, void *user);

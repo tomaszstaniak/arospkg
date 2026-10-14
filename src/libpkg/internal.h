@@ -52,6 +52,18 @@ int  leftovers_report(struct pkg_ctx *, const char *id, const char *dest,
 
 /* Shared between install (ops.c) and upgrade/rollback (swap.c). */
 void  registry_path(struct pkg_ctx *, const char *id, char *out, size_t n);
+
+/* news_io.c: the catalogue a refresh replaces, read before it is replaced,
+   and the record written once the new one is in place. */
+typedef struct {
+    char *text; size_t len;          /* NULL: there was no catalogue */
+    char when[24], day[11];          /* its date */
+    char url[512];                   /* where the last refresh fetched it; "" unknown */
+} news_prev;
+void news_before_update(struct pkg_ctx *, news_prev *);
+int  news_after_update(struct pkg_ctx *, const char *url, news_prev *);
+void news_prev_free(news_prev *);
+void details_catalogue(struct pkg_ctx *, pkg_details *);
 void  txn_id(char out[64], const char *id);
 void  now_iso(char out[32]);
 int   prog(struct pkg_ctx *, const char *phase, unsigned long done,

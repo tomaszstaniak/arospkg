@@ -254,6 +254,89 @@ int notes_from_element(const char *json, const js_tok *t, int ntok, int el,
     return lines;
 }
 
+/* The strings of an array member, joined by ", " as far as they fit. */
+static void join_member(const char *json, const js_tok *t, int ntok, int obj, const char *name,
+                        char *out, size_t n)
+{
+    int a = js_member(json, t, ntok, obj, name), k, el;
+    size_t used = 0;
+    out[0] = 0;
+    for (k = 0; a >= 0 && (el = js_elem(t, ntok, a, k)) >= 0; k++) {
+        char w[64];
+        if (js_str(json, t, el, w, sizeof w) != 0 || !w[0]) continue;
+        if (used + strlen(w) + 3 > n) break;
+        used += (size_t)snprintf(out + used, n - used, "%s%s", used ? ", " : "", w);
+    }
+}
+
+/* A catalogue date is exactly YYYY-MM-DD or it is unknown: a malformed one
+   must not sort as if it were a date. */
+int news_date_ok(const char *d)
+{
+    int i;
+    if (strlen(d) != 10) return 0;
+    for (i = 0; i < 10; i++)
+        if (i == 4 || i == 7 ? d[i] != '-' : (d[i] < '0' || d[i] > '9')) return 0;
+    return 1;
+}
+
+/* Read wider than a date, so "2026-10-14T00:00" is not cut down to one. */
+static void date_member(const char *json, const js_tok *t, int ntok, int el, const char *name, char out[11])
+{
+    char w[32];
+    member_str(json, t, ntok, el, name, w, sizeof w);
+    if (news_date_ok(w)) memcpy(out, w, 11); else out[0] = 0;
+}
+
+void dates_from_element(const char *json, const js_tok *t, int ntok, int el, char first[11], char app[11])
+{
+    date_member(json, t, ntok, el, "first_added", first);
+    date_member(json, t, ntok, el, "app_first_added", app);
+}
+
+/* review and runtime_tests (tools/mkindex.py): what was checked about these
+   bytes. A review object this client does not recognise reads as "" -- the
+   catalogue saying nothing -- never as reviewed. */
+static void review_from_element(const char *json, const js_tok *t, int ntok, int el, pkg_details *d)
+{
+    int r = js_member(json, t, ntok, el, "review"), a, k, x;
+    if (r >= 0 && t[r].type == JS_OBJ) {
+        char st[16];
+        member_str(json, t, ntok, r, "status", st, sizeof st);
+        if (!strcmp(st, "reviewed") || !strcmp(st, "listed")) snprintf(d->review, sizeof d->review, "%s", st);
+        if (!strcmp(st, "reviewed")) {
+            d->review_suite = (int)js_long(json, t, js_member(json, t, ntok, r, "suite"), 0);
+            date_member(json, t, ntok, r, "date", d->review_date);
+            join_member(json, t, ntok, r, "checked", d->review_checked, sizeof d->review_checked);
+            join_member(json, t, ntok, r, "unchecked", d->review_unchecked, sizeof d->review_unchecked);
+        }
+    }
+    a = js_member(json, t, ntok, el, "runtime_tests");
+    for (k = 0; a >= 0 && (x = js_elem(t, ntok, a, k)) >= 0; k++) {
+        char sys[64], arch[16], abi[8], mach[48], date[11], res[12], steps[64], note[160];
+        if (t[x].type != JS_OBJ) continue;
+        member_str(json, t, ntok, x, "system", sys, sizeof sys);
+        member_str(json, t, ntok, x, "arch", arch, sizeof arch);
+        member_str(json, t, ntok, x, "abi", abi, sizeof abi);
+        member_str(json, t, ntok, x, "machine", mach, sizeof mach);
+        date_member(json, t, ntok, x, "date", date);
+        member_str(json, t, ntok, x, "result", res, sizeof res);
+        member_str(json, t, ntok, x, "note", note, sizeof note);
+        join_member(json, t, ntok, x, "checked", steps, sizeof steps);
+        if (!sys[0] || !news_date_ok(date) || (strcmp(res, "passed") && strcmp(res, "failed"))) continue;
+        if (d->ntests < PKG_TESTS_MAX)
+            snprintf(d->tests[d->ntests], sizeof d->tests[0], "%s %s/%s%s%s, %s: %s%s%s%s",
+                     sys, arch, abi, mach[0] ? ", " : "", mach, date, res,
+                     steps[0] ? " (" : "", steps, steps[0] ? ")" : "");
+        if (d->ntests < PKG_TESTS_MAX && note[0]) {
+            size_t l = strlen(d->tests[d->ntests]);
+            snprintf(d->tests[d->ntests] + l, sizeof d->tests[0] - l, " -- %s", note);
+        }
+        d->ntests++;
+    }
+    dates_from_element(json, t, ntok, el, d->first_added, d->app_first_added);
+}
+
 int details_from_index(const char *json, size_t len, const char *id,
                        const char *my_arch, const char *my_abi, pkg_details *d)
 {
@@ -312,6 +395,7 @@ int details_from_index(const char *json, size_t len, const char *id,
                 d->launch_bad = 1;
             }
         }
+        review_from_element(json, t, ntok, el, d);
         d->compat = pkg_compat_of(e->arch, e->abi, my_arch, my_abi, d->compat_why, sizeof d->compat_why);
         e->ours = d->compat == PKG_COMPAT_NATIVE;
         d->in_index = 1;
@@ -338,4 +422,30 @@ int entry_from_registry(const char *json, size_t len, pkg_entry *e)
     e->revision = e->installed_revision;
     free(t);
     return e->id[0] ? 0 : -1;
+}
+
+/* Listed or Reviewed, in the user's words. The two facts the catalogue
+   keeps apart -- what its automatic checks found about these bytes, and who
+   ran the program where -- stay apart here too. */
+void pkg_review_text(const pkg_details *d, char *out, size_t n)
+{
+    if (!strcmp(d->review, "reviewed"))
+        snprintf(out, n, "Reviewed -- the catalogue's automatic checks passed for this archive "
+                 "(suite %d, %s): %s%s%s", d->review_suite, d->review_date[0] ? d->review_date : "date unknown",
+                 d->review_checked, d->review_unchecked[0] ? ". Not decidable from the files: " : "",
+                 d->review_unchecked);
+    else if (!strcmp(d->review, "listed"))
+        snprintf(out, n, "Listed -- published without the automatic review; the download is still "
+                 "checked against its size and SHA-256");
+    else
+        snprintf(out, n, "not stated -- this catalogue predates review records; run apkg update");
+}
+
+void pkg_added_text(const pkg_details *d, char *out, size_t n)
+{
+    if (!d->first_added[0] && !d->app_first_added[0]) snprintf(out, n, "unknown");
+    else if (!strcmp(d->first_added, d->app_first_added) || !d->app_first_added[0])
+        snprintf(out, n, "%s", d->first_added);
+    else snprintf(out, n, "%s (this build), %s (the application)",
+                  d->first_added[0] ? d->first_added : "unknown", d->app_first_added);
 }

@@ -7,6 +7,7 @@
 #include "../libpkg/sha256.h"
 #include "../libpkg/verify.h"
 #include "../libpkg/entries.h"
+#include "../libpkg/json.h"
 #include "present.h"
 #include "hint.h"
 #include "selfupdate.h"
@@ -42,6 +43,8 @@ static void verdict(const char *w)
 static void print_notes(const pkg_details *d, int after_install);
 
 static const char *hint_root;
+/* Names per kind in the summary after apkg update. */
+#define NEWS_SUMMARY_NAMES 5
 
 static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_details *d)
 {
@@ -117,6 +120,22 @@ static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_d
     }
     if (*d->source) pr_field("Source", d->source, -1);
     if (*d->license) pr_field("License", d->license, -1);
+    if (d->in_index) {
+        int i;
+        putchar('\n'); pr_heading("Review and tests");
+        pkg_review_text(d, text, sizeof text);
+        pr_field("Status", text, !strcmp(d->review, "reviewed") ? PR_GREEN : -1);
+        if (!d->ntests) pr_field("Runtime tests", "none recorded for this archive", -1);
+        for (i = 0; i < d->ntests && i < PKG_TESTS_MAX; i++)
+            pr_field(i ? "" : "Runtime tests", d->tests[i], -1);
+        if (d->ntests > PKG_TESTS_MAX) {
+            snprintf(text, sizeof text, "and %d more", d->ntests - PKG_TESTS_MAX);
+            pr_field("", text, -1);
+        }
+        pkg_added_text(d, text, sizeof text);
+        pr_field("Added", text, -1);
+        pr_field("Catalogue", d->catalogue[0] ? d->catalogue : "the catalogue file on this machine", -1);
+    }
 }
 
 static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pkg_err *e)
@@ -145,6 +164,18 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
     }
     if (d.source[0])  printf("  source:       %s\n", d.source);
     if (d.license[0]) printf("  license:      %s\n", d.license);
+    if (d.in_index) {
+        char text[600]; int i;
+        pkg_review_text(&d, text, sizeof text);
+        printf("  status:       %s\n", text);
+        if (!d.ntests) printf("  runtime tests: none recorded for this archive\n");
+        for (i = 0; i < d.ntests && i < PKG_TESTS_MAX; i++)
+            printf("  %s %s\n", i ? "              " : "runtime tests:", d.tests[i]);
+        if (d.ntests > PKG_TESTS_MAX) printf("                and %d more\n", d.ntests - PKG_TESTS_MAX);
+        pkg_added_text(&d, text, sizeof text);
+        printf("  added:        %s\n", text);
+        printf("  catalogue:    %s\n", d.catalogue[0] ? d.catalogue : "the catalogue file on this machine");
+    }
     if (d.in_index) {
         if (d.compat != PKG_COMPAT_NATIVE)
             printf("  requirements: not checked -- it is not compatible with this machine\n");
@@ -229,6 +260,7 @@ static void usage(void)
            "  list              List installed packages\n"
            "  update            Refresh the package catalogue\n"
            "  outdated          List installed packages with updates\n"
+           "  recent            List applications recently added to the catalogue\n"
            "  upgrade <id>      Install a newer version or revision\n"
            "  upgrade --all     Upgrade every package that can be upgraded now\n"
            "  rollback <id>     Restore the previous package revision\n"
@@ -245,8 +277,13 @@ static void usage(void)
            "  --root <dir>      Package directory (default: SYS:Packages)\n"
            "  --plain           Disable formatting and progress output\n"
            "  --color=<mode>    Colour output: auto, always or never\n"
-           "  --json            Output search, list and outdated results as JSON\n"
+           "  --json            Output search, list, outdated and recent as JSON\n"
            "  --all             With outdated: every installed package and its state\n"
+           "  --limit <n>       With recent: at most n (default 10; 0 = all)\n"
+           "  --days <n>        With recent: added in the last n days\n"
+           "  --since <date>    With recent: added on or after YYYY-MM-DD\n"
+           "  --builds          With recent: also new builds of older applications\n"
+           "  --since-last-update  With recent: what the last apkg update brought\n"
            "  --verbose         Also show download addresses and file locations\n"
            "  --version         Show version and build information\n"
            "  --about           Show author, project and licence information\n"
@@ -536,6 +573,199 @@ static void updates_summary(const pkg_updates *u, const char *root)
     pr_text(line, 0);
 }
 
+/* ------------------------------------------------------- what is new */
+
+/* "a, b, c and 4 more": at most `max` rows of one kind, by name. */
+static void news_names(const pkg_news *nw, pkg_news_kind k, int max, char *out, size_t n)
+{
+    int i, shown = 0, all = 0;
+    size_t used = 0;
+    out[0] = 0;
+    for (i = 0; i < nw->n; i++) {
+        const pkg_news_row *r = &nw->rows[i];
+        char one[300], a[80], b[80];
+        if (r->kind != k) continue;
+        if (all++ >= max) continue;
+        if (k == PKG_NEWS_UPDATED) {
+            rev_label(a, sizeof a, r->old_version, r->old_revision);
+            rev_label(b, sizeof b, r->version, r->revision);
+            snprintf(one, sizeof one, "%s %s -> %s", r->id, a, b);
+        } else if (k == PKG_NEWS_RECENT)
+            snprintf(one, sizeof one, "%s (%s)", r->id, r->app_first_added);
+        else snprintf(one, sizeof one, "%s%s", r->id, r->returned ? " (back)" : "");
+        if (used + strlen(one) + 3 < n) used += (size_t)snprintf(out + used, n - used, "%s%s", shown++ ? ", " : "", one);
+    }
+    if (all > shown && used + 20 < n) snprintf(out + used, n - used, " and %d more", all - shown);
+}
+
+/* After `apkg update`: the short account; `apkg recent --since-last-update`
+   has the whole of it. */
+static void news_summary(pkg_ctx *c, const char *index, const char *root)
+{
+    pkg_news nw; pkg_err e; char line[1200], names[900], cmd[PKG_MAXPATH + 60];
+    memset(&e, 0, sizeof e);
+    if (pkg_news_last(c, index, &nw, &e) != PKG_OK || !nw.recorded || !nw.current) {
+        pr_text("What is new in it could not be worked out on this machine.", 0);
+        pkg_news_free(&nw);
+        return;
+    }
+    if (nw.first) {
+        pr_text(nw.first_why, 0);
+        if (nw.recent) {
+            news_names(&nw, PKG_NEWS_RECENT, NEWS_SUMMARY_NAMES, names, sizeof names);
+            snprintf(line, sizeof line, "Recently added to the catalogue: %s", names);
+            pr_text(line, 0);
+            cmd_hint(cmd, sizeof cmd, root, "recent");
+            snprintf(line, sizeof line, "More: %s", cmd);
+            pr_text(line, 0);
+        } else pr_text("The catalogue does not date its applications, so recent additions cannot be listed.", 0);
+        pkg_news_free(&nw);
+        return;
+    }
+    if (!nw.n) {
+        snprintf(line, sizeof line, "Nothing new for this system since the catalogue fetched %s.",
+                 nw.previous[0] ? nw.previous : "the previous update");
+        pr_text(line, 0);
+        pkg_news_free(&nw);
+        return;
+    }
+    if (nw.apps) {
+        news_names(&nw, PKG_NEWS_APP, NEWS_SUMMARY_NAMES, names, sizeof names);
+        snprintf(line, sizeof line, "New application%s (%d): %s", nw.apps == 1 ? "" : "s", nw.apps, names);
+        pr_text(line, 0);
+    }
+    if (nw.builds) {
+        news_names(&nw, PKG_NEWS_BUILD, NEWS_SUMMARY_NAMES, names, sizeof names);
+        snprintf(line, sizeof line, "New build%s for this system (%d): %s", nw.builds == 1 ? "" : "s", nw.builds, names);
+        pr_text(line, 0);
+    }
+    if (nw.updated) {
+        news_names(&nw, PKG_NEWS_UPDATED, NEWS_SUMMARY_NAMES, names, sizeof names);
+        snprintf(line, sizeof line, "Updated in the catalogue (%d): %s", nw.updated, names);
+        pr_text(line, 0);
+    }
+    cmd_hint(cmd, sizeof cmd, root, "recent --since-last-update");
+    snprintf(line, sizeof line, "Full list: %s", cmd);
+    pr_text(line, 0);
+    pkg_news_free(&nw);
+}
+
+static const char *news_label(const pkg_news_row *r)
+{
+    switch (r->kind) {
+    case PKG_NEWS_APP:     return r->returned ? "back in the catalogue" : "new application";
+    case PKG_NEWS_BUILD:   return "new build for this system";
+    case PKG_NEWS_UPDATED: return "updated";
+    case PKG_NEWS_RECENT:  return "recently added";
+    }
+    return "";
+}
+
+static void news_rows(const pkg_news *nw, int limit)
+{
+    int i, w = 4, shown[4] = { 0, 0, 0, 0 };
+    char line[600], v[200], o[80];
+    for (i = 0; i < nw->n; i++)
+        if ((int)strlen(nw->rows[i].id) > w) w = (int)strlen(nw->rows[i].id);
+    if (w > 24) w = 24;
+    for (i = 0; i < nw->n; i++) {
+        const pkg_news_row *r = &nw->rows[i];
+        const char *date = r->kind == PKG_NEWS_BUILD ? r->first_added : r->app_first_added;
+        if (limit > 0 && shown[r->kind]++ >= limit) continue;
+        rev_label(v, sizeof v, r->version, r->revision);
+        if (r->kind == PKG_NEWS_UPDATED) {
+            rev_label(o, sizeof o, r->old_version, r->old_revision);
+            snprintf(v + strlen(v), sizeof v - strlen(v), " (was %s)", o);
+        }
+        printf("  %-10s  %-*s  %s\n", date[0] ? date : "no date", w, r->id, v);
+        snprintf(line, sizeof line, "%s%s%s%s", news_label(r), r->installed ? ", installed" : "",
+                 r->summary[0] ? " -- " : "", r->summary);
+        pr_text(line, 14);
+    }
+}
+
+/* The ABI the news model judges by: --abi when testing, else this build's. */
+static const char *my_abi_word(void)
+{
+    const char *o = pkg_abi_override();
+    return o && *o ? o : pkg_abi();
+}
+
+/* apkg recent. Exit status: 0 answered (also with nothing to list); 10 no
+   catalogue, or for --since-last-update no record of an update that matches
+   the catalogue in use; 5 usage. Documented in docs/guide/using.md. */
+static int recent(pkg_ctx *c, const char *index, const char *root, const pkg_recent_opts *o,
+                  int last, int limit, int json)
+{
+    pkg_news nw; pkg_err e; char line[800], cmd[PKG_MAXPATH + 60];
+    pkg_status st;
+    memset(&e, 0, sizeof e);
+    st = last ? pkg_news_last(c, index, &nw, &e) : pkg_recent(c, index, o, &nw, &e);
+    if (st != PKG_OK) {
+        if (json) {
+            char buf[400]; js_out o;
+            js_out_init(&o, buf, sizeof buf);
+            js_raw(&o, "{ \"schema\": 1, \"error\": "); js_vstr(&o, e.summary); js_raw(&o, " }\n");
+            fputs(o.fail ? "{ \"schema\": 1, \"error\": \"\" }\n" : buf, stdout);
+        }
+        else show(&e);
+        return 10;
+    }
+    if (json) {
+        char *js = pkg_news_json(&nw, last ? "last-update" : "recent", last ? limit : 0);
+        int rc = (last && (!nw.recorded || !nw.current)) ? 10 : 0;
+        if (js) fputs(js, stdout); else { printf("{ \"schema\": 1, \"error\": \"out of memory\" }\n"); rc = 10; }
+        free(js); pkg_news_free(&nw);
+        return rc;
+    }
+    if (last) {
+        if (!nw.recorded || !nw.current) {
+            cmd_hint(cmd, sizeof cmd, root, "update");
+            snprintf(line, sizeof line, nw.recorded
+                     ? "The catalogue in use is not the one the last recorded update fetched; it was replaced "
+                       "since by other means. Run %s to compare again."
+                     : "No catalogue update has been recorded on this machine yet. Run %s.", cmd);
+            pr_text(line, 0);
+            pkg_news_free(&nw);
+            return 10;
+        }
+        snprintf(line, sizeof line, "What the update of %s brought", nw.when);
+        pr_heading(line);
+        if (nw.first) pr_text(nw.first_why, 0);
+        else if (nw.previous[0]) {
+            snprintf(line, sizeof line, "Compared with the catalogue fetched %s, for %s/%s.", nw.previous, pkg_arch(), my_abi_word());
+            pr_text(line, 0);
+        }
+        if (!nw.n) pr_text(nw.first ? "The catalogue does not date its applications." : "Nothing new for this system.", 0);
+        else news_rows(&nw, limit);
+    } else {
+        if (o->since[0]) snprintf(line, sizeof line, "Added since %s, for %s/%s", o->since, pkg_arch(), my_abi_word());
+        else snprintf(line, sizeof line, "Recently added, for %s/%s", pkg_arch(), my_abi_word());
+        pr_heading(line);
+        if (nw.when[0]) {
+            snprintf(line, sizeof line, "Catalogue fetched %s; dates are when the catalogue first published them.", nw.when);
+            pr_text(line, 0);
+        }
+        if (!nw.n) pr_text(nw.unknown_dates ? "Nothing dated in that period."
+                                            : "No applications for this system were added in that period.", 0);
+        else news_rows(&nw, 0);
+        if (nw.unknown_dates) {
+            snprintf(line, sizeof line, "%d application%s for this system %s no date in the catalogue and %s not listed.",
+                     nw.unknown_dates, nw.unknown_dates == 1 ? "" : "s", nw.unknown_dates == 1 ? "has" : "have",
+                     nw.unknown_dates == 1 ? "is" : "are");
+            pr_text(line, 0);
+        }
+        if (!o->builds) {
+            cmd_hint(cmd, sizeof cmd, root, "recent --builds");
+            snprintf(line, sizeof line, "New builds of older applications too: %s", cmd);
+            pr_text(line, 0);
+        }
+    }
+    pr_text("Details: apkg show <id>", 0);
+    pkg_news_free(&nw);
+    return 0;
+}
+
 /* Exit status: 0 the check ran (whether or not anything is newer); 10 no
    catalogue, one that cannot be read, or the root cannot be read; 5 usage.
    Documented in docs/guide/using.md. */
@@ -769,6 +999,8 @@ static int real_main(int argc, char **argv)
     int nrest = 0;
     int group_rc = -1, shown = 0;    /* upgrade --all: its own exit status; errors already shown */
     int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0, all = 0;
+    int limit = -1, days = -1, builds = 0, last_update = 0;
+    const char *since = NULL;
     pkg_ctx *c = NULL;
     pkg_err e;
     pkg_status st;
@@ -803,6 +1035,11 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--all-abi")) pkg_set_abi_show_all(1);
         else if (!strcmp(argv[i], "--json")) json = 1;
         else if (!strcmp(argv[i], "--all")) all = 1;
+        else if (!strcmp(argv[i], "--limit") && i + 1 < argc) limit = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--days") && i + 1 < argc) days = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--since") && i + 1 < argc) since = argv[++i];
+        else if (!strcmp(argv[i], "--builds")) builds = 1;
+        else if (!strcmp(argv[i], "--since-last-update")) last_update = 1;
         else if (!strcmp(argv[i], "--verbose")) pkg_set_verbose(1);
         else if (!strcmp(argv[i], "--keep-rejected")) pkg_set_keep_rejected(1);
         else if (!strcmp(argv[i], "--plain")) plain = 1;
@@ -907,6 +1144,7 @@ static int real_main(int argc, char **argv)
         if (!strcmp(cmd, "list") || !strcmp(cmd, "info") || !strcmp(cmd, "show") ||
             !strcmp(cmd, "search") || !strcmp(cmd, "requires") ||
             !strcmp(cmd, "verify") || !strcmp(cmd, "open") || !strcmp(cmd, "outdated") ||
+            !strcmp(cmd, "recent") ||
             !strcmp(cmd, "run") ||
             dry) mode = PKG_OPEN_READ;   /* a dry run never recovers */
         else if (!strcmp(cmd, "doctor")) mode = retry ? PKG_OPEN_DOCTOR : PKG_OPEN_READ;
@@ -984,7 +1222,25 @@ static int real_main(int argc, char **argv)
                 pkg_updates u; pkg_err e3; memset(&e3, 0, sizeof e3);
                 if (pkg_updates_get(c, index, 1, &u, &e3) == PKG_OK) { updates_summary(&u, root); pkg_updates_free(&u); }
             }
+            news_summary(c, index, root);
         }
+    } else if (!strcmp(cmd, "recent")) {
+        pkg_recent_opts o; int rc;
+        memset(&o, 0, sizeof o);
+        if (arg || limit < -1 || (days != -1 && days < 1) || (since && !news_date_ok(since))
+            || (since && days != -1) || (last_update && (since || days != -1 || builds))) {
+            printf("apkg recent: [--limit N] [--days N | --since YYYY-MM-DD] [--builds] [--json],\n"
+                   "             or --since-last-update [--limit N] [--json]\n");
+            pkg_close(c);
+            return 5;
+        }
+        o.limit = limit >= 0 ? limit : 10;
+        o.builds = builds;
+        if (since) snprintf(o.since, sizeof o.since, "%s", since);
+        else if (days > 0) pkg_days_ago(days - 1, o.since);
+        rc = recent(c, index, root, &o, last_update, limit > 0 ? limit : 0, json);
+        pkg_close(c);
+        return rc;
     } else if (!strcmp(cmd, "outdated")) {
         int rc;
         if (arg) { printf("apkg outdated: it takes no package; it lists all of them\n"); pkg_close(c); return 5; }

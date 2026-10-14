@@ -69,6 +69,11 @@ int details_from_index(const char *json, size_t len, const char *id,
 int entry_from_registry(const char *json, size_t len, pkg_entry *out);
 
 int  entries_push(pkg_entries *, const pkg_entry *);
+
+/* first_added and app_first_added of an index element; "" when absent or
+   not YYYY-MM-DD. news_date_ok: exactly that shape. */
+void dates_from_element(const char *json, const js_tok *t, int ntok, int el, char first[11], char app[11]);
+int  news_date_ok(const char *d);
 /* Case-insensitive by id, as AROS compares names. */
 void entries_sort(pkg_entries *);
 #endif
