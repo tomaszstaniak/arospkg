@@ -50,7 +50,20 @@ for p in pk:
     if p["id"] == "scopagame" and p["arch"] == "x86_64":
         q["version"] = "1.0"
     old.append(q)
-(out / "old.json").write_text(json.dumps({**idx, "packages": old}, indent=1) + "\n")
+old_text = json.dumps({**idx, "packages": old}, indent=1) + "\n"
+(out / "old.json").write_text(old_text)
+# The record of the refresh that fetched it, as apkg 0.6 writes it: the
+# update compares with the catalogue of that date (2026-10-01), whatever
+# the file's own date on the guest.
+import hashlib
+(out / "news.json").write_text(json.dumps({
+    "schema": 1, "mode": "last-update",
+    "catalogue": "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v2.json",
+    "refreshed": "2026-10-01 12:00", "compared_with": "",
+    "catalogue_sha256": hashlib.sha256(old_text.encode()).hexdigest(),
+    "recorded": True, "current": True, "first_catalogue": False, "first_reason": "",
+    "counts": {"new_applications": 0, "new_builds": 0, "updated": 0, "recently_added": 0, "unknown_dates": 0},
+    "items": []}, indent=1) + "\n")
 expect = {"new-application": ["arospkg", "limpet", "xrick"], "returned": ["xrick"],
           "new-build": ["folio"], "updated": ["scopagame", "zgloom"]}
 (out / "expect.json").write_text(json.dumps(expect, indent=1) + "\n")

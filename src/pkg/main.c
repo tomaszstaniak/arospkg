@@ -650,10 +650,11 @@ static void news_summary(pkg_ctx *c, const char *index, const char *root)
     pkg_news_free(&nw);
 }
 
-static const char *news_label(const pkg_news_row *r)
+/* recent: rows of `apkg recent` are additions by date, not news since an update. */
+static const char *news_label(const pkg_news_row *r, int recent)
 {
     switch (r->kind) {
-    case PKG_NEWS_APP:     return r->returned ? "back in the catalogue" : "new application";
+    case PKG_NEWS_APP:     return recent ? "added" : r->returned ? "back in the catalogue" : "new application";
     case PKG_NEWS_BUILD:   return "new build for this system";
     case PKG_NEWS_UPDATED: return "updated";
     case PKG_NEWS_RECENT:  return "recently added";
@@ -661,7 +662,7 @@ static const char *news_label(const pkg_news_row *r)
     return "";
 }
 
-static void news_rows(const pkg_news *nw, int limit)
+static void news_rows(const pkg_news *nw, int limit, int recent)
 {
     int i, w = 4, shown[4] = { 0, 0, 0, 0 };
     char line[600], v[200], o[80];
@@ -678,7 +679,7 @@ static void news_rows(const pkg_news *nw, int limit)
             snprintf(v + strlen(v), sizeof v - strlen(v), " (was %s)", o);
         }
         printf("  %-10s  %-*s  %s\n", date[0] ? date : "no date", w, r->id, v);
-        snprintf(line, sizeof line, "%s%s%s%s", news_label(r), r->installed ? ", installed" : "",
+        snprintf(line, sizeof line, "%s%s%s%s", news_label(r, recent), r->installed ? ", installed" : "",
                  r->summary[0] ? " -- " : "", r->summary);
         pr_text(line, 14);
     }
@@ -737,7 +738,7 @@ static int recent(pkg_ctx *c, const char *index, const char *root, const pkg_rec
             pr_text(line, 0);
         }
         if (!nw.n) pr_text(nw.first ? "The catalogue does not date its applications." : "Nothing new for this system.", 0);
-        else news_rows(&nw, limit);
+        else news_rows(&nw, limit, 0);
     } else {
         if (o->since[0]) snprintf(line, sizeof line, "Added since %s, for %s/%s", o->since, pkg_arch(), my_abi_word());
         else snprintf(line, sizeof line, "Recently added, for %s/%s", pkg_arch(), my_abi_word());
@@ -748,7 +749,7 @@ static int recent(pkg_ctx *c, const char *index, const char *root, const pkg_rec
         }
         if (!nw.n) pr_text(nw.unknown_dates ? "Nothing dated in that period."
                                             : "No applications for this system were added in that period.", 0);
-        else news_rows(&nw, 0);
+        else news_rows(&nw, 0, 1);
         if (nw.unknown_dates) {
             snprintf(line, sizeof line, "%d application%s for this system %s no date in the catalogue and %s not listed.",
                      nw.unknown_dates, nw.unknown_dates == 1 ? "" : "s", nw.unknown_dates == 1 ? "has" : "have",

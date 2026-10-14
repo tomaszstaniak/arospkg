@@ -37,7 +37,9 @@ t = f("05-update-b")
 check(rc(t) == 0 and "New applications (3)" in t and "xrick (back)" in t, "update over an older catalogue: 3 new, xrick back")
 check("New build for this system (1): folio" in t, "folio: a new build for this system")
 check("Updated in the catalogue (2)" in t and "zgloom" in t and "scopagame" in t, "zgloom and scopagame: updated")
-check("apkg --root SYS:NewsB recent --since-last-update" in t, "summary points at the full list")
+check("Full list: apkg --root" in t and "recent --since-last-update" in t, "summary points at the full list")
+check("Compared with the catalogue fetched 2026-10-01 12:00" in f("06-last"), "compared with the catalogue of the recorded refresh")
+check(rc(f("05a-seeded-last")) == 0, "a seeded record of 2026-10-01 is read")
 js = json.loads(f("07-last.json") or "{}")
 kinds = {}
 for it in js.get("items", []):
@@ -53,7 +55,7 @@ t = f("08-recent")
 check(rc(t) == 0 and "Recently added, for x86_64/v11" in t and "new builds of older applications too" in t.lower(),
       "recent: heading and --builds hint")
 t9 = f("09-recent-all")
-check(rc(t9) == 0 and "new build for this system" in t9, "recent --builds --limit 0: builds labelled")
+check(rc(t9) == 0 and t9.count("  added") > 10 and "Recently added" in t9, "recent --builds --limit 0: every dated application, labelled added")
 check(rc(f("10-recent-days")) == 0, "recent --days 30: rc 0")
 js = json.loads(f("11-since.json") or "{}")
 check(js.get("mode") == "recent" and all((i["first_added"] if i["kind"] == "new-build" else i["app_first_added"]) >= "2026-10-01"

@@ -24,12 +24,14 @@ echo "rc $RC" >>RESULTS:$NTAG-03-update-again.txt
 RAM:apkg --root "RAM:News First" --plain recent --since-last-update >RESULTS:$NTAG-04-first-last.txt
 echo "rc $RC" >>RESULTS:$NTAG-04-first-last.txt
 
-; An earlier catalogue on the machine, dated 2026-10-01: the update compares.
+; An earlier catalogue on the machine, fetched 2026-10-01: the update compares.
 delete SYS:NewsB all quiet
 makedir SYS:NewsB
 makedir SYS:NewsB/db
 copy RAM:nw/old.json SYS:NewsB/db/index.json
-setdate SYS:NewsB/db/index.json 01-Oct-26 12:00:00
+copy RAM:nw/news.json SYS:NewsB/db/news.json
+RAM:apkg --root SYS:NewsB --plain recent --since-last-update >RESULTS:$NTAG-05a-seeded-last.txt
+echo "rc $RC" >>RESULTS:$NTAG-05a-seeded-last.txt
 RAM:apkg --root SYS:NewsB --plain update >RESULTS:$NTAG-05-update-b.txt
 echo "rc $RC" >>RESULTS:$NTAG-05-update-b.txt
 RAM:apkg --root SYS:NewsB --plain recent --since-last-update >RESULTS:$NTAG-06-last.txt
