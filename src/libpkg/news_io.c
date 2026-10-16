@@ -109,7 +109,14 @@ void news_before_update(struct pkg_ctx *c, news_prev *prev)
 static int same_url(const char *recorded, const char *url)
 {
     size_t n = strlen(recorded);
-    return n >= 511 ? strncmp(recorded, url, n) == 0 : strcmp(recorded, url) == 0;
+    const char *a = strrchr(recorded, '/'), *b = strrchr(url, '/');
+    if (n >= 511) return strncmp(recorded, url, n) == 0;
+    if (!strcmp(recorded, url)) return 1;
+    /* index-v2.json and index-v3.json of one place are one catalogue in
+       two generations: moving from one to the other (apkg 0.6 does) is not
+       another catalogue, and is compared as usual. */
+    return a && b && a - recorded == b - url && !strncmp(recorded, url, (size_t)(a - recorded))
+           && !strncmp(a, "/index-v", 8) && !strncmp(b, "/index-v", 8);
 }
 
 int news_after_update(struct pkg_ctx *c, const char *url, news_prev *prev)

@@ -93,7 +93,24 @@ static void worker_main(void)
     } else if ((st = pkg_open(j->root, PKG_OPEN_WRITE, &c, &e)) == PKG_OK) {
         pkg_set_progress(c, on_progress, j);
         switch (j->kind) {
-        case JOB_INSTALL:  st = pkg_install(c, j->index, j->id, PKG_STOP_NONE, &e); break;
+        case JOB_INSTALL: {
+            /* The same plan the window showed, made again under the lock:
+               if it grew since, it was not what the user accepted. */
+            pkg_install_plan *pl = (pkg_install_plan *)AllocVec(sizeof *pl, MEMF_ANY | MEMF_CLEAR);
+            if (!pl) { st = PKG_E_NOMEM; snprintf(e.summary, sizeof e.summary, "out of memory"); break; }
+            st = pkg_plan_install(c, j->index, j->id, pl, &e);
+            if (st == PKG_OK && !pl->ok) {
+                st = e.status = pl->status ? pl->status : PKG_E_REQUIRES;
+                snprintf(e.summary, sizeof e.summary, "cannot install it");
+                snprintf(e.detail, sizeof e.detail, "%s", pl->why);
+            } else if (st == PKG_OK && pl->extra && !j->confirmed) {
+                st = e.status = PKG_E_REQUIRES;
+                snprintf(e.summary, sizeof e.summary, "the plan changed; look at it again");
+            } else if (st == PKG_OK)
+                st = pkg_install_plan_run(c, j->index, pl, PKG_STOP_NONE, &e);
+            FreeVec(pl);
+            break;
+        }
         case JOB_REMOVE:   st = pkg_remove(c, j->id, PKG_STOP_NONE, &e);
                            if (st == PKG_OK) pkg_last_removal(c, &j->done->rem);
                            break;

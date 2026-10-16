@@ -271,6 +271,7 @@ const char *rx_statusword(pkg_status s)
     case PKG_E_REQUIRES:       return "REQUIRES";
     case PKG_E_CANCELLED:      return "CANCELLED";
     case PKG_E_LAUNCH:         return "CANNOTRUN";
+    case PKG_E_REQUIRED:       return "REQUIRED";
     }
     return "FAILED";
 }

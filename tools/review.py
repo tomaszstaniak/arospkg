@@ -33,7 +33,9 @@ import mkindex  # noqa: E402
 
 # Raised when a check is added, removed or made stricter. A record of an
 # older suite still counts as what it was: the catalogue shows its number.
-SUITE = 1
+# 2 (2026-10-16): metadata includes the relations (depends with a minimum
+# version, recommends, conflicts, replaces).
+SUITE = 2
 
 # ELF e_machine of the CPUs the catalogue carries.
 ELF_MACHINE = {"x86_64": 62, "i386": 3, "aarch64": 183}

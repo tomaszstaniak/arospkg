@@ -321,6 +321,9 @@ pkg_status pkg_open(const char *root, pkg_mode mode, pkg_ctx **out, pkg_err *e)
     if (mode != PKG_OPEN_DOCTOR) {
         u_deltree(c->tmp);
         u_mkdir(c->tmp);
+        /* A replacement interrupted after its new package was installed:
+           the old one is removed now, as the plan said. */
+        rel_finish_replacements(c);
     }
     *out = c;
     return PKG_OK;

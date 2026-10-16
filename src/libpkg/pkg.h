@@ -13,11 +13,13 @@
 
 #define PKG_MAXPATH 512
 
-/* The catalogue apkg update fetches. index-v2.json is the generation of the
-   file this client reads: every package, of any size. index.json beside it
-   stays within what clients up to 0.3.2 read (8192 values), for them. */
+/* The catalogue apkg update fetches. index-v3.json is the generation of the
+   file this client reads: every package, including those that need
+   relations (client_features). index-v2.json beside it leaves those out,
+   for apkg 0.4 and 0.5; index.json stays within what clients up to 0.3.2
+   read (8192 values), for them. */
 #define PKG_INDEX_URL \
-    "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v2.json"
+    "https://raw.githubusercontent.com/tomaszstaniak/arospkg-index/main/index-v3.json"
 #define PKG_MAXID    64
 
 typedef enum {
@@ -38,7 +40,8 @@ typedef enum {
      * number, so renumbering would silently re-point every existing test. */
     PKG_E_REQUIRES,        /* the MACHINE does not provide something needed */
     PKG_E_CANCELLED,       /* the caller's progress callback asked to stop  */
-    PKG_E_LAUNCH           /* the application cannot be started as described */
+    PKG_E_LAUNCH,          /* the application cannot be started as described */
+    PKG_E_REQUIRED         /* other installed packages depend on it          */
 } pkg_status;
 
 typedef struct {
@@ -168,7 +171,9 @@ typedef enum {
     /* Upgrade and rollback swap two trees; these are the two states
      * between the renames. Appended, as --interrupt-at names them by number. */
     PKG_STOP_AFTER_OLD_MOVED,   /* live tree moved aside, nothing published */
-    PKG_STOP_AFTER_NEW_PUBLISHED/* new tree in place, registry not written  */
+    PKG_STOP_AFTER_NEW_PUBLISHED,/* new tree in place, registry not written  */
+    PKG_STOP_BEFORE_REPLACED    /* replacement installed, old one not yet  *
+                                 * removed: what recovery must finish      */
 } pkg_stop;
 
 /* Fault injection for the paths that only run when a write fails. These are
@@ -678,6 +683,83 @@ const char *pkg_news_word(pkg_news_kind);   /* "new-application", "new-build", .
 char       *pkg_news_json(const pkg_news *, const char *mode, int limit);
 /* The machine's date `days` days ago, YYYY-MM-DD, for --days. */
 void        pkg_days_ago(int days, char out[11]);
+
+/* -------------------------------------------------------------- relations */
+
+/* Relations between packages (docs/guide/metadata.md, "Relations"): what a
+ * package needs (depends), suggests (recommends), refuses (conflicts) and
+ * takes over (replaces). One model for apkg, PkgManager and ARexx.
+ *
+ * What apkg can deliver is decided by where it installs: every package in
+ * its own drawer, <root>/<id>. A dependency is therefore another package
+ * in the same root, for this CPU and ABI, that the program finds there;
+ * a library or a command the system must provide stays a requires_system,
+ * which apkg checks and never installs. */
+
+/* One relation of a package, for show and the details panel. */
+typedef struct {
+    int  kind;                    /* PKG_REL_DEPENDS ... */
+    char id[PKG_MAXID];
+    char min_version[64];         /* "" when any version */
+    char reason[160];             /* recommends: what it adds */
+    int  listed;                  /* the catalogue has the id, for any system */
+    int  compatible;              /* it has a build for this system, new enough */
+    char available[64];           /* that build's version */
+    int  installed;               /* registry entry in this root */
+    char installed_version[64];
+    int  satisfied;               /* installed, for this system, new enough */
+    char state[200];              /* in the user's words */
+} pkg_relation;
+enum { PKG_REL_DEPENDS = 0, PKG_REL_RECOMMENDS, PKG_REL_CONFLICTS, PKG_REL_REPLACES };
+#define PKG_REL_ROWS 64
+
+/* Every relation `id` declares (its catalogue build for this system, or its
+   registry entry when the catalogue does not list it), with its state here. */
+pkg_status pkg_relations_get(pkg_ctx *, const char *index_path, const char *id,
+                             pkg_relation *rows, int max, int *n, pkg_err *);
+const char *pkg_rel_word(int kind);       /* "depends", "recommends", ... */
+
+/* What `apkg install <id>` will do, before anything is downloaded: the
+ * packages it needs installed first (oldest dependency first), the package,
+ * and the installed packages it replaces, removed after it. Refusals --
+ * a dependency missing from the catalogue or too old, a cycle, a conflict
+ * either way, a replacement something else still needs -- are in `why`
+ * with `ok` 0. Nothing is ever removed that the plan does not name. */
+enum { PKG_OP_DEPENDENCY = 0, PKG_OP_INSTALL, PKG_OP_REMOVE_REPLACED, PKG_OP_MARK_EXPLICIT };
+#define PKG_PLAN_OPS 24
+typedef struct {
+    int  kind;
+    char id[PKG_MAXID];
+    char version[64];
+    long revision;
+    char note[200];
+    int  done;                    /* after pkg_install_plan_run: 1 done, 0 not reached */
+    pkg_status status;            /* after the run: how it ended, when attempted */
+    char error[200];
+} pkg_plan_op;
+typedef struct {
+    int  ok;
+    pkg_status status;            /* the refusal's status when ok is 0 */
+    char why[700];
+    pkg_plan_op ops[PKG_PLAN_OPS];
+    int  nops;
+    int  extra;                   /* operations beyond the one asked for: confirm first */
+} pkg_install_plan;
+
+pkg_status pkg_plan_install(pkg_ctx *, const char *index_path, const char *id,
+                            pkg_install_plan *out, pkg_err *);
+/* Run the plan, one transaction per package. A replacement is recorded
+ * before it starts (db/replace.json), so an interruption between installing
+ * the new package and removing the old one is finished by the next apkg
+ * that opens the root for writing; the whole is NOT one transaction: after
+ * a failure, what was done stays done and the plan says which steps ran. */
+pkg_status pkg_install_plan_run(pkg_ctx *, const char *index_path, pkg_install_plan *,
+                                pkg_stop stop, pkg_err *);
+/* The plan as one JSON object (caller frees). */
+char      *pkg_install_plan_json(const pkg_install_plan *);
+/* Replacements finished by recovery when the root was opened: "hardcode by
+   bishop", or "". */
+const char *pkg_replacements_finished(const pkg_ctx *);
 
 /* NULL clears it. See pkg_progress for what cancelling can and cannot do. */
 void       pkg_set_progress(pkg_ctx *, pkg_progress, void *user);

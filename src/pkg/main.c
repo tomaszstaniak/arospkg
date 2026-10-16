@@ -41,6 +41,7 @@ static void verdict(const char *w)
 }
 
 static void print_notes(const pkg_details *d, int after_install);
+static void print_relations(pkg_ctx *c, const char *index, const char *id, int rich);
 
 static const char *hint_root;
 /* Names per kind in the summary after apkg update. */
@@ -136,6 +137,7 @@ static void show_rich(pkg_ctx *c, const char *index, const char *id, const pkg_d
         pr_field("Added", text, -1);
         pr_field("Catalogue", d->catalogue[0] ? d->catalogue : "the catalogue file on this machine", -1);
     }
+    print_relations(c, index, id, 1);
 }
 
 static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pkg_err *e)
@@ -176,6 +178,7 @@ static pkg_status show_package(pkg_ctx *c, const char *index, const char *id, pk
         printf("  added:        %s\n", text);
         printf("  catalogue:    %s\n", d.catalogue[0] ? d.catalogue : "the catalogue file on this machine");
     }
+    print_relations(c, index, id, 0);
     if (d.in_index) {
         if (d.compat != PKG_COMPAT_NATIVE)
             printf("  requirements: not checked -- it is not compatible with this machine\n");
@@ -279,6 +282,7 @@ static void usage(void)
            "  --color=<mode>    Colour output: auto, always or never\n"
            "  --json            Output search, list, outdated and recent as JSON\n"
            "  --all             With outdated: every installed package and its state\n"
+           "  --yes             Carry out an install plan that changes other packages\n"
            "  --limit <n>       With recent: at most n (default 10; 0 = all)\n"
            "  --days <n>        With recent: added in the last n days\n"
            "  --since <date>    With recent: added on or after YYYY-MM-DD\n"
@@ -321,7 +325,8 @@ static void usage_testing(void)
            "  --interrupt-at <n>       Interrupt an operation at a checkpoint:\n"
            "    1 plan; 2 directory; 3 directory marker; 4 registry;\n"
            "    5 before commit; 6 remove; 7 publish; 8 drawer icon;\n"
-           "    9 old tree moved; 10 new tree published\n"
+           "    9 old tree moved; 10 new tree published;\n"
+           "    11 replacement installed, old package not yet removed\n"
            "Interrupted operations may require recovery on the next run.\n");
 }
 
@@ -514,6 +519,89 @@ static void offered(pkg_ctx *c, const char *index, const char *id, char *v, size
     if (pkg_details_get(c, index, id, &d, &e2) != PKG_OK) return;
     if (installed && d.e.installed) rev_label(v, n, d.e.installed_version, d.e.installed_revision);
     else if (!installed && d.in_index) rev_label(v, n, d.e.version, d.e.revision);
+}
+
+/* ---------------------------------------------------------- relations */
+
+static const char *op_verb(int k)
+{
+    return k == PKG_OP_DEPENDENCY ? "install (needed)" : k == PKG_OP_INSTALL ? "install" :
+           k == PKG_OP_REMOVE_REPLACED ? "remove (replaced)" : "keep, as installed by you";
+}
+
+/* The plan of `apkg install`, step by step, before anything happens. */
+static void print_plan(const pkg_install_plan *pl)
+{
+    int i; char line[400], v[80];
+    pr_heading("Plan");
+    for (i = 0; i < pl->nops; i++) {
+        const pkg_plan_op *o = &pl->ops[i];
+        rev_label(v, sizeof v, o->version, o->revision);
+        snprintf(line, sizeof line, "%d. %s %s %s%s%s", i + 1, op_verb(o->kind), o->id, v,
+                 o->note[0] ? " -- " : "", o->note);
+        pr_text(line, 2);
+    }
+}
+
+/* After a run that stopped: which steps ran and which did not. */
+static void print_plan_result(const pkg_install_plan *pl)
+{
+    int i; char line[500];
+    pr_heading("What was done");
+    for (i = 0; i < pl->nops; i++) {
+        const pkg_plan_op *o = &pl->ops[i];
+        snprintf(line, sizeof line, "%d. %s %s: %s%s%s", i + 1, op_verb(o->kind), o->id,
+                 !o->done ? "not done" : o->status == PKG_OK ? "done" : "failed",
+                 o->done && o->status != PKG_OK ? " -- " : "", o->done && o->status != PKG_OK ? o->error : "");
+        pr_text(line, 2);
+    }
+}
+
+static int assume_yes;   /* --yes */
+
+/* A plan that changes more than the package named is confirmed first: in
+   a window, by answering; in a script, by --yes. */
+static int plan_confirmed(void)
+{
+    char ans[16];
+    if (assume_yes) return 1;
+    if (!IsInteractive(Input())) {
+        pr_text("This changes more than the package you named. Run it again with --yes to go ahead, "
+                "or with --dry-run to see it only. Nothing was changed.", 0);
+        return 0;
+    }
+    printf("Go ahead? [y/N] ");
+    fflush(stdout);
+    if (!fgets(ans, sizeof ans, stdin) || (ans[0] != 'y' && ans[0] != 'Y')) {
+        pr_text("Nothing was changed.", 0);
+        return 0;
+    }
+    return 1;
+}
+
+/* What `show` lists under Relations. */
+static void print_relations(pkg_ctx *c, const char *index, const char *id, int rich)
+{
+    pkg_relation *rows = (pkg_relation *)malloc(sizeof *rows * PKG_REL_ROWS);
+    pkg_err e2; int n = 0, i; char line[600];
+    memset(&e2, 0, sizeof e2);
+    if (!rows) return;
+    if (pkg_relations_get(c, index, id, rows, PKG_REL_ROWS, &n, &e2) != PKG_OK || !n) { free(rows); return; }
+    if (rich) { putchar('\n'); pr_heading("Relations"); }
+    for (i = 0; i < n; i++) {
+        const pkg_relation *r = &rows[i];
+        char what[200];
+        snprintf(what, sizeof what, "%s%s%s", r->id, r->min_version[0] ? " >= " : "", r->min_version);
+        if (r->kind == PKG_REL_RECOMMENDS && r->reason[0])
+            snprintf(line, sizeof line, "%s -- %s. %s", what, r->reason, r->state);
+        else snprintf(line, sizeof line, "%s: %s", what, r->state);
+        if (rich) pr_field(r->kind == PKG_REL_DEPENDS ? "Needs" : r->kind == PKG_REL_RECOMMENDS ? "Recommends" :
+                           r->kind == PKG_REL_CONFLICTS ? "Conflicts with" : "Replaces", line,
+                           r->kind == PKG_REL_DEPENDS ? (r->satisfied ? PR_GREEN : PR_YELLOW) : -1);
+        else printf("  %-13s %s\n", r->kind == PKG_REL_DEPENDS ? "needs:" : r->kind == PKG_REL_RECOMMENDS ? "recommends:" :
+                    r->kind == PKG_REL_CONFLICTS ? "conflicts:" : "replaces:", line);
+    }
+    free(rows);
 }
 
 static void heading2(const char *verb, const char *id, const char *v)
@@ -1001,7 +1089,7 @@ static int real_main(int argc, char **argv)
     int nrest = 0;
     int group_rc = -1, shown = 0;    /* upgrade --all: its own exit status; errors already shown */
     int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0, all = 0;
-    int limit = -1, days = -1, builds = 0, last_update = 0;
+    int limit = -1, days = -1, builds = 0, last_update = 0, rc_dry = 0;
     const char *since = NULL;
     pkg_ctx *c = NULL;
     pkg_err e;
@@ -1041,6 +1129,7 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--days") && i + 1 < argc) days = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--since") && i + 1 < argc) since = argv[++i];
         else if (!strcmp(argv[i], "--builds")) builds = 1;
+        else if (!strcmp(argv[i], "--yes")) assume_yes = 1;
         else if (!strcmp(argv[i], "--since-last-update")) last_update = 1;
         else if (!strcmp(argv[i], "--verbose")) pkg_set_verbose(1);
         else if (!strcmp(argv[i], "--keep-rejected")) pkg_set_keep_rejected(1);
@@ -1174,6 +1263,8 @@ static int real_main(int argc, char **argv)
         /* Never mixed into JSON: outdated --json carries the pending count. */
         if (json) r = 0;
         if (r) printf("recovered %d interrupted transaction(s)\n", r);
+        if (!json && *pkg_replacements_finished(c))
+            printf("finished an interrupted replacement: %s\n", pkg_replacements_finished(c));
         pending = json ? 0 : pkg_pending_txns(c);
         if (pending)
             printf("WARNING: %d uncommitted transaction(s) exist. What follows is\n"
@@ -1295,6 +1386,23 @@ static int real_main(int argc, char **argv)
                        !strcmp(cmd, "upgrade") || !strcmp(cmd, "rollback"))) {
         char *out = NULL;
         if (!arg) { printf("apkg %s: which package?\n", cmd); pkg_close(c); return 5; }
+        if (!strcmp(cmd, "install")) {
+            /* The relations plan, as install would make it; then the files
+               of the package itself. */
+            pkg_install_plan *pl = (pkg_install_plan *)calloc(1, sizeof *pl);
+            if (pl && pkg_plan_install(c, index, arg, pl, &e) == PKG_OK) {
+                if (json) {
+                    char *js = pkg_install_plan_json(pl);
+                    if (js) fputs(js, stdout);
+                    free(js);
+                    rc_dry = pl->ok ? 0 : 10;
+                    free(pl); pkg_close(c); return rc_dry;
+                }
+                if (!pl->ok) { pr_text(pl->why, 0); free(pl); pkg_close(c); return 10; }
+                if (pl->extra) print_plan(pl);
+            }
+            free(pl);
+        }
         st = pkg_dry_run(c, index, cmd, arg, fetch, &out, &e);
         if (st == PKG_OK) fputs(out, stdout);
         free(out);
@@ -1329,11 +1437,58 @@ static int real_main(int argc, char **argv)
         snprintf(doing, sizeof doing, "install %s", arg);
         doing_id = arg;
         cancel_noun = "Installation";
-        offered(c, index, arg, v, sizeof v, 0);
-        heading2("Installing", arg, v);
-        st = pkg_install(c, index, arg, stop, &e);
-        pr_end_line();
-        if (st == PKG_OK) print_installed(c, index, arg, "Installed");
+        {
+            /* The plan first: what it needs, what it replaces, what it
+               refuses. Only a plan beyond the package itself is asked about. */
+            pkg_install_plan *pl = (pkg_install_plan *)calloc(1, sizeof *pl);
+            int i;
+            if (!pl) { printf("out of memory\n"); pkg_close(c); return 10; }
+            st = pkg_plan_install(c, index, arg, pl, &e);
+            if (st == PKG_OK && !pl->ok) {
+                e.status = st = pl->status ? pl->status : PKG_E_REQUIRES;
+                snprintf(e.summary, sizeof e.summary, "cannot install it");
+                snprintf(e.detail, sizeof e.detail, "%s", pl->why);
+                snprintf(e.subject, sizeof e.subject, "%s", arg);
+            }
+            if (st == PKG_OK && json) {
+                char *js;
+                if (pl->extra && !assume_yes) {
+                    js = pkg_install_plan_json(pl); if (js) fputs(js, stdout); free(js);
+                    free(pl); pkg_close(c); return 5;
+                }
+                st = pkg_install_plan_run(c, index, pl, stop, &e);
+                js = pkg_install_plan_json(pl); if (js) fputs(js, stdout); free(js);
+                free(pl); pkg_close(c);
+                return st == PKG_OK ? 0 : 10;
+            }
+            if (st == PKG_OK && (pl->extra || pl->ops[0].kind == PKG_OP_MARK_EXPLICIT)) print_plan(pl);
+            if (st == PKG_OK && pl->extra && !plan_confirmed()) { free(pl); pkg_close(c); return 5; }
+            if (st == PKG_OK) {
+                offered(c, index, arg, v, sizeof v, 0);
+                if (pl->ops[0].kind != PKG_OP_MARK_EXPLICIT) heading2("Installing", arg, v);
+                st = pkg_install_plan_run(c, index, pl, stop, &e);
+                pr_end_line();
+                if (st == PKG_OK) {
+                    for (i = 0; i < pl->nops; i++) {
+                        const pkg_plan_op *o = &pl->ops[i];
+                        if (o->kind == PKG_OP_DEPENDENCY) print_installed(c, index, o->id, "Installed (needed)");
+                        else if (o->kind == PKG_OP_MARK_EXPLICIT)
+                            { char l[200]; snprintf(l, sizeof l, "%s was installed as a dependency; it is now recorded as installed by you.", o->id); pr_text(l, 0); }
+                    }
+                    if (pl->ops[pl->nops - 1].kind != PKG_OP_MARK_EXPLICIT || pl->nops > 1)
+                        for (i = 0; i < pl->nops; i++) if (pl->ops[i].kind == PKG_OP_INSTALL) print_installed(c, index, arg, "Installed");
+                    for (i = 0; i < pl->nops; i++)
+                        if (pl->ops[i].kind == PKG_OP_REMOVE_REPLACED) {
+                            char l[300]; pkg_removal rm;
+                            pkg_last_removal(c, &rm);
+                            snprintf(l, sizeof l, "Removed %s, which %s replaces.%s%s", pl->ops[i].id, arg,
+                                     rm.dir[0] ? " Kept, as you changed or added them: " : "", rm.dir[0] ? rm.dir : "");
+                            pr_text(l, 0);
+                        }
+                } else if (pl->extra) print_plan_result(pl);
+            }
+            free(pl);
+        }
     } else if (!strcmp(cmd, "remove")) {
         char v[80];
         pkg_removal rm;

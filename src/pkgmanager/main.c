@@ -958,6 +958,33 @@ static void show_detail(void)
             k += (size_t)snprintf(buf + k, sizeof buf - k, "added: %s\ncatalogue: %s", text,
                                   det.catalogue[0] ? det.catalogue : "the catalogue file on this machine");
     }
+    {
+        /* What it needs, recommends, conflicts with and replaces, from the
+           same call apkg show makes. */
+        pkg_relation *rr = (pkg_relation *)malloc(sizeof *rr * PKG_REL_ROWS);
+        int nr = 0, i;
+        pkg_ctx *c = NULL; pkg_err err; memset(&err, 0, sizeof err);
+        if (rr && pkg_open(root, PKG_OPEN_READ, &c, &err) == PKG_OK) {
+            pkg_relations_get(c, index_path, e->id, rr, PKG_REL_ROWS, &nr, &err);
+            pkg_close(c);
+        }
+        for (i = 0; rr && i < nr; i++) {
+            char st[240], *hint;
+            snprintf(st, sizeof st, "%s", rr[i].state);
+            /* The window's way to install it, not the Shell's. */
+            if ((hint = strstr(st, " (apkg install ")) != NULL) snprintf(hint, sizeof st - (size_t)(hint - st), " (select it and press Install)");
+            k = strlen(buf);
+            if (k < sizeof buf)
+                snprintf(buf + k, sizeof buf - k, "\n\33b%s\33n %s%s%s%s%s: %s",
+                         rr[i].kind == PKG_REL_DEPENDS ? "needs" : rr[i].kind == PKG_REL_RECOMMENDS ? "recommends" :
+                         rr[i].kind == PKG_REL_CONFLICTS ? "conflicts with" : "replaces",
+                         rr[i].id, rr[i].min_version[0] ? " " : "", rr[i].min_version[0] ? ">= " : "", rr[i].min_version,
+                         rr[i].reason[0] ? "" : "", st);
+            if (rr[i].kind == PKG_REL_RECOMMENDS && rr[i].reason[0] && (k = strlen(buf)) < sizeof buf)
+                snprintf(buf + k, sizeof buf - k, "\n  why: %s", rr[i].reason);
+        }
+        free(rr);
+    }
     if (e->installed && !strcmp(last_verify.id, e->id)) {
         /* First, where it is seen without scrolling: it answers the button
            that was just pressed. */
@@ -1068,11 +1095,15 @@ static void finish(rx_job *j, rx_jobstate st, const char *error, const char *mes
     if (j == active) active = NULL;
 }
 
+static int install_confirmed;     /* the plan in the confirmation window was accepted */
+
 static int start(job_kind kind, const char *id)
 {
     if (in_flight) return -1;
     memset(&cur, 0, sizeof cur);
     cur.kind = kind;
+    cur.confirmed = kind == JOB_INSTALL && install_confirmed;
+    install_confirmed = 0;
     cur.seq = active ? active->id : 0;
     snprintf(cur.id, sizeof cur.id, "%s", id ? id : "");
     snprintf(cur.root, sizeof cur.root, "%s", root);
@@ -1096,6 +1127,9 @@ static int start(job_kind kind, const char *id)
 }
 
 /* Every operation starts here, from a button or from a script. */
+static int install_gate(rx_job *j);
+static void proceed(const char *how);
+
 static rx_job *begin(job_kind kind, const char *pkg, const char *origin)
 {
     rx_job *j;
@@ -1109,8 +1143,62 @@ static rx_job *begin(job_kind kind, const char *pkg, const char *origin)
     j->state = (kind == JOB_PREVIEW_UPGRADE || kind == JOB_PREVIEW_ROLLBACK) ? RXJ_PREVIEW : RXJ_RUNNING;
     active = j;
     logline("job %ld %s %s from %s", j->id, j->op, j->package[0] ? j->package : "-", origin);
+    if (kind == JOB_INSTALL && install_gate(j)) return j;
     if (start(kind, pkg) != 0) finish(j, RXJ_FAILED, "CANNOTSTART", "could not start the worker process");
     return j;
+}
+
+/* Before an install: its plan, from the same call apkg makes. A refusal
+ * ends the job here; a plan that changes more than the package (what it
+ * needs, what it replaces) waits in the confirmation window. Returns 1
+ * when the job was settled or is waiting, 0 to start it at once. */
+static int install_gate(rx_job *j)
+{
+    static char text[3000];
+    pkg_install_plan *pl = (pkg_install_plan *)calloc(1, sizeof *pl);
+    pkg_ctx *c = NULL; pkg_err err; pkg_status st;
+    size_t k; int i;
+    memset(&err, 0, sizeof err);
+    if (!pl) return 0;
+    if ((st = pkg_open(root, PKG_OPEN_READ, &c, &err)) == PKG_OK) {
+        st = pkg_plan_install(c, index_path, j->package, pl, &err);
+        pkg_close(c);
+    }
+    if (st != PKG_OK || !pl->ok) {
+        char why[800];
+        snprintf(why, sizeof why, "%s", st != PKG_OK ? err.summary : pl->why);
+        logline("install %s refused: %s", j->package, why);
+        finish(j, RXJ_FAILED, rx_statusword(st != PKG_OK ? st : pl->status), why);
+        if (st == PKG_OK) {
+            err.status = pl->status; snprintf(err.summary, sizeof err.summary, "cannot install %s", j->package);
+            snprintf(err.detail, sizeof err.detail, "%s", pl->why);
+        }
+        show_err("cannot install", err.status, &err);
+        free(pl);
+        return 1;
+    }
+    if (!pl->extra) { free(pl); return 0; }
+    k = (size_t)snprintf(text, sizeof text, "Install %s\n\nThis changes more than %s:\n\n", j->package, j->package);
+    for (i = 0; i < pl->nops && k < sizeof text; i++) {
+        const pkg_plan_op *o = &pl->ops[i];
+        char v[80];
+        rev_label(v, sizeof v, o->version, o->revision);
+        k += (size_t)snprintf(text + k, sizeof text - k, "%d. %s %s %s%s%s\n", i + 1,
+                              o->kind == PKG_OP_DEPENDENCY ? "install (needed)" : o->kind == PKG_OP_INSTALL ? "install" :
+                              "remove (replaced)", o->id, v, o->note[0] ? "\n     " : "", o->note);
+    }
+    if (k < sizeof text)
+        snprintf(text + k, sizeof text - k, "\nNothing else is removed. Files you changed in a removed package are kept.\n\nProceed?");
+    logline("install %s: plan of %d steps waits for confirmation", j->package, pl->nops);
+    free(pl);
+    j->state = RXJ_CONFIRM;
+    snprintf(j->message, sizeof j->message, "the install plan waits for confirmation");
+    confirming = 1;
+    status("waiting for your decision");
+    if (auto_yes) { proceed("confirmed automatically (--yes)"); return 1; }
+    SetAttrs(win_confirm, MUIA_Window_Open, TRUE, TAG_DONE);
+    SetAttrs(txt_confirm, MUIA_Floattext_Text, (IPTR)text, TAG_DONE);
+    return 1;
 }
 
 /* The plan is shown in a window of its own rather than a requester: a
@@ -1131,7 +1219,9 @@ static void proceed(const char *how)
     logline("%s %s %s", j->op, j->package, how);
     j->state = RXJ_RUNNING;
     j->phase[0] = 0; j->done = j->total = 0; j->can_cancel = 0;
-    if (start(!strcmp(j->op, "upgrade") ? JOB_UPGRADE : JOB_ROLLBACK, j->package) != 0)
+    if (!strcmp(j->op, "install")) install_confirmed = 1;
+    if (start(!strcmp(j->op, "install") ? JOB_INSTALL : !strcmp(j->op, "upgrade") ? JOB_UPGRADE : JOB_ROLLBACK,
+              j->package) != 0)
         finish(j, RXJ_FAILED, "CANNOTSTART", "could not start the worker process");
 }
 

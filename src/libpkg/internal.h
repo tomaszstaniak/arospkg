@@ -2,6 +2,7 @@
 #define PKG_INTERNAL_H
 #include "pkg.h"
 #include "req.h"
+#include "json.h"
 #include <stddef.h>
 
 #define MAXINV 2048
@@ -23,6 +24,13 @@ struct pkg_ctx {
     void *progress_user;
     const char *progress_id;   /* the package an event is about, during install */
     pkg_removal removal;       /* what the last remove left in place */
+    /* Relations: the reason the next install records ("explicit" or
+       "dependency"), whether it runs inside a plan (pkg_install refuses on
+       its own when the plan would need more than the one package), and the
+       replacements recovery finished at open. */
+    char install_reason[16];
+    int  in_plan;
+    char replaced_note[200];
 };
 
 typedef struct { char rel[256]; char sha[65]; long size; } inv_ent;
@@ -61,6 +69,11 @@ typedef struct {
     char url[512];                   /* where the last refresh fetched it; "" unknown */
 } news_prev;
 void news_before_update(struct pkg_ctx *, news_prev *);
+/* relations_io.c */
+int  rel_fragment(const char *json, const js_tok *t, int ntok, int obj, char *out, size_t n, char *why, size_t wn);
+pkg_status rel_check_alone(struct pkg_ctx *, const char *index_path, const char *id, int upgrade, pkg_err *);
+pkg_status rel_check_remove(struct pkg_ctx *, const char *id, pkg_err *);
+void rel_finish_replacements(struct pkg_ctx *);
 int  news_after_update(struct pkg_ctx *, const char *url, news_prev *);
 void news_prev_free(news_prev *);
 void details_catalogue(struct pkg_ctx *, pkg_details *);
@@ -79,7 +92,8 @@ char *registry_text(const char *id, const char *version, long revision,
                     const char *icon_state, const char *icon_sha, long icon_size,
                     const char *icon_member,
                     const char *prev_registry, const char *prev_archive,
-                    const char *notes, const pkg_launch *launch);
+                    const char *notes, const pkg_launch *launch,
+                    const char *reason, const char *rel_json);
 /* Write application.json into a staged tree from the catalogue's launch
    table, unless the archive brought its own (which then stands). Returns 0,
    or -1 when the file could not be written. */
@@ -88,10 +102,13 @@ int   app_stage(const char *staging, const char *id, const char *version, long r
                 const pkg_launch *l);
 /* What upgrade, rollback, verify and a dry run need to know about a revision,
  * read from a registry entry or from an index entry (swap.c). */
+#define REL_JSON_MAX 4096
 typedef struct {
     char version[64];
     long revision;
     char arch[16], abi[8];
+    char reason[16];             /* registry: "explicit" or "dependency" */
+    char rel_json[REL_JSON_MAX]; /* the relations, as the registry records them */
     char url[512], sha[65];
     long size;
     char subdir[128];

@@ -60,6 +60,11 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_news" \
     "$SRC/req.c" "$SRC/err.c"
 "$OUT/test_news"
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_relations" \
+    "$HERE/test_relations.c" "$SRC/relations.c" "$SRC/entries.c" "$SRC/json.c" "$SRC/listing.c" "$SRC/app.c" \
+    "$SRC/req.c" "$SRC/err.c" "$SRC/upgrade.c"
+"$OUT/test_relations"
+
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_hint" \
     "$HERE/test_hint.c" "$HERE/../src/pkg/hint.c"
 "$OUT/test_hint"
@@ -99,6 +104,8 @@ for t in test_sha256 test_req test_icon test_listing test_entries test_upgrade t
     echo "== $t"
     "$OUT/$t" || fail=1
 done
+echo "== test_relations.py"
+python3 "$HERE/test_relations.py" || fail=1
 echo "== test_review"
 python3 "$HERE/test_review.py" || fail=1
 echo "== test_mkindex"

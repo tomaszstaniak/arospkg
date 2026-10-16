@@ -23,6 +23,7 @@ typedef struct {
     char            index_url[512];
     char            current[16];  /* JOB_CHECK_RELEASE: this PkgManager's version */
     struct MsgPort *reply;      /* the window's port; the worker sends here */
+    int             confirmed;  /* JOB_INSTALL: the user accepted a plan with more steps */
     volatile int    cancel;     /* set by the window, read by the callback  */
     volatile int    running;
     /* The final message, allocated by job_start before the worker exists:

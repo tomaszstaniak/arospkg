@@ -66,6 +66,11 @@ int swap_read_registry(const char *path, rev_info *r, inv_ent *inv, int *ninv, c
     r->size = js_long(js, t, js_member(js, t, n, 0, "archive_size"), -1);
     /* A rollback writes the previous revision's record again: its notes too. */
     if (notes_from_element(js, t, n, 0, r->notes, sizeof r->notes) < 0) r->notes[0] = 0;
+    member(js, t, n, 0, "reason", r->reason, sizeof r->reason);
+    {
+        char why[200];
+        if (rel_fragment(js, t, n, 0, r->rel_json, sizeof r->rel_json, why, sizeof why) != 0) r->rel_json[0] = 0;
+    }
     {
         char why[200];
         if (launch_from_object(js, t, n, js_member(js, t, n, 0, "launch"), &r->launch, why, sizeof why) != 1)
@@ -127,6 +132,10 @@ pkg_status swap_read_index(const char *index_path, const char *id,
     if (launch_from_object(js, t, n, js_member(js, t, n, found, "launch"), &r->launch, why, sizeof why) != 1)
         memset(&r->launch, 0, sizeof r->launch);
     if (req_parse(js, t, n, found, r->app_reqs, MAXREQ, &r->app_nreq, why, sizeof why) != 0) r->app_nreq = 0;
+    if (rel_fragment(js, t, n, found, r->rel_json, sizeof r->rel_json, why, sizeof why) != 0) {
+        free(t); free(js);
+        return pkg_fail(e, PKG_E_REQUIRES, "this package's relations are not readable by this apkg", why, id);
+    }
     if (req_parse(js, t, n, found, reqs, MAXREQ, nreq, why, sizeof why) != 0) {
         free(t); free(js);
         return pkg_fail(e, PKG_E_REQUIRES, "this package's system requirements are not readable", why, id);
@@ -440,7 +449,8 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
                         to->icon_member,
                         is_rollback ? "" : prev_reg,
                         is_rollback ? "" : prev_arc,
-                        to->notes, &to->launch);
+                        to->notes, &to->launch,
+                        from->reason, to->rel_json);
     if (!reg || u_write_atomicish(regpath, reg) != 0) { st = pkg_fail(e, PKG_E_IO, "cannot write the registry entry", "", regpath); goto out; }
     STOP(PKG_STOP_AFTER_REGISTRY);
     STOP(PKG_STOP_BEFORE_COMMIT);
@@ -487,6 +497,9 @@ static pkg_status do_upgrade(pkg_ctx *c, const char *index_path, const char *id,
                                                                    : (from.abi[0] ? from.abi : pkg_abi()),
                          &to, reqs, &nreq, e);
     if (st != PKG_OK) goto out;
+    /* The new build's depends must already be here and it must not conflict
+       with anything installed: an upgrade installs nothing else. */
+    if ((st = rel_check_alone(c, index_path, id, 1, e)) != PKG_OK) goto out;
     if (upgrade_allowed(from.version, from.revision, to.version, to.revision, why, sizeof why) != 0) {
         if (preview) {
             memset(preview, 0, sizeof *preview);

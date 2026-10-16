@@ -48,9 +48,10 @@ char *registry_text(const char *id, const char *version, long revision,
                     const char *icon_state, const char *icon_sha, long icon_size,
                     const char *icon_member,
                     const char *prev_registry, const char *prev_archive,
-                    const char *notes, const pkg_launch *launch)
+                    const char *notes, const pkg_launch *launch,
+                    const char *reason, const char *rel_json)
 {
-    size_t cap = 4096 + PKG_NOTES_MAX * 2 + (size_t)n * 400 + (size_t)nreq * 400;
+    size_t cap = 4096 + REL_JSON_MAX + PKG_NOTES_MAX * 2 + (size_t)n * 400 + (size_t)nreq * 400;
     char *buf = (char *)malloc(cap);
     js_out o; char when[32]; int i;
     if (!buf) return NULL;
@@ -74,7 +75,14 @@ char *registry_text(const char *id, const char *version, long revision,
     js_raw(&o, ",\n  "); js_key(&o, "origin");  js_vstr(&o, url);
     js_raw(&o, ",\n  "); js_key(&o, "archive_sha256"); js_vstr(&o, sha);
     js_raw(&o, ",\n  "); js_key(&o, "archive_size");   js_vlong(&o, size);
-    js_raw(&o, ",\n  "); js_key(&o, "reason");  js_vstr(&o, "explicit");
+    /* "explicit": asked for; "dependency": installed because another
+       package needs it. Kept across upgrades. */
+    js_raw(&o, ",\n  "); js_key(&o, "reason");  js_vstr(&o, reason && *reason ? reason : "explicit");
+    /* The relations as the catalogue declared them for this build, so a
+       removal or a conflict check needs no catalogue. relations_schema
+       says they were recorded, also when there are none. */
+    js_raw(&o, ",\n  "); js_key(&o, "relations_schema"); js_vlong(&o, 1);
+    if (rel_json && *rel_json) js_raw(&o, rel_json);
     js_raw(&o, ",\n  "); js_key(&o, "dir");     js_vstr(&o, id);
     /* The requirement verdicts are part of the record of this install, not of
      * the package: the same archive installed on another machine can produce
@@ -294,7 +302,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
 {
     c->progress_id = id;
     const char *abi_force = pkg_abi_override();
-    char *idx = NULL, *plan = NULL, *reg = NULL;
+    char *idx = NULL, *plan = NULL, *reg = NULL, *rel_json = NULL;
     js_tok *t = NULL;
     int ntok, arr, i, found = -1;
     char version[64] = "", arch[16] = "", url[512] = "", want_sha[65] = "", want_abi[16] = "";
@@ -369,6 +377,23 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     if (launch_from_object(idx, t, ntok, js_member(idx, t, ntok, found, "launch"),
                            &launch, why, sizeof why) != 1)
         memset(&launch, 0, sizeof launch);
+
+    /* Relations: a declaration this client cannot read, or a feature it
+       lacks, refuses the package -- installing it without what it needs and
+       calling that a success is what older clients did. Outside a plan the
+       package must need nothing else: pkg_plan_install says what. */
+    {
+        char rwhy[200];
+        if (!(rel_json = (char *)malloc(REL_JSON_MAX))) { st = pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id); goto out; }
+        if (rel_fragment(idx, t, ntok, found, rel_json, REL_JSON_MAX, rwhy, sizeof rwhy) != 0) {
+            st = pkg_fail(e, PKG_E_REQUIRES, "this package's relations are not readable by this apkg", rwhy, id);
+            goto out;
+        }
+    }
+    if (!c->in_plan) {
+        pkg_status rs = rel_check_alone(c, index_path, id, 0, e);
+        if (rs != PKG_OK) { st = rs; goto out; }
+    }
 
     {
         pkg_status a;
@@ -589,7 +614,8 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
                         icon_src[0] ? (icon_managed ? "installed" : "kept-existing")
                                     : "none",
                         icon_managed ? icon_sha : "", icon_managed ? icon_size : -1,
-                        icon_src, "", "", notes, &launch);
+                        icon_src, "", "", notes, &launch,
+                        c->install_reason[0] ? c->install_reason : "explicit", rel_json);
     if (!reg || u_write_atomicish(regpath, reg) != 0) {
         st = pkg_fail(e, PKG_E_IO, "cannot write the registry entry", "", regpath); goto out;
     }
@@ -612,7 +638,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     }
     st = PKG_OK;
 out:
-    free(idx); free(t); free(plan); free(reg); free(inv);
+    free(idx); free(t); free(plan); free(reg); free(inv); free(rel_json);
     return st;
 }
 
@@ -669,6 +695,10 @@ pkg_status pkg_remove(pkg_ctx *c, const char *id, pkg_stop stop, pkg_err *e)
     registry_path(c, id, regpath, sizeof regpath);
     if (!u_exists(regpath))
         return pkg_fail(e, PKG_E_NOT_FOUND, "not installed", "", id);
+    /* Not while another installed package depends on it: the other would
+       stay installed and stop working. */
+    if ((st = rel_check_remove(c, id, e)) != PKG_OK) return st;
+    st = PKG_E_IO;
 
     regtext = u_read_all(regpath, &len);
     if (!regtext) return pkg_fail(e, PKG_E_IO, "cannot read the registry entry", "", regpath);
