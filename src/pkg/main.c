@@ -595,11 +595,15 @@ static void print_relations(pkg_ctx *c, const char *index, const char *id, int r
         if (r->kind == PKG_REL_RECOMMENDS && r->reason[0])
             snprintf(line, sizeof line, "%s -- %s. %s", what, r->reason, r->state);
         else snprintf(line, sizeof line, "%s: %s", what, r->state);
+        if (r->kind == PKG_REL_NEEDED_BY)
+            snprintf(line, sizeof line, "%s%s%s%s: %s", r->id, r->min_version[0] ? " (needs at least " : "",
+                     r->min_version, r->min_version[0] ? ")" : "", r->state);
         if (rich) pr_field(r->kind == PKG_REL_DEPENDS ? "Needs" : r->kind == PKG_REL_RECOMMENDS ? "Recommends" :
-                           r->kind == PKG_REL_CONFLICTS ? "Conflicts with" : "Replaces", line,
+                           r->kind == PKG_REL_CONFLICTS ? "Conflicts with" : r->kind == PKG_REL_REPLACES ? "Replaces" :
+                           "Needed by", line,
                            r->kind == PKG_REL_DEPENDS ? (r->satisfied ? PR_GREEN : PR_YELLOW) : -1);
         else printf("  %-13s %s\n", r->kind == PKG_REL_DEPENDS ? "needs:" : r->kind == PKG_REL_RECOMMENDS ? "recommends:" :
-                    r->kind == PKG_REL_CONFLICTS ? "conflicts:" : "replaces:", line);
+                    r->kind == PKG_REL_CONFLICTS ? "conflicts:" : r->kind == PKG_REL_REPLACES ? "replaces:" : "needed by:", line);
     }
     free(rows);
 }
@@ -1465,7 +1469,9 @@ static int real_main(int argc, char **argv)
             if (st == PKG_OK && pl->extra && !plan_confirmed()) { free(pl); pkg_close(c); return 5; }
             if (st == PKG_OK) {
                 offered(c, index, arg, v, sizeof v, 0);
-                if (pl->ops[0].kind != PKG_OP_MARK_EXPLICIT) heading2("Installing", arg, v);
+                /* With a plan shown, its steps say what is installed; the
+                   progress lines name each package. */
+                if (pl->ops[0].kind != PKG_OP_MARK_EXPLICIT && !pl->extra) heading2("Installing", arg, v);
                 st = pkg_install_plan_run(c, index, pl, stop, &e);
                 pr_end_line();
                 if (st == PKG_OK) {

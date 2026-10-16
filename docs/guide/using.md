@@ -50,6 +50,47 @@ Installed zunecalc 1.0
 the package and press **Open folder**. With `--root`, the printed command
 carries the same root, so it can be copied as it is.
 
+### What a package needs, recommends or replaces
+
+`apkg show` lists a package's relations with their state here:
+
+```text
+  recommends:   limpet >= 0.4.1 -- full-screen front end with colours, scrollback and a clean exit; Bishop also runs in a plain Shell. not installed; the catalogue has 0.5.0 (apkg install limpet)
+  replaces:     hardcode: installed: installing this package removes it (files you changed are kept)
+```
+
+When an install changes more than the package you named, apkg shows the
+plan first and asks:
+
+```text
+Plan
+  1. install bishop 0.3.0-test2-aros3
+  2. remove (replaced) hardcode 0.3.0-test1-aros3 -- replaced by bishop; files you changed in it are kept
+Go ahead? [y/N]
+```
+
+- A package it needs is installed first, from the same catalogue, for this
+  system, and recorded as installed because another needs it. Installing it
+  by name later records it as yours.
+- A package it replaces is removed after it, as `apkg remove` removes:
+  files you changed or added stay where they were.
+- A conflict, either way, refuses the install and says which package to
+  remove first. Nothing is removed for you.
+- A recommendation is only shown. Install it yourself if you want it.
+
+In a script there is nobody to answer, so such a plan needs `--yes`;
+without it apkg changes nothing and exits with 5. `apkg --dry-run install`
+shows the plan and the files; `--json` gives the plan as one object
+(`ok`, `refusal`, `steps` with `action`, `id`, `version`, `note`, and after
+a run `done`, `result`, `error`). Each step is its own transaction: if one
+fails, the steps before it stay done and apkg lists which ran. A
+replacement is recorded before it starts; if it is interrupted after the
+new package is in, the next apkg that changes anything in that root removes
+the old one and says so.
+
+`apkg remove` refuses a package that another installed package needs, and
+names it. Remove that one first.
+
 ## Start a program
 
 ```text
@@ -326,6 +367,11 @@ them, and so does PkgManager after **Remove**.
   the list says how many new applications, new builds and updates it found.
   A catalogue without dates, or no recorded update, is said as such, never
   shown as "nothing new".
+- **Install** shows the plan in a confirmation window when it changes more
+  than the selected package (what it needs, what it replaces). **Remove**
+  refuses a package another one needs, and says which. The details list
+  what a package needs, recommends, conflicts with and replaces, with the
+  state of each.
 - The details show the status (Listed or Reviewed), the runtime tests
   recorded for this archive, when the catalogue first published it and
   where the catalogue came from.

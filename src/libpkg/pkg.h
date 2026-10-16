@@ -710,7 +710,8 @@ typedef struct {
     int  satisfied;               /* installed, for this system, new enough */
     char state[200];              /* in the user's words */
 } pkg_relation;
-enum { PKG_REL_DEPENDS = 0, PKG_REL_RECOMMENDS, PKG_REL_CONFLICTS, PKG_REL_REPLACES };
+enum { PKG_REL_DEPENDS = 0, PKG_REL_RECOMMENDS, PKG_REL_CONFLICTS, PKG_REL_REPLACES,
+       PKG_REL_NEEDED_BY      /* an installed package whose depends name this one */ };
 #define PKG_REL_ROWS 64
 
 /* Every relation `id` declares (its catalogue build for this system, or its

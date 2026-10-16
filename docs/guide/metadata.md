@@ -16,7 +16,7 @@ code is what runs, and this file needs fixing.
 
 | | **manifest** | **index** | **registry** |
 |---|---|---|---|
-| file | `manifests/<id>.<arch>.<abi>.toml` in arospkg-index (older ones `<id>.<arch>.toml`), corrections in `overrides/` under the same name | `index.json` in arospkg-index | `<root>/db/installed/<id>.json` |
+| file | `manifests/<id>.<arch>.<abi>.toml` in arospkg-index (older ones `<id>.<arch>.toml`), corrections in `overrides/` under the same name | `index-v3.json` (and `index-v2.json`, `index.json` for older clients) in arospkg-index | `<root>/db/installed/<id>.json` |
 | format | TOML | JSON, `schema: 1` | JSON, `schema: 1` |
 | written by | the index maintainer (the author may draft it) | `tools/mkindex.py`, never by hand | the client, when it installs or upgrades |
 | read by | `mkindex.py` | `apkg`, `PkgManager` | `apkg`, `PkgManager` |
@@ -117,8 +117,56 @@ system says it runs.
 | `requires_system[].type` | string | yes | none | | only `"library"` is probed | Any other value is accepted: `mkindex.py` prints a note and the client reports *undetermined*. |
 | `requires_system[].id` | string | yes | none | | the library name | `"crt.library"`. At most 63 characters. |
 | `requires_system[].min_version` | integer ≥ 0 | no | `0` | | `OpenLibrary(id, min_version)` | Only when you know it. No other keys are allowed in the table. |
-| `depends` | array of strings | no | `[]` | `depends` | **not read in 0.3** | Other packages in the same index. `mkindex.py` drops a manifest whose `depends` cannot be met in the same `arch`, and repeats until nothing more is dropped. |
+| `depends` | array of strings | no | `[]` | `depends` | 0.6: installed first; not read before 0.6 | `"id"` or `"id >= 1.2"`: other packages of the same catalogue, same CPU and ABI. See [Relations](#relations). |
+| `recommends` | array of tables | no | none | `recommends` | 0.6: shown, never installed or required | `[[recommends]]` with `id`, `reason`, optional `min_version`. See [Relations](#relations). |
+| `conflicts` | array of strings | no | none | `conflicts` | 0.6: refuses to install them together | Package ids. See [Relations](#relations). |
+| `replaces` | array of strings | no | none | `replaces` | 0.6: removes the old package after installing this one | Package ids. See [Relations](#relations). |
 | `install` | table | no | `{}` | `install`, copied as is | not read | Reserved. No manifest uses it. |
+
+### Relations
+
+Four relations between packages, each with one meaning in the manifest,
+the catalogue, the local registry, `apkg` and PkgManager.
+
+**What apkg can deliver.** apkg installs every package into its own
+drawer, `<root>/<id>`, with its drawer icon beside it. It puts nothing into
+`LIBS:`, `C:`, `Fonts:` or `DEVS:`, and makes no assigns. So a package can
+depend only on another package that the program finds in the same root:
+beside its own drawer (`<root>/<id>`), or through the registry. A library
+or a command that the system must provide is a `requires_system`, which
+apkg checks on the machine and never installs. Installing a library's
+archive would not make the requirement true.
+
+| relation | written as | what apkg does |
+|---|---|---|
+| `depends` | `depends = ["limpet", "foo >= 1.2"]` | Without it the program does not work. `apkg install` installs it first from the same catalogue, the build for this CPU and ABI, at least the version given (only `>=`, dotted numbers). Its own `depends` too, deepest first. It is recorded as installed as a dependency. A package that another installed package depends on is not removed. |
+| `recommends` | `[[recommends]]` with `id`, `reason`, optional `min_version` | Optional. `show` and PkgManager say what it adds (`reason`), whether the catalogue has it for this system, and whether it is installed. It is never installed automatically, never blocks an install or a start, and does not change how the program starts. |
+| `conflicts` | `conflicts = ["other"]` | The two are never installed together. Checked in both directions: the new package's list, and the list of every installed package. Nothing is removed to resolve it: the user removes one first. |
+| `replaces` | `replaces = ["old"]` | This package takes over an installed one. `apkg install` installs it, then removes the old one as `apkg remove` does: files the user changed or added stay in the old drawer. It implies a conflict. It is **not** a provides: what depends on the old id is not satisfied by the new one, so the replacement is refused while another installed package depends on the old id. |
+
+A rename is a `replaces` plus the program's own migration of its settings:
+apkg moves no configuration between packages.
+
+Rules `mkindex.py` and `apkg-pack check` enforce: ids are package ids; a
+minimum version is dotted numbers; no relation names the package itself;
+nothing is both needed and refused or replaced; at most 16 of each; a
+recommendation says what it adds, in plain ASCII of at most 159
+characters; every `depends` exists in the catalogue for the same CPU and
+ABI at the stated version; no cycle.
+
+**Old clients.** apkg 0.4 and 0.5 read `index-v2.json` and skip keys they
+do not know: they would install a package without its dependencies, beside
+a conflicting one or without removing what it replaces, and report
+success. An entry with `depends`, `conflicts` or `replaces` therefore
+carries `"client_features": ["relations"]` and is published only in
+`index-v3.json`, the file apkg 0.6 fetches; a client that meets a feature it
+does not know refuses the package. `recommends` alone needs no new client.
+
+**States.** For each relation `show` keeps apart: the id is in the
+catalogue (for any system); the catalogue has a build for this system,
+new enough; the registry has it in this root; and the relation is
+satisfied (installed, for this system, new enough). An author's declaration
+never makes an entry Reviewed or runtime tested.
 
 A library requirement is decided on the machine, in this order:
 

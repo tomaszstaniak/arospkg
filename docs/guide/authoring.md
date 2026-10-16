@@ -94,6 +94,28 @@ post_install_notes = [
 At most 8 lines of 159 characters, printable ASCII without `"` or `\`.
 apkg already says where the program was installed and how to start it.
 
+### Other packages: depends, recommends, conflicts, replaces
+
+Only when the program finds the other package in the same apkg root (its
+drawer beside yours). A library or a command from the system is a
+`requires_system`, not a dependency. Write the plain keys before any
+`[[table]]`:
+
+<!-- validate: fragment -->
+```toml
+replaces = ["hardcode"]
+
+[[recommends]]
+id          = "limpet"
+min_version = "0.4.1"
+reason      = "full-screen front end with colours, scrollback and a clean exit"
+```
+
+`depends`, `conflicts` and `replaces` make the entry need apkg 0.6: it is
+published only for 0.6 and later. A rename is `replaces` plus your
+program's own copy of its old settings; apkg moves none. The meanings are in
+the [metadata reference](metadata.md#relations).
+
 ### Say how it starts
 
 Add a `[launch]` table and users can start the program with `apkg run`

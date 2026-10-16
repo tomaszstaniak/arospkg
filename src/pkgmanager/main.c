@@ -977,7 +977,8 @@ static void show_detail(void)
             if (k < sizeof buf)
                 snprintf(buf + k, sizeof buf - k, "\n\33b%s\33n %s%s%s%s%s: %s",
                          rr[i].kind == PKG_REL_DEPENDS ? "needs" : rr[i].kind == PKG_REL_RECOMMENDS ? "recommends" :
-                         rr[i].kind == PKG_REL_CONFLICTS ? "conflicts with" : "replaces",
+                         rr[i].kind == PKG_REL_CONFLICTS ? "conflicts with" : rr[i].kind == PKG_REL_REPLACES ? "replaces" :
+                         "needed by",
                          rr[i].id, rr[i].min_version[0] ? " " : "", rr[i].min_version[0] ? ">= " : "", rr[i].min_version,
                          rr[i].reason[0] ? "" : "", st);
             if (rr[i].kind == PKG_REL_RECOMMENDS && rr[i].reason[0] && (k = strlen(buf)) < sizeof buf)

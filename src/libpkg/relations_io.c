@@ -374,6 +374,21 @@ pkg_status pkg_relations_get(pkg_ctx *c, const char *index_path, const char *id,
         for (i = 0; !found && i < ninst; i++) if (!strcmp(inst[i].id, id)) { *d = inst[i].rel; found = 1; }
     }
     *nrows = rel_rows(idx, len, d, inst, ninst, pkg_arch(), my_abi(), rows, max);
+    /* And the other way: what installed here needs this one. */
+    for (i = 0; i < ninst && *nrows < max; i++) {
+        int j;
+        for (j = 0; j < inst[i].rel.ndepends; j++)
+            if (!strcmp(inst[i].rel.depends[j].id, id)) {
+                pkg_relation *r = &rows[(*nrows)++];
+                memset(r, 0, sizeof *r);
+                r->kind = PKG_REL_NEEDED_BY;
+                snprintf(r->id, sizeof r->id, "%s", inst[i].id);
+                snprintf(r->min_version, sizeof r->min_version, "%s", inst[i].rel.depends[j].min_version);
+                r->installed = r->satisfied = 1;
+                snprintf(r->state, sizeof r->state, "installed; it cannot be removed while %s is", inst[i].id);
+                break;
+            }
+    }
     free(idx); free(inst); free(d);
     return PKG_OK;
 }

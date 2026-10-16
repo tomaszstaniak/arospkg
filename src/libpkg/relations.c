@@ -153,7 +153,7 @@ const char *pkg_rel_word(int k) { return rel_kind_word(k); }
 const char *rel_kind_word(int k)
 {
     return k == REL_DEPENDS ? "depends" : k == REL_RECOMMENDS ? "recommends" :
-           k == REL_CONFLICTS ? "conflicts" : "replaces";
+           k == REL_CONFLICTS ? "conflicts" : k == REL_REPLACES ? "replaces" : "needed-by";
 }
 
 /* --------------------------------------------------------------- planning */
@@ -216,10 +216,13 @@ static int choose(planner *p, const char *id, const char *wanted_by)
                       "nothing is picked for it.%s%s", id, "", "");
     mstr(p->json, p->t, p->ntok, el, "arch", arch, sizeof arch);
     mstr(p->json, p->t, p->ntok, el, "abi", abi, sizeof abi);
-    if (!native(arch, abi, p->arch, p->abi))
+    if (!native(arch, abi, p->arch, p->abi)) {
+        char target[32];
+        snprintf(target, sizeof target, "%s/%s", arch, abi[0] ? abi : "?");
         return wanted_by ? refuse(p, PKG_E_NOT_FOUND, "%s needs %s, which the catalogue has only for other "
-                                  "systems (%s).", wanted_by, id, arch)
+                                  "systems (%s).", wanted_by, id, target)
                          : -2;   /* the target: the install's own target check explains it */
+    }
     return el;
 }
 
