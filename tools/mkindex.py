@@ -177,10 +177,104 @@ def check(m, stage="index"):
         if isinstance(r, bool) or not isinstance(r, int) or not 1 <= r <= REVISION_MAX:
             problems.append(f"revision {r!r} is not an integer from 1 to {REVISION_MAX}")
     problems += check_strings(m)
+    problems += check_relations(m)
     problems += check_requires(m.get("requires_system", []))
     problems += check_notes(m.get("post_install_notes"))
     problems += check_launch(m.get("launch"))
     return problems
+
+
+# Relations between packages (docs/guide/metadata.md, "Relations"). The
+# same rules as the client's reader (src/libpkg/relations.c): a declaration
+# the client would refuse must not be published.
+REL_MAX = 16
+REL_KEYS = ("depends", "recommends", "conflicts", "replaces")
+# What a catalogue entry needs from a client: a client that does not know
+# a feature named here must not install the entry. Clients before 0.6 do not
+# read depends, conflicts or replaces at all, so such entries go only to
+# index-v3.json, which they never fetch.
+CLIENT_FEATURES = ("relations",)
+DEPEND_RE = re.compile(r"^([a-z][a-z0-9._-]{0,63})(?: >= ([0-9]{1,9}(?:\.[0-9]{1,9}){0,7}))?$")
+
+
+def numeric_version(v):
+    """The client's ordering (upgrade.c version_compare): plain dotted
+    numbers only. A tuple, or None when the version cannot be ordered."""
+    if not isinstance(v, str) or not re.match(r"^[0-9]{1,9}(\.[0-9]{1,9}){0,7}$", v):
+        return None
+    parts = [int(x) for x in v.split(".")]
+    return tuple(parts + [0] * (8 - len(parts)))
+
+
+def parse_depend(s):
+    """(id, min_version or None), or None when the string is not one."""
+    hit = DEPEND_RE.match(s) if isinstance(s, str) else None
+    return (hit.group(1), hit.group(2)) if hit else None
+
+
+def check_relations(m):
+    """depends, recommends, conflicts and replaces: their form, and the
+    combinations that cannot mean anything."""
+    problems = []
+    own = str(m.get("id", "")).lower()
+    named = {}
+    dep = m.get("depends", [])
+    if not isinstance(dep, list):
+        return ["depends must be a list"]
+    for i, d in enumerate(dep):
+        got = parse_depend(d)
+        if not got:
+            problems.append(f"depends[{i}]: {d!r} is not \"id\" or \"id >= version\" with a version "
+                            "of dotted numbers (the only versions apkg can order)")
+            continue
+        named.setdefault(got[0], []).append("depends")
+    rec = m.get("recommends", [])
+    if not isinstance(rec, list) or not all(isinstance(r, dict) for r in rec):
+        problems.append("recommends: write one [[recommends]] table per package"); rec = []
+    for i, r in enumerate(rec):
+        extra = set(r) - {"id", "min_version", "reason"}
+        if extra:
+            problems.append(f"recommends[{i}]: unknown key(s) {', '.join(sorted(extra))}")
+        if not cat.ID_RE.match(str(r.get("id", ""))):
+            problems.append(f"recommends[{i}]: id {r.get('id')!r} is not a legal package id")
+        else:
+            named.setdefault(r["id"], []).append("recommends")
+        if "min_version" in r and numeric_version(r["min_version"]) is None:
+            problems.append(f"recommends[{i}]: min_version {r['min_version']!r} is not dotted numbers")
+        why = r.get("reason")
+        if not isinstance(why, str) or not why.strip():
+            problems.append(f"recommends[{i}]: reason missing; say what it adds")
+        elif not PLAIN.match(why) or len(why) > NOTES_LINE:
+            problems.append(f"recommends[{i}]: reason must be plain ASCII of at most {NOTES_LINE} characters")
+    for k in ("conflicts", "replaces"):
+        v = m.get(k, [])
+        if not isinstance(v, list):
+            problems.append(f"{k} must be a list of package ids"); continue
+        for i, x in enumerate(v):
+            if not isinstance(x, str) or not cat.ID_RE.match(x):
+                problems.append(f"{k}[{i}]: {x!r} is not a legal package id")
+            else:
+                named.setdefault(x, []).append(k)
+    for k in REL_KEYS:
+        v = m.get(k, [])
+        if isinstance(v, list) and len(v) > REL_MAX:
+            problems.append(f"{k}: {len(v)} entries; the client reads at most {REL_MAX}")
+    for x, where in sorted(named.items()):
+        if x == own:
+            problems.append(f"{', '.join(sorted(set(where)))}: names the package itself ({x})")
+        if len(where) != len(set(where)):
+            problems.append(f"{x} is named twice in {where[0]}")
+        # replaces implies a conflict, so naming a package in both is
+        # redundant but consistent; every other pair contradicts itself.
+        if len(set(where)) > 1 and set(where) != {"conflicts", "replaces"}:
+            problems.append(f"{x} is in {' and '.join(sorted(set(where)))}: a package cannot be "
+                            "both needed and refused, or both needed and replaced")
+    return problems
+
+
+def client_features(m):
+    """The client features an entry needs (CLIENT_FEATURES)."""
+    return ["relations"] if any(m.get(k) for k in ("depends", "conflicts", "replaces")) else []
 
 
 def launch_path_problem(rel):
@@ -327,7 +421,7 @@ def check_strings(m):
     if isinstance(src, dict) and isinstance(src.get("repository"), str) \
             and len(src["repository"]) > SOURCE_MAX:
         print(f"  note: {m.get('id')}: source.repository is longer than the {SOURCE_MAX} the client shows")
-    for k in ("depends", "installs_on", "runs_on", "does_not_run_on"):
+    for k in ("installs_on", "runs_on", "does_not_run_on"):
         v = m.get(k, [])
         if not isinstance(v, list) or not all(isinstance(x, str) and PLAIN.match(x) for x in v):
             problems.append(f"{k} must be a list of plain ASCII strings")
@@ -704,6 +798,14 @@ def main():
             "arch": m["arch"], "abi": m.get("abi") or None,
             "category": m.get("category", ""), "url": m["url"], "size": m["size"],
             "sha256": m["sha256"], "depends": m.get("depends", []),
+            # Relations (docs/guide/metadata.md); clients before 0.6 read none
+            # of them, so an entry that needs them names the client feature
+            # and is left out of index-v2.json.
+            **({"recommends": [{k: r[k] for k in ("id", "min_version", "reason") if k in r}
+                               for r in m["recommends"]]} if m.get("recommends") else {}),
+            **({"conflicts": m["conflicts"]} if m.get("conflicts") else {}),
+            **({"replaces": m["replaces"]} if m.get("replaces") else {}),
+            **({"client_features": client_features(m)} if client_features(m) else {}),
             "requires_system": m.get("requires_system", []),
             # Carried through so a client can refuse a package on a system
             # where it is known not to run. Installing correctly and running
@@ -738,11 +840,21 @@ def main():
     # Closure. An approved manifest may name a dependency that does not exist;
     # publishing it would move the failure from us to a user at install time.
     # Iterated to a fixed point: dropping a package can orphan its dependents.
+    # A dependency is the same CPU AND the same ABI: an x86_64/v1 build
+    # cannot satisfy an x86_64/v11 one. A stated minimum version must be met
+    # by what is published.
     while True:
-        have = {(p["id"].lower(), p["arch"]) for p in published}
+        have = {(p["id"].lower(), p["arch"], p["abi"]): p["version"] for p in published}
         broken = []
         for p in published:
-            missing = [d for d in p["depends"] if (d.lower(), p["arch"]) not in have]
+            missing = []
+            for d in p["depends"]:
+                did, dmin = parse_depend(d)
+                v = have.get((did, p["arch"], p["abi"]))
+                if v is None:
+                    missing.append(f"{did} (not in the index for {p['arch']}/{p['abi']})")
+                elif dmin and (numeric_version(v) is None or numeric_version(v) < numeric_version(dmin)):
+                    missing.append(f"{did} >= {dmin} (the index has {v})")
             if missing:
                 broken.append((p, missing))
         if not broken:
@@ -750,9 +862,23 @@ def main():
         for p, missing in broken:
             published.remove(p)
             failed.add(f'{p["id"]}.{p["arch"]}.toml')
-            rejected.append((f'{p["id"]}.{p["arch"]}.toml',
-                             [f"depends on {', '.join(missing)}, not in the index "
-                              f"for {p['arch']}"]))
+            rejected.append((f'{p["id"]}.{p["arch"]}.toml', [f"depends on {', '.join(missing)}"]))
+    # A cycle has no order to install in; the client refuses one, so it is
+    # refused here, where it lands on us.
+    graph = {(p["id"].lower(), p["arch"], p["abi"]): [parse_depend(d)[0] for d in p["depends"]] for p in published}
+    for p in list(published):
+        start = (p["id"].lower(), p["arch"], p["abi"])
+        seen, todo = set(), list(graph[start])
+        while todo:
+            x = todo.pop()
+            if x == start[0]:
+                published.remove(p)
+                failed.add(f'{p["id"]}.{p["arch"]}.toml')
+                rejected.append((f'{p["id"]}.{p["arch"]}.toml', ["its depends lead back to itself (a cycle)"]))
+                break
+            if x not in seen:
+                seen.add(x)
+                todo += graph.get((x, p["arch"], p["abi"]), [])
 
     packages = sorted(published, key=lambda p: (p["id"], p["arch"]))
     outdir = Path(args.out_dir)
@@ -775,7 +901,7 @@ def main():
             v, a = ch.dates_for(history, p)
             if v: p["first_added"] = v
             if a: p["app_first_added"] = a
-    v2_path, old_path = outdir / "index-v2.json", outdir / "index.json"
+    v3_path, v2_path, old_path = outdir / "index-v3.json", outdir / "index-v2.json", outdir / "index.json"
     # Clients up to 0.3.2 fetch index.json and read at most OLD_CLIENT_MAXTOK
     # values. It keeps the packages it already lists, with their metadata
     # brought up to date from the same manifests (Archives replaces files
@@ -793,8 +919,13 @@ def main():
         old_packages = packages
     # Only what those clients read; everything else costs them values.
     old_packages = [{k: p[k] for k in OLD_CLIENT_FIELDS if k in p} for p in old_packages]
-    texts = {}
-    for path, pkgs in ((v2_path, packages), (old_path, old_packages)):
+    # index-v3.json: everything, for clients from 0.6. index-v2.json, read by
+    # 0.4 and 0.5: what they can install as described, so nothing that needs
+    # a client feature they lack (they would skip the dependencies and call
+    # the install a success).
+    v2_packages = [p for p in packages if not p.get("client_features")]
+    texts = {v3_path: json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": packages}, indent=2) + "\n"}
+    for path, pkgs in ((v2_path, v2_packages), (old_path, old_packages)):
         texts[path] = json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": pkgs},
                                  indent=2) + "\n"
 
@@ -814,17 +945,20 @@ def main():
     stop = []
     if failed:
         stop.append(f"{len(failed)} approved manifest(s) not published: {', '.join(sorted(failed))}")
-    for path, maxtok, maxbytes, who in ((v2_path, CLIENT_MAXTOK, CLIENT_MAXBYTES, "later clients"),
+    for path, maxtok, maxbytes, who in ((v3_path, CLIENT_MAXTOK, CLIENT_MAXBYTES, "clients from 0.6"),
+                                        (v2_path, CLIENT_MAXTOK, CLIENT_MAXBYTES, "clients 0.4 and 0.5"),
                                         (old_path, OLD_CLIENT_MAXTOK, OLD_CLIENT_MAXBYTES, "clients up to 0.3.2")):
         ntok, nbytes = json_values(json.loads(texts[path])), len(texts[path].encode())
-        npk = len(packages if path == v2_path else old_packages)
+        npk = len(json.loads(texts[path])["packages"])
         print(f"{path.name:<16} {npk} packages, {ntok} JSON values ({100 * ntok // maxtok}% of {maxtok}), "
               f"{nbytes} bytes ({100 * nbytes // maxbytes}% of {maxbytes}); for {who}")
         if ntok > maxtok or nbytes > maxbytes:
             stop.append(f"{path.name} is larger than {who} read. Its packages are kept and "
                         f"nothing is shortened: decide which to drop from it by hand")
-    if len(old_packages) < len(packages):
-        print(f"  {len(packages) - len(old_packages)} package(s) only in index-v2.json")
+    if len(v2_packages) < len(packages):
+        print(f"  {len(packages) - len(v2_packages)} package(s) need a client from 0.6: only in index-v3.json")
+    if len(old_packages) < len(v2_packages):
+        print(f"  {len(v2_packages) - len(old_packages)} package(s) only in index-v2.json and index-v3.json")
     old_ntok = json_values(json.loads(texts[old_path]))
     if old_ntok > OLD_CLIENT_BUDGET * OLD_CLIENT_MAXTOK:
         stop.append(f"index.json would hold {old_ntok} values, past the {int(OLD_CLIENT_BUDGET * 100)}% "
@@ -840,7 +974,7 @@ def main():
     if stop:
         for why in stop:
             print(f"\nNOT WRITTEN: {why}")
-        print(f"{v2_path} and {old_path} are unchanged.")
+        print(f"{v3_path.name}, {v2_path.name} and {old_path.name} are unchanged.")
         sys.exit(1)
     # Each written beside and renamed over, so a failure half-way cannot leave
     # a truncated index where a good one was.

@@ -54,7 +54,7 @@ EM_ARCH = {62: "x86_64", 3: "i386", 183: "aarch64"}
 # Key order of a written manifest: plain keys before any table (TOML puts a
 # key written after a [[table]] header inside that table).
 ORDER = ("id", "version", "revision", "summary", "category", "license", "kind",
-         "arch", "abi", "subdir", "icon", "depends", "depends_checked",
+         "arch", "abi", "subdir", "icon", "depends", "depends_checked", "conflicts", "replaces",
          "installs_on", "runs_on", "does_not_run_on", "post_install_notes")
 GENERATED = "# Written by apkg-pack submit from the archive's .arospkg/manifest.toml.\n" \
             "# Do not edit: a maintainer's change goes in overrides/{name}, which\n" \
@@ -94,8 +94,9 @@ def write_toml(m, header=""):
             lines.append("]")
         else:
             lines.append(f"{k:<15} = {toml_value(m[k])}")
-    for r in m.get("requires_system", []):
-        lines += ["", "[[requires_system]]"] + [f"{k} = {toml_value(v)}" for k, v in r.items()]
+    for table in ("requires_system", "recommends"):
+        for r in m.get(table, []):
+            lines += ["", f"[[{table}]]"] + [f"{k} = {toml_value(v)}" for k, v in r.items()]
     for k, v in m.items():
         if isinstance(v, dict):
             lines += ["", f"[{k}]"] + [f"{a} = {toml_value(b)}" for a, b in v.items()]
