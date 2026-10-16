@@ -9,6 +9,7 @@
  * never touches a MUI object: the callback copies the event into a message
  * and the window's own loop does the drawing. */
 #include "job.h"
+#include <stdio.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <dos/dostags.h>

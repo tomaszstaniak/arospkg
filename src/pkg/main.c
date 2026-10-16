@@ -17,6 +17,7 @@
 #include <string.h>
 #include <time.h>
 #include <proto/exec.h>
+#include <proto/dos.h>
 #include <dos/dos.h>
 
 /* APKG_TEST_VERSION lets a self-update test build call itself older than the
