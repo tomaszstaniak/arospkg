@@ -34,3 +34,21 @@ What is real and what was prepared:
 ![apkg recent --limit 6](limpet-recent.png)
 
 ![apkg show xrick: Review and tests](limpet-show-status.png)
+
+## Relations: dependencies, replacement, the removal guard
+
+From the development build of 2026-10-16 (apkg 716850a2..., PkgManager of
+the same commit) on AROS One 1.3, with a local test catalogue: Bishop and
+Hardcode are internal test packages, not published; rellib, relapp and the
+other `rel*` packages are small test packages made for these runs.
+
+![Install bishop: the plan replaces hardcode](replace-confirm.png)
+
+![Bishop's details: Limpet recommended, Hardcode replaced](relations-details.png)
+
+![Install relapp: two packages it needs come first](dependencies-confirm.png)
+
+![Remove rellib: relapp needs it](remove-needed-refused.png)
+
+![Limpet: the replacement asked about and done](limpet-replace-bishop.png)
+

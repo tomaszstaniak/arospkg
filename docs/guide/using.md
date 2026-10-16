@@ -89,7 +89,15 @@ new package is in, the next apkg that changes anything in that root removes
 the old one and says so.
 
 `apkg remove` refuses a package that another installed package needs, and
-names it. Remove that one first.
+names it. Remove that one first. A package installed only because another
+needed it stays installed when that one goes; `apkg show` no longer lists
+anything that needs it, and you remove it yourself if you want.
+
+What apkg does not do: install a library, a command or a font that a
+program needs from the system (those are requirements, which `show`
+checks); upgrade a dependency that is too old (it says which `apkg
+upgrade` to run); or treat a replacement as the old package for others that
+depend on it.
 
 ## Start a program
 
