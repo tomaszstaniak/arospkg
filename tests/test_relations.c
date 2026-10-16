@@ -34,7 +34,12 @@ static const char *CAT =
     E("limpet",  "0.5.0", "x86_64", "v11", "") ","
     E("future",  "1",     "x86_64", "v11", ",\"client_features\":[\"teleport\"]") ","
     E("pair",    "1",     "x86_64", "v11", ",\"depends\":[\"lib2\",\"foe\"],\"client_features\":[\"relations\"]") ","
-    E("foe",     "1",     "x86_64", "v11", ",\"conflicts\":[\"lib2\"],\"client_features\":[\"relations\"]")
+    E("foe",     "1",     "x86_64", "v11", ",\"conflicts\":[\"lib2\"],\"client_features\":[\"relations\"]") ","
+    E("newer",   "1",     "x86_64", "v11", ",\"depends\":[\"taker\"],\"client_features\":[\"relations\"]") ","
+    E("taker",   "1",     "x86_64", "v11", ",\"replaces\":[\"hardcode\"],\"client_features\":[\"relations\"]") ","
+    E("both",    "1",     "x86_64", "v11", ",\"depends\":[\"usesold\"],\"replaces\":[\"hardcode\"],\"client_features\":[\"relations\"]") ","
+    E("usesold", "1",     "x86_64", "v11", ",\"depends\":[\"hardcode\"],\"client_features\":[\"relations\"]") ","
+    E("pairrep", "1",     "x86_64", "v11", ",\"replaces\":[\"olda\",\"oldb\"],\"client_features\":[\"relations\"]")
     "]}";
 
 static rel_inst I(const char *id, const char *v, const char *abi, const char *dep)
@@ -112,6 +117,25 @@ int main(void)
     in[0] = I("hardcodex", "1", "v11", NULL);
     plan(in, 1, "bishop", 0);                    order("=bishop", "a similar name is not replaced");
 
+    in[0] = I("hardcode", "0.3.0-test1", "v11", NULL);
+    plan(in, 1, "newer", 0);                     refused("by itself first", PKG_E_CONFLICT, "a dependency may not replace: one replacement per plan");
+    in[1] = I("hardcode", "x", "v11", NULL);    /* placeholder, overwritten */
+    plan(in, 1, "both", 0);                      refused("still needs it", PKG_E_CONFLICT, "no replacement of what a dependency in the plan needs");
+    in[0] = I("olda", "1", "v11", NULL); in[1] = I("oldb", "1", "v11", "olda");
+    plan(in, 2, "pairrep", 0);                   order("=pairrep -oldb -olda", "two replaced packages that depend on each other: dependent first");
+
+    {   /* rollback */
+        rel_decl rd; char rwhy[300];
+        memset(&rd, 0, sizeof rd);
+        in[0] = I("app", "1.0", "v11", NULL);
+        snprintf(in[0].rel.depends[0].id, PKG_MAXID, "lib1"); snprintf(in[0].rel.depends[0].min_version, 64, "1.2"); in[0].rel.ndepends = 1;
+        CHECK(rel_check_decl(&rd, "lib1", "1.0", in, 1, "x86_64", "v11", rwhy, sizeof rwhy) != 0 && strstr(rwhy, "would break it"),
+              "rollback below what an installed dependent needs is refused");
+        CHECK(rel_check_decl(&rd, "lib1", "1.3", in, 1, "x86_64", "v11", rwhy, sizeof rwhy) == 0, "rollback that still meets it is allowed");
+        snprintf(rd.depends[0].id, PKG_MAXID, "ghost"); rd.ndepends = 1;
+        CHECK(rel_check_decl(&rd, "lib1", "1.3", in, 1, "x86_64", "v11", rwhy, sizeof rwhy) != 0, "rollback to a revision needing a missing package is refused");
+    }
+
     in[0] = I("plain", "1.0", "v11", NULL);
     plan(in, 1, "app", 1);                       refused("Install it first", PKG_E_REQUIRES, "an upgrade installs no dependency");
 
@@ -142,7 +166,7 @@ int main(void)
             char buf[2000], txt[2100]; js_out o; js_tok *t; int nt; rel_decl back;
             snprintf(d.depends[0].id, PKG_MAXID, "lib1"); snprintf(d.depends[0].min_version, 64, "1.2"); d.ndepends = 1;
             snprintf(d.conflicts[0].id, PKG_MAXID, "enemy"); d.nconflicts = 1;
-            js_out_init(&o, buf, sizeof buf); rel_emit(&o, &d);
+            js_out_init(&o, buf, sizeof buf); rel_emit(&o, &d, 1);
             snprintf(txt, sizeof txt, "{ \"x\": 1%s }", buf);
             nt = js_parse_alloc(txt, strlen(txt), &t, 1000);
             CHECK(nt > 0 && rel_read(txt, t, nt, 0, &back, why, sizeof why) == 0

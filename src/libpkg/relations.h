@@ -43,7 +43,7 @@ typedef struct {
 int  rel_read(const char *json, const js_tok *t, int ntok, int obj, rel_decl *out, char *why, size_t n);
 /* `"depends": [...], "conflicts": [...], ...` for a registry entry, each
    preceded by ",\n  ". Nothing for empty lists. */
-void rel_emit(js_out *o, const rel_decl *d);
+void rel_emit(js_out *o, const rel_decl *d, int with_recommends);
 int  rel_any(const rel_decl *d);
 
 /* What the registry knows of one installed package. `rel_known` is 0 for an
@@ -87,6 +87,13 @@ int rel_plan_install(const char *json, size_t len, const rel_inst *inst, int nin
 
 /* Installed packages whose depends name `id`, as "bishop (needs limpet >= 0.4.1)",
    comma separated. Returns how many. `except` (may be NULL) is left out. */
+/* Whether a build of `id` at `version` with relations `d` may be what is
+   installed here (a rollback): its depends installed and new enough, no
+   conflict either way, and no installed dependent needing a newer one.
+   0, or -1 with the reason. */
+int rel_check_decl(const rel_decl *d, const char *id, const char *version, const rel_inst *inst, int ninst,
+                   const char *my_arch, const char *my_abi, char *why, size_t wn);
+
 int rel_required_by(const rel_inst *inst, int ninst, const char *id, const char *except,
                     char *out, size_t n);
 

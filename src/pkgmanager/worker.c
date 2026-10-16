@@ -92,6 +92,7 @@ static void worker_main(void)
             pkg_close(c);
         }
     } else if ((st = pkg_open(j->root, PKG_OPEN_WRITE, &c, &e)) == PKG_OK) {
+        snprintf(j->done->note, sizeof j->done->note, "%s", pkg_replacements_finished(c));
         pkg_set_progress(c, on_progress, j);
         switch (j->kind) {
         case JOB_INSTALL: {
@@ -104,9 +105,14 @@ static void worker_main(void)
                 st = e.status = pl->status ? pl->status : PKG_E_REQUIRES;
                 snprintf(e.summary, sizeof e.summary, "cannot install it");
                 snprintf(e.detail, sizeof e.detail, "%s", pl->why);
-            } else if (st == PKG_OK && pl->extra && !j->confirmed) {
-                st = e.status = PKG_E_REQUIRES;
-                snprintf(e.summary, sizeof e.summary, "the plan changed; look at it again");
+            } else if (st == PKG_OK && pl->extra) {
+                char sig[700];
+                plan_signature(pl, sig, sizeof sig);
+                if (!j->confirmed || strcmp(sig, j->plan_sig)) {
+                    st = e.status = PKG_E_REQUIRES;
+                    snprintf(e.summary, sizeof e.summary, "the plan changed since it was shown");
+                    snprintf(e.detail, sizeof e.detail, "Nothing was changed. Press Install again to see it.");
+                } else st = pkg_install_plan_run(c, j->index, pl, PKG_STOP_NONE, &e);
             } else if (st == PKG_OK)
                 st = pkg_install_plan_run(c, j->index, pl, PKG_STOP_NONE, &e);
             FreeVec(pl);
@@ -208,4 +214,13 @@ int job_start(job *j)
         return -1;
     }
     return 0;
+}
+
+void plan_signature(const pkg_install_plan *pl, char *out, size_t n)
+{
+    int i; size_t k = 0;
+    out[0] = 0;
+    for (i = 0; i < pl->nops && k + 2 < n; i++)
+        k += (size_t)snprintf(out + k, n - k, "%d:%s:%s:%ld;", pl->ops[i].kind, pl->ops[i].id,
+                              pl->ops[i].version, pl->ops[i].revision);
 }

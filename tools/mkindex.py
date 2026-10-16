@@ -259,6 +259,18 @@ def check_relations(m):
         v = m.get(k, [])
         if isinstance(v, list) and len(v) > REL_MAX:
             problems.append(f"{k}: {len(v)} entries; the client reads at most {REL_MAX}")
+    # What the client keeps: ids and versions of at most 63 characters.
+    for i, d in enumerate(dep):
+        got = parse_depend(d)
+        if got and (len(got[0]) > 63 or (got[1] and len(got[1]) > 63)):
+            problems.append(f"depends[{i}]: id and version are at most 63 characters each")
+    for i, r in enumerate(rec):
+        if len(str(r.get("id", ""))) > 63 or len(str(r.get("min_version", ""))) > 63:
+            problems.append(f"recommends[{i}]: id and min_version are at most 63 characters each")
+    for k in ("conflicts", "replaces"):
+        for i, x in enumerate(m.get(k, []) if isinstance(m.get(k, []), list) else []):
+            if isinstance(x, str) and len(x) > 63:
+                problems.append(f"{k}[{i}]: at most 63 characters")
     for x, where in sorted(named.items()):
         if x == own:
             problems.append(f"{', '.join(sorted(set(where)))}: names the package itself ({x})")
@@ -844,41 +856,46 @@ def main():
     # cannot satisfy an x86_64/v11 one. A stated minimum version must be met
     # by what is published.
     while True:
-        have = {(p["id"].lower(), p["arch"], p["abi"]): p["version"] for p in published}
-        broken = []
-        for p in published:
-            missing = []
-            for d in p["depends"]:
-                did, dmin = parse_depend(d)
-                v = have.get((did, p["arch"], p["abi"]))
-                if v is None:
-                    missing.append(f"{did} (not in the index for {p['arch']}/{p['abi']})")
-                elif dmin and (numeric_version(v) is None or numeric_version(v) < numeric_version(dmin)):
-                    missing.append(f"{did} >= {dmin} (the index has {v})")
-            if missing:
-                broken.append((p, missing))
-        if not broken:
-            break
-        for p, missing in broken:
-            published.remove(p)
-            failed.add(f'{p["id"]}.{p["arch"]}.toml')
-            rejected.append((f'{p["id"]}.{p["arch"]}.toml', [f"depends on {', '.join(missing)}"]))
-    # A cycle has no order to install in; the client refuses one, so it is
-    # refused here, where it lands on us.
-    graph = {(p["id"].lower(), p["arch"], p["abi"]): [parse_depend(d)[0] for d in p["depends"]] for p in published}
-    for p in list(published):
-        start = (p["id"].lower(), p["arch"], p["abi"])
-        seen, todo = set(), list(graph[start])
-        while todo:
-            x = todo.pop()
-            if x == start[0]:
-                published.remove(p)
-                failed.add(f'{p["id"]}.{p["arch"]}.toml')
-                rejected.append((f'{p["id"]}.{p["arch"]}.toml', ["its depends lead back to itself (a cycle)"]))
-                break
-            if x not in seen:
-                seen.add(x)
-                todo += graph.get((x, p["arch"], p["abi"]), [])
+      changed_any = False
+      while True:
+          have = {(p["id"].lower(), p["arch"], p["abi"]): p["version"] for p in published}
+          broken = []
+          for p in published:
+              missing = []
+              for d in p["depends"]:
+                  did, dmin = parse_depend(d)
+                  v = have.get((did, p["arch"], p["abi"]))
+                  if v is None:
+                      missing.append(f"{did} (not in the index for {p['arch']}/{p['abi']})")
+                  elif dmin and (numeric_version(v) is None or numeric_version(v) < numeric_version(dmin)):
+                      missing.append(f"{did} >= {dmin} (the index has {v})")
+              if missing:
+                  broken.append((p, missing))
+          if not broken:
+              break
+          for p, missing in broken:
+              published.remove(p)
+              failed.add(f'{p["id"]}.{p["arch"]}.toml')
+              rejected.append((f'{p["id"]}.{p["arch"]}.toml', [f"depends on {', '.join(missing)}"]))
+      # A cycle has no order to install in; the client refuses one, so it is
+      # refused here, where it lands on us.
+      graph = {(p["id"].lower(), p["arch"], p["abi"]): [parse_depend(d)[0] for d in p["depends"]] for p in published}
+      for p in list(published):
+          start = (p["id"].lower(), p["arch"], p["abi"])
+          seen, todo = set(), list(graph[start])
+          while todo:
+              x = todo.pop()
+              if x == start[0]:
+                  published.remove(p)
+                  failed.add(f'{p["id"]}.{p["arch"]}.toml')
+                  rejected.append((f'{p["id"]}.{p["arch"]}.toml', ["its depends lead back to itself (a cycle)"]))
+                  changed_any = True
+                  break
+              if x not in seen:
+                  seen.add(x)
+                  todo += graph.get((x, p["arch"], p["abi"]), [])
+      if not changed_any:
+          break
 
     packages = sorted(published, key=lambda p: (p["id"], p["arch"]))
     outdir = Path(args.out_dir)
@@ -902,6 +919,7 @@ def main():
             if v: p["first_added"] = v
             if a: p["app_first_added"] = a
     v3_path, v2_path, old_path = outdir / "index-v3.json", outdir / "index-v2.json", outdir / "index.json"
+    v2_packages = [p for p in packages if not p.get("client_features")]
     # Clients up to 0.3.2 fetch index.json and read at most OLD_CLIENT_MAXTOK
     # values. It keeps the packages it already lists, with their metadata
     # brought up to date from the same manifests (Archives replaces files
@@ -913,17 +931,16 @@ def main():
         # new, so it stays out, and index.json keeps one entry per (id, arch),
         # which is all clients up to 0.3.2 were tested with.
         keep = {(p["id"], p["arch"], p.get("abi")) for p in prev.get("packages", [])}
-        old_packages = [p for p in packages if (p["id"], p["arch"], p["abi"]) in keep
+        old_packages = [p for p in v2_packages if (p["id"], p["arch"], p["abi"]) in keep
                         or p["id"] in OLD_CLIENT_ALWAYS]
     else:
-        old_packages = packages
+        old_packages = v2_packages
     # Only what those clients read; everything else costs them values.
     old_packages = [{k: p[k] for k in OLD_CLIENT_FIELDS if k in p} for p in old_packages]
     # index-v3.json: everything, for clients from 0.6. index-v2.json, read by
     # 0.4 and 0.5: what they can install as described, so nothing that needs
     # a client feature they lack (they would skip the dependencies and call
     # the install a success).
-    v2_packages = [p for p in packages if not p.get("client_features")]
     texts = {v3_path: json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": packages}, indent=2) + "\n"}
     for path, pkgs in ((v2_path, v2_packages), (old_path, old_packages)):
         texts[path] = json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": pkgs},

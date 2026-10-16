@@ -80,9 +80,13 @@ char *registry_text(const char *id, const char *version, long revision,
     js_raw(&o, ",\n  "); js_key(&o, "reason");  js_vstr(&o, reason && *reason ? reason : "explicit");
     /* The relations as the catalogue declared them for this build, so a
        removal or a conflict check needs no catalogue. relations_schema
-       says they were recorded, also when there are none. */
-    js_raw(&o, ",\n  "); js_key(&o, "relations_schema"); js_vlong(&o, 1);
-    if (rel_json && *rel_json) js_raw(&o, rel_json);
+       says they were recorded, also when there are none; with rel_json
+       NULL they are not known (a rollback to an entry from before 0.6), and
+       readers take the catalogue's word instead. */
+    if (rel_json) {
+        js_raw(&o, ",\n  "); js_key(&o, "relations_schema"); js_vlong(&o, 1);
+        js_raw(&o, rel_json);
+    }
     js_raw(&o, ",\n  "); js_key(&o, "dir");     js_vstr(&o, id);
     /* The requirement verdicts are part of the record of this install, not of
      * the package: the same archive installed on another machine can produce
@@ -391,7 +395,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
         }
     }
     if (!c->in_plan) {
-        pkg_status rs = rel_check_alone(c, index_path, id, 0, e);
+        pkg_status rs = rel_check_alone(c, index_path, id, 0, NULL, NULL, e);
         if (rs != PKG_OK) { st = rs; goto out; }
     }
 

@@ -68,8 +68,12 @@ int swap_read_registry(const char *path, rev_info *r, inv_ent *inv, int *ninv, c
     if (notes_from_element(js, t, n, 0, r->notes, sizeof r->notes) < 0) r->notes[0] = 0;
     member(js, t, n, 0, "reason", r->reason, sizeof r->reason);
     {
+        /* Recorded since 0.6; an older entry's relations are unknown, not
+           none, and stay so when it is written again. */
         char why[200];
-        if (rel_fragment(js, t, n, 0, r->rel_json, sizeof r->rel_json, why, sizeof why) != 0) r->rel_json[0] = 0;
+        r->rel_known = js_member(js, t, n, 0, "relations_schema") >= 0
+                       && rel_fragment(js, t, n, 0, r->rel_json, sizeof r->rel_json, why, sizeof why) == 0;
+        if (!r->rel_known) r->rel_json[0] = 0;
     }
     {
         char why[200];
@@ -136,6 +140,7 @@ pkg_status swap_read_index(const char *index_path, const char *id,
         free(t); free(js);
         return pkg_fail(e, PKG_E_REQUIRES, "this package's relations are not readable by this apkg", why, id);
     }
+    r->rel_known = 1;
     if (req_parse(js, t, n, found, reqs, MAXREQ, nreq, why, sizeof why) != 0) {
         free(t); free(js);
         return pkg_fail(e, PKG_E_REQUIRES, "this package's system requirements are not readable", why, id);
@@ -450,7 +455,7 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
                         is_rollback ? "" : prev_reg,
                         is_rollback ? "" : prev_arc,
                         to->notes, &to->launch,
-                        from->reason, to->rel_json);
+                        from->reason, to->rel_known ? to->rel_json : NULL);
     if (!reg || u_write_atomicish(regpath, reg) != 0) { st = pkg_fail(e, PKG_E_IO, "cannot write the registry entry", "", regpath); goto out; }
     STOP(PKG_STOP_AFTER_REGISTRY);
     STOP(PKG_STOP_BEFORE_COMMIT);
@@ -497,9 +502,6 @@ static pkg_status do_upgrade(pkg_ctx *c, const char *index_path, const char *id,
                                                                    : (from.abi[0] ? from.abi : pkg_abi()),
                          &to, reqs, &nreq, e);
     if (st != PKG_OK) goto out;
-    /* The new build's depends must already be here and it must not conflict
-       with anything installed: an upgrade installs nothing else. */
-    if ((st = rel_check_alone(c, index_path, id, 1, e)) != PKG_OK) goto out;
     if (upgrade_allowed(from.version, from.revision, to.version, to.revision, why, sizeof why) != 0) {
         if (preview) {
             memset(preview, 0, sizeof *preview);
@@ -514,6 +516,11 @@ static pkg_status do_upgrade(pkg_ctx *c, const char *index_path, const char *id,
     st = target_check(id, to.arch, to.abi, pkg_abi_override(), e);
     if (st != PKG_OK) goto out;
     st = req_check(id, reqs, nreq, e);
+    if (st != PKG_OK) goto out;
+    /* The new build's depends must already be here and it must not conflict
+       with anything installed: an upgrade installs nothing else. Judged for
+       the installed build's CPU and ABI, which the upgrade keeps. */
+    st = rel_check_alone(c, index_path, id, 1, to.arch, to.abi, e);
     if (st != PKG_OK) goto out;
     if (strlen(to.sha) != 64) { st = pkg_fail(e, PKG_E_VERIFY, "the index has no hash for this package", "", id); goto out; }
 
@@ -603,6 +610,16 @@ static pkg_status do_rollback(pkg_ctx *c, const char *id, pkg_stop stop, pkg_pla
        was installed, and the machine is the same one. */
     nreq = 0;
     if (!preview) { char b[80]; rev_label(b, sizeof b, to.version, to.revision); printf("rolling %s back to %s\n", id, b); }
+    /* Going back must not undo a relation: the earlier revision's depends
+       must be here, it must not conflict, and nothing installed may need a
+       newer one. Its relations are the ones its record kept; an entry from
+       before 0.6 kept none, and is judged by what depends on it. */
+    {
+        pkg_status rs = rel_check_rollback(c, id, to.version, to.rel_known ? to.rel_json : "",
+                                           from.arch[0] ? from.arch : pkg_arch(),
+                                           from.abi[0] ? from.abi : pkg_abi(), e);
+        if (rs != PKG_OK) { st = rs; goto out; }
+    }
     st = swap(c, id, 1, &from, from_text, &to, from.prev_archive, old, nold, reqs, nreq, stop, preview, e);
 out:
     free(old); free(dummy); free(from_text); free(to_text);

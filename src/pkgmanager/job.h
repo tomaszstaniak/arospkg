@@ -24,6 +24,7 @@ typedef struct {
     char            current[16];  /* JOB_CHECK_RELEASE: this PkgManager's version */
     struct MsgPort *reply;      /* the window's port; the worker sends here */
     int             confirmed;  /* JOB_INSTALL: the user accepted a plan with more steps */
+    char            plan_sig[700];  /* ...namely this one, step by step (plan_signature) */
     volatile int    cancel;     /* set by the window, read by the callback  */
     volatile int    running;
     /* The final message, allocated by job_start before the worker exists:
@@ -53,12 +54,17 @@ typedef struct pm_msg_s {
     char          *listing;     /* JOB_VERIFY: one line per file, AllocVec'd; the window frees it */
     pkg_run_result run;         /* JOB_RUN: what was started */
     pkg_removal    rem;         /* JOB_REMOVE: what was kept in place */
+    char           note[200];   /* a replacement recovery finished when the root was opened */
 } pm_msg;
 
 /* Start the worker process for `j`. Returns 0 on success; the worker will
  * send PM_DONE exactly once, whatever happens. -1 when the final message or
  * the process could not be had; nothing was started then. */
 int job_start(job *j);
+
+/* The steps of an install plan as one string, so the worker can tell the
+   plan it is about to run from the one the user accepted. */
+void plan_signature(const pkg_install_plan *pl, char *out, size_t n);
 void job_set_slow(int ms);      /* testing only */
 void job_test_nomem(void);      /* testing only */
 long job_wait_gone(long report_ms, void (*still)(long ms));

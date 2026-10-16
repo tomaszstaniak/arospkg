@@ -1097,6 +1097,7 @@ static void finish(rx_job *j, rx_jobstate st, const char *error, const char *mes
 }
 
 static int install_confirmed;     /* the plan in the confirmation window was accepted */
+static char install_sig[700];     /* that plan's steps (plan_signature) */
 
 static int start(job_kind kind, const char *id)
 {
@@ -1104,6 +1105,7 @@ static int start(job_kind kind, const char *id)
     memset(&cur, 0, sizeof cur);
     cur.kind = kind;
     cur.confirmed = kind == JOB_INSTALL && install_confirmed;
+    if (cur.confirmed) snprintf(cur.plan_sig, sizeof cur.plan_sig, "%s", install_sig);
     install_confirmed = 0;
     cur.seq = active ? active->id : 0;
     snprintf(cur.id, sizeof cur.id, "%s", id ? id : "");
@@ -1191,6 +1193,7 @@ static int install_gate(rx_job *j)
     if (k < sizeof text)
         snprintf(text + k, sizeof text - k, "\nNothing else is removed. Files you changed in a removed package are kept.\n\nProceed?");
     logline("install %s: plan of %d steps waits for confirmation", j->package, pl->nops);
+    plan_signature(pl, install_sig, sizeof install_sig);
     free(pl);
     j->state = RXJ_CONFIRM;
     snprintf(j->message, sizeof j->message, "the install plan waits for confirmation");
@@ -1399,6 +1402,7 @@ static int on_message(pm_msg *m)
                         rx_statusword(m->status), why);
         }
         if (quit_pending) return 1;       /* the worker is gone; see worker.c */
+        if (m->note[0]) logline("finished an interrupted replacement: %s", m->note);
         busy(0);
         {
             IPTR t = 0; char keep[PKG_MAXID];
@@ -1423,6 +1427,12 @@ static int on_message(pm_msg *m)
                 snprintf(kept + k, sizeof kept - k, " and the changed drawer icon");
             logline("%s", kept);
             status(kept);
+        }
+        else if (m->status == PKG_OK && kind != JOB_UPDATE && m->note[0]) {
+            /* Said where the user looks: an old package was removed now. */
+            static char both[600];
+            snprintf(both, sizeof both, "%s; finished an interrupted replacement: %s", line, m->note);
+            status(both);
         }
         else if (m->status == PKG_OK && kind != JOB_UPDATE) status(line);
         else if (m->status == PKG_OK) update_news_status(past[kind]);

@@ -129,13 +129,13 @@ static void emit_list(js_out *o, const char *name, const rel_item *it, int n, in
     js_raw(o, "]");
 }
 
-void rel_emit(js_out *o, const rel_decl *d)
+void rel_emit(js_out *o, const rel_decl *d, int with_recommends)
 {
     int i;
     emit_list(o, "depends", d->depends, d->ndepends, 1);
     emit_list(o, "conflicts", d->conflicts, d->nconflicts, 0);
     emit_list(o, "replaces", d->replaces, d->nreplaces, 0);
-    if (d->nrecommends) {
+    if (with_recommends && d->nrecommends) {
         js_raw(o, ",\n  "); js_key(o, "recommends"); js_raw(o, " [");
         for (i = 0; i < d->nrecommends; i++) {
             js_raw(o, i ? ", { " : "{ ");
@@ -356,15 +356,37 @@ int rel_plan_install(const char *json, size_t len, const rel_inst *inst, int nin
     }
     ntarget = out->nops;
 
-    /* Replacements: only installed packages, and only when nothing else
-       installed still depends on them. */
+    /* Replacements: the package asked for may replace installed ones; a
+       dependency that would replace something is installed on its own
+       first, so the plan stays one replacement with one record. Nothing is
+       replaced that a package staying installed, or one this plan
+       installs, still depends on. */
     for (i = 0; i < ntarget; i++) {
         if (!planned_rel(&p, out->ops[i].id, &d)) continue;
         for (j = 0; j < d.nreplaces; j++) {
             const rel_inst *old = installed(&p, d.replaces[j].id);
-            char who[300];
-            if (!old || same_id(old->id, id)) continue;
-            if (rel_required_by(inst, ninst, old->id, NULL, who, sizeof who) > 0) {
+            char who[300] = "";
+            size_t wl = 0;
+            int m, q;
+            if (!old || (same_id(old->id, id) && out->ops[i].kind == RELOP_TARGET)) continue;
+            if (out->ops[i].kind != RELOP_TARGET) {
+                snprintf(why, sizeof why, "%s, which %s needs, would replace the installed %s. Install %s "
+                         "by itself first, then %s.", out->ops[i].id, id, old->id, out->ops[i].id, id);
+                out->ok = 0; out->status = PKG_E_CONFLICT; snprintf(out->why, sizeof out->why, "%s", why);
+                goto done;
+            }
+            for (q = 0; q < ninst; q++) {
+                if (same_id(inst[q].id, old->id) || names(d.replaces, d.nreplaces, inst[q].id)) continue;
+                for (m = 0; m < inst[q].rel.ndepends; m++)
+                    if (same_id(inst[q].rel.depends[m].id, old->id) && wl + 70 < sizeof who)
+                        wl += (size_t)snprintf(who + wl, sizeof who - wl, "%s%s", wl ? ", " : "", inst[q].id);
+            }
+            for (q = 0; q < ntarget; q++) {
+                if (q == i || !planned_rel(&p, out->ops[q].id, &dq)) continue;
+                if (names(dq.depends, dq.ndepends, old->id) && wl + 70 < sizeof who)
+                    wl += (size_t)snprintf(who + wl, sizeof who - wl, "%s%s", wl ? ", " : "", out->ops[q].id);
+            }
+            if (wl) {
                 snprintf(why, sizeof why, "%s would replace %s, but %s still need%s it. Remove %s first, "
                          "or install it without replacing.", out->ops[i].id, old->id, who,
                          strchr(who, ',') ? "" : "s", who);
@@ -382,6 +404,23 @@ int rel_plan_install(const char *json, size_t len, const rel_inst *inst, int nin
                 o->revision = old->revision;
                 snprintf(o->note, sizeof o->note, "replaced by %s; files you changed in it are kept", out->ops[i].id);
             }
+        }
+    }
+
+    /* The replaced packages go dependents first: removing one that another
+       replaced package still depends on would be refused. */
+    {
+        int a, b, moved = 1, guard = 0;
+        while (moved && guard++ < REL_PLAN_MAX) {
+            moved = 0;
+            for (a = ntarget; a < out->nops; a++)
+                for (b = a + 1; b < out->nops; b++) {
+                    const rel_inst *later = installed(&p, out->ops[b].id);
+                    if (later && names(later->rel.depends, later->rel.ndepends, out->ops[a].id)) {
+                        rel_op tmp = out->ops[a]; out->ops[a] = out->ops[b]; out->ops[b] = tmp;
+                        moved = 1;
+                    }
+                }
         }
     }
 
@@ -516,4 +555,35 @@ int rel_rows(const char *json, size_t len, const rel_decl *d, const rel_inst *in
     }
     free(t);
     return n;
+}
+
+int rel_check_decl(const rel_decl *d, const char *id, const char *version, const rel_inst *inst, int ninst,
+                   const char *my_arch, const char *my_abi, char *why, size_t wn)
+{
+    int i, j;
+    for (i = 0; i < d->ndepends; i++) {
+        const rel_inst *in = NULL;
+        for (j = 0; j < ninst; j++) if (same_id(inst[j].id, d->depends[i].id)) in = &inst[j];
+        if (!in || !native(in->arch, in->abi, my_arch, my_abi) || !meets(in->version, d->depends[i].min_version)) {
+            snprintf(why, wn, "%s %s needs %s%s%s, which is not installed here%s.", id, version, d->depends[i].id,
+                     d->depends[i].min_version[0] ? " >= " : "", d->depends[i].min_version,
+                     in ? " in that version" : "");
+            return -1;
+        }
+    }
+    for (j = 0; j < ninst; j++) {
+        if (same_id(inst[j].id, id)) continue;
+        if (names(d->conflicts, d->nconflicts, inst[j].id) || names(d->replaces, d->nreplaces, inst[j].id) ||
+            names(inst[j].rel.conflicts, inst[j].rel.nconflicts, id) || names(inst[j].rel.replaces, inst[j].rel.nreplaces, id)) {
+            snprintf(why, wn, "%s %s conflicts with the installed %s.", id, version, inst[j].id);
+            return -1;
+        }
+        for (i = 0; i < inst[j].rel.ndepends; i++)
+            if (same_id(inst[j].rel.depends[i].id, id) && !meets(version, inst[j].rel.depends[i].min_version)) {
+                snprintf(why, wn, "%s needs %s >= %s; going back to %s would break it.", inst[j].id, id,
+                         inst[j].rel.depends[i].min_version, version);
+                return -1;
+            }
+    }
+    return 0;
 }

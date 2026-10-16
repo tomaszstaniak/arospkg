@@ -1486,10 +1486,15 @@ static int real_main(int argc, char **argv)
                         for (i = 0; i < pl->nops; i++) if (pl->ops[i].kind == PKG_OP_INSTALL) print_installed(c, index, arg, "Installed");
                     for (i = 0; i < pl->nops; i++)
                         if (pl->ops[i].kind == PKG_OP_REMOVE_REPLACED) {
-                            char l[300]; pkg_removal rm;
+                            char l[400], d[PKG_MAXPATH]; pkg_removal rm;
+                            int last = 1, k2;
+                            for (k2 = i + 1; k2 < pl->nops; k2++) if (pl->ops[k2].kind == PKG_OP_REMOVE_REPLACED) last = 0;
+                            /* Only the last removal's record is kept; for the
+                               others, where their files would be. */
                             pkg_last_removal(c, &rm);
-                            snprintf(l, sizeof l, "Removed %s, which %s replaces.%s%s", pl->ops[i].id, arg,
-                                     rm.dir[0] ? " Kept, as you changed or added them: " : "", rm.dir[0] ? rm.dir : "");
+                            snprintf(d, sizeof d, "%s", last ? rm.dir : "");
+                            snprintf(l, sizeof l, "Removed %s, which %s replaces. Files you changed or added in it "
+                                     "stay in its drawer%s%s.", pl->ops[i].id, arg, d[0] ? ": " : "", d);
                             pr_text(l, 0);
                         }
                 } else if (pl->extra) print_plan_result(pl);

@@ -82,6 +82,7 @@ $A install relghost >RESULTS:$RTAG-29-ghost.txt
 echo "rc $RC" >>RESULTS:$RTAG-29-ghost.txt
 $A install rellib >RESULTS:$RTAG-30-mark-explicit.txt
 echo "rc $RC" >>RESULTS:$RTAG-30-mark-explicit.txt
+type SYS:RelT/db/installed/rellib.json >>RESULTS:$RTAG-30-mark-explicit.txt
 $A --yes install relbroken >RESULTS:$RTAG-31-broken.txt
 echo "rc $RC" >>RESULTS:$RTAG-31-broken.txt
 $A list >RESULTS:$RTAG-32-list-end.txt

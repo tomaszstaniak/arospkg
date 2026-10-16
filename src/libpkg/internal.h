@@ -71,7 +71,10 @@ typedef struct {
 void news_before_update(struct pkg_ctx *, news_prev *);
 /* relations_io.c */
 int  rel_fragment(const char *json, const js_tok *t, int ntok, int obj, char *out, size_t n, char *why, size_t wn);
-pkg_status rel_check_alone(struct pkg_ctx *, const char *index_path, const char *id, int upgrade, pkg_err *);
+pkg_status rel_check_alone(struct pkg_ctx *, const char *index_path, const char *id, int upgrade,
+                           const char *arch, const char *abi, pkg_err *);
+pkg_status rel_check_rollback(struct pkg_ctx *, const char *id, const char *version, const char *rel_json,
+                              const char *arch, const char *abi, pkg_err *);
 pkg_status rel_check_remove(struct pkg_ctx *, const char *id, pkg_err *);
 void rel_finish_replacements(struct pkg_ctx *);
 int  news_after_update(struct pkg_ctx *, const char *url, news_prev *);
@@ -102,13 +105,16 @@ int   app_stage(const char *staging, const char *id, const char *version, long r
                 const pkg_launch *l);
 /* What upgrade, rollback, verify and a dry run need to know about a revision,
  * read from a registry entry or from an index entry (swap.c). */
-#define REL_JSON_MAX 4096
+/* depends, conflicts and replaces as the registry records them: 48 entries
+   of at most 130 characters with their quoting. */
+#define REL_JSON_MAX 8192
 typedef struct {
     char version[64];
     long revision;
     char arch[16], abi[8];
     char reason[16];             /* registry: "explicit" or "dependency" */
     char rel_json[REL_JSON_MAX]; /* the relations, as the registry records them */
+    int  rel_known;              /* registry: they were recorded (0.6 and later) */
     char url[512], sha[65];
     long size;
     char subdir[128];

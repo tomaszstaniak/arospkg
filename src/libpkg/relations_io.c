@@ -25,10 +25,21 @@ int rel_fragment(const char *json, const js_tok *t, int ntok, int obj, char *out
         return -1;
     }
     js_out_init(&o, out, n);
-    rel_emit(&o, d);
+    /* The registry keeps what removal and conflict checks need; the
+       recommendations are the catalogue's to show. */
+    rel_emit(&o, d, 0);
     free(d);
     if (o.fail) { out[0] = 0; snprintf(why, wn, "too many relations to record"); return -1; }
     return 0;
+}
+
+static int same_id(const char *a, const char *b)
+{
+    for (; *a && *b; a++, b++) {
+        int x = *a >= 'A' && *a <= 'Z' ? *a + 32 : *a, y = *b >= 'A' && *b <= 'Z' ? *b + 32 : *b;
+        if (x != y) return 0;
+    }
+    return *a == *b;
 }
 
 static void member(const char *js, const js_tok *t, int n, int obj, const char *name, char *out, size_t len)
@@ -91,25 +102,28 @@ static const char *my_abi(void)
 
 /* The plan from the catalogue file and the registry. */
 static pkg_status plan_for(struct pkg_ctx *c, const char *index_path, const char *id, int upgrade,
+                           const char *arch, const char *abi,
                            rel_plan *rp, rel_inst **inst, int *ninst, pkg_err *e)
 {
     size_t len; char *idx = u_read_all(index_path, &len);
     int rc;
     if (!idx) return pkg_fail(e, PKG_E_NOT_FOUND, "no catalogue -- run apkg update first", "", index_path);
     if (load_installed(c, idx, len, inst, ninst) != 0) { free(idx); return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id); }
-    rc = rel_plan_install(idx, len, *inst, *ninst, id, pkg_arch(), my_abi(), upgrade, rp);
+    rc = rel_plan_install(idx, len, *inst, *ninst, id, arch && *arch ? arch : pkg_arch(),
+                          abi && *abi ? abi : my_abi(), upgrade, rp);
     free(idx);
     if (rc != 0 && rp->ok) return index_unreadable(e, rc, index_path);
     return PKG_OK;
 }
 
-pkg_status rel_check_alone(struct pkg_ctx *c, const char *index_path, const char *id, int upgrade, pkg_err *e)
+pkg_status rel_check_alone(struct pkg_ctx *c, const char *index_path, const char *id, int upgrade,
+                           const char *arch, const char *abi, pkg_err *e)
 {
     rel_plan *rp = (rel_plan *)malloc(sizeof *rp);
     rel_inst *inst = NULL; int ninst = 0, i;
     pkg_status st;
     if (!rp) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
-    st = plan_for(c, index_path, id, upgrade, rp, &inst, &ninst, e);
+    st = plan_for(c, index_path, id, upgrade, arch, abi, rp, &inst, &ninst, e);
     if (st == PKG_OK && !rp->ok)
         st = pkg_fail(e, rp->status ? rp->status : PKG_E_REQUIRES,
                       rp->status == PKG_E_CONFLICT ? "a conflict with another package" : "a requirement is not met",
@@ -130,9 +144,15 @@ pkg_status rel_check_alone(struct pkg_ctx *c, const char *index_path, const char
 
 pkg_status rel_check_remove(struct pkg_ctx *c, const char *id, pkg_err *e)
 {
-    rel_inst *inst = NULL; int ninst = 0, n;
-    char who[400], why[500];
-    if (load_installed(c, NULL, 0, &inst, &ninst) != 0) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
+    rel_inst *inst = NULL; int ninst = 0, n, rc;
+    char who[400], why[500], ip[PKG_MAXPATH], *idx; size_t len = 0;
+    /* Entries from before 0.6 recorded no relations: the catalogue on this
+       machine says what they need. */
+    snprintf(ip, sizeof ip, "%s/index.json", c->db);
+    idx = u_read_all(ip, &len);
+    rc = load_installed(c, idx, len, &inst, &ninst);
+    free(idx);
+    if (rc != 0) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
     n = rel_required_by(inst, ninst, id, NULL, who, sizeof who);
     free(inst);
     if (!n) return PKG_OK;
@@ -158,7 +178,7 @@ pkg_status pkg_plan_install(pkg_ctx *c, const char *index_path, const char *id,
            depended on it must not take it along. */
         if (load_installed(c, NULL, 0, &inst, &ninst) != 0) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
         for (i = 0; i < ninst; i++)
-            if (!strcmp(inst[i].id, id) && !strcmp(inst[i].reason, "dependency")) {
+            if (same_id(inst[i].id, id) && !strcmp(inst[i].reason, "dependency")) {
                 out->ok = 1; out->nops = 1;
                 out->ops[0].kind = PKG_OP_MARK_EXPLICIT;
                 snprintf(out->ops[0].id, sizeof out->ops[0].id, "%s", id);
@@ -171,7 +191,7 @@ pkg_status pkg_plan_install(pkg_ctx *c, const char *index_path, const char *id,
         return pkg_fail(e, PKG_E_EXISTS, "already installed", "Remove it first if you want to install it again.", id);
     }
     if (!(rp = (rel_plan *)malloc(sizeof *rp))) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
-    st = plan_for(c, index_path, id, 0, rp, &inst, &ninst, e);
+    st = plan_for(c, index_path, id, 0, NULL, NULL, rp, &inst, &ninst, e);
     if (st == PKG_OK) {
         out->ok = rp->ok;
         out->status = rp->status;
@@ -213,23 +233,25 @@ static int write_replace(struct pkg_ctx *c, const pkg_install_plan *pl)
 
 static int mark_explicit(struct pkg_ctx *c, const char *id)
 {
-    char p[PKG_MAXPATH], *txt, *at; size_t len;
+    /* The registry's "reason" member, found through the reader, its value
+       replaced in place: the rest of the entry stays byte for byte. */
+    char p[PKG_MAXPATH], *txt, *n2; size_t len; js_tok *t; int nt, v, rc = -1;
     registry_path(c, id, p, sizeof p);
     if (!(txt = u_read_all(p, &len))) return -1;
-    /* The writer emits exactly this member; nothing else spells it. */
-    if ((at = strstr(txt, "\"reason\": \"dependency\"")) == NULL) { free(txt); return 0; }
-    {
-        size_t head = (size_t)(at - txt);
-        char *n2 = (char *)malloc(len + 16);
-        int rc;
-        if (!n2) { free(txt); return -1; }
-        memcpy(n2, txt, head);
-        strcpy(n2 + head, "\"reason\": \"explicit\"");
-        strcat(n2, at + strlen("\"reason\": \"dependency\""));
+    nt = js_parse_alloc(txt, len, &t, PKG_JSON_MAXTOK);
+    v = nt > 0 ? js_member(txt, t, nt, 0, "reason") : -1;
+    if (v >= 0 && t[v].type == JS_STR && t[v].end - t[v].start == 10 && !strncmp(txt + t[v].start, "dependency", 10)
+        && (n2 = (char *)malloc(len + 1)) != NULL) {
+        memcpy(n2, txt, (size_t)t[v].start);
+        memcpy(n2 + t[v].start, "explicit", 8);
+        memcpy(n2 + t[v].start + 8, txt + t[v].end, len - (size_t)t[v].end);
+        n2[len - 2] = 0;
         rc = u_write_atomicish(p, n2);
-        free(n2); free(txt);
-        return rc;
+        free(n2);
     }
+    if (nt > 0) free(t);
+    free(txt);
+    return rc;
 }
 
 pkg_status pkg_install_plan_run(pkg_ctx *c, const char *index_path, pkg_install_plan *pl,
@@ -241,6 +263,10 @@ pkg_status pkg_install_plan_run(pkg_ctx *c, const char *index_path, pkg_install_
 
     if (!pl->ok) return pkg_fail(e, pl->status ? pl->status : PKG_E_REQUIRES, "the plan was refused", pl->why, "");
     for (i = 0; i < pl->nops; i++) if (pl->ops[i].kind == PKG_OP_REMOVE_REPLACED) replacing = 1;
+    replace_path(c, path, sizeof path);
+    if (replacing && u_exists(path))
+        return pkg_fail(e, PKG_E_CONFLICT, "an earlier replacement is not finished",
+                        "Its old package could not be removed. Look at it with apkg doctor; nothing was changed.", path);
     if (replacing && write_replace(c, pl) != 0)
         return pkg_fail(e, PKG_E_IO, "cannot record the replacement", "Nothing was changed.", c->db);
     c->in_plan = 1;
@@ -307,7 +333,12 @@ void rel_finish_replacements(struct pkg_ctx *c)
                     if (used + strlen(old) + strlen(newid) + 8 < sizeof c->replaced_note)
                         used += (size_t)snprintf(c->replaced_note + used, sizeof c->replaced_note - used,
                                                  "%s%s by %s", used ? ", " : "", old, newid);
-                } else left = 1;
+                } else {
+                    left = 1;
+                    if (used + 60 < sizeof c->replaced_note)
+                        used += (size_t)snprintf(c->replaced_note + used, sizeof c->replaced_note - used,
+                                                 "%s%s by %s NOT finished: %.80s", used ? ", " : "", old, newid, e.summary);
+                }
             }
         free(t);
     }
@@ -371,14 +402,14 @@ pkg_status pkg_relations_get(pkg_ctx *c, const char *index_path, const char *id,
                 free(t);
             }
         }
-        for (i = 0; !found && i < ninst; i++) if (!strcmp(inst[i].id, id)) { *d = inst[i].rel; found = 1; }
+        for (i = 0; !found && i < ninst; i++) if (same_id(inst[i].id, id)) { *d = inst[i].rel; found = 1; }
     }
     *nrows = rel_rows(idx, len, d, inst, ninst, pkg_arch(), my_abi(), rows, max);
     /* And the other way: what installed here needs this one. */
     for (i = 0; i < ninst && *nrows < max; i++) {
         int j;
         for (j = 0; j < inst[i].rel.ndepends; j++)
-            if (!strcmp(inst[i].rel.depends[j].id, id)) {
+            if (same_id(inst[i].rel.depends[j].id, id)) {
                 pkg_relation *r = &rows[(*nrows)++];
                 memset(r, 0, sizeof *r);
                 r->kind = PKG_REL_NEEDED_BY;
@@ -391,4 +422,28 @@ pkg_status pkg_relations_get(pkg_ctx *c, const char *index_path, const char *id,
     }
     free(idx); free(inst); free(d);
     return PKG_OK;
+}
+
+pkg_status rel_check_rollback(struct pkg_ctx *c, const char *id, const char *version, const char *rel_json,
+                              const char *arch, const char *abi, pkg_err *e)
+{
+    char ip[PKG_MAXPATH], *idx, txt[REL_JSON_MAX + 16], why[400]; size_t len = 0;
+    rel_inst *inst = NULL; int ninst = 0, rc;
+    rel_decl *d = (rel_decl *)calloc(1, sizeof *d);
+    pkg_status st = PKG_OK;
+    if (!d) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
+    snprintf(txt, sizeof txt, "{ \"x\": 0%s }", rel_json ? rel_json : "");
+    {
+        js_tok *t; int nt = js_parse_alloc(txt, strlen(txt), &t, PKG_JSON_MAXTOK);
+        if (nt > 0) { rel_read(txt, t, nt, 0, d, why, sizeof why); free(t); }
+    }
+    snprintf(ip, sizeof ip, "%s/index.json", c->db);
+    idx = u_read_all(ip, &len);
+    rc = load_installed(c, idx, len, &inst, &ninst);
+    free(idx);
+    if (rc != 0) st = pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
+    else if (rel_check_decl(d, id, version, inst, ninst, arch, abi, why, sizeof why) != 0)
+        st = pkg_fail(e, PKG_E_REQUIRES, "the earlier revision does not fit what is installed", why, id);
+    free(inst); free(d);
+    return st;
 }

@@ -89,6 +89,22 @@ r, v3, v2 = generate([M(id="a", depends=["b"]), M(id="b", depends=["a"])])
 if r.returncode == 0 or "a cycle" not in r.stdout:
     fails.append(f"a cycle is refused: {r.stdout}")
 
+r, v3, v2 = generate([M(id="top", depends=["b"]), M(id="b", depends=["c"]), M(id="c", depends=["b"])])
+if r.returncode == 0 or "top.x86_64.toml: depends on b" not in r.stdout:
+    fails.append(f"what depends on a cycle is refused too, not published with a missing dependency: {r.stdout}")
+refused({"conflicts": ["a" * 64]}, "at most 63", "relation ids within what the client keeps")
+refused({"depends": ["lib >= " + ".".join(["123456789"] * 8)]}, "at most 63", "a minimum version within what the client keeps")
+
+# index.json, for clients up to 0.3.2, never gets a package that needs relations,
+# even one it listed before the package gained them.
+d = Path(tempfile.mkdtemp()); (d / "m").mkdir()
+(d / "index.json").write_text(json.dumps({"schema": 1, "packages": [{"id": "app", "arch": "x86_64", "abi": "v11"}]}))
+(d / "m" / "app.x86_64.v11.toml").write_text(toml(M(id="app", replaces=["old"])))
+subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(d / "m"), "--out-dir", str(d),
+                "--no-archive-check"], capture_output=True, text=True)
+if [p["id"] for p in json.loads((d / "index.json").read_text())["packages"]]:
+    fails.append("index.json keeps no package that needs relations")
+
 if fails:
     print("\n".join(fails)); print(f"RELATIONS: {len(fails)} failed"); sys.exit(1)
 print("RELATIONS: declarations, closure, cycles and the catalogue split hold")
