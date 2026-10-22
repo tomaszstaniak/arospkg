@@ -120,6 +120,41 @@ int main(void)
     ok(version_compare("1.2.3.4.5.6.7.8", "1.2.3.4.5.6.7.9") == -1 &&
        version_compare("1.2.3.4.5.6.7.8.9", "2") == 2, "at most 8 components");
 
+    /* Pre-release and rebuild tags, as the catalogue's own ports use them. */
+    ok(version_compare("0.9.0-test2-r2", "0.9.0-test4") == -1, "test2-r2 < test4 (PdfCraft test 2 rebuild 2 -> test 4)");
+    ok(version_compare("0.9.0-test9", "0.9.0-test10") == -1, "test9 < test10: numbers, not text");
+    ok(version_compare("0.9.0-test10", "0.9.0-test9") == 1, "test10 > test9");
+    ok(version_compare("0.9.0-test4", "0.9.0") == -1, "a test release comes before the final release");
+    ok(version_compare("0.9.0", "0.9.0-test4") == 1, "the final release is newer than its test");
+    ok(version_compare("0.9.0-test4", "0.9.1-test1") == -1, "the numbers decide first");
+    ok(version_compare("0.8.9", "0.9.0-test1") == -1, "an older final release < a newer test");
+    ok(version_compare("0.7.0-preview2", "0.7.0-preview2-r2") == -1, "a rebuild is newer than what it rebuilds");
+    ok(version_compare("0.7.0-preview2-r2", "0.7.0-preview3") == -1, "the next preview is newer than a rebuild");
+    ok(version_compare("0.1.0-rc1", "0.1.0-rc3") == -1, "rc1 < rc3");
+    ok(version_compare("0.1.0-rc3", "0.1.0") == -1, "an rc comes before the release");
+    ok(version_compare("1.0", "1.0-r2") == -1 && version_compare("1.0-r2", "1.0-r10") == -1, "rebuilds of a release");
+    ok(version_compare("0.9.0-test4", "0.9.0-test4") == 0, "the same version");
+    ok(version_compare("0.7.0-preview1", "0.7.0-test1") == 2, "different pre-release kinds are not ordered");
+    ok(version_compare("0.1.0-preview5", "0.1.0-rc1") == 2, "preview and rc are not ordered either");
+    ok(version_compare("0.1.0-preview5", "0.2.0-rc1") == -1, "different kinds, different numbers: the numbers decide");
+    ok(version_compare("1.0-test", "1.0") == 2 && version_compare("1.0-r", "1.0") == 2, "a tag needs its number");
+    ok(version_compare("1.0-r2-test1", "1.0") == 2, "the rebuild tag comes last");
+    ok(version_compare("1.0-test1-test2", "1.0") == 2, "one pre-release tag");
+    ok(version_compare("1.6.0-dev", "1.6.0") == 2 && version_compare("0.3.1-1", "0.3.1") == 2 &&
+       version_compare("2.1-fix-1", "2.1") == 2 && version_compare("9.13beta", "9.13") == 2 &&
+       version_compare("v0.9.0b1", "0.9.0") == 2 && version_compare("0.9r2", "0.9") == 2,
+       "other tags the catalogue contains stay unordered");
+    ok(version_compare("1.0-TEST1", "1.0") == 2, "tags are lower case");
+    ok(version_compare("1.0-test1234567890", "1.0") == 2, "a tag number over 9 digits is refused");
+    ok(upgrade_allowed("0.9.0-test2-r2", 1, "0.9.0-test4", 1, why, sizeof why) == 0, "0.9.0-test2-r2 -> 0.9.0-test4 allowed");
+    ok(upgrade_allowed("0.9.0-test4", 1, "0.9.0-test2-r2", 1, why, sizeof why) != 0 && strstr(why, "older version"),
+       "0.9.0-test4 -> 0.9.0-test2-r2 is a downgrade");
+    ok(upgrade_allowed("0.9.0-test4", 1, "0.9.0", 1, why, sizeof why) == 0, "test -> final allowed");
+    ok(upgrade_allowed("0.9.0", 1, "0.9.0-test4", 1, why, sizeof why) != 0 && strstr(why, "older version"),
+       "final -> its test is a downgrade");
+    ok(upgrade_allowed("0.7.0-preview1", 1, "0.7.0-test1", 1, why, sizeof why) != 0 && strstr(why, "refused rather than guessed"),
+       "preview -> test of the same numbers is refused, not guessed");
+
     ok(upgrade_allowed("0.1.0", 1, "0.2.0", 1, why, sizeof why) == 0, "newer version: allowed");
     ok(upgrade_allowed("0.1.0", 5, "0.2.0", 1, why, sizeof why) == 0,
        "newer version with a lower revision number: allowed, revisions count per version");

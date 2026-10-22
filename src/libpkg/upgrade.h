@@ -50,12 +50,18 @@ int upgrade_plan(const inv_ent *old, int nold,
 const char *upgrade_actname(up_act);
 
 /* Order two upstream versions, when that can be done without guessing.
- * A version is ordered only if it is plain dotted numbers: one to eight
- * components, each 1-9 digits ("0.2.0", "1.10", "2026.09"). Components
- * compare as numbers, so 1.10 > 1.9; a missing component counts as 0.
+ * A version is ordered if it is dotted numbers -- one to eight components,
+ * each 1-9 digits ("0.2.0", "1.10", "2026.09") -- optionally followed by one
+ * pre-release tag "-testN", "-previewN" or "-rcN" and then a rebuild tag
+ * "-rN" ("0.9.0-test4", "0.7.0-preview2-r2", "1.0-r2"). Components compare
+ * as numbers, so 1.10 > 1.9 and test9 < test10; a missing component counts
+ * as 0. For the same numbers a pre-release comes before the release
+ * (0.9.0-test4 < 0.9.0), and a rebuild after what it rebuilds (test2 <
+ * test2-r2 < test4). Pre-releases of different kinds for the same numbers
+ * ("-preview1" and "-test1") are not ordered.
  * Returns -1/0/1 (a < b, equal, a > b), or 2 when either version is not of
- * that form. Two versions equal as numbers but written differently
- * ("1.0" and "1.0.0", "1.02" and "1.2") return 0. */
+ * that form or the two cannot be ordered. Two versions equal as numbers but
+ * written differently ("1.0" and "1.0.0", "1.02" and "1.2") return 0. */
 int version_compare(const char *a, const char *b);
 
 /* The upgrade rule, in one place. Returns 0 if `to` may replace `from`, or

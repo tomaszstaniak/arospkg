@@ -19,6 +19,7 @@
  * What is saved for a later rollback lives OUTSIDE the transaction so it
  * survives its cleanup: db/previous/<id>.json and cache/previous/<id>.<ext>.
  */
+#include "limits.h"
 #include "internal.h"
 #include "app.h"
 #include "upgrade.h"
@@ -233,7 +234,7 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
     /* 1. The target tree, and the three inventories. */
     prog(c, "extract", 0, to->size > 0 ? (unsigned long)to->size : 0, 0);
     if (pkg_slow_ms) Delay((ULONG)pkg_slow_ms);
-    if (arc_extract(to_archive, staging, to->subdir, 64L*1024*1024, 256L*1024*1024, NULL, NULL, why) != 0) {
+    if (arc_extract(to_archive, staging, to->subdir, PKG_MAX_MEMBER, PKG_MAX_TOTAL, NULL, NULL, why) != 0) {
         st = pkg_fail(e, PKG_E_ARCHIVE, "the archive was rejected", why, to_archive); goto fail_staging;
     }
     prog(c, "extract", 1, 1, 0);

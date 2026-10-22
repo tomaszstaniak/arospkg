@@ -1,3 +1,4 @@
+#include "limits.h"
 #include "internal.h"
 #include "app.h"
 #include "entries.h"
@@ -249,7 +250,7 @@ pkg_status fetch_verified(pkg_ctx *c, const char *id, const char *url,
             st = pkg_fail(e, PKG_E_CANCELLED, "cancelled before the download", "", id); return st;
         }
         net_set_progress(c->progress ? net_prog_shim : NULL, c);
-        if (net_fetch(url, archive, 64L * 1024 * 1024, why) != 0) {
+        if (net_fetch(url, archive, PKG_MAX_DOWNLOAD, why) != 0) {
             net_set_progress(NULL, NULL);
             net_close();
             st = strcmp(why, "cancelled") == 0
@@ -485,7 +486,7 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     }
     prog(c, "extract", 0, want_size > 0 ? (unsigned long)want_size : 0, 0);
     if (pkg_slow_ms > 0) Delay(pkg_slow_ticks(pkg_slow_ms)); /* testing only */
-    if (arc_extract(archive, staging, subdir, 64L*1024*1024, 256L*1024*1024,
+    if (arc_extract(archive, staging, subdir, PKG_MAX_MEMBER, PKG_MAX_TOTAL,
                     NULL, NULL, why) != 0) {
         st = pkg_fail(e, PKG_E_ARCHIVE, "the archive was rejected", why, archive);
         goto out;

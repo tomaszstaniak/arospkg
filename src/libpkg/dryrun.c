@@ -7,6 +7,7 @@
  * a staging tree under tmp/, which it removes again, and -- only when asked
  * -- an archive into the cache, which is not the installation.
  */
+#include "limits.h"
 #include "internal.h"
 #include "app.h"
 #include "verify.h"
@@ -136,7 +137,7 @@ static pkg_status dry_install(pkg_ctx *c, const char *index_path, const char *id
     snprintf(sroot, sizeof sroot, "%s/dry-%s", c->tmp, tid);
     snprintf(staging, sizeof staging, "%s/%s", sroot, id);
     if (u_mkdir(sroot) != 0 || u_mkdir(staging) != 0) return pkg_fail(e, PKG_E_IO, "cannot create staging", "", staging);
-    if (arc_extract(archive, staging, to.subdir, 64L*1024*1024, 256L*1024*1024, NULL, NULL, why) != 0) {
+    if (arc_extract(archive, staging, to.subdir, PKG_MAX_MEMBER, PKG_MAX_TOTAL, NULL, NULL, why) != 0) {
         u_deltree(sroot);
         rep_add(r, "would be refused: the archive was rejected -- %s\n", why); return PKG_OK;
     }

@@ -7,6 +7,7 @@
  * gone looking for a damaged download. Now the format is identified first and
  * an unknown one is named as such.
  */
+#include "limits.h"
 #include "arc.h"
 #include "zip.h"
 #include "lha.h"
@@ -39,8 +40,10 @@ int arc_extract(const char *archive, const char *dest, const char *strip,
         snprintf(why, 160, "not a ZIP or LHA archive");
         return -1;
     }
+    /* The LHA reader holds the archive and each member in memory. */
     if (!strcmp(kind, "lha"))
-        return lha_extract(archive, dest, strip, max_file, max_total,
+        return lha_extract(archive, dest, strip,
+                           max_file > PKG_MAX_MEMBER_BUFFERED ? PKG_MAX_MEMBER_BUFFERED : max_file, max_total,
                            (lha_cb)cb, user, why);
     return zip_extract(archive, dest, strip, max_file, max_total,
                        (zip_cb)cb, user, why);
@@ -55,6 +58,7 @@ int arc_extract_member(const char *archive, const char *member,
         return -1;
     }
     if (!strcmp(kind, "lha"))
-        return lha_extract_member(archive, member, dest_file, max_file, why);
+        return lha_extract_member(archive, member, dest_file,
+                                  max_file > PKG_MAX_MEMBER_BUFFERED ? PKG_MAX_MEMBER_BUFFERED : max_file, why);
     return zip_extract_member(archive, member, dest_file, max_file, why);
 }

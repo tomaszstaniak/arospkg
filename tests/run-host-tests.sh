@@ -94,6 +94,10 @@ with zipfile.ZipFile('/tmp/arospkg-unsafe.zip', 'w') as z:
     z.writestr('LIBS:evil.library', b'e')
 PY2
 
+python3 "$HERE/make-zip-limits.py" "$OUT/zip-limits"
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_zip_limits" \
+    "$HERE/test_zip_limits.c" "$SRC/zip.c" "$HERE/host_util.c" -lz
+
 python3 "$HERE/make-lha-fixtures.py"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_lha" \
@@ -108,6 +112,11 @@ echo "== test_relations.py"
 python3 "$HERE/test_relations.py" || fail=1
 echo "== test_review"
 python3 "$HERE/test_review.py" || fail=1
+for t in test_zip_limits; do
+    echo "== $t"
+    "$OUT/$t" "$OUT/zip-limits" || fail=1
+    rm -rf "$OUT"/zip-limits/out-*
+done
 echo "== test_mkindex"
 python3 "$HERE/test_mkindex.py" || fail=1
 python3 "$HERE/test_apkg_pack.py" || fail=1

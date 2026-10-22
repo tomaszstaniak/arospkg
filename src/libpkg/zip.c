@@ -48,6 +48,67 @@ static void mk_parents(const char *dest, const char *rel)
         }
 }
 
+/* Write one member to `full`, CHUNK bytes at a time: a member costs two fixed
+ * buffers of memory whatever its size. Exactly `usz` bytes are written or the
+ * member is refused -- more output than the directory declares, less, a short
+ * read or a CRC-32 that does not match -- so the size limits checked in pass 1
+ * hold for what reaches the disk, not only for what the archive claims. */
+/* Static: AROS stacks are small, and one extraction runs at a time. */
+#define CHUNK 65536
+static int write_member(FILE *f, unsigned method, unsigned csz, unsigned usz, unsigned crc,
+                        const char *name, const char *full, char why[160])
+{
+    static unsigned char in[CHUNK], outb[CHUNK];
+    unsigned long left = csz, written = 0, sum = crc32(0L, Z_NULL, 0);
+    FILE *o;
+    z_stream z;
+    int zr = Z_OK, rc = -1;
+
+    if (method != 0 && method != 8) {
+        snprintf(why, 160, "unsupported compression %u in %s", method, name); return -1;
+    }
+    if (!(o = fopen(full, "wb"))) { snprintf(why, 160, "cannot write %s", full); return -1; }
+    memset(&z, 0, sizeof z);
+    if (method == 8 && inflateInit2(&z, -15) != Z_OK) {
+        fclose(o); snprintf(why, 160, "inflateInit failed"); return -1;
+    }
+    while (left > 0 || (method == 8 && zr != Z_STREAM_END)) {
+        size_t n = left > CHUNK ? CHUNK : left, got = 0;
+        if (n && (got = fread(in, 1, n, f)) != n) { snprintf(why, 160, "short read in %s", name); goto done; }
+        left -= (unsigned long)got;
+        if (method == 0) {
+            if (fwrite(in, 1, got, o) != got) { snprintf(why, 160, "write failed: %s", full); goto done; }
+            sum = crc32(sum, in, (uInt)got);
+            written += got;
+            continue;
+        }
+        z.next_in = in; z.avail_in = (uInt)got;
+        do {
+            size_t have;
+            z.next_out = outb; z.avail_out = CHUNK;
+            zr = inflate(&z, Z_NO_FLUSH);
+            if (zr != Z_OK && zr != Z_STREAM_END && !(zr == Z_BUF_ERROR && left > 0)) {
+                snprintf(why, 160, "inflate failed for %s", name); goto done;
+            }
+            have = CHUNK - z.avail_out;
+            if (written + have > usz) { snprintf(why, 160, "member larger than declared: %s", name); goto done; }
+            if (have && fwrite(outb, 1, have, o) != have) { snprintf(why, 160, "write failed: %s", full); goto done; }
+            sum = crc32(sum, outb, (uInt)have);
+            written += have;
+        } while (z.avail_out == 0 && zr != Z_STREAM_END);
+        if (zr != Z_STREAM_END && left == 0 && z.avail_in == 0) {
+            snprintf(why, 160, "inflate failed for %s", name); goto done;
+        }
+    }
+    if (written != usz) { snprintf(why, 160, "member size differs from the directory: %s", name); goto done; }
+    if (sum != crc) { snprintf(why, 160, "CRC mismatch in %s", name); goto done; }
+    rc = 0;
+done:
+    if (method == 8) inflateEnd(&z);
+    if (fclose(o) != 0 && rc == 0) { snprintf(why, 160, "close failed: %s", full); rc = -1; }
+    return rc;
+}
+
 /* `only`, when set, extracts that single member -- matched by its full name
  * inside the archive -- to the file path `dest`, and fails if it is absent. The
  * drawer icon is the reason: it sits BESIDE the program's directory in the
@@ -124,6 +185,9 @@ static int extract(const char *archive, const char *dest, const char *strip,
             if (max_file > 0 && (long)usz > max_file) {
                 snprintf(why, 160, "member over size limit: %s", name); goto out;
             }
+            if (rd16(cd + off + 10) == 0 && rd32(cd + off + 20) != usz) {
+                snprintf(why, 160, "stored member with a bad size: %s", name); goto out;
+            }
             total += (long)usz;
             if (max_total > 0 && total > max_total) {
                 snprintf(why, 160, "archive over total size limit"); goto out;
@@ -139,7 +203,8 @@ static int extract(const char *archive, const char *dest, const char *strip,
             unsigned nlen = rd16(cd + off + 28), elen = rd16(cd + off + 30),
                      clen = rd16(cd + off + 32);
             unsigned method = rd16(cd + off + 10), csz = rd32(cd + off + 20),
-                     usz = rd32(cd + off + 24), lho = rd32(cd + off + 42);
+                     usz = rd32(cd + off + 24), lho = rd32(cd + off + 42),
+                     crc = rd32(cd + off + 16);
             char name[512], rel[512], full[512];
             unsigned char lh[30];
             const char *use;
@@ -152,7 +217,7 @@ static int extract(const char *archive, const char *dest, const char *strip,
                 found = 1;
                 strncpy(rel, name, sizeof rel - 1); rel[sizeof rel - 1] = 0;
                 strncpy(full, dest, sizeof full - 1); full[sizeof full - 1] = 0;
-                goto write_member;
+                goto extract_one;
             }
             use = name;
             if (striplen && strncmp(name, strip, striplen) == 0 && name[striplen] == '/')
@@ -174,58 +239,14 @@ static int extract(const char *archive, const char *dest, const char *strip,
                 continue;
             }
             mk_parents(dest, rel);
-write_member:
+extract_one:
             fseek(f, (long)lho, SEEK_SET);
             if (fread(lh, 1, 30, f) != 30 || rd32(lh) != 0x04034b50) {
                 snprintf(why, 160, "bad local header for %s", name); goto out;
             }
             fseek(f, (long)(lho + 30 + rd16(lh + 26) + rd16(lh + 28)), SEEK_SET);
 
-            {
-                FILE *o = fopen(full, "wb");
-                unsigned char *in, *outb;
-                if (!o) { snprintf(why, 160, "cannot write %s", full); goto out; }
-                in = (unsigned char *)malloc(csz ? csz : 1);
-                outb = (unsigned char *)malloc(usz ? usz : 1);
-                if (!in || !outb) { free(in); free(outb); fclose(o);
-                                    snprintf(why, 160, "out of memory"); goto out; }
-                if (fread(in, 1, csz, f) != csz) {
-                    free(in); free(outb); fclose(o);
-                    snprintf(why, 160, "short read in %s", name); goto out;
-                }
-                if (method == 0) {
-                    if (fwrite(in, 1, csz, o) != csz) {
-                        free(in); free(outb); fclose(o);
-                        snprintf(why, 160, "write failed: %s", full); goto out;
-                    }
-                } else if (method == 8) {
-                    z_stream z;
-                    int zr;
-                    memset(&z, 0, sizeof z);
-                    z.next_in = in; z.avail_in = csz;
-                    z.next_out = outb; z.avail_out = usz;
-                    if (inflateInit2(&z, -15) != Z_OK) {
-                        free(in); free(outb); fclose(o);
-                        snprintf(why, 160, "inflateInit failed"); goto out;
-                    }
-                    zr = inflate(&z, Z_FINISH);
-                    inflateEnd(&z);
-                    if (zr != Z_STREAM_END || z.total_out != usz) {
-                        free(in); free(outb); fclose(o);
-                        snprintf(why, 160, "inflate failed for %s", name); goto out;
-                    }
-                    if (fwrite(outb, 1, usz, o) != usz) {
-                        free(in); free(outb); fclose(o);
-                        snprintf(why, 160, "write failed: %s", full); goto out;
-                    }
-                } else {
-                    free(in); free(outb); fclose(o);
-                    snprintf(why, 160, "unsupported compression %u in %s", method, name);
-                    goto out;
-                }
-                free(in); free(outb);
-                if (fclose(o) != 0) { snprintf(why, 160, "close failed: %s", full); goto out; }
-            }
+            if (write_member(f, method, csz, usz, crc, name, full, why) != 0) goto out;
             if (cb && cb(rel, full, user) != 0) { snprintf(why, 160, "aborted at %s", rel); goto out; }
         }
     }
