@@ -1,4 +1,4 @@
-arospkg 0.5.0
+arospkg 0.6.0
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -66,6 +66,24 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.6.0
+------------
+
+- Packages can depend on, recommend, conflict with and replace other
+  packages. apkg install shows the plan first: dependencies are installed
+  before the package, a replaced package is removed after, and a package
+  others need is not removed. The catalogue for 0.6 is index-v3.json.
+- Larger programs: one file in a package may be up to 128 MiB (64 MiB
+  before). Files are unpacked through small fixed buffers and checked
+  against their recorded size and CRC, so a larger package needs no more
+  memory to install.
+- Test and preview releases are put in order: apkg upgrade moves from
+  0.9.0-test2-r2 to 0.9.0-test4 and later to 0.9.0, and test10 comes after
+  test9. Versions in other forms are still refused rather than guessed.
+- apkg update says what is new in the catalogue; apkg recent lists what
+  was added recently. apkg show and PkgManager say whether a build was
+  reviewed automatically and where it was tested.
 
 NEW IN 0.5.0
 ------------
