@@ -162,6 +162,14 @@ carries `"client_features": ["relations"]` and is published only in
 `index-v3.json`, the file apkg 0.6 fetches; a client that meets a feature it
 does not know refuses the package. `recommends` alone needs no new client.
 
+**Large members.** apkg before 0.6 refuses an archive with a member that
+unpacks to more than 64 MiB ("member over size limit"); 0.6 accepts up to
+128 MiB in a ZIP. The review record (`tools/review.py`, suite 3) notes the
+largest member, and an entry whose largest member is over 64 MiB carries
+`"client_features": ["large-members"]` and is published only in
+`index-v3.json`. Entries reviewed before suite 3 carry no size record and
+are listed as before.
+
 **States.** For each relation `show` keeps apart: the id is in the
 catalogue (for any system); the catalogue has a build for this system,
 new enough; the registry has it in this root; and the relation is

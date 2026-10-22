@@ -125,12 +125,13 @@ refuses the whole archive:
 - control characters;
 - a member name of 512 bytes or more.
 
-Size limits in 0.3 (`src/libpkg/ops.c`):
+Size limits (`src/libpkg/limits.h`):
 
 | limit | value |
 |---|---|
 | download | 64 MiB |
-| one member, unpacked | 64 MiB |
+| one member, unpacked, in a ZIP | 128 MiB (64 MiB before 0.6) |
+| one member, unpacked, in an LHA | 64 MiB |
 | all members, unpacked | 256 MiB |
 | the drawer icon | 1 MiB |
 | files in the package | 2048 |
@@ -157,12 +158,18 @@ revision = 1                # optional: this port's 1st release of that version
 
 What the client does with them, in 0.3:
 
-- `apkg upgrade` moves only between revisions of **the same** `version`, and
-  only upwards.
-- A new `version` is not an upgrade. The user removes the package and
-  installs it again. The client refuses to install over a drawer that still
-  holds files the user changed, so the user has to move that drawer aside
-  first. Plan releases with this in mind.
+- `apkg upgrade` moves to a newer revision of the same `version`, or to a
+  newer `version` when both versions can be ordered (0.4.1 and later).
+- A version can be ordered when it is dotted numbers, optionally followed by
+  one pre-release tag `-testN`, `-previewN` or `-rcN` and then a rebuild tag
+  `-rN` (0.6 and later): 0.9.0-test2-r2 < 0.9.0-test4 < 0.9.0, test9 <
+  test10. Pre-releases of different kinds for the same numbers, and every
+  other spelling, are not ordered, and moving between them is not an
+  upgrade: the user removes the package and installs it again. Keep one
+  scheme for one program.
+- A member over 64 MiB unpacked is refused by clients before 0.6. The
+  catalogue lists such an entry only in `index-v3.json`, with the client
+  feature `large-members`.
 
 ## 3. Target: `arch`, `abi`, `requires_system`
 

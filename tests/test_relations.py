@@ -105,6 +105,27 @@ subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", s
 if [p["id"] for p in json.loads((d / "index.json").read_text())["packages"]]:
     fails.append("index.json keeps no package that needs relations")
 
+# Large members: an entry whose review record says one member unpacks to more
+# than 64 MiB needs the "large-members" feature and stays out of index-v2.json,
+# which clients before 0.6 read and whose limit refuses it.
+import review as rv  # noqa: E402
+d = Path(tempfile.mkdtemp()); (d / "m").mkdir(); (d / "rv").mkdir()
+for mm in (M(id="big"), M(id="small")):
+    (d / "m" / mkindex.variant_file(mm)).write_text(toml(mm))
+    rec = {"schema": 1, "suite": rv.SUITE, "id": mm["id"], "arch": mm["arch"], "abi": mm["abi"], "date": "2026-10-23",
+           "sha256": mm["sha256"], "size": mm["size"], "manifest_digest": rv.manifest_digest(mm), "result": "passed",
+           "sizes": {"largest_member": (90 if mm["id"] == "big" else 40) * 1024 * 1024, "unpacked": 1},
+           "checks": [], "unchecked": []}
+    (d / "rv" / (mkindex.variant_file(mm)[:-5] + ".json")).write_text(json.dumps(rec))
+r = subprocess.run([sys.executable, str(HERE / "tools/mkindex.py"), "--manifests", str(d / "m"), "--out-dir", str(d),
+                    "--no-archive-check", "--review-dir", str(d / "rv")], capture_output=True, text=True)
+v3 = {p["id"]: p for p in json.loads((d / "index-v3.json").read_text())["packages"]}
+v2 = [p["id"] for p in json.loads((d / "index-v2.json").read_text())["packages"]]
+if r.returncode or v3["big"].get("client_features") != ["large-members"] or "client_features" in v3["small"] or v2 != ["small"]:
+    fails.append(f"a member over 64 MiB needs large-members and is left out of index-v2.json: {r.stdout}{r.stderr} {v2}")
+if mkindex.client_features(M(id="x"), {"sizes": {"largest_member": 64 * 1024 * 1024}}):
+    fails.append("exactly 64 MiB is still within what old clients accept")
+
 if fails:
     print("\n".join(fails)); print(f"RELATIONS: {len(fails)} failed"); sys.exit(1)
-print("RELATIONS: declarations, closure, cycles and the catalogue split hold")
+print("RELATIONS: declarations, closure, cycles, large members and the catalogue split hold")

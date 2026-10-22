@@ -20,6 +20,7 @@ nothing is unpacked to disk.
 """
 import argparse
 import hashlib
+import re
 import json
 import subprocess
 import sys
@@ -35,7 +36,7 @@ import mkindex  # noqa: E402
 # older suite still counts as what it was: the catalogue shows its number.
 # 2 (2026-10-16): metadata includes the relations (depends with a minimum
 # version, recommends, conflicts, replaces).
-SUITE = 2
+SUITE = 3
 
 # ELF e_machine of the CPUs the catalogue carries.
 ELF_MACHINE = {"x86_64": 62, "i386": 3, "aarch64": 183}
@@ -152,6 +153,41 @@ def _check_cpu(m, heads):
     return "passed", detail
 
 
+# What the client accepts (src/libpkg/limits.h), and what clients before 0.6
+# accepted for one member. An entry with a larger member names the client
+# feature "large-members" (mkindex.client_features) and is left out of
+# index-v2.json, which those clients read.
+MAX_DOWNLOAD = 64 * 1024 * 1024
+MAX_MEMBER_ZIP = 128 * 1024 * 1024
+MAX_MEMBER_LHA = 64 * 1024 * 1024
+MAX_TOTAL = 256 * 1024 * 1024
+OLD_CLIENT_MAX_MEMBER = 64 * 1024 * 1024
+
+
+def archive_sizes(path):
+    """(largest member name, its unpacked size, all members unpacked, kind)."""
+    import subprocess
+    import zipfile
+    path = Path(path)
+    head = path.open("rb").read(8)
+    if head[:4] == b"PK\x03\x04":
+        infos = [i for i in zipfile.ZipFile(path).infolist() if not i.is_dir()]
+        sizes = [(i.filename, i.file_size) for i in infos]
+        kind = "zip"
+    else:
+        out = subprocess.run(["lha", "lq", str(path)], capture_output=True, text=True, check=True).stdout
+        sizes = []
+        for ln in out.splitlines():
+            hit = re.search(r"\s(\d+) +(?:\d+\.\d%|\*+) ", ln)
+            if hit:
+                sizes.append((ln[hit.end():].strip(), int(hit.group(1))))
+        kind = "lha"
+    if not sizes:
+        return "", 0, 0, kind
+    name, big = max(sizes, key=lambda x: x[1])
+    return name, big, sum(n for _, n in sizes), kind
+
+
 def review(m, archive, data=None, today=None):
     """The record for manifest dict `m` (override applied) and the archive
     file. `data`: its bytes when already read."""
@@ -169,12 +205,31 @@ def review(m, archive, data=None, today=None):
     add("download", "passed" if ok_dl else "failed",
         "" if ok_dl else f"{len(data)} bytes, sha256 {sha}; the entry says "
                          f"{m.get('size')} bytes, sha256 {m.get('sha256')}")
+    sizes = None
     names = None
     try:
         names = mkindex.archive_list(archive)
         add("archive", "passed", f"{len(names)} members")
     except Exception as exc:
         add("archive", "failed", f"cannot be read: {exc}")
+    if names is not None:
+        try:
+            big_name, big, total, kind = archive_sizes(archive)
+            sizes = {"largest_member": big, "unpacked": total}
+            limit = MAX_MEMBER_ZIP if kind == "zip" else MAX_MEMBER_LHA
+            over = []
+            if len(data) > MAX_DOWNLOAD:
+                over.append(f"the archive is {len(data)} bytes, over the {MAX_DOWNLOAD}-byte download limit")
+            if big > limit:
+                over.append(f"{big_name} unpacks to {big} bytes, over the {limit}-byte limit for one member")
+            if total > MAX_TOTAL:
+                over.append(f"the members unpack to {total} bytes, over the {MAX_TOTAL}-byte limit")
+            note = f"largest member {big} bytes ({big_name}), {total} bytes unpacked"
+            if not over and big > OLD_CLIENT_MAX_MEMBER:
+                note += "; over 64 MiB, which clients before 0.6 refuse"
+            add("sizes", "failed" if over else "passed", "; ".join(over) or note)
+        except Exception as exc:
+            add("sizes", "failed", f"sizes cannot be read: {exc}")
     if names is not None:
         unsafe = [p for p in mkindex.check_members({**m, "icon": "", "launch": None, "subdir": ""}, set(names))
                   if p.startswith("member ")]
@@ -209,6 +264,7 @@ def review(m, archive, data=None, today=None):
         "sha256": sha, "size": len(data),
         "manifest_digest": manifest_digest(m),
         "result": "passed" if passed else "failed",
+        **({"sizes": sizes} if sizes else {}),
         "checks": checks,
         "unchecked": unchecked,
     }

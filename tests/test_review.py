@@ -5,7 +5,7 @@ counts only for the bytes and the metadata it was made with; runtime tests
 are published only for the bytes they were made with; first publication
 dates come from history.json and never from today's date by default.
 Host only."""
-import hashlib, io, json, shutil, struct, subprocess, sys, tempfile, zipfile
+import hashlib, io, json, os, shutil, struct, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
@@ -27,9 +27,9 @@ def elf(machine, cls=2):
     return bytes(h)
 
 
-def zip_of(members):
+def zip_of(members, compression=zipfile.ZIP_STORED):
     b = io.BytesIO()
-    with zipfile.ZipFile(b, "w") as z:
+    with zipfile.ZipFile(b, "w", compression) as z:
         for name, data in members:
             z.writestr(name, data)
     return b.getvalue()
@@ -85,7 +85,7 @@ def run(name, members, want_result, want_check=None, want_detail=None, make=zip_
 
 
 rec, m, p = run("sound archive", GOOD, "passed")
-if [c["name"] for c in rec["checks"]] != ["metadata", "download", "archive", "paths", "layout", "cpu"]:
+if [c["name"] for c in rec["checks"]] != ["metadata", "download", "archive", "sizes", "paths", "layout", "cpu"]:
     fails.append(f"the suite runs every check: {rec['checks']}")
 if [u["name"] for u in rec["unchecked"]] != ["abi"]:
     fails.append(f"the ABI is reported as not decidable, never guessed: {rec['unchecked']}")
@@ -125,6 +125,22 @@ rec, *_ = run("other CPU beside", GOOD + [("Demo/extra-i386", elf(3, 1))], "pass
 cpu = [c for c in rec["checks"] if c["name"] == "cpu"][0]
 if "another CPU" not in cpu["detail"]:
     fails.append(f"a second CPU's file beside the program is reported: {cpu}")
+
+# Sizes: recorded for the catalogue, and checked against what the client accepts.
+rec, *_ = run("sizes recorded", GOOD, "passed")
+if rec.get("sizes") != {"largest_member": len(GOOD[1][1]), "unpacked": sum(len(d) for n, d in GOOD if not n.endswith("/"))}:
+    fails.append(f"the largest member and the unpacked total are recorded: {rec.get('sizes')}")
+big = 70 * 1024 * 1024
+deflated = lambda ms: zip_of(ms, zipfile.ZIP_DEFLATED)
+rec, *_ = run("a member over 64 MiB", GOOD + [("Demo/Big", b"\0" * big)], "passed", make=deflated)
+sz = [c for c in rec["checks"] if c["name"] == "sizes"][0]
+if rec["sizes"]["largest_member"] != big or "clients before 0.6" not in sz["detail"]:
+    fails.append(f"a member over 64 MiB passes and says which clients refuse it: {sz}")
+run("a member over 128 MiB", GOOD + [("Demo/Huge", b"\0" * (129 * 1024 * 1024))], "failed", "sizes", "limit for one member",
+    make=deflated)
+run("an archive over 64 MiB", GOOD + [("Demo/Noise", os.urandom(65 * 1024 * 1024))], "failed", "sizes", "download limit")
+run("an LHA member over 64 MiB", [("Demo/Demo", elf(62)), ("Demo/Demo.info", b"i"), ("Demo.info", b"i"),
+                                  ("Demo/Big", b"\0" * big)], "failed", "sizes", "limit for one member", make=lha_of)
 
 def zip_with_link(members, link, target):
     b = io.BytesIO()

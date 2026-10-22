@@ -212,9 +212,11 @@ reported as such, because an empty list then says little.
 
 `upgrade` installs a newer version of a package, or a newer packaging
 revision of the same version, and keeps files you changed. Versions are
-compared as numbers (1.10 is newer than 1.9) only when they consist of
-numbers and dots; apkg refuses an older version and any version it cannot
-order, and says why. `rollback` returns to what the last upgrade replaced.
+compared as numbers (1.10 is newer than 1.9) when they consist of numbers
+and dots, optionally with one `-testN`, `-previewN` or `-rcN` tag and a
+`-rN` rebuild tag (0.9.0-test2-r2, 0.9.0-test4 and 0.9.0 come in that
+order); apkg refuses an older version and any version it cannot order, and
+says why. `rollback` returns to what the last upgrade replaced.
 
 `upgrade --all` first prints the plan: every update it will install and
 every one it skips, with the reason. Then it upgrades the packages one after

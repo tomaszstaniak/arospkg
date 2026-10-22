@@ -193,7 +193,12 @@ REL_KEYS = ("depends", "recommends", "conflicts", "replaces")
 # a feature named here must not install the entry. Clients before 0.6 do not
 # read depends, conflicts or replaces at all, so such entries go only to
 # index-v3.json, which they never fetch.
-CLIENT_FEATURES = ("relations",)
+#
+# "large-members": a member over 64 MiB unpacked, which clients before 0.6
+# refused ("member over size limit"). Known from the entry's review record
+# (tools/review.py, suite 3 on), so an entry reviewed before that has none.
+CLIENT_FEATURES = ("relations", "large-members")
+OLD_CLIENT_MAX_MEMBER = 64 * 1024 * 1024
 DEPEND_RE = re.compile(r"^([a-z][a-z0-9._-]{0,63})(?: >= ([0-9]{1,9}(?:\.[0-9]{1,9}){0,7}))?$")
 
 
@@ -284,9 +289,13 @@ def check_relations(m):
     return problems
 
 
-def client_features(m):
-    """The client features an entry needs (CLIENT_FEATURES)."""
-    return ["relations"] if any(m.get(k) for k in ("depends", "conflicts", "replaces")) else []
+def client_features(m, review_rec=None):
+    """The client features an entry needs (CLIENT_FEATURES). `review_rec`: its
+    review record when one applies to these bytes (review_record())."""
+    out = ["relations"] if any(m.get(k) for k in ("depends", "conflicts", "replaces")) else []
+    if review_rec and (review_rec.get("sizes") or {}).get("largest_member", 0) > OLD_CLIENT_MAX_MEMBER:
+        out.append("large-members")
+    return out
 
 
 def launch_path_problem(rel):
@@ -711,19 +720,25 @@ def runtime_tests_for(runtime_dir, m):
     return sorted(current, key=lambda t: t["date"], reverse=True), []
 
 
-def review_for(review_dir, m):
-    """The catalogue's review object for m: reviewed only when a stored
-    record of the automatic suite applies to these bytes and this metadata."""
+def review_record(review_dir, m):
+    """The stored review record that applies to m's bytes and metadata, or None."""
     import review as rv
-    out = {"status": "listed"}
     if not review_dir:
-        return out
+        return None
     p = Path(review_dir) / (variant_file(m)[:-5] + ".json")
     try:
         rec = json.loads(p.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return out
-    if not rv.record_applies(rec, m):
+        return None
+    return rec if rv.record_applies(rec, m) else None
+
+
+def review_for(review_dir, m):
+    """The catalogue's review object for m: reviewed only when a stored
+    record of the automatic suite applies to these bytes and this metadata."""
+    out = {"status": "listed"}
+    rec = review_record(review_dir, m)
+    if rec is None:
         return out
     return {"status": "reviewed", "suite": rec["suite"], "date": rec["date"],
             "checked": [c["name"] for c in rec.get("checks", [])],
@@ -817,7 +832,7 @@ def main():
                                for r in m["recommends"]]} if m.get("recommends") else {}),
             **({"conflicts": m["conflicts"]} if m.get("conflicts") else {}),
             **({"replaces": m["replaces"]} if m.get("replaces") else {}),
-            **({"client_features": client_features(m)} if client_features(m) else {}),
+            **({"client_features": feats} if (feats := client_features(m, review_record(args.review_dir, m))) else {}),
             "requires_system": m.get("requires_system", []),
             # Carried through so a client can refuse a package on a system
             # where it is known not to run. Installing correctly and running
