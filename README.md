@@ -224,7 +224,7 @@ Despite its name, this script packages stable releases too; without
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
 The published release descriptions are kept in `release/notes-<version>.md`
-([0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
+([0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
 builds, then use it for the GitHub release notes.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,
