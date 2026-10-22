@@ -6,28 +6,18 @@ Both use the same catalogue and installed packages.
 
 ## Downloads
 
-**[Download 0.5.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.x86_64-aros-v11.zip)**
-· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.5.0)
-· [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.i386-aros-v0.zip)
-· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.x86_64-aros-v1.zip)
-· [Raspberry Pi (experimental, untested on a Pi)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.aarch64-aros-raspi.zip)
+**[Download 0.6.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.6.0/arospkg-0.6.0.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.6.0)
+· [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.6.0/arospkg-0.6.0.i386-aros-v0.zip)
+· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.6.0/arospkg-0.6.0.x86_64-aros-v1.zip)
+· [Raspberry Pi 0.5.0 (experimental, untested on a Pi)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.aarch64-aros-raspi.zip)
 
-New in 0.5.0: **start what you installed**. `apkg run folio` and
-PkgManager's **Run** start an application as its package describes: a
-Workbench program from its icon, with its stack and tool types, a Shell
-program in your Shell. PkgManager gains Verify, keeps listing installed
-packages without a catalogue, and says which files a removal kept. Its
-pictures and *Demo store* are a **demonstration** of a possible future,
-clearly marked: nothing can be bought. On 0.4.x, `apkg self-update`
-installs the new apkg; PkgManager comes from the archive.
+New in 0.6.0: packages can **depend on** other packages, recommend, conflict with and replace them, and `apkg install` shows the plan before it changes anything. One file in a package may be up to 128 MiB, so larger programs install, and test releases are put in order for `apkg upgrade` (0.9.0-test2-r2, 0.9.0-test4, 0.9.0). `apkg update` says what is new, `apkg recent` lists recent additions, and `apkg show` and PkgManager say whether a build was reviewed and where it was tested. Some catalogue entries need 0.6: earlier versions do not see them. On 0.4.x and 0.5.x, `apkg self-update` installs the new apkg; PkgManager comes from the archive.
 
 [Screenshots of 0.5.0 on AROS One](docs/screenshots/0.5.0/README.md) ·
 [0.4.2 screenshots](docs/screenshots/0.4.2/README.md).
 
-The mainline and Raspberry Pi archives include apkg and PkgManager. The Pi
-build is compiled and linked with the native Pi SDK but was not run on a Pi;
-please report what works. The reported Folio checksum failure on a Pi
-remains unexplained.
+The mainline archive includes apkg and PkgManager. There is no 0.6.0 Raspberry Pi build; 0.5.0 remains its latest.
 
 ## Install
 
@@ -50,7 +40,7 @@ Keep the extracted drawer somewhere permanent, not `RAM:`, if using
 PkgManager (included in the ABIv11, mainline and Pi archives). Installing
 packages requires a working network connection.
 
-**Upgrading from 0.3.x?** Install 0.5.0 manually using the commands above.
+**Upgrading from 0.3.x?** Install 0.6.0 manually using the commands above.
 Keep `SYS:Packages`; it contains your installed programs and package records.
 
 ## Use the graphical interface
@@ -227,8 +217,8 @@ with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.
 
-The 0.5.0 archives were made from the release commit with
-`README=release/README TARGETS="x86_64-aros-v11 i386-aros-v0 x86_64-aros-v1 aarch64-aros-raspi" sh tools/make-rc.sh 0.5.0`.
+The 0.6.0 archives were made from the release commit with
+`README=release/README TARGETS="x86_64-aros-v11 i386-aros-v0 x86_64-aros-v1" sh tools/make-rc.sh 0.6.0`.
 Despite its name, this script packages stable releases too; without
 `TARGETS` it builds all four targets and needs all four toolchains.
 `tools/make-release.sh` is the older packaging path, not the release recipe.
