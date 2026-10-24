@@ -1,0 +1,161 @@
+; Self-update from the Shell: the published release, a copy in C:, an apkg
+; on its own, refusals that must change nothing, and recovery after an
+; update stopped between apkg and PkgManager. Every check prints PASS or
+; FAIL, and every command's return code beside the one wanted; grade.py
+; reads both. Release sources are tests/selfupdate/relserver.py's.
+FailAt 21
+Set H RAM:rxt/hc
+Set OLD "SYS:SUT/Old Apps/arospkg-0.6.0.x86_64-aros-v11"
+
+; ---- S1: arospkg 0.6.0 as published, unpacked by hand under a path with
+; spaces, its apkg copied to C: as the release README says.
+MakeDir "SYS:SUT/Old Apps"
+UnZip >NIL: RAM:rxt/arospkg-0.6.0.x86_64-aros-v11.zip -d "SYS:SUT/Old Apps"
+Copy "$OLD/apkg" C:apkg
+Protect C:apkg +e
+Echo "== s1a: 0.6.0's own self-update replaces C:apkg only" >RESULTS:{{R}}-s1.txt
+C:apkg --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-s1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-s1.txt
+$H assert-hash C:apkg {{A2}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/PkgManager" {{P060}} >>RESULTS:{{R}}-s1.txt
+Echo "== s1b: the new apkg in C:, nothing recorded, nothing to choose: apkg alone, up to date" >>RESULTS:{{R}}-s1.txt
+C:apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-s1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/PkgManager" {{P060}} >>RESULTS:{{R}}-s1.txt
+Echo "== s1c: --drawer ties C:apkg to the drawer; the drawer follows" >>RESULTS:{{R}}-s1.txt
+C:apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update --drawer "$OLD" >>RESULTS:{{R}}-s1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-s1.txt
+$H assert-hash C:apkg {{A2}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/apkg" {{A2}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/PkgManager" {{P2}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/BUILD.txt" {{B2}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/application.json" {{J2}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/PkgManager.info" {{I060}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/PkgManager.old" {{P060}} >>RESULTS:{{R}}-s1.txt
+$H assert-hash "$OLD/apkg.old" {{A060}} >>RESULTS:{{R}}-s1.txt
+Type ENVARC:arospkg/copies.json >>RESULTS:{{R}}-s1.txt
+Echo "== s1d: --check: every file current" >>RESULTS:{{R}}-s1.txt
+C:apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update --check >>RESULTS:{{R}}-s1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-s1.txt
+Echo "== s1e: the drawer's own apkg: its copy in C: is recorded, so it goes along; up to date" >>RESULTS:{{R}}-s1.txt
+"$OLD/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-s1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-s1.txt
+
+; ---- A1: an apkg on its own, without PkgManager: only it is updated, no
+; window is added.
+MakeDir "SYS:SUT/Tools Only"
+Copy RAM:rxt/apkg-b1 "SYS:SUT/Tools Only/apkg"
+Protect "SYS:SUT/Tools Only/apkg" +e
+Echo "== a1: apkg alone" >RESULTS:{{R}}-a1.txt
+"SYS:SUT/Tools Only/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-a1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-a1.txt
+$H assert-hash "SYS:SUT/Tools Only/apkg" {{A2}} >>RESULTS:{{R}}-a1.txt
+If EXISTS "SYS:SUT/Tools Only/PkgManager"
+  Echo "FAIL a PkgManager was added" >>RESULTS:{{R}}-a1.txt
+Else
+  Echo "PASS no PkgManager added" >>RESULTS:{{R}}-a1.txt
+EndIf
+
+; ---- E: refusals. Each must leave the installation exactly as it was.
+Set E "SYS:SUT/Err/arospkg-0.6.99-sutest1.x86_64-aros-v11"
+MakeDir SYS:SUT/Err
+UnZip >NIL: RAM:rxt/arospkg-0.6.99-sutest1.x86_64-aros-v11.zip -d SYS:SUT/Err
+Echo "== e1: a checksum that does not match" >RESULTS:{{R}}-e.txt
+"$E/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/bad/ self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Echo "== e2: the download breaks off" >>RESULTS:{{R}}-e.txt
+"$E/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/cut/ self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Echo "== e3: a release with no archive for this machine" >>RESULTS:{{R}}-e.txt
+"$E/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/i386only/ self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Echo "== e4: the previous backup is protected from deletion: refused before anything moves" >>RESULTS:{{R}}-e.txt
+Copy "$E/PkgManager" "$E/PkgManager.old"
+Protect "$E/PkgManager.old" -d
+"$E/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Protect "$E/PkgManager.old" +d
+Delete "$E/PkgManager.old" QUIET
+Echo "== e5: writing the second new file fails" >>RESULTS:{{R}}-e.txt
+"$E/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ --self-update-fail-at write:2 self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Echo "== e6: the second rename fails: the first file is put back" >>RESULTS:{{R}}-e.txt
+"$E/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ --self-update-fail-at rename:2 self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Echo "== e7: an operation holds the root (its lock)" >>RESULTS:{{R}}-e.txt
+MakeDir SYS:SUT/LockRoot
+MakeDir SYS:SUT/LockRoot/db
+Echo "{}" >SYS:SUT/LockRoot/db/lock.owner
+"$E/apkg" --root SYS:SUT/LockRoot --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Echo "== e8: a real operation runs: a slow catalogue refresh in the same root" >>RESULTS:{{R}}-e.txt
+MakeDir SYS:SUT/BusyRoot
+Run >NIL: "$E/apkg" --root SYS:SUT/BusyRoot --index-url https://10.0.2.2/slowidx/index-v3.json update
+Wait 5
+"$E/apkg" --root SYS:SUT/BusyRoot --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-e.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-e.txt
+Wait 40
+If EXISTS SYS:SUT/BusyRoot/db/lock.owner
+  Echo "FAIL the refresh still holds its root" >>RESULTS:{{R}}-e.txt
+Else
+  Echo "PASS the refresh finished undisturbed" >>RESULTS:{{R}}-e.txt
+EndIf
+Echo "== e: the installation is as it was" >>RESULTS:{{R}}-e.txt
+$H assert-hash "$E/apkg" {{A1}} >>RESULTS:{{R}}-e.txt
+$H assert-hash "$E/PkgManager" {{P1}} >>RESULTS:{{R}}-e.txt
+$H assert-hash "$E/BUILD.txt" {{B1}} >>RESULTS:{{R}}-e.txt
+$H assert-hash "$E/application.json" {{J1}} >>RESULTS:{{R}}-e.txt
+List "$E" >>RESULTS:{{R}}-e.txt
+If EXISTS ENVARC:arospkg/self-update.json
+  Echo "FAIL a journal was left" >>RESULTS:{{R}}-e.txt
+Else
+  Echo "PASS no journal left" >>RESULTS:{{R}}-e.txt
+EndIf
+
+; ---- R: stopped dead between apkg and PkgManager, as by a power cut.
+Set IA "SYS:SUT/Int A/arospkg-0.6.99-sutest1.x86_64-aros-v11"
+MakeDir "SYS:SUT/Int A"
+UnZip >NIL: RAM:rxt/arospkg-0.6.99-sutest1.x86_64-aros-v11.zip -d "SYS:SUT/Int A"
+Echo "== r1: stop after apkg is replaced" >RESULTS:{{R}}-r.txt
+"$IA/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ --self-update-fail-at stop:1 self-update >>RESULTS:{{R}}-r.txt
+Echo "rc=$RC want=20" >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IA/apkg" {{A2}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IA/PkgManager" {{P1}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IA/PkgManager.new" {{P2}} >>RESULTS:{{R}}-r.txt
+Type ENVARC:arospkg/self-update.json >>RESULTS:{{R}}-r.txt
+Echo "== r1: --recover finishes it" >>RESULTS:{{R}}-r.txt
+"$IA/apkg" self-update --recover >>RESULTS:{{R}}-r.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IA/apkg" {{A2}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IA/PkgManager" {{P2}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IA/BUILD.txt" {{B2}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IA/application.json" {{J2}} >>RESULTS:{{R}}-r.txt
+If EXISTS ENVARC:arospkg/self-update.json
+  Echo "FAIL the journal is still there" >>RESULTS:{{R}}-r.txt
+Else
+  Echo "PASS journal gone" >>RESULTS:{{R}}-r.txt
+EndIf
+Set IB "SYS:SUT/Int B/arospkg-0.6.99-sutest1.x86_64-aros-v11"
+MakeDir "SYS:SUT/Int B"
+UnZip >NIL: RAM:rxt/arospkg-0.6.99-sutest1.x86_64-aros-v11.zip -d "SYS:SUT/Int B"
+Echo "== r2: stop after apkg, and PkgManager's new file is lost: back to the previous set" >>RESULTS:{{R}}-r.txt
+"$IB/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ --self-update-fail-at stop:1 self-update >>RESULTS:{{R}}-r.txt
+Echo "rc=$RC want=20" >>RESULTS:{{R}}-r.txt
+Delete "$IB/PkgManager.new" QUIET
+Echo "== r2: the next self-update settles it first, then updates" >>RESULTS:{{R}}-r.txt
+"$IB/apkg" self-update --recover >>RESULTS:{{R}}-r.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IB/apkg" {{A1}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IB/PkgManager" {{P1}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IB/BUILD.txt" {{B1}} >>RESULTS:{{R}}-r.txt
+"$IB/apkg" --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-r.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IB/apkg" {{A2}} >>RESULTS:{{R}}-r.txt
+$H assert-hash "$IB/PkgManager" {{P2}} >>RESULTS:{{R}}-r.txt
+Echo "shell done" >RESULTS:{{R}}-shell-done.txt
+; Results to the host as they are (tests/tools/recv.py), the marker last.
+RAM:rxt/putfile RESULTS:{{R}}-s1.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-a1.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-e.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-r.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-shell-done.txt >NIL:

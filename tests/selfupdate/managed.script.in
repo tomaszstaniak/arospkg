@@ -1,0 +1,128 @@
+; Self-update of arospkg installed by apkg as a package, in a root whose
+; path has spaces: from the published 0.6.0, with a user's changed icon,
+; through rollback, with a copy outside the root, and stopped dead inside
+; the package's own transaction. Then a copy with two installations it
+; could belong to, and a PkgManager running from the installation a Shell
+; update would replace.
+FailAt 21
+Set H RAM:rxt/hc
+Set MR "SYS:SUT/Root With Space"
+Set M "SYS:SUT/Root With Space/arospkg"
+Set OLD "SYS:SUT/Old Apps/arospkg-0.6.0.x86_64-aros-v11"
+MakeDir "$MR"
+
+; ---- M1: 0.6.0 installed from a catalogue, then updated in place.
+Echo "== m1a: install arospkg 0.6.0 as a package" >RESULTS:{{R}}-m1.txt
+RAM:rxt/apkg-r2 --root "$MR" --index RAM:rxt/idx060.json install arospkg >>RESULTS:{{R}}-m1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-m1.txt
+Copy RAM:rxt/user.info "$M/PkgManager.info"
+$H assert-hash "$M/PkgManager.info" {{IUSER}} >>RESULTS:{{R}}-m1.txt
+Echo "== m1b: 0.6.0's own self-update replaces only its file in the package" >>RESULTS:{{R}}-m1.txt
+"$M/apkg" --root "$MR" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-m1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/apkg" {{A2}} >>RESULTS:{{R}}-m1.txt
+Echo "== m1c: the new apkg replaces the package as an upgrade" >>RESULTS:{{R}}-m1.txt
+"$M/apkg" --root "$MR" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-m1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/apkg" {{A2}} >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/PkgManager" {{P2}} >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/BUILD.txt" {{B2}} >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/PkgManager.info" {{IUSER}} >>RESULTS:{{R}}-m1.txt
+"$M/apkg" --root "$MR" info arospkg >>RESULTS:{{R}}-m1.txt
+"$M/apkg" --root "$MR" verify arospkg >>RESULTS:{{R}}-m1.txt
+Echo "verify rc=$RC" >>RESULTS:{{R}}-m1.txt
+"$M/apkg" --root "$MR" list >>RESULTS:{{R}}-m1.txt
+Echo "== m1d: apkg rollback arospkg goes back to 0.6.0; the icon stays the user's" >>RESULTS:{{R}}-m1.txt
+"$M/apkg" --root "$MR" rollback arospkg >>RESULTS:{{R}}-m1.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/PkgManager" {{P060}} >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/apkg" {{A060}} >>RESULTS:{{R}}-m1.txt
+$H assert-hash "$M/PkgManager.info" {{IUSER}} >>RESULTS:{{R}}-m1.txt
+
+; ---- M2: a copy outside the root, tied to the package with --drawer:
+; both to the release in one update.
+MakeDir "SYS:SUT/Copy M"
+Copy RAM:rxt/apkg-b1 "SYS:SUT/Copy M/apkg"
+Protect "SYS:SUT/Copy M/apkg" +e
+Echo "== m2: the copy and the package together" >RESULTS:{{R}}-m2.txt
+"SYS:SUT/Copy M/apkg" --root "$MR" --self-update-from https://10.0.2.2/r2/ self-update --drawer "$M" >>RESULTS:{{R}}-m2.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-m2.txt
+$H assert-hash "SYS:SUT/Copy M/apkg" {{A2}} >>RESULTS:{{R}}-m2.txt
+$H assert-hash "$M/apkg" {{A2}} >>RESULTS:{{R}}-m2.txt
+$H assert-hash "$M/PkgManager" {{P2}} >>RESULTS:{{R}}-m2.txt
+$H assert-hash "$M/PkgManager.info" {{IUSER}} >>RESULTS:{{R}}-m2.txt
+"$M/apkg" --root "$MR" verify arospkg >>RESULTS:{{R}}-m2.txt
+Echo "verify rc=$RC" >>RESULTS:{{R}}-m2.txt
+
+; ---- MR: stopped dead inside the package's transaction, after the copy
+; was replaced: the package's own recovery rolls it back, and the copy
+; follows it back.
+"$M/apkg" --root "$MR" rollback arospkg >NIL:
+Copy RAM:rxt/apkg-b1 "SYS:SUT/Copy M/apkg"
+Echo "== mr: stop inside the package transaction (old drawer moved aside)" >RESULTS:{{R}}-mr.txt
+$H assert-hash "$M/PkgManager" {{P060}} >>RESULTS:{{R}}-mr.txt
+"SYS:SUT/Copy M/apkg" --root "$MR" --self-update-from https://10.0.2.2/r2/ --self-update-fail-at managed:9 self-update >>RESULTS:{{R}}-mr.txt
+Echo "rc=$RC want=20" >>RESULTS:{{R}}-mr.txt
+$H assert-hash "SYS:SUT/Copy M/apkg" {{A2}} >>RESULTS:{{R}}-mr.txt
+Type ENVARC:arospkg/self-update.json >>RESULTS:{{R}}-mr.txt
+Echo "== mr: --recover: the package back to 0.6.0, the copy back too" >>RESULTS:{{R}}-mr.txt
+"SYS:SUT/Copy M/apkg" self-update --recover >>RESULTS:{{R}}-mr.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-mr.txt
+$H assert-hash "SYS:SUT/Copy M/apkg" {{A1}} >>RESULTS:{{R}}-mr.txt
+$H assert-hash "$M/PkgManager" {{P060}} >>RESULTS:{{R}}-mr.txt
+$H assert-hash "$M/apkg" {{A060}} >>RESULTS:{{R}}-mr.txt
+"$M/apkg" --root "$MR" info arospkg >>RESULTS:{{R}}-mr.txt
+Echo "== mr: and then the update goes through" >>RESULTS:{{R}}-mr.txt
+"SYS:SUT/Copy M/apkg" --root "$MR" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-mr.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-mr.txt
+$H assert-hash "SYS:SUT/Copy M/apkg" {{A2}} >>RESULTS:{{R}}-mr.txt
+$H assert-hash "$M/PkgManager" {{P2}} >>RESULTS:{{R}}-mr.txt
+$H assert-hash "$M/PkgManager.info" {{IUSER}} >>RESULTS:{{R}}-mr.txt
+"$M/apkg" --root "$MR" verify arospkg >>RESULTS:{{R}}-mr.txt
+Echo "verify rc=$RC" >>RESULTS:{{R}}-mr.txt
+List "$MR/tmp" "$MR/db/transactions" >>RESULTS:{{R}}-mr.txt
+
+; ---- A2: a copy that could belong to two installations: the package in
+; the root in use, and the drawer a running PkgManager announces. Never
+; guessed: refused in a script, until --drawer or --apkg-only says.
+; Run drops the quotes of a path with spaces (~/Work/AROS/CLAUDE.md): an assign.
+Assign SUOLD: "$OLD"
+Run >NIL: SUOLD:PkgManager --root "SYS:SUT/No Root"
+Wait 20
+MakeDir "SYS:SUT/Tools Two"
+Copy RAM:rxt/apkg-b1 "SYS:SUT/Tools Two/apkg"
+Protect "SYS:SUT/Tools Two/apkg" +e
+Echo "== a2: PkgManager runs from the drawer of S1 (its Shell's number):" >RESULTS:{{R}}-a2.txt
+Status COMMAND SUOLD:PkgManager >>RESULTS:{{R}}-a2.txt
+Echo "== a2a: two candidates, a script with no console: refused, both listed" >>RESULTS:{{R}}-a2.txt
+"SYS:SUT/Tools Two/apkg" <NIL: --root "$MR" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:{{R}}-a2.txt
+Echo "rc=$RC want=5" >>RESULTS:{{R}}-a2.txt
+$H assert-hash "SYS:SUT/Tools Two/apkg" {{A1}} >>RESULTS:{{R}}-a2.txt
+Echo "== a2b: --apkg-only: this apkg alone, recorded" >>RESULTS:{{R}}-a2.txt
+"SYS:SUT/Tools Two/apkg" --root "$MR" --self-update-from https://10.0.2.2/r2/ self-update --apkg-only >>RESULTS:{{R}}-a2.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-a2.txt
+$H assert-hash "SYS:SUT/Tools Two/apkg" {{A2}} >>RESULTS:{{R}}-a2.txt
+Echo "== a2c: the record decides from now on" >>RESULTS:{{R}}-a2.txt
+"SYS:SUT/Tools Two/apkg" --root "$MR" --self-update-from https://10.0.2.2/r2/ self-update --check >>RESULTS:{{R}}-a2.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-a2.txt
+Echo "== l2: C:apkg belongs to the drawer PkgManager runs from: refused while it runs" >>RESULTS:{{R}}-a2.txt
+C:apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r3/ self-update >>RESULTS:{{R}}-a2.txt
+Echo "rc=$RC want=10" >>RESULTS:{{R}}-a2.txt
+$H assert-hash C:apkg {{A2}} >>RESULTS:{{R}}-a2.txt
+$H assert-hash "$OLD/PkgManager" {{P2}} >>RESULTS:{{R}}-a2.txt
+Status >ENV:supm COMMAND SUOLD:PkgManager
+Break $supm
+Wait 10
+Assign SUOLD: REMOVE
+Echo "== l2b: PkgManager closed: the same update goes through" >>RESULTS:{{R}}-a2.txt
+C:apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r3/ self-update >>RESULTS:{{R}}-a2.txt
+Echo "rc=$RC want=0" >>RESULTS:{{R}}-a2.txt
+$H assert-hash C:apkg {{A3}} >>RESULTS:{{R}}-a2.txt
+$H assert-hash "$OLD/PkgManager" {{P3}} >>RESULTS:{{R}}-a2.txt
+Echo "managed done" >RESULTS:{{R}}-managed-done.txt
+; Results to the host as they are (tests/tools/recv.py), the marker last.
+RAM:rxt/putfile RESULTS:{{R}}-m1.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-m2.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-mr.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-a2.txt >NIL:
+RAM:rxt/putfile RESULTS:{{R}}-managed-done.txt >NIL:
