@@ -51,12 +51,13 @@ Execute RAM:rxt/managed.script
 ```
 
 and from the host `run-gui.sh RUNID SHOTS RECV` for the window, then
-`Execute RAM:rxt/cleanup.script`. `grade.py RECV RUNID` grades the Shell
+`Execute RAM:rxt/cleanup.script`. Every result goes into the run's own
+drawer, `RESULTS:arospkg-RUNID/`. `grade.py RECV RUNID` grades the Shell
 and package results; the window checks print PASS/FAIL into
 `RECV/RUNID-g1..g4.txt`.
 
 | Script | What it shows |
 |---|---|
-| `shell.script` | 0.6.0 as published, then the new apkg with `C:apkg` and `--drawer`; apkg on its own; refusals (bad checksum, broken download, no archive for this machine, protected backup, write and rename failures, an operation in the root); an update stopped between apkg and PkgManager, finished or undone |
-| `managed.script` | arospkg installed as a package in a root with spaces: 0.6.0's own self-update, the package upgrade, a user's icon kept, `verify`, rollback, a copy tied with `--drawer`, a stop inside the package transaction; a copy with two possible installations; a Shell update refused while PkgManager runs from the installation |
-| `run-gui.sh` + `gui.script.in` | the window: available, the `C:apkg` question, progress, confirmation, restart and result; a second window refused; Cancel during the download; a package started from its icon; Repair now after an interrupted update |
+| `shell.script` | 0.6.0 as published, then the new apkg with `C:apkg` and `--drawer`; 0.6.0's own apkg run twice; apkg on its own; refusals (bad checksum, broken download, no archive for this machine, protected backup, write and rename failures, an operation in the root, a record that cannot be written); an update stopped between apkg and PkgManager, finished or undone; two updates at once, the second refusing to write over the first one's journal |
+| `managed.script` | arospkg installed as a package in a root with spaces: 0.6.0's own self-update, the package upgrade, a user's icon kept, `verify`, rollback, a copy tied with `--drawer`, a stop inside the package transaction; the package changed by another revision and by a newer version while a self-update waits; a copy with two possible installations; a Shell update refused while PkgManager runs from the installation |
+| `run-gui.sh` + `gui.script.in` | the window: available, the `C:apkg` question, progress, confirmation, restart and result; a second window refused; Cancel during the download; a package started from its icon; Repair now after an interrupted update; a current PkgManager whose apkg and C:apkg are behind |

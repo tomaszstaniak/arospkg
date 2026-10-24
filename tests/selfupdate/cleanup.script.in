@@ -1,7 +1,8 @@
 ; Put the machine back: its own C:apkg and record of copies, and nothing
 ; of the tests on SYS: or in ENVARC:. Exact names only.
 FailAt 21
-Delete ENVARC:arospkg/copies.json ENV:arospkg/copies.json ENVARC:arospkg/self-update.json QUIET
+Protect ENVARC:arospkg/copies.json +d QUIET
+Delete ENVARC:arospkg/copies.json ENVARC:arospkg/copies.json.new ENV:arospkg/copies.json ENVARC:arospkg/self-update.json QUIET
 If EXISTS RAM:copies-before.json
   Copy RAM:copies-before.json ENVARC:arospkg/copies.json
 Else
@@ -22,4 +23,4 @@ If EXISTS RAM:su-no-packages
   EndIf
 EndIf
 Delete T:arospkg-#? ALL QUIET FORCE
-List C:apkg#? ENVARC:arospkg >RESULTS:{{R}}-cleanup.txt
+List C:apkg#? ENVARC:arospkg >RESULTS:arospkg-{{R}}/{{R}}-cleanup.txt

@@ -58,8 +58,9 @@ it belongs to this one.
 
 ## In PkgManager
 
-**Check for a newer version** shows this PkgManager's version and the
-latest stable release. When the release is newer, **Update arospkg**:
+**Check for a newer version** shows the latest stable release and the
+versions of PkgManager, the apkg beside it and the copies tied to it. When
+any of them is behind the release, and none is newer, **Update arospkg**:
 
 1. downloads and checks the release; the progress and **Cancel** are at the
    bottom of the main window, which keeps responding;
@@ -100,7 +101,11 @@ Nothing is changed when:
   Close it, or update from its About window. With two PkgManager windows
   open, close the other one;
 - an installed file is newer than the latest stable release;
-- a previous backup (`<file>.old`) is protected from deletion.
+- a previous backup (`<file>.old`) is protected from deletion;
+- an earlier update did not finish: settle it first (see below);
+- the package `arospkg` changed while the update was downloading, for
+  example because `apkg upgrade arospkg` ran meanwhile. Check again;
+- the choice of installation for a copy cannot be recorded.
 
 ## Going back
 

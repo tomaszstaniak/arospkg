@@ -15,8 +15,15 @@ INSTALL
      apkg --version
      apkg update
 
-On 0.4.x, "apkg self-update" replaces apkg instead; PkgManager is always
-taken from this archive. Keep your existing SYS:Packages. Versions 0.3.x
+Already on 0.4.x to 0.6.0? Run "apkg self-update" twice instead: the first
+run replaces apkg, the second updates PkgManager and the rest of its
+drawer. If the apkg you run is the copy in C:, name the drawer the second
+time:
+
+     apkg self-update --drawer "Work:arospkg-0.6.0.x86_64-aros-v11"
+
+From this version on, one "apkg self-update", or About > Update arospkg in
+PkgManager, updates both. Keep your existing SYS:Packages. Versions 0.3.x
 need the manual copy above.
 
 PkgManager is included in the x86_64 ABIv11, mainline and Pi archives.
@@ -143,8 +150,8 @@ UPDATES
   apkg upgrade <id>          install a newer version or packaging revision
   apkg upgrade --all         every update that can be installed, in turn
   apkg rollback <id>         restore what the last upgrade replaced
-  apkg self-update --check   check for a newer stable apkg
-  apkg self-update           replace the apkg executable you started
+  apkg self-update --check   check apkg and PkgManager against the release
+  apkg self-update           update apkg and its PkgManager
 
 Upgrade moves to a newer upstream version (0.1.0 to 0.2.0, 1.9 to
 1.10, 0.9.0-test2-r2 to 0.9.0-test4) or to a newer packaging revision of
@@ -155,8 +162,10 @@ reason. Files you
 changed are kept, as in a revision upgrade. Rollback needs the previous
 archive in the cache. Close the application before either operation or removal.
 
-Self-update keeps apkg.old beside the updated executable. PkgManager
-must be updated separately from the release archive. Recovery instructions:
+Self-update keeps the previous files beside the new ones as .old; for
+arospkg installed as a package, "apkg rollback arospkg" goes back. In
+PkgManager: About > Check for a newer version, then Update arospkg.
+PkgManager closes and starts again. Details and recovery:
 https://github.com/tomaszstaniak/arospkg/blob/main/docs/self-update.md
 
 FILES AND RECOVERY

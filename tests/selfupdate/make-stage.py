@@ -93,7 +93,16 @@ def catalogue(zpath, top, version, base):
 
 
 open(os.path.join(stage, "idx060.json"), "w").write(catalogue(z060, top060, "0.6.0", "r060"))
-open(os.path.join(stage, "idxb1.json"), "w").write(catalogue(zb1, topb1, "0.6.99-sutest1", "b1"))
+# Revision 1: a window's update of this package hands the revision on to
+# the apkg that finishes it, which must find the same one.
+c = json.loads(catalogue(zb1, topb1, "0.6.99-sutest1", "b1")); c["packages"][0]["revision"] = 1
+open(os.path.join(stage, "idxb1.json"), "w").write(json.dumps(c, indent=1))
+# For a package that changes under a waiting self-update: the same 0.6.0 as
+# revision 2, and the 0.7.1-sutest3 archive catalogued as a newer 0.8.0.
+c = json.loads(catalogue(z060, top060, "0.6.0", "r060")); c["packages"][0]["revision"] = 2
+open(os.path.join(stage, "idx060r2.json"), "w").write(json.dumps(c, indent=1))
+top3 = members(zr3)[0]
+open(os.path.join(stage, "idx080.json"), "w").write(catalogue(zr3, top3, "0.8.0", "r3"))
 
 # A user's PkgManager icon: moved on the desktop and given a tool type of
 # its own, which an update must keep.
@@ -125,7 +134,7 @@ for t in ("setup", "shell", "managed", "cleanup"):
     assert "{{" not in text, t
     open(os.path.join(stage, t + ".script"), "w").write(text)
 # gui.script.in holds one script per window step, each after "### <name>".
-parts = open(os.path.join(here, "gui.script.in")).read().split("### ")[1:]
+parts = (open(os.path.join(here, "gui.script.in")).read() + open(os.path.join(here, "bg.script.in")).read()).split("### ")[1:]
 for part in parts:
     name, text = part.split("\n", 1)
     for k, v in subst.items():
