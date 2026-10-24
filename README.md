@@ -101,11 +101,14 @@ apkg open soliton
 | `apkg rollback soliton` | Return to the previous revision, if its archive is still cached. |
 | `apkg run folio [file]` | Start an installed application as its package describes; `--check` says whether and how. |
 | `apkg open soliton` | Open the package's drawer in Wanderer. |
-| `apkg self-update` | Replace this apkg with the latest stable release; `--check` only reports. |
+| `apkg self-update` | Update apkg and its PkgManager to the latest stable release; `--check` only reports. |
 
-From 0.4.0, use `apkg self-update --check` to check for a newer stable
-release and `apkg self-update` to install it. The previous executable is
-kept as `apkg.old`. Update PkgManager separately from the release archive.
+`apkg self-update --check` checks for a newer stable release and
+`apkg self-update` installs it, for apkg and the PkgManager of the same
+installation; in PkgManager, **About** > **Update arospkg** does the same.
+Previous files are kept as `.old`. Versions 0.4.x to 0.6.0 replace only
+apkg: run `apkg self-update` a second time and the new apkg updates
+PkgManager. See [Updating arospkg](docs/self-update.md).
 
 Both interfaces use `SYS:Packages` by default. For another location, pass
 the **same root to both**, every time:

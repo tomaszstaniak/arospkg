@@ -5,7 +5,7 @@ Current release: **0.5.0**. Start with the guide for your task.
 ## Using the manager
 
 - [Install and use](guide/using.md)
-- [Update apkg and PkgManager](self-update.md)
+- [Update apkg and PkgManager](self-update.md): from the Shell or from PkgManager
 - [Screenshots](screenshots/0.5.0/README.md)
 - [Downloads and release notes](https://github.com/tomaszstaniak/arospkg/releases)
 

@@ -1,87 +1,155 @@
-# Updating apkg
+# Updating arospkg
+
+In the Shell:
 
 ```
 apkg self-update --check
 apkg self-update
 ```
 
-## The first time
+In PkgManager: **About** > **Check for a newer version**, then **Update
+arospkg**.
 
-arospkg 0.3.2 and earlier do not have this command. Install 0.4.0, the
-first release that has it, by hand, as before: unpack its archive and copy `apkg`
-over the old one (to `C:`, or wherever you keep it). From then on,
-`apkg self-update` updates it.
+Both update apkg and the PkgManager of the same installation to the same
+release. Your packages, the catalogue, your package root and your icons
+stay as they are.
 
-## Using it
+arospkg 0.6.0 and earlier update apkg only; see [From 0.6.0 and
+earlier](#from-060-and-earlier).
 
-`--check` shows the version you have, the file it was started from, and the
-latest stable release for this machine. It needs the network to ask, and it
-changes nothing: no file is written beside apkg.
+## What is updated
 
-`self-update` replaces the apkg you started, and only that file: if you run
-`SYS:Tools/apkg self-update`, that copy is updated and `C:apkg` is not, and
-the other way round. It shows the file and the version first. It:
+Where arospkg is installed decides what is replaced:
 
-1. reads the latest **stable** release from
-   https://github.com/tomaszstaniak/arospkg/releases (release candidates are
-   never used);
-2. takes the archive for exactly this apkg's CPU and ABI. If the release has
-   none, it says so and changes nothing: it never takes another target's
-   build;
-3. downloads it completely and checks it: the archive against the release's
-   `SHA256SUMS`, apkg against the `BUILD.txt` in the archive, and that the
-   new program is for this CPU and ABI;
-4. writes the new program beside the old one as `apkg.new`, renames the old
-   one to `apkg.old`, and the new one to `apkg`. If the last step fails, the
-   old one is put back.
+| Installation | What is updated |
+|---|---|
+| The release archive, unpacked into a drawer | `apkg`, `PkgManager`, `BUILD.txt` and `application.json` in that drawer, where they are |
+| Installed by apkg as the package `arospkg` | the whole package, as `apkg upgrade` would; `apkg verify arospkg` stays clean |
+| apkg copied elsewhere, such as `C:apkg` | that copy, together with the installation it belongs to |
+| apkg on its own, without PkgManager | that apkg; no PkgManager is added |
 
-The apkg that runs `self-update` finishes as the old version; the new one
-runs from the next command. What the checks prove: the archive is the one
-the release's `SHA256SUMS` names, and the program is the one its `BUILD.txt`
-names, for this CPU and ABI. Both files come from the same release as the
-archive, so they guard against a damaged or wrong download, not against a
-release that was itself replaced; the release is not signed.
+A file the release does not contain is left as it is. Icons (`.info`) are
+never replaced in a drawer you unpacked; in an installed package, an icon
+you changed (its position or tool types) is kept.
 
-The previous version stays as `apkg.old` beside the new one (one previous
-version; an older `apkg.old` is replaced). Your packages, the catalogue and
-`SYS:Packages` are not touched. While an install or another operation is
-running, `self-update` refuses; try again when it has finished.
+The previous version stays: as `<file>.old` beside each replaced file, or
+for an installed package as its previous revision (`apkg rollback
+arospkg`).
 
-PkgManager is not updated by this. Take it from the release archive.
-Every answer of `self-update` says so. In PkgManager, **About** > **Check
-for a newer version** asks the same question for the window: it reads the
-latest release's `SHA256SUMS` and says whether a newer PkgManager exists,
-and where to get it. It does not replace the running window.
+## Which installation an apkg belongs to
 
-When the latest stable release has no archive for this machine, as for the
-Raspberry Pi with 0.4.1, `--check` says there is no newer apkg for it and
-exits 0; `self-update` refuses and changes nothing.
+apkg started from a drawer with PkgManager in it belongs to that drawer. A
+copy elsewhere, usually `C:apkg`, belongs to whichever installation you say,
+and apkg remembers it in `ENVARC:arospkg/copies.json`. It never searches
+your disks for copies, and it never guesses:
 
-`update` and `upgrade` keep their meaning: `apkg update` refreshes the
-package catalogue, `apkg upgrade <id>` updates an installed package.
+- When the copy is not recorded and an installation is in sight (the
+  package `arospkg` in the package root, or a drawer a running PkgManager
+  comes from), apkg lists them and asks which one, or none. In a script it
+  stops, changes nothing and says how to answer.
+- `apkg self-update --drawer "<drawer>"` ties the copy to that drawer.
+- `apkg self-update --apkg-only` updates the copy on its own.
+- With nothing recorded and nothing in sight, only the copy is updated, and
+  apkg says how to include PkgManager.
 
-## Going back to the previous version
+When you update from an installation's drawer, or from PkgManager, and
+`C:apkg` is not recorded with any installation, you are asked once whether
+it belongs to this one.
+
+## In PkgManager
+
+**Check for a newer version** shows this PkgManager's version and the
+latest stable release. When the release is newer, **Update arospkg**:
+
+1. downloads and checks the release; the progress and **Cancel** are at the
+   bottom of the main window, which keeps responding;
+2. shows what will be updated and that PkgManager will close and start
+   again;
+3. after **Proceed**, closes PkgManager; apkg from the same installation
+   replaces the files and starts PkgManager again, from its icon if you
+   started it that way, otherwise with the same root and options;
+4. PkgManager then says what happened.
+
+If PkgManager cannot be started again, a requester says so, apart from
+whether the update itself succeeded. Start it from its drawer.
+
+Cancelling at any point before **Proceed** leaves everything as it was.
+
+## What is checked
+
+- The release is the latest **stable** release on
+  https://github.com/tomaszstaniak/arospkg/releases (never a pre-release).
+- The archive is the one for this CPU, ABI and system. A Raspberry Pi build
+  takes only Raspberry Pi archives, and a hosted aarch64 build never takes
+  them. If the release has none for your machine, `--check` says so and
+  nothing changes.
+- The archive must match the release's `SHA256SUMS`, and apkg and PkgManager
+  must match the archive's `BUILD.txt` and be built for this machine.
+  Everything is downloaded and checked before any file is replaced. These
+  files come from the same release; releases are not signed.
+- Every place a file goes must accept a new file and a rename, and must have
+  room, before PkgManager closes or anything is replaced.
+
+## When it refuses
+
+Nothing is changed when:
+
+- an apkg or PkgManager operation is running in the package root (install,
+  upgrade, rollback, refresh). Try again when it has finished;
+- PkgManager is running from the installation a Shell update would replace.
+  Close it, or update from its About window. With two PkgManager windows
+  open, close the other one;
+- an installed file is newer than the latest stable release;
+- a previous backup (`<file>.old`) is protected from deletion.
+
+## Going back
+
+For a drawer you unpacked, or a copy:
 
 ```
-Delete C:apkg
-Rename C:apkg.old C:apkg
+Delete "Work:arospkg/PkgManager"
+Rename "Work:arospkg/PkgManager.old" "Work:arospkg/PkgManager"
 ```
 
-(with the path of the copy you updated instead of `C:apkg`).
+for each file the update listed. For the package `arospkg`:
+
+```
+apkg rollback arospkg
+```
 
 ## If an update was interrupted
 
-An interruption before the swap (a broken download, a failed check) leaves
-apkg as it was. If the machine stopped during the swap itself, you may find
-`apkg.old` and `apkg.new` but no `apkg`. Either one is a complete, checked
-program:
+Before replacing anything, the update writes `ENVARC:arospkg/self-update.json`
+with the files and their checksums, and keeps each new file beside its
+target as `<file>.new`. If the machine stops halfway:
+
+- the next `apkg self-update`, or `apkg self-update --recover`, finishes
+  the update when every new file is still there, and otherwise puts the
+  previous files back;
+- PkgManager, when it starts, offers **Repair now**, which does the same and
+  starts it again.
+
+If neither is possible from what is on the disk, nothing is touched and
+apkg prints, file by file, what to rename. An installed package is first
+settled by its own recovery, as for any interrupted package operation; if
+the root's lock was left by the stopped run, `apkg unlock` clears it.
+
+## From 0.6.0 and earlier
+
+These versions replace only the apkg you start. Run `apkg self-update` once
+more after it, and the new apkg updates PkgManager too. If you run it as
+`C:apkg`, say which drawer it belongs to the first time:
 
 ```
-Rename C:apkg.old C:apkg       ; back to the version you had
-Rename C:apkg.new C:apkg       ; or finish the update
+apkg self-update --drawer "Work:arospkg-0.6.0.x86_64-aros-v11"
 ```
+
+arospkg 0.3.2 and earlier have no `self-update`: install a newer release by
+hand from its archive, as the README describes.
 
 ## Limits
 
 - A resident apkg (`Resident`) is not updated; start it from its file.
 - It needs the network and the certificate bundle, as downloads do.
+- A PkgManager from 0.6.0 or earlier does not say where it runs from, so
+  while one is open a Shell update refuses until it is closed.

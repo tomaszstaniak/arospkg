@@ -334,15 +334,17 @@ can show, such as Limpet, apkg uses colour and wraps to the window; in the
 standard Shell window it prints plain text. Commands apkg prints for you to
 copy carry your `--root`, quoted when needed.
 
-### apkg and PkgManager are updated separately
+### Updating arospkg itself
 
-`self-update --check` checks for a newer stable apkg release. `self-update`
-replaces the apkg executable you started and keeps the previous copy as
-`apkg.old`. It does not update PkgManager: take PkgManager from the release
-archive. In PkgManager, **About** > **Check for a newer version** says
-whether a newer release exists. When the latest release has no archive for
-your machine, `--check` says so and your
-apkg stays as it is.
+`self-update --check` lists apkg and PkgManager as installed and the latest
+stable release. `self-update` updates both to that release, keeping the
+previous files as `.old` (or, for arospkg installed as a package, as its
+previous revision). In PkgManager, **About** > **Check for a newer
+version** and then **Update arospkg** do the same; PkgManager closes and
+starts again. A copy such as `C:apkg` is updated with the installation you
+tie it to; apkg asks once, or takes `--drawer` or `--apkg-only`. When the
+latest release has no archive for your machine, `--check` says so and
+nothing changes. [Updating arospkg](../self-update.md) has the details.
 
 ## Check the installed files
 
