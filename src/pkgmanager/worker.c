@@ -9,6 +9,7 @@
  * never touches a MUI object: the callback copies the event into a message
  * and the window's own loop does the drawing. */
 #include "job.h"
+#include "../libpkg/util.h"
 #include <stdio.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -69,7 +70,23 @@ static void worker_main(void)
     /* The release check reads the network and nothing in the root: no
        lock, so it never waits for, or blocks, a package operation. */
     if (j->kind == JOB_CHECK_RELEASE) {
-        st = pkg_release_check(NULL, NULL, j->current, &j->done->rel, &e);
+        st = pkg_release_check(su_base(), NULL, j->current, &j->done->rel, &e);
+    } else if (j->kind == JOB_SU_LOCATE) {
+        /* Where this PkgManager's installation is, and its files now: the
+           files are hashed, which takes a moment on a slow machine. */
+        su_job *s = j->su;
+        st = su_locate(s->program, 0, j->root, NULL, &s->in, &s->where, &s->facts, &e);
+        s->c_path[0] = 0;
+        if (st == PKG_OK && s->in.home != SU_HOME_NONE)
+            su_unrecorded_c_apkg(&s->in, s->c_path, sizeof s->c_path, s->c_version, sizeof s->c_version);
+    } else if (j->kind == JOB_SU_STAGE) {
+        /* The release, downloaded and checked; nothing outside T: changes.
+           An operation that holds the root now would refuse the update
+           after the window has closed: it is refused here instead. */
+        su_job *s = j->su;
+        if ((st = su_precheck(&s->in, j->root, 1, &e)) == PKG_OK
+            && (st = su_release(NULL, NULL, &s->rel, &e)) == PKG_OK)
+            st = su_stage_release(&s->in, &s->rel, NULL, s->stage_dir, on_progress, j, &s->st, &e);
     } else if (j->kind == JOB_VERIFY || j->kind == JOB_RUN) {
         /* Both only read the root: no lock, so neither waits for, or holds
            up, an install in another program. Verify hashes every file, which

@@ -134,6 +134,11 @@ pkg_status swap_read_index(const char *index_path, const char *id,
                            const char *arch, const char *abi, rev_info *,
                            req_ent *reqs, int *nreq, pkg_err *);
 void       swap_archive_ext(const char *url, char *ext, size_t n);
+/* A managed arospkg replaced by a release's archive, kept icons and all;
+   see swap.c. */
+pkg_status pkg_selfupdate_swap(struct pkg_ctx *, const char *id, const char *archive, const char *version,
+                               const char *url, const char *sha, long size, const char *subdir,
+                               pkg_stop stop, pkg_err *);
 
 /* Download `url` to `archive` unless a cached copy already matches; verify
  * size and sha256 before anything is published into the cache. */

@@ -8,6 +8,8 @@
 #include "../about.h"
 #include "../libpkg/verify.h"
 #include "demo.h"
+#include "../libpkg/util.h"
+#include <dos/dostags.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/intuition.h>
@@ -20,17 +22,24 @@
 #include <stdarg.h>
 #include <strings.h>
 
+/* PM_TEST_VERSION names a clearly labelled test build, so a self-update
+   test can start from a version older than the test release; a release
+   never sets it. */
+#ifdef PM_TEST_VERSION
+#define PM_VERSION PM_TEST_VERSION
+#else
 #define PM_VERSION "0.6.0"
+#endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
        ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN, ID_RUN, ID_VERIFY,
-       ID_CHECK, ID_BUY, ID_THUMB0, ID_THUMB1, ID_THUMB2, ID_THUMB3 };
+       ID_CHECK, ID_BUY, ID_THUMB0, ID_THUMB1, ID_THUMB2, ID_THUMB3, ID_SELFUPDATE };
 
 static Object *app, *win, *str_search, *cyc_cat, *cyc_state, *lst, *txt_detail,
               *txt_status, *gauge, *btn_install, *btn_remove, *btn_update, *btn_cancel,
               *btn_upgrade, *btn_rollback, *win_confirm, *txt_confirm, *btn_proceed, *btn_decline,
               *win_about, *btn_about, *btn_about_close, *btn_open,
-              *txt_catalogue, *btn_check, *txt_release,
+              *txt_catalogue, *btn_check, *txt_release, *btn_selfupdate,
               *btn_run, *btn_verify, *txt_head, *btn_buy,
               *grp_media, *pg_shot, *pic_shot, *txt_noshot, *txt_caption, *grp_thumbs,
               *pic_thumb[DEMO_MAXSHOTS], *txt_provenance, *pg_icon, *pic_icon,
@@ -52,6 +61,19 @@ static int rexx_quit;             /* QUIT arrived with nothing running */
    reads the catalogue and the registry only; no network. */
 static pkg_updates upd;
 static int start_updates;         /* --updates: open with the Updates filter */
+
+/* Updating arospkg itself (libpkg/selfup.h). The worker finds and stages;
+   the window asks and decides; the installation's apkg replaces the files
+   after this window has gone, and starts it again. */
+static su_job sujob;
+static int su_offer;              /* the release check found a newer release */
+static int su_confirming;         /* the confirmation shows the update */
+static int su_handed_off;         /* apkg has the update: quit now */
+static int wb_start;              /* started from the icon: start again from it */
+static char log_path[PKG_MAXPATH];
+static char demo_arg[PKG_MAXPATH];
+static char self_drawer[PKG_MAXPATH];
+static char announce_nonce[24];
 
 /* Every operation gets a record and a number, whether the window or a
  * script started it, so a script can follow either. `active` is the one the
@@ -1029,6 +1051,7 @@ static void busy(int on)
 {
     SetAttrs(btn_update,  MUIA_Disabled, on, TAG_DONE);
     SetAttrs(btn_check,   MUIA_Disabled, on, TAG_DONE);
+    SetAttrs(btn_selfupdate, MUIA_Disabled, on || !su_offer, TAG_DONE);
     SetAttrs(btn_cancel,  MUIA_Disabled, TRUE, TAG_DONE);   /* until an event says otherwise */
     SetAttrs(gauge, MUIA_Gauge_Current, 0, MUIA_Gauge_InfoText, (IPTR)(on ? "starting" : ""), TAG_DONE);
     if (on) {
@@ -1053,6 +1076,7 @@ static const char *opname(job_kind k)
     case JOB_CHECK_RELEASE: return "check";
     case JOB_VERIFY: return "verify";
     case JOB_RUN: return "run";
+    case JOB_SU_LOCATE: case JOB_SU_STAGE: return "self-update";
     default: return "none";
     }
 }
@@ -1114,6 +1138,7 @@ static int start(job_kind kind, const char *id)
     snprintf(cur.index_url, sizeof cur.index_url, "%s", index_url);
     snprintf(cur.current, sizeof cur.current, "%s", PM_VERSION);
     cur.reply = port;
+    cur.su = &sujob;
     last_phase[0] = 0; last_can_cancel = 0;
     busy(1);
     status(kind == JOB_INSTALL ? "installing..." : kind == JOB_REMOVE ? "removing..." :
@@ -1123,6 +1148,8 @@ static int start(job_kind kind, const char *id)
            kind == JOB_CHECK_RELEASE ? "asking for the latest release..." :
            kind == JOB_VERIFY ? "checking the installed files..." :
            kind == JOB_RUN ? "starting..." :
+           kind == JOB_SU_LOCATE ? "looking at this installation of arospkg..." :
+           kind == JOB_SU_STAGE ? "downloading and checking the new arospkg..." :
            "working out what the rollback would do...");
     if (job_start(&cur) != 0) { busy(0); status("could not start the worker process"); return -1; }
     in_flight = 1;
@@ -1215,9 +1242,13 @@ static void confirm_close(void)
     confirming = 0;
 }
 
+static void su_proceed(void);
+static void su_decline(const char *how);
+
 static void proceed(const char *how)
 {
     rx_job *j = active;
+    if (su_confirming) { su_proceed(); return; }
     if (!confirming || !j) return;
     confirm_close();
     logline("%s %s %s", j->op, j->package, how);
@@ -1232,12 +1263,346 @@ static void proceed(const char *how)
 static void decline(const char *how)
 {
     rx_job *j = active;
+    if (su_confirming) { su_decline(how); return; }
     if (!confirming || !j) return;
     confirm_close();
     logline("%s %s %s", j->op, j->package, how);
     finish(j, RXJ_DECLINED, "", "nothing changed");
     busy(0);
     status("nothing changed");
+}
+
+
+/* ------------------------------------------------------ updating arospkg */
+
+/* Said where the question was asked, in About, and on the status line. */
+/* About's text is five lines of about fifty characters; a longer line is
+   broken at a space rather than cut off at the frame. */
+static void about_text(const char *in)
+{
+    static char text[900];
+    size_t k = 0, col = 0, last = 0;
+    int lines = 1;
+    for (; *in && k + 2 < sizeof text; in++) {
+        if (*in == '\n') { text[k++] = '\n'; col = 0; last = 0; lines++; continue; }
+        if (*in == ' ') last = k;
+        text[k++] = *in;
+        if (++col > 50 && last && lines < 6) { text[last] = '\n'; col = k - last - 1; last = 0; lines++; }
+    }
+    text[k] = 0;
+    SetAttrs(txt_release, MUIA_Text_Contents, (IPTR)text, TAG_DONE);
+}
+
+static void su_say(const char *line, const char *about)
+{
+    about_text(about ? about : line);
+    status(line);
+    logline("self-update: %s", line);
+}
+
+/* One Shell argument, quoted as ReadArgs reads it back. */
+static void su_quote(char *out, size_t n, const char *arg)
+{
+    size_t k = 0;
+    if (n < 3) { if (n) out[0] = 0; return; }
+    out[k++] = '"';
+    for (; *arg && k + 3 < n; arg++) {
+        if (*arg == '"' || *arg == '*') out[k++] = '*';
+        out[k++] = *arg;
+    }
+    out[k++] = '"';
+    out[k] = 0;
+}
+
+/* Run a command and give back the first line it printed: whether an apkg
+   understands the hand-off this window writes, before the window closes
+   for good. */
+static int su_first_line(const char *cmd, char *out, size_t n)
+{
+    char file[64], *t;
+    struct Process *me = (struct Process *)FindTask(NULL);
+    BPTR o, in, home, td, old;
+    LONG rc;
+    snprintf(file, sizeof file, "%sarospkg-proto-%s", u_exists("T:") ? "T:" : "RAM:", announce_nonce);
+    if (!(o = Open((CONST_STRPTR)file, MODE_NEWFILE))) return -1;
+    if (!(in = Open((CONST_STRPTR)"NIL:", MODE_OLDFILE))) { Close(o); return -1; }
+    /* Even a command that ends at once keeps a copy of the caller's home
+       drawer locked until a reboot (~/Work/AROS/CLAUDE.md): this window's
+       drawer is the one about to be replaced. */
+    td = Lock((CONST_STRPTR)(u_exists("T:") ? "T:" : "RAM:"), SHARED_LOCK);
+    home = me->pr_HomeDir; me->pr_HomeDir = BNULL;
+    old = td ? CurrentDir(td) : BNULL;
+    rc = SystemTags((CONST_STRPTR)cmd, SYS_Output, (IPTR)o, SYS_Input, (IPTR)in, TAG_DONE);
+    if (td) { CurrentDir(old); UnLock(td); }
+    me->pr_HomeDir = home;
+    Close(in);
+    Close(o);
+    t = u_read_all(file, NULL);
+    u_delete(file);
+    if (rc != 0 || !t) { free(t); return -1; }
+    t[strcspn(t, "\r\n")] = 0;
+    snprintf(out, n, "%s", t);
+    free(t);
+    return 0;
+}
+
+/* The apkg that finishes the update: the installation's own, or the new
+   one just checked, whichever reads this window's hand-off. */
+static int su_helper(char *out, size_t n)
+{
+    char cand[5][PKG_MAXPATH], cmd[PKG_MAXPATH + 64], line[80], want[40];
+    int i;
+    snprintf(want, sizeof want, "arospkg-self-update %d", SU_PROTOCOL);
+    /* After an interruption the drawer's apkg may be missing, as .new or
+       .old beside it; any of them, or C:apkg, will do if it reads this
+       hand-off. */
+    u_join(cand[0], PKG_MAXPATH, sujob.in.drawer, "apkg");
+    u_join(cand[1], PKG_MAXPATH, sujob.st.dir, "new/apkg");
+    u_join(cand[2], PKG_MAXPATH, sujob.in.drawer, "apkg.new");
+    u_join(cand[3], PKG_MAXPATH, sujob.in.drawer, "apkg.old");
+    snprintf(cand[4], PKG_MAXPATH, "C:apkg");
+    for (i = 0; i < 5; i++) {
+        if (!sujob.st.dir[0] && i == 1) continue;
+        char q[PKG_MAXPATH + 8];
+        if (!u_exists(cand[i])) continue;
+        su_quote(q, sizeof q, cand[i]);
+        snprintf(cmd, sizeof cmd, "%s self-update --protocol", q);
+        if (su_first_line(cmd, line, sizeof line) == 0 && !strcmp(line, want)) {
+            snprintf(out, n, "%s", cand[i]);
+            return 0;
+        }
+        logline("self-update: %s does not read this hand-off (%s)", cand[i], line);
+    }
+    return -1;
+}
+
+/* Hand the update to apkg and leave. apkg waits until this process is
+   gone, replaces the files and starts PkgManager again with what it was
+   started with. Returns 0 when apkg has it. */
+static int su_hand_off(const su_stage *st, const char *what)
+{
+    su_restart rs;
+    pkg_err e;
+    char helper[PKG_MAXPATH], file[PKG_MAXPATH + 16], q[PKG_MAXPATH + 8], cmd[2 * PKG_MAXPATH + 64];
+    struct Process *me = (struct Process *)FindTask(NULL);
+    BPTR t, old, home;
+    LONG rc;
+
+    memset(&rs, 0, sizeof rs); memset(&e, 0, sizeof e);
+    if (su_helper(helper, sizeof helper) != 0) {
+        su_say("cannot update from this window: its apkg does not take the update over",
+               "This installation's apkg cannot finish an update started here.\nUpdate from a Shell: apkg self-update");
+        return -1;
+    }
+    rs.wb = wb_start;
+    snprintf(rs.program, sizeof rs.program, "%s", sujob.program);
+    snprintf(rs.root, sizeof rs.root, "%s", root);
+    rs.task = (unsigned long)(IPTR)me;
+    if (me->pr_CLI) rs.module = (unsigned long)(IPTR)((struct CommandLineInterface *)BADDR(me->pr_CLI))->cli_Module;
+    snprintf(rs.nonce, sizeof rs.nonce, "%s", announce_nonce);
+    {
+        /* Started again as it was started now: the same root and options. */
+        size_t k = (size_t)snprintf(rs.args, sizeof rs.args, "--after-update");
+        if (strcmp(root, "SYS:Packages")) { su_quote(q, sizeof q, root); k += (size_t)snprintf(rs.args + k, sizeof rs.args - k, " --root %s", q); }
+        if (log_path[0] && k < sizeof rs.args) { su_quote(q, sizeof q, log_path); k += (size_t)snprintf(rs.args + k, sizeof rs.args - k, " --log %s", q); }
+        if (demo_arg[0] && k < sizeof rs.args) { su_quote(q, sizeof q, demo_arg); k += (size_t)snprintf(rs.args + k, sizeof rs.args - k, " --demo %s", q); }
+        if (start_updates && k < sizeof rs.args) snprintf(rs.args + k, sizeof rs.args - k, " --updates");
+    }
+    u_join(file, sizeof file, st->dir, "handoff.json");
+    if (su_handoff_save(file, &sujob.in, st, &rs, &e) != PKG_OK) { show_err("cannot update arospkg", e.status, &e); return -1; }
+    su_quote(q, sizeof q, helper);
+    {
+        char qf[PKG_MAXPATH + 24];
+        su_quote(qf, sizeof qf, file);
+        snprintf(cmd, sizeof cmd, "%s self-update --apply %s", q, qf);
+    }
+    /* Its own current directory in T:, and no copy of this window's home
+       drawer: either would hold a lock in the installation it replaces. */
+    {
+        BPTR nin = Open((CONST_STRPTR)"NIL:", MODE_OLDFILE), nout = Open((CONST_STRPTR)"NIL:", MODE_NEWFILE);
+        if (!nin || !nout || !(t = Lock((CONST_STRPTR)(u_exists("T:") ? "T:" : "RAM:"), SHARED_LOCK))) {
+            if (nin) Close(nin);
+            if (nout) Close(nout);
+            su_say("cannot start apkg to finish the update; nothing was changed", NULL);
+            return -1;
+        }
+        home = me->pr_HomeDir; me->pr_HomeDir = BNULL;
+        old = CurrentDir(t);
+        rc = SystemTags((CONST_STRPTR)cmd, SYS_Input, (IPTR)nin, SYS_Output, (IPTR)nout,
+                        SYS_Asynch, TRUE, NP_StackSize, 262144, TAG_DONE);
+        CurrentDir(old);
+        me->pr_HomeDir = home;
+        UnLock(t);
+        if (rc == -1) {
+            Close(nin); Close(nout);
+            su_say("cannot start apkg to finish the update; nothing was changed", NULL);
+            return -1;
+        }
+    }
+    logline("self-update: %s handed to %s (%s); quitting", what, helper, file);
+    su_handed_off = 1;
+    return 0;
+}
+
+static void su_done(job_kind kind, pm_msg *m, const char *why)
+{
+    char line[900];
+    su_install *in = &sujob.in;
+    if (kind == JOB_SU_LOCATE) {
+        if (m->status != PKG_OK) {
+            snprintf(line, sizeof line, "cannot update arospkg: %s", why);
+            su_say(line, NULL); busy(0); return;
+        }
+        if (sujob.where.kind != SU_WHERE_HOME) {
+            /* Only the drawer of a release or of the package is replaced
+               from here; a renamed or moved PkgManager is updated by hand. */
+            su_say("cannot update arospkg from here: this PkgManager is not in an arospkg drawer "
+                   "(no apkg, BUILD.txt or package record beside it)", NULL);
+            busy(0); return;
+        }
+        if (sujob.c_path[0]) {
+            /* C:apkg is where the release README puts a copy; whether it is
+               this installation's is the user's to say, once. */
+            LONG a;
+            pkg_err e;
+            memset(&e, 0, sizeof e);
+            status("waiting for your decision");
+            if (auto_yes) a = 1;
+            else a = MUI_Request(app, win_about, 0, (STRPTR)"Update arospkg",
+                                 (STRPTR)"Update it too|Leave it|Cancel",
+                                 (STRPTR)"%s (%s) is another apkg on this machine.\n"
+                                         "It is not recorded with any installation.\n\n"
+                                         "Update it together with this PkgManager?",
+                                 (IPTR)sujob.c_path, (IPTR)sujob.c_version);
+            if (a == 0) { su_say("update cancelled; nothing was changed", NULL); busy(0); return; }
+            if (a == 1) su_add_copy(in, sujob.c_path);
+            su_record(sujob.c_path, a == 1 ? in->drawer : "", &e);
+            logline("self-update: %s recorded as %s", sujob.c_path, a == 1 ? "part of this installation" : "on its own");
+        }
+        snprintf(sujob.stage_dir, sizeof sujob.stage_dir, "%sarospkg-update-%s", u_exists("T:") ? "T:" : "RAM:", announce_nonce);
+        SetAttrs(txt_release, MUIA_Text_Contents, (IPTR)"Downloading and checking the new arospkg...\n"
+                 "Progress is shown at the bottom of the main window;\nCancel there stops it. Nothing is changed yet.", TAG_DONE);
+        if (!begin(JOB_SU_STAGE, NULL, "window")) busy(0);
+        return;
+    }
+    /* JOB_SU_STAGE */
+    if (m->status != PKG_OK) {
+        if (sujob.stage_dir[0]) u_deltree(sujob.stage_dir);
+        if (m->status == PKG_E_CANCELLED) su_say("update cancelled; nothing was changed", NULL);
+        else { snprintf(line, sizeof line, "cannot update arospkg: %s", why); su_say(line, NULL); }
+        busy(0); return;
+    }
+    if (!sujob.st.nreplace && !sujob.st.managed) {
+        u_deltree(sujob.stage_dir);
+        su_say("arospkg is up to date: every file already is the release's", NULL);
+        busy(0); return;
+    }
+    {
+        static char text[2400];
+        size_t k;
+        int i;
+        /* What happens to the window first: it is what the user has to
+           know before pressing Proceed; the files follow. */
+        k = (size_t)snprintf(text, sizeof text, "Update arospkg from %s to %s\n\n"
+                             "PkgManager closes now and starts again when the new files are in place. "
+                             "Icons and settings are kept.\n\n", PM_VERSION, sujob.st.version);
+        if (sujob.st.managed && k < sizeof text)
+            k += (size_t)snprintf(text + k, sizeof text - k, "The package arospkg in %s is replaced as an upgrade "
+                                  "(%s -> %s); apkg rollback arospkg goes back.\n\n",
+                                  in->root, in->managed_version, sujob.st.version);
+        if (k < sizeof text)
+            k += (size_t)snprintf(text + k, sizeof text - k, "In %s:\n  ", in->drawer);
+        for (i = 0; i < in->n && k < sizeof text; i++)
+            if (in->f[i].act == SU_REPLACE && !in->f[i].copy)
+                k += (size_t)snprintf(text + k, sizeof text - k, "%s ", su_role_name(in->f[i].role));
+        for (i = 0; i < in->n && k < sizeof text; i++)
+            if (in->f[i].act == SU_REPLACE && in->f[i].copy)
+                k += (size_t)snprintf(text + k, sizeof text - k, "\nAlso %s (%s)", in->f[i].path,
+                                      in->f[i].version[0] ? in->f[i].version : "?");
+        if (k < sizeof text)
+            snprintf(text + k, sizeof text - k, "\n\nThe previous files stay beside them, named .old.\n\nProceed?");
+        logline("self-update: plan to %s, %d file(s)%s, waits for confirmation", sujob.st.version,
+                sujob.st.nreplace, sujob.st.managed ? " and the package" : "");
+        su_confirming = confirming = 1;
+        status("waiting for your decision");
+        SetAttrs(btn_cancel, MUIA_Disabled, TRUE, TAG_DONE);
+        SetAttrs(gauge, MUIA_Gauge_InfoText, (IPTR)"waiting for your decision", TAG_DONE);
+        if (auto_yes) { su_proceed(); return; }
+        SetAttrs(win_confirm, MUIA_Window_Open, TRUE, TAG_DONE);
+        SetAttrs(txt_confirm, MUIA_Floattext_Text, (IPTR)text, TAG_DONE);
+    }
+}
+
+static void su_proceed(void)
+{
+    confirm_close();
+    su_confirming = 0;
+    logline("self-update: confirmed");
+    if (su_hand_off(&sujob.st, "the update") != 0) { u_deltree(sujob.stage_dir); busy(0); }
+}
+
+static void su_decline(const char *how)
+{
+    confirm_close();
+    su_confirming = 0;
+    u_deltree(sujob.stage_dir);
+    logline("self-update: %s", how);
+    su_say("update cancelled; nothing was changed", NULL);
+    busy(0);
+}
+
+/* Update arospkg, pressed in About. */
+static void su_begin(void)
+{
+    char run[SU_MAXCAND][PKG_MAXPATH];
+    int un = 0, n = su_running_pkgmanagers(run, SU_MAXCAND, &un), i, mine = 0;
+    for (i = 0; i < n; i++) if (!strcasecmp(run[i], self_drawer)) mine++;
+    if (mine > 1 || un) {
+        su_say("close the other PkgManager windows first: they would keep running the old version", NULL);
+        return;
+    }
+    if (su_journal_pending()) {
+        su_say("an earlier update of arospkg did not finish: start PkgManager again to repair it", NULL);
+        return;
+    }
+    memset(&sujob.in, 0, sizeof sujob.in);
+    memset(&sujob.st, 0, sizeof sujob.st);
+    sujob.stage_dir[0] = 0;
+    begin(JOB_SU_LOCATE, NULL, "window");
+}
+
+/* At the start: what the last update did, or an update left unfinished. */
+static void su_at_start(void)
+{
+    su_result r;
+    if (su_result_take(&r)) {
+        static char line[300];
+        logline("self-update result: ok=%d changed=%d %s -> %s: %s | %s", r.ok, r.changed, r.from, r.to, r.summary, r.detail);
+        snprintf(line, sizeof line, "%s", r.summary);
+        status(line);
+        SetAttrs(txt_release, MUIA_Text_Contents, (IPTR)line, TAG_DONE);
+        if (!auto_yes)
+            MUI_Request(app, win, 0, (STRPTR)"arospkg update", (STRPTR)"OK", (STRPTR)"%s\n\n%s",
+                        (IPTR)r.summary, (IPTR)r.detail);
+    }
+    if (su_journal_pending()) {
+        /* Not repaired automatically under --yes: a repair that cannot
+           succeed would start this window again, and again. */
+        LONG a = auto_yes ? 0 : MUI_Request(app, win, 0, (STRPTR)"arospkg update", (STRPTR)"Repair now|Later",
+                                            (STRPTR)"An update of arospkg did not finish.\n\n"
+                                                    "PkgManager closes, the update is finished or undone,\n"
+                                                    "and PkgManager starts again.", NULL);
+        logline("self-update: unfinished update found; %s", a ? "repair" : "later");
+        if (a) {
+            su_stage none;
+            memset(&none, 0, sizeof none);
+            memset(&sujob.in, 0, sizeof sujob.in);
+            snprintf(sujob.in.drawer, sizeof sujob.in.drawer, "%s", self_drawer);
+            snprintf(none.dir, sizeof none.dir, "%sarospkg-repair-%s", u_exists("T:") ? "T:" : "RAM:", announce_nonce);
+            sujob.st = none;
+            if (u_mkdir(none.dir) != 0 || su_hand_off(&none, "the repair") != 0) u_deltree(none.dir);
+        } else status("an update of arospkg did not finish: start PkgManager again to repair it");
+    }
 }
 
 /* Returns 1 when the window should now quit. */
@@ -1272,9 +1637,11 @@ static int on_message(pm_msg *m)
     if (m->kind == PM_DONE) {
         static const char *verb[] = { "none", "install", "remove", "update",
                                       "preview upgrade", "upgrade", "preview rollback", "rollback",
-                                      "check for a newer version", "verify", "start" };
+                                      "check for a newer version", "verify", "start",
+                                      "update arospkg", "update arospkg" };
         static const char *past[] = { "", "installed", "removed", "index updated",
-                                      "", "upgraded", "", "rolled back", "checked", "verified", "started" };
+                                      "", "upgraded", "", "rolled back", "checked", "verified", "started",
+                                      "", "" };
         job_kind kind = cur.kind;
         rx_job *j = active;
         char line[160], why[640];
@@ -1294,15 +1661,15 @@ static int on_message(pm_msg *m)
                          "This PkgManager %s stays as it is.", r->other_version[0] ? r->other_version : "?",
                          r->target, PM_VERSION);
             else if (r->cmp < 0)
-                snprintf(text, sizeof text, "A newer release is available: %s (this is %s).\n"
-                         "Update PkgManager from the archive at\n%s\n"
-                         "apkg self-update updates only apkg.", r->version, PM_VERSION, PKG_RELEASE_PAGE);
+                snprintf(text, sizeof text, "A newer release is available.\n"
+                         "This PkgManager: %s\nLatest stable release: %s\n"
+                         "Update arospkg updates PkgManager and apkg together.", PM_VERSION, r->version);
             else if (r->cmp == 0)
-                snprintf(text, sizeof text, "PkgManager %s is the latest stable release.\n"
-                         "apkg self-update updates only apkg.", PM_VERSION);
+                snprintf(text, sizeof text, "PkgManager %s is the latest stable release.", PM_VERSION);
             else snprintf(text, sizeof text, "PkgManager %s is newer than the latest stable release (%s).",
                           PM_VERSION, r->version);
-            SetAttrs(txt_release, MUIA_Text_Contents, (IPTR)text, TAG_DONE);
+            about_text(text);
+            su_offer = m->status == PKG_OK && r->found == 1 && r->cmp < 0;
             logline("release check: status=%d found=%d version=%s other=%s cmp=%d", (int)m->status,
                     r->found, r->version, r->other_version, r->cmp);
             if (j) {
@@ -1312,6 +1679,15 @@ static int on_message(pm_msg *m)
             if (quit_pending) return 1;
             busy(0);
             status(m->status == PKG_OK ? "release checked: see About" : "could not check for a newer version");
+            return 0;
+        }
+        if (kind == JOB_SU_LOCATE || kind == JOB_SU_STAGE) {
+            if (j) {
+                if (m->status == PKG_OK) finish(j, RXJ_DONE, "", "");
+                else finish(j, m->status == PKG_E_CANCELLED ? RXJ_CANCELLED : RXJ_FAILED, rx_statusword(m->status), why);
+            }
+            if (quit_pending) { if (sujob.stage_dir[0]) u_deltree(sujob.stage_dir); return 1; }
+            su_done(kind, m, why);
             return 0;
         }
         if (kind == JOB_VERIFY || kind == JOB_RUN) {
@@ -1851,8 +2227,19 @@ static int real_main(int argc, char **argv)
     const char *rexxlib = NULL;
     static char title[64];
 
+    int after_update = 0;
+
+    wb_start = argc == 0;
     for (i = 1; i < argc; i++)
-        if (!strcmp(argv[i], "--log") && i + 1 < argc) logf = fopen(argv[++i], "w");
+        if (!strcmp(argv[i], "--after-update")) after_update = 1;
+    for (i = 1; i < argc; i++)
+        if (!strcmp(argv[i], "--log") && i + 1 < argc) {
+            /* Started again after an update: the same log goes on. */
+            snprintf(log_path, sizeof log_path, "%s", argv[++i]);
+            logf = fopen(log_path, after_update ? "a" : "w");
+        }
+        else if (!strcmp(argv[i], "--after-update")) ;
+        else if (!strcmp(argv[i], "--release-from") && i + 1 < argc) su_set_base(argv[++i]);  /* tests */
         else if (!strcmp(argv[i], "--root") && i + 1 < argc) snprintf(root, sizeof root, "%s", argv[++i]);
         else if (!strcmp(argv[i], "--slow") && i + 1 < argc) job_set_slow(atoi(argv[++i]));
         else if (!strcmp(argv[i], "--break-download-at") && i + 1 < argc)   /* tests */
@@ -1860,7 +2247,10 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc) /* tests */
             pkg_test_break_download(atol(argv[++i]), 2);
         else if (!strcmp(argv[i], "--yes")) auto_yes = 1;        /* tests: no requester to click */
-        else if (!strcmp(argv[i], "--demo") && i + 1 < argc) snprintf(demo_path, sizeof demo_path, "%s", argv[++i]);
+        else if (!strcmp(argv[i], "--demo") && i + 1 < argc) {
+            snprintf(demo_path, sizeof demo_path, "%s", argv[++i]);
+            snprintf(demo_arg, sizeof demo_arg, "%s", demo_path);
+        }
         else if (!strcmp(argv[i], "--updates") || !strcasecmp(argv[i], "UPDATES")) start_updates = 1;
         else if (!strcmp(argv[i], "--rexxlib") && i + 1 < argc) rexxlib = argv[++i];  /* tests: a machine without ARexx */
         else if (!strcmp(argv[i], "--test-nomem") && i + 1 < argc) {                   /* tests: allocation failures */
@@ -1872,6 +2262,19 @@ static int real_main(int argc, char **argv)
 
     snprintf(index_path, sizeof index_path, "%s/db/index.json", root);
     {
+        /* This program's file and drawer, as DOS names them: what a
+           self-update replaces, and what this window announces while it
+           runs so that apkg can tell it is in use. */
+        char name[256] = "";
+        if (!GetProgramName((STRPTR)name, sizeof name) || !name[0])
+            snprintf(name, sizeof name, "%s", FindTask(NULL)->tc_Node.ln_Name ? FindTask(NULL)->tc_Node.ln_Name : "PkgManager");
+        if (GetProgramDir() && NameFromLock(GetProgramDir(), (STRPTR)self_drawer, sizeof self_drawer)) {
+            snprintf(sujob.program, sizeof sujob.program, "%s", self_drawer);
+            AddPart((STRPTR)sujob.program, FilePart((STRPTR)name), sizeof sujob.program);
+        }
+        su_announce_start(self_drawer, announce_nonce, sizeof announce_nonce);
+    }
+    {
         /* The demo storefront is optional: without it the window has no
            pictures and no Demo store, and says nothing more about it. */
         char why[200];
@@ -1882,7 +2285,7 @@ static int real_main(int argc, char **argv)
     cat_entries[0] = (STRPTR)"All categories"; cat_entries[1] = NULL;
 
     port = CreateMsgPort();
-    if (!port) return RETURN_FAIL;
+    if (!port) { su_announce_stop(); return RETURN_FAIL; }
     portsig = 1UL << port->mp_SigBit;
 
     rexx_open(rexxlib);
@@ -2035,11 +2438,13 @@ static int real_main(int argc, char **argv)
                 End),
                 Child, (txt_release = TextObject,
                     MUIA_Frame, MUIV_Frame_Text,
-                    MUIA_Text_Contents, (IPTR)"PkgManager and apkg are updated separately:\n"
-                                              "apkg self-update replaces only apkg.",
+                    /* Five lines: the height every later answer fits in. */
+                    MUIA_Text_Contents, (IPTR)"Check for a newer version, then Update arospkg\n"
+                                              "updates PkgManager and apkg together.\n\n\n",
                 End),
                 Child, (HGroup,
                     Child, (btn_check = SimpleButton("Check for a newer version")),
+                    Child, (btn_selfupdate = SimpleButton("Update arospkg")),
                     Child, (btn_about_close = SimpleButton("Close")),
                 End),
             End),
@@ -2065,7 +2470,7 @@ static int real_main(int argc, char **argv)
         End),
     End;
 
-    if (!app) { rexx_close("CLOSING PkgManager could not open its window"); DeleteMsgPort(port); return RETURN_FAIL; }
+    if (!app) { rexx_close("CLOSING PkgManager could not open its window"); DeleteMsgPort(port); su_announce_stop(); return RETURN_FAIL; }
 
     DoMethod(win, MUIM_Notify, MUIA_Window_CloseRequest, TRUE,
              (IPTR)app, 2, MUIM_Application_ReturnID, MUIV_Application_ReturnID_Quit);
@@ -2077,6 +2482,7 @@ static int real_main(int argc, char **argv)
     DoMethod(btn_about, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT);
     DoMethod(btn_about_close, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT_CLOSE);
     DoMethod(btn_check, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_CHECK);
+    DoMethod(btn_selfupdate, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_SELFUPDATE);
     DoMethod(win_about, MUIM_Notify, MUIA_Window_CloseRequest, TRUE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ABOUT_CLOSE);
     DoMethod(btn_install, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_INSTALL);
     DoMethod(btn_remove,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_REMOVE);
@@ -2104,10 +2510,12 @@ static int real_main(int argc, char **argv)
     SetAttrs(btn_open,     MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_run,      MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_verify,   MUIA_Disabled, TRUE, TAG_DONE);
+    SetAttrs(btn_selfupdate, MUIA_Disabled, TRUE, TAG_DONE);
     SetAttrs(btn_buy,      MUIA_Disabled, TRUE, MUIA_ShowMe, FALSE, TAG_DONE);
     SetAttrs(win, MUIA_Window_Open, TRUE, TAG_DONE);
     if (start_updates) SetAttrs(cyc_state, MUIA_NoNotify, TRUE, MUIA_Cycle_Active, ST_UPDATES, TAG_DONE);
     refill("", NULL, start_updates ? "start updates" : "start");
+    su_at_start();
 
     while (!quit) {
         ret = DoMethod(app, MUIM_Application_NewInput, (IPTR)&sigs);
@@ -2144,6 +2552,7 @@ static int real_main(int argc, char **argv)
         case ID_UPGRADE: { pkg_entry *e = selected(); if (e) { logline("upgrade pressed for %s", e->id); begin(JOB_PREVIEW_UPGRADE, e->id, "window"); } } break;
         case ID_ROLLBACK:{ pkg_entry *e = selected(); if (e) { logline("rollback pressed for %s", e->id); begin(JOB_PREVIEW_ROLLBACK, e->id, "window"); } } break;
         case ID_CHECK:   logline("check for a newer version pressed"); begin(JOB_CHECK_RELEASE, NULL, "window"); break;
+        case ID_SELFUPDATE: logline("update arospkg pressed"); su_begin(); break;
         case ID_CANCEL:  if (in_flight) { cur.cancel = 1; if (active) active->cancel_asked = 1; status("cancelling..."); logline("cancel pressed for %s", cur.id); } break;
         case ID_PROCEED: proceed("confirmed"); break;
         case ID_DECLINE: if (buy_showing) buy_close(); else decline("declined"); break;
@@ -2166,6 +2575,7 @@ static int real_main(int argc, char **argv)
             if (sigs & rxsig) rexx_poll(rexx_command);
         }
         if (rexx_quit && !busy_now()) break;
+        if (su_handed_off) break;
     }
 
     /* The worker's last message says the operation ended; whether the task
@@ -2180,6 +2590,8 @@ static int real_main(int argc, char **argv)
     pkg_updates_free(&upd);
     DeleteMsgPort(port);
     logline("quit");
+    /* Last: an update waiting for this window starts once this is gone. */
+    su_announce_stop();
     if (logf) fclose(logf);
     return RETURN_OK;
 }

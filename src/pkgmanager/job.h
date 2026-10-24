@@ -6,11 +6,28 @@
 
 #include "../libpkg/pkg.h"
 #include "../libpkg/release.h"
+#include "../libpkg/selfup.h"
 #include <exec/ports.h>
 
 typedef enum { JOB_NONE, JOB_INSTALL, JOB_REMOVE, JOB_UPDATE,
                JOB_PREVIEW_UPGRADE, JOB_UPGRADE, JOB_PREVIEW_ROLLBACK, JOB_ROLLBACK,
-               JOB_CHECK_RELEASE, JOB_VERIFY, JOB_RUN } job_kind;
+               JOB_CHECK_RELEASE, JOB_VERIFY, JOB_RUN,
+               JOB_SU_LOCATE, JOB_SU_STAGE } job_kind;
+
+/* Updating arospkg (libpkg/selfup.h): what the worker finds and stages for
+   the window, which shows it and decides. Too big for a message, and only
+   one job is ever out, so the window owns it and the worker fills it in. */
+typedef struct {
+    char        program[PKG_MAXPATH];  /* this PkgManager's file */
+    su_install  in;
+    su_where    where;
+    su_facts    facts;
+    pkg_release rel;
+    su_stage    st;
+    char        stage_dir[PKG_MAXPATH];
+    char        c_path[PKG_MAXPATH];   /* an unrecorded C:apkg to ask about */
+    char        c_version[48];
+} su_job;
 
 struct pm_msg_s;
 
@@ -31,6 +48,7 @@ typedef struct {
        an operation must never end with nothing to say so because memory ran
        out after the work was done. */
     struct pm_msg_s *done;
+    su_job         *su;         /* JOB_SU_*: the window's record of the update */
 } job;
 
 /* Every message the worker sends. PM_PROGRESS carries one pkg_progress_ev,

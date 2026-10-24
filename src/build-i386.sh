@@ -22,7 +22,7 @@ fi
 BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h $TLS_SRC "$HERE"/pkg/*.c "$HERE"/../third_party/aros-xterm/aros_tty_client.c \
            | shasum -a 256 | cut -c1-16)
 echo "build id $BUILD_ID  (i386 / ABIv0, not released)"
-$CC -O2 -Wall -Wextra -std=gnu99 \
+$CC -O2 -Wall -Wextra -std=gnu99 $EXTRA_CFLAGS \
     -DPKG_BUILD_ID='"'"$BUILD_ID"'"' \
     -DPKG_TOOLCHAIN='"'"$TC"'"' \
     -DPKG_ABI='"v0"' \

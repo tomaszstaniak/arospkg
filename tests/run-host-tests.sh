@@ -49,6 +49,10 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_rexxcmd" \
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_release" "$HERE/test_release.c" "$SRC/release.c"
 "$OUT/test_release"
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_selfup" \
+    "$HERE/test_selfup.c" "$SRC/selfup.c" "$SRC/json.c" "$SRC/release.c"
+"$OUT/test_selfup"
+
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_updates" \
     "$HERE/test_updates.c" "$SRC/updates.c" "$SRC/entries.c" "$SRC/app.c" "$SRC/json.c" "$SRC/listing.c" \
     "$SRC/req.c" "$SRC/upgrade.c" "$SRC/err.c"

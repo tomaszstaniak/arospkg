@@ -1,39 +1,34 @@
-/* apkg self-update: replace the running apkg with the latest stable release
- * for exactly this build's CPU and ABI. docs/self-update.md is the user's
- * side of it.
+/* apkg self-update: the Shell's front of libpkg/selfup.h, which updates
+ * apkg and the PkgManager that goes with it to the same release.
+ * docs/self-update.md is the user's side.
  *
  * Where the release comes from: GitHub's releases/latest/download/, which
  * names the latest STABLE release (prereleases never), and in it
  * SHA256SUMS and arospkg-<version>.<target>.zip, the names
  * tools/make-rc.sh gives them.
  *
- * Measured on AROS One 1.3 (tests/selfupdate/selfren.c): a running program
- * is loaded whole and holds no lock on its file, so it can rename its own
- * file, put a new one in its place and delete the old one, on SYS:, RAM:
- * and C:. So the swap is done here, in this process, with no helper:
- * <self>.new is written and checked first, <self> becomes <self>.old,
- * <self>.new becomes <self>, and if that last step fails the first is
- * undone. */
+ * The same command finishes what PkgManager starts (--apply): the window
+ * stages the release, writes a hand-off and quits; this program, from the
+ * installation's own drawer, waits for it to be gone, replaces the files
+ * and starts it again. */
 #include "selfupdate.h"
 #include "present.h"
 #include "../libpkg/pkg.h"
-#include "../libpkg/net.h"
-#include "../libpkg/zip.h"
-#include "../libpkg/sha256.h"
+#include "../libpkg/selfup.h"
 #include "../libpkg/util.h"
-#include "../libpkg/release.h"
+#include <proto/exec.h>
 #include <proto/dos.h>
+#include <proto/intuition.h>
+#include <intuition/intuition.h>
 #include <dos/dos.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#define LATEST PKG_RELEASE_LATEST
-
-static const char *from_s, *sums_s, *fail_s;
-void su_test_from(const char *u) { from_s = u; }
+static const char *sums_s;
+void su_test_from(const char *u) { su_set_base(u); }
 void su_test_sums(const char *f) { sums_s = f; }
-void su_test_fail(const char *w) { fail_s = w; }
 
 /* The file this process was loaded from: its PROGDIR: and its name. Never
    another copy found on the command path. */
@@ -46,61 +41,12 @@ static int self_path(char *out, size_t n)
     return u_exists(out) ? 0 : -1;
 }
 
-/* The temporary directory; T: when the system has it. */
-static void tmpname(char *out, size_t n, const char *leaf)
-{
-    snprintf(out, n, "%s%s", u_exists("T:") ? "T:" : "RAM:", leaf);
-}
-
-/* The CPU of an ELF file, and whether it carries this build's ABI tag. */
-static int same_target(const char *file, char why[240])
-{
-    size_t len, i, tl;
-    char tag[40];
-    unsigned char *d = (unsigned char *)u_read_all(file, &len);
-    unsigned m, want = !strcmp(pkg_arch(), "x86_64") ? 62 : !strcmp(pkg_arch(), "i386") ? 3 : 183;
-    int found = 0;
-    if (!d || len < 64 || memcmp(d, "\177ELF", 4)) {
-        free(d); snprintf(why, 240, "the new apkg is not an AROS program"); return -1;
-    }
-    m = d[18] | (d[19] << 8);
-    snprintf(tag, sizeof tag, "arospkg-abi=%s", pkg_abi());
-    tl = strlen(tag) + 1;                       /* with its terminating zero */
-    for (i = 0; i + tl <= len && !found; i++) if (!memcmp(d + i, tag, tl)) found = 1;
-    free(d);
-    if (m != want) { snprintf(why, 240, "the new apkg is for another CPU"); return -1; }
-    if (!found) { snprintf(why, 240, "the new apkg is not built for ABI %s", pkg_abi()); return -1; }
-    return 0;
-}
-
-/* net_fetch leaves its file as <dest>.part; take it only when complete. */
-static int fetch(const char *url, const char *dest, long max, char why[240])
-{
-    char part[PKG_MAXPATH];
-    snprintf(part, sizeof part, "%s.part", dest);
-    u_delete(dest);
-    if (net_fetch(url, dest, max, why) != 0) { u_delete(part); return -1; }
-    if (!Rename((CONST_STRPTR)part, (CONST_STRPTR)dest)) {
-        u_delete(part); snprintf(why, 240, "cannot write %s", dest); return -1;
-    }
-    return 0;
-}
-
-/* Said wherever the manager's own version comes up: self-update replaces
-   this apkg and nothing else, and the window is a separate program. */
-static void pkg_note(void)
-{
-    pr_text("apkg self-update replaces only this apkg. PkgManager is a separate program: "
-            "take it from the release archive (" PKG_RELEASE_PAGE "), or use its "
-            "\"Check for a newer version\" in About.", 2);
-}
-
 static int checking;                     /* --check: the wording of a failure */
 
 static int fail(const char *what, const char *detail)
 {
-    char head[300];
-    snprintf(head, sizeof head, "Could not %s: %s", checking ? "check for a newer apkg" : "update apkg", what);
+    char head[400];
+    snprintf(head, sizeof head, "Could not %s: %s", checking ? "check for a newer arospkg" : "update arospkg", what);
     fputs(pr_color(PR_RED), stdout);
     pr_text(head, 0);
     fputs(pr_off(), stdout);
@@ -108,181 +54,321 @@ static int fail(const char *what, const char *detail)
     return 10;
 }
 
-int apkg_self_update(const char *current, const char *root, int check_only)
-{
-    char self[512], fresh[520], prev[520], lockf[512];
-    char sums[PKG_MAXPATH], zip[PKG_MAXPATH], build[PKG_MAXPATH];
-    char url[1024], why[240], zwhy[160], name[160], member[200], ver[40];
-    char want_zip[65] = "", want_bin[65] = "", got[65];
-    const char *t = pkg_release_target(), *base = from_s ? from_s : LATEST;
-    char *list = NULL;
-    int rc = 10, c, found = 0;
-    struct FileInfoBlock *fib;
-    LONG prot = 0;
+static int fail_e(const pkg_err *e) { return fail(e->summary, e->detail); }
 
-    fresh[0] = 0;
-    checking = check_only;
-    if (!t) return fail("this build's CPU and ABI have no release archive",
-                        "Update it by hand from https://github.com/tomaszstaniak/arospkg/releases");
+/* Ctrl-C cancels while the library still takes it: the download and the
+   checks. Once files move, the break waits until they are settled. */
+static void on_progress(void *user, const pkg_progress_ev *ev, int *cancel)
+{
+    (void)user;
+    pr_progress(ev->id, ev->phase, ev->done, ev->total);
+    if (ev->can_cancel && (SetSignal(0L, 0L) & SIGBREAKF_CTRL_C)) {
+        SetSignal(0L, SIGBREAKF_CTRL_C);
+        *cancel = 1;
+    }
+}
+
+static const char *home_words(const su_install *in, char *buf, size_t n)
+{
+    if (in->home == SU_HOME_MANAGED)
+        snprintf(buf, n, "%s (package arospkg %s in %s)", in->drawer,
+                 in->managed_version[0] ? in->managed_version : "?", in->root);
+    else if (in->home == SU_HOME_DRAWER) snprintf(buf, n, "%s", in->drawer);
+    else snprintf(buf, n, "none: apkg on its own, without PkgManager");
+    return buf;
+}
+
+/* One line per file: role, the version it says, where, and what happens. */
+static void show_files(const su_install *in, const char *release, int planned)
+{
+    int i;
+    for (i = 0; i < in->n; i++) {
+        const su_file *f = &in->f[i];
+        const char *state;
+        if (!planned && f->role != SU_APKG && f->role != SU_PKGMANAGER) continue;
+        state = planned ? (f->act == SU_REPLACE ? "update" : "keep") : su_state_word(f, release);
+        printf("  %-16s %-14s %-7s %s\n", su_role_name(f->role),
+               f->role == SU_APKG || f->role == SU_PKGMANAGER ? (f->version[0] ? f->version : "?") : "",
+               state, f->path);
+    }
+}
+
+static void list_candidates(const su_facts *f)
+{
+    int i;
+    printf("This apkg (%s) is a copy, and it is not recorded which installation it belongs to.\n", f->started);
+    for (i = 0; i < f->ncand; i++) printf("  %d  %s (%s)\n", i + 1, f->cand[i], f->cand_how[i]);
+    printf("  0  none: update only this apkg\n");
+}
+
+/* A copy with no record and somewhere it could belong: asked in a window;
+   in a script, told how to answer. Returns the chosen drawer ("" = on its
+   own), or NULL when nothing was chosen. */
+static const char *choose(const su_facts *f, char *buf, size_t n)
+{
+    char ans[16];
+    int k;
+    list_candidates(f);
+    if (!IsInteractive(Input())) {
+        pr_text("Choose with --drawer <drawer> or --apkg-only and run it again; the choice is recorded. "
+                "Nothing was changed.", 0);
+        return NULL;
+    }
+    printf("Which installation is it part of? [0-%d, Return cancels] ", f->ncand);
+    fflush(stdout);
+    if (!fgets(ans, sizeof ans, stdin) || ans[0] < '0' || ans[0] > '9') { pr_text("Nothing was changed.", 0); return NULL; }
+    k = atoi(ans);
+    if (k < 0 || k > f->ncand) { pr_text("Nothing was changed.", 0); return NULL; }
+    snprintf(buf, n, "%s", k ? f->cand[k - 1] : "");
+    return buf;
+}
+
+static int yes_no(const char *q)
+{
+    char ans[16];
+    printf("%s [y/N] ", q);
+    fflush(stdout);
+    return fgets(ans, sizeof ans, stdin) && (ans[0] == 'y' || ans[0] == 'Y');
+}
+
+/* Settle an earlier update that did not finish. Returns 0 when nothing is
+   in the way any more. */
+static int recover_first(void)
+{
+    char steps[1200];
+    int found;
+    pkg_err e;
+    memset(&e, 0, sizeof e);
+    if (!su_journal_pending()) return 0;
+    printf("An earlier update of arospkg did not finish.\n");
+    if (su_recover(&found, steps, sizeof steps, &e) != PKG_OK) {
+        if (e.status != PKG_E_UNRESOLVED_TXN) return fail_e(&e);
+        fail(e.summary, "");
+        printf("To repair it by hand:\n%sThen delete %s.\n", steps, SU_JOURNAL_FILE);
+        return 10;
+    }
+    printf("  %s\n\n", steps);
+    return 0;
+}
+
+static void stage_name(char *out, size_t n)
+{
+    snprintf(out, n, "%sarospkg-update-%lx", u_exists("T:") ? "T:" : "RAM:",
+             (unsigned long)(IPTR)FindTask(NULL) ^ (unsigned long)time(NULL));
+}
+
+int apkg_self_update(const char *current, const char *root, const su_opts *o)
+{
+    char self[PKG_MAXPATH], buf[PKG_MAXPATH + 200], chosen_buf[PKG_MAXPATH], stage[PKG_MAXPATH];
+    const char *chosen = o->drawer;
+    su_install in;
+    su_where w;
+    su_facts f;
+    su_stage st;
+    pkg_release r;
+    pkg_err e;
+    int rc, i;
+
+    (void)current;
+    memset(&e, 0, sizeof e);
+    checking = o->check;
+    if (o->protocol) { printf("arospkg-self-update %d\n", SU_PROTOCOL); return 0; }
+    if (o->apply) return apkg_self_update_apply(o->apply);
+    if (o->recover) {
+        if (!su_journal_pending()) { printf("No unfinished update of arospkg.\n"); return 0; }
+        return recover_first();
+    }
+    if (!pkg_release_target())
+        return fail("this build's CPU and ABI have no release archive",
+                    "Update it by hand from https://github.com/tomaszstaniak/arospkg/releases");
     if (self_path(self, sizeof self) != 0)
         return fail("cannot find the file this apkg was started from",
                     "A resident apkg is not updated; start it from its file and try again.");
+    if (o->check) {
+        if (su_journal_pending()) printf("An earlier update of arospkg did not finish: apkg self-update settles it.\n\n");
+    } else if ((rc = recover_first()) != 0) return rc;
 
-    tmpname(sums, sizeof sums, "apkg-self-update.sums");
-    tmpname(zip, sizeof zip, "apkg-self-update.zip");
-    tmpname(build, sizeof build, "apkg-self-update.build");
-
-    if (net_open(why) != 0) return fail("no network", why);
-    if (sums_s) {                               /* testing only */
-        list = u_read_all(sums_s, NULL);
-        if (!list) { rc = fail("cannot read the test checksum file", sums_s); goto out; }
-    } else {
-        snprintf(url, sizeof url, "%sSHA256SUMS", base);
-        if (fetch(url, sums, 65536, why) != 0) { rc = fail("cannot fetch the release's checksums", why); goto out; }
-        list = u_read_all(sums, NULL);
+    if (su_locate(self, 1, root, chosen, &in, &w, &f, &e) != PKG_OK) return fail_e(&e);
+    if (w.kind == SU_WHERE_BROKEN) return fail("cannot tell which installation this apkg belongs to", w.why);
+    if (w.kind == SU_WHERE_CHOOSE) {
+        if (o->check) {
+            list_candidates(&f);
+            printf("apkg self-update asks which one; nothing else is checked until then.\n");
+            return 0;
+        }
+        if (!(chosen = choose(&f, chosen_buf, sizeof chosen_buf))) return 5;
+        if (su_locate(self, 1, root, chosen, &in, &w, &f, &e) != PKG_OK) return fail_e(&e);
+        if (w.kind == SU_WHERE_BROKEN) return fail("cannot use that installation", w.why);
     }
-    /* "<sha256>  arospkg-<version>.<target>.zip", one archive per target */
-    {
-        pkg_release r;
-        found = pkg_release_pick(list, t, &r);
-        snprintf(want_zip, sizeof want_zip, "%s", r.sha256);
-        snprintf(name, sizeof name, "%s", r.archive);
-        snprintf(ver, sizeof ver, "%s", r.version);
-        if (!found && check_only) {
+    if (w.record && !o->check) {
+        if (su_record(self, w.kind == SU_WHERE_ALONE ? "" : w.drawer, &e) != PKG_OK) return fail_e(&e);
+        printf("Recorded: %s %s.\n\n", self, w.kind == SU_WHERE_ALONE ? "is used on its own"
+                                                                       : "belongs to that installation");
+    }
+    if (!o->check && in.home != SU_HOME_NONE) {
+        /* C:apkg is where the release README puts a copy: a known place,
+           asked about once, never searched for anywhere else. */
+        char cp[PKG_MAXPATH], cv[48];
+        if (su_unrecorded_c_apkg(&in, cp, sizeof cp, cv, sizeof cv)) {
+            printf("%s (%s) is another apkg on this machine, not recorded with any installation.\n", cp, cv);
+            if (IsInteractive(Input())) {
+                int y = yes_no("Update it together with this installation?");
+                if (y) su_add_copy(&in, cp);
+                su_record(cp, y ? in.drawer : "", &e);
+                printf("Recorded: %s %s.\n\n", cp, y ? "belongs to this installation" : "is used on its own");
+            } else
+                printf("It is left as it is. Answer in a Shell window, or tie it to this installation with\n"
+                       "  \"%s\" self-update --drawer \"%s\"\n\n", cp, in.drawer);
+        }
+    }
+
+    if (su_release(NULL, sums_s, &r, &e) != PKG_OK) return fail_e(&e);
+    pr_heading("arospkg");
+    pr_field("Started from", self, -1);
+    pr_field("Installation", home_words(&in, buf, sizeof buf), -1);
+    if (r.found == 1) snprintf(buf, sizeof buf, "%s (%s)", r.version, r.target);
+    else snprintf(buf, sizeof buf, "%s, with no archive for %s", r.other_version[0] ? r.other_version : "unknown version", r.target);
+    pr_field("Latest stable release", buf, -1);
+    if (w.kind == SU_WHERE_ALONE) pr_field("PkgManager", w.why, -1);
+    putchar('\n');
+    show_files(&in, r.version, 0);
+    putchar('\n');
+    if (r.found != 1) {
+        if (o->check && !r.found) {
             /* Not a failure of the question: the answer is that there is
-               nothing newer for this machine. The Pi stayed on 0.4.0 when
-               0.4.1 had no archive for it, and that is what --check says. */
-            char line[400];
-            snprintf(line, sizeof line, "apkg %s", current);
-            pr_heading(line);
-            pr_field("Location", self, -1);
-            snprintf(line, sizeof line, "%s, with no archive for %s",
-                     r.other_version[0] ? r.other_version : "unknown version", t);
-            pr_field("Latest stable release", line, -1);
-            putchar('\n');
-            printf("No newer apkg for this machine. This one stays as it is.\n");
-            pkg_note();
-            rc = 0; goto out;
+               nothing newer for this machine. */
+            printf("No newer arospkg for this machine. This one stays as it is.\n");
+            return 0;
         }
+        return fail(r.found ? "the release lists more than one archive for this system"
+                            : "the latest stable release has no archive for this CPU and ABI", r.target);
     }
-    if (found != 1) {
-        rc = fail(found ? "the release lists more than one archive for this target"
-                        : "the latest stable release has no archive for this CPU and ABI", t);
-        goto out;
-    }
-
-    c = pkg_release_vercmp(current, ver);
-    {
-        char line[600];
-        snprintf(line, sizeof line, "apkg %s", current);
-        pr_heading(line);
-        pr_field("Location", self, -1);
-        snprintf(line, sizeof line, "%s (%s)", ver, t);
-        pr_field("Latest stable release", line, -1);
-        putchar('\n');
-    }
-    if (c >= 0) {
-        if (c == 0) { pr_word(PR_GREEN, "Up to date"); putchar('\n'); }
-        else printf("This apkg is newer than the latest stable release.\n");
-        if (check_only) pkg_note();
-        rc = 0; goto out;
-    }
-    if (check_only) {
-        printf("A newer release is available. Install it with: apkg self-update\n");
-        pkg_note();
-        rc = 0; goto out;
-    }
-
-    /* A package operation in progress may start apkg again from this file:
-       leave the file alone until it has finished. */
-    snprintf(lockf, sizeof lockf, "%s/db/lock.owner", root);
-    if (u_exists(lockf)) {
-        rc = fail("an apkg or PkgManager operation is running", "Try again when it has finished.");
-        goto out;
-    }
-
-    {
-        char line[120];
-        snprintf(line, sizeof line, "Updating apkg %s to %s", current, ver);
-        pr_heading(line);
-    }
-    snprintf(url, sizeof url, "%s%s", base, name);
-    printf("Downloading %s\n", name);
-    if (pkg_verbose()) printf("  from %s\n", url);
-    if (fetch(url, zip, 16L * 1024 * 1024, why) != 0) { rc = fail("cannot fetch the release archive", why); goto out; }
-    printf("Verifying archive\n");
-    if (sha256_file(zip, got) != 0 || strcmp(got, want_zip) != 0) {
-        rc = fail("the archive does not match the release's checksum", got); goto out;
-    }
-    /* The program's own checksum is in the archive's BUILD.txt. */
-    snprintf(member, sizeof member, "arospkg-%s.%s/BUILD.txt", ver, t);
-    if (zip_extract_member(zip, member, build, 65536, zwhy) != 0) { rc = fail("the archive has no BUILD.txt", zwhy); goto out; }
-    {
-        char *bt = u_read_all(build, NULL), *l;
-        for (l = bt; l && *l; ) {
-            char sha[80], fn[64];
-            if (sscanf(l, "%79s %63s", sha, fn) == 2 && strlen(sha) == 64 && !strcmp(fn, "apkg"))
-                snprintf(want_bin, sizeof want_bin, "%s", sha);
-            l = strchr(l, '\n'); if (l) l++;
+    if (o->check) {
+        int older = su_managed_behind(&in, r.version), newer = 0;
+        for (i = 0; i < in.n; i++) {
+            const char *s = su_state_word(&in.f[i], r.version);
+            if (in.f[i].role != SU_APKG && in.f[i].role != SU_PKGMANAGER) continue;
+            if (!strcmp(s, "older") || !strcmp(s, "unknown")) older++;
+            if (!strcmp(s, "newer")) newer++;
         }
-        free(bt);
+        if (newer) printf("This installation has a build newer than the latest stable release.\n");
+        else if (older) printf("A newer release is available. Install it with: apkg self-update\n");
+        else { pr_word(PR_GREEN, "Up to date"); putchar('\n'); }
+        return 0;
     }
-    if (!want_bin[0]) { rc = fail("BUILD.txt in the archive does not name apkg's checksum", ""); goto out; }
 
-    snprintf(fresh, sizeof fresh, "%s.new", self);
-    snprintf(prev, sizeof prev, "%s.old", self);
-    snprintf(member, sizeof member, "arospkg-%s.%s/apkg", ver, t);
-    u_delete(fresh);
-    if (zip_extract_member(zip, member, fresh, 16L * 1024 * 1024, zwhy) != 0) {
-        u_delete(fresh); rc = fail("cannot unpack apkg from the archive", zwhy); goto out;
+    if (su_all_current(&in, r.version)) { pr_word(PR_GREEN, "Up to date"); putchar('\n'); return 0; }
+    if (su_precheck(&in, root, 0, &e) != PKG_OK) return fail_e(&e);
+    stage_name(stage, sizeof stage);
+    if (su_stage_release(&in, &r, NULL, stage, on_progress, NULL, &st, &e) != PKG_OK) {
+        u_deltree(stage);
+        return e.status == PKG_E_CANCELLED ? (fail_e(&e), 5) : fail_e(&e);
     }
-    if (sha256_file(fresh, got) != 0 || strcmp(got, want_bin) != 0) {
-        u_delete(fresh); rc = fail("the unpacked apkg does not match BUILD.txt", got); goto out;
-    }
-    if (same_target(fresh, why) != 0) { u_delete(fresh); rc = fail(why, fresh); goto out; }
-
-    printf("Installing apkg\n");
-    /* The new file gets the old one's protection bits, so it stays runnable. */
-    if ((fib = AllocDosObject(DOS_FIB, NULL))) {
-        BPTR l = Lock((CONST_STRPTR)self, SHARED_LOCK);
-        if (l && Examine(l, fib)) prot = fib->fib_Protection;
-        if (l) UnLock(l);
-        FreeDosObject(DOS_FIB, fib);
-    }
-    SetProtection((CONST_STRPTR)fresh, prot);
-
-    u_delete(prev);
-    if (!Rename((CONST_STRPTR)self, (CONST_STRPTR)prev)) {
-        u_delete(fresh); rc = fail("cannot move the current apkg aside; nothing changed", self); goto out;
-    }
-    if (fail_s && !strcmp(fail_s, "stop")) {    /* testing only: as if the machine stopped here */
-        printf("(test) stopped after moving %s to %s\n", self, prev);
-        rc = 20; goto keep;
-    }
-    if ((fail_s && !strcmp(fail_s, "swap")) || !Rename((CONST_STRPTR)fresh, (CONST_STRPTR)self)) {
-        LONG back = Rename((CONST_STRPTR)prev, (CONST_STRPTR)self);
-        u_delete(fresh);
-        rc = fail(back ? "cannot put the new apkg in place; the previous one is back, nothing changed"
-                       : "cannot put the new apkg in place, nor the previous one back",
-                  back ? self : "Rename the .old file to the original name to get it back.");
-        goto out;
-    }
-    if (sha256_file(self, got) != 0 || strcmp(got, want_bin) != 0) {
-        rc = fail("the installed file does not match after the update", self); goto out;
+    if (!st.nreplace && !st.managed) {
+        u_deltree(stage);
+        pr_word(PR_GREEN, "Up to date"); printf(": every file already is the release's.\n");
+        return 0;
     }
     putchar('\n');
-    pr_word(PR_GREEN, "Updated"); printf(" apkg to %s\n", ver);
-    pr_field("Location", self, -1);
-    pr_field("Previous version", prev, -1);
-    /* This process is still the old code; only the file has changed. */
+    snprintf(buf, sizeof buf, "Updating arospkg to %s", st.version);
+    pr_heading(buf);
+    show_files(&in, st.version, 1);
+    if (st.managed)
+        printf("  The package arospkg in %s is replaced as an upgrade (%s -> %s).\n",
+               in.root, in.managed_version, st.version);
+    printf("  Icons and settings are kept.\n");
+    rc = su_apply(&in, &st, root, &e);
+    u_deltree(stage);
+    SetSignal(0L, SIGBREAKF_CTRL_C);       /* a break during the swap waited for it */
+    if (rc != PKG_OK) {
+        fail_e(&e);
+        if (e.status == PKG_E_UNRESOLVED_TXN) printf("Run apkg self-update again to finish or undo it.\n");
+        return 10;
+    }
+    putchar('\n');
+    pr_word(PR_GREEN, "Updated"); printf(" arospkg to %s\n", st.version);
+    for (i = 0; i < in.n; i++)
+        if (in.f[i].act == SU_REPLACE && (in.home != SU_HOME_MANAGED || in.f[i].copy))
+            printf("  %s (previous version: %s.old)\n", in.f[i].path, in.f[i].path);
+    if (st.managed) printf("  %s (previous version: apkg rollback arospkg)\n", in.drawer);
+    /* This process is still the old code; only the files have changed. */
     pr_text("The new version runs from the next apkg command.", 2);
-    pkg_note();
-    rc = 0;
-out:
-    if (fresh[0]) u_delete(fresh);         /* gone already after a swap */
-keep:
-    free(list);
-    u_delete(sums); u_delete(zip); u_delete(build);
-    net_close();
-    return rc;
+    return 0;
+}
+
+/* ---------------------------------------------------- PkgManager's hand-off */
+
+/* Said in a requester: this process has no console of its own. */
+static void tell(const char *text)
+{
+    struct Library *IntuitionBase = OpenLibrary((CONST_STRPTR)"intuition.library", 39);
+    struct EasyStruct es;
+    IPTR args[1];
+    if (!IntuitionBase) return;
+    es.es_StructSize = sizeof es; es.es_Flags = 0;
+    es.es_Title = (CONST_STRPTR)"arospkg update";
+    es.es_TextFormat = (CONST_STRPTR)"%s";
+    es.es_GadgetFormat = (CONST_STRPTR)"OK";
+    /* EasyRequestArgs, not the varargs EasyRequest: on some SDKs that one
+       is a link-library stub using a global IntuitionBase. */
+    args[0] = (IPTR)text;
+    EasyRequestArgs(NULL, &es, NULL, args);
+    CloseLibrary(IntuitionBase);
+}
+
+int apkg_self_update_apply(const char *handoff)
+{
+    su_install in;
+    su_stage st;
+    su_restart rs;
+    su_result res;
+    pkg_err e, re;
+    pkg_status s;
+    char steps[1200] = "", text[1400];
+    int found = 0, i;
+
+    memset(&e, 0, sizeof e); memset(&re, 0, sizeof re); memset(&res, 0, sizeof res);
+    s = su_handoff_load(handoff, &in, &st, &rs, &e);
+    if (!rs.program[0]) {
+        snprintf(text, sizeof text, "The update of arospkg could not start: %s\n%s", e.summary, e.detail);
+        tell(text);
+        return 10;
+    }
+    /* The window first: it closes, its worker ends, its announcement goes. */
+    if (su_wait_gone(&rs, 60) != 0) {
+        tell("PkgManager did not close within a minute, so nothing was changed.");
+        return 10;
+    }
+    if (s == PKG_OK && su_journal_pending() && su_recover(&found, steps, sizeof steps, &e) != PKG_OK) s = e.status;
+    if (s == PKG_OK) s = su_apply(&in, &st, rs.root, &e);
+    if (st.dir[0]) u_deltree(st.dir);
+    u_delete(handoff);
+
+    res.ok = s == PKG_OK;
+    res.changed = s == PKG_OK && (st.nreplace || st.managed || found);
+    snprintf(res.to, sizeof res.to, "%s", st.version);
+    for (i = 0; i < in.n && !res.from[0]; i++)
+        if (in.f[i].role == SU_PKGMANAGER && in.f[i].version[0]) snprintf(res.from, sizeof res.from, "%s", in.f[i].version);
+    if (s == PKG_OK && !st.version[0])
+        snprintf(res.summary, sizeof res.summary, "The unfinished update of arospkg was settled: %s.",
+                 found ? steps : "nothing was left to do");
+    else if (s == PKG_OK) {
+        snprintf(res.summary, sizeof res.summary, "arospkg was updated to %s.", st.version);
+        snprintf(res.detail, sizeof res.detail, "%s", in.home == SU_HOME_MANAGED
+                 ? "The previous version can be restored with: apkg rollback arospkg"
+                 : "The previous files are kept beside the new ones, named .old.");
+    } else {
+        snprintf(res.summary, sizeof res.summary, "arospkg was not updated: %s", e.summary);
+        snprintf(res.detail, sizeof res.detail, "%s%s", e.status == PKG_E_UNRESOLVED_TXN ? "To repair it by hand:\n" : "",
+                 e.status == PKG_E_UNRESOLVED_TXN && steps[0] ? steps : e.detail);
+    }
+    su_result_write(&res);
+    if (su_restart_pkgmanager(&rs, &re) != PKG_OK) {
+        /* Told apart from the update itself: the files are what res says. */
+        snprintf(text, sizeof text, "%s\n%s\n\nPkgManager could not be started again: %s\nStart it from %s",
+                 res.summary, res.detail, re.summary, rs.program);
+        tell(text);
+        return s == PKG_OK ? 5 : 10;
+    }
+    return s == PKG_OK ? 0 : 10;
 }

@@ -11,6 +11,7 @@
 #include "present.h"
 #include "hint.h"
 #include "selfupdate.h"
+#include "../libpkg/selfup.h"
 #include "../about.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,8 +25,11 @@
    release it updates to; a release never sets it. */
 #ifdef APKG_TEST_VERSION
 static const char *VERSION = "apkg " APKG_TEST_VERSION;
+static const char VERSTAG[] __attribute__((used)) = "$VER: apkg " APKG_TEST_VERSION " (24.10.2026)";
 #else
 static const char *VERSION = "apkg 0.6.0";
+/* What a self-update reads to tell this file's version without running it. */
+static const char VERSTAG[] __attribute__((used)) = "$VER: apkg 0.6.0 (24.10.2026)";
 #endif
 
 /* `show`: the library's account of one package, laid out for a person. The
@@ -275,8 +279,11 @@ static void usage(void)
            "  run <id> [file]   Start an installed application (optionally with a file)\n"
            "  run --check <id>  Say whether and how it would start, without starting it\n"
            "  open <id>         Open an installed package's drawer on the desktop\n"
-           "  self-update       Replace this apkg with the latest stable release\n"
-           "  self-update --check  Say whether there is a newer one\n\n"
+           "  self-update       Update apkg and its PkgManager to the latest stable release\n"
+           "  self-update --check  Say what is installed and whether there is a newer one\n"
+           "  self-update --drawer <dir>  Update this apkg with the installation in <dir>\n"
+           "  self-update --apkg-only     Update this apkg on its own, without PkgManager\n"
+           "  self-update --recover       Finish or undo an update that was interrupted\n\n"
            "Options:\n"
            "  --root <dir>      Package directory (default: SYS:Packages)\n"
            "  --plain           Disable formatting and progress output\n"
@@ -318,7 +325,9 @@ static void usage_testing(void)
            "  --break-download-at <n>  Simulate one connection reset after n bytes\n"
            "  --self-update-from <url> Release base URL for self-update (https, ends in /)\n"
            "  --self-update-sums <file> Use a local SHA256SUMS for self-update\n"
-           "  --self-update-fail-at <swap|stop> Fail the self-update at the swap\n"
+           "  --self-update-fail-at <how> Fail the self-update: write:<n> (n-th new file),\n"
+           "                          rename:<n> (n-th rename), stop:<n> (stop dead after the\n"
+           "                          n-th rename), managed:<n> (--interrupt-at in the package)\n"
            "  --corrupt-download-at <n> Simulate one TLS data error after n bytes\n"
            "  --cancel-at <phase>      Request cancellation in a phase\n"
            "                          download, download-mid, verify, extract, publish\n"
@@ -1094,6 +1103,7 @@ static int real_main(int argc, char **argv)
     int nrest = 0;
     int group_rc = -1, shown = 0;    /* upgrade --all: its own exit status; errors already shown */
     int expect = -1, retry = 0, json = 0, dry = 0, fetch = 0, plain = 0, color = PR_COLOR_AUTO, check = 0, all = 0;
+    su_opts suo = { 0, 0, 0, NULL, NULL };
     int limit = -1, days = -1, builds = 0, last_update = 0, rc_dry = 0;
     const char *since = NULL;
     pkg_ctx *c = NULL;
@@ -1150,6 +1160,11 @@ static int real_main(int argc, char **argv)
         else if (!strcmp(argv[i], "--self-update-from") && i + 1 < argc) su_test_from(argv[++i]);
         else if (!strcmp(argv[i], "--self-update-sums") && i + 1 < argc) su_test_sums(argv[++i]);
         else if (!strcmp(argv[i], "--self-update-fail-at") && i + 1 < argc) su_test_fail(argv[++i]);
+        else if (!strcmp(argv[i], "--drawer") && i + 1 < argc) suo.drawer = argv[++i];
+        else if (!strcmp(argv[i], "--apkg-only")) suo.drawer = "";
+        else if (!strcmp(argv[i], "--recover")) suo.recover = 1;
+        else if (!strcmp(argv[i], "--apply") && i + 1 < argc) suo.apply = argv[++i];
+        else if (!strcmp(argv[i], "--protocol")) suo.protocol = 1;
         else if (!strcmp(argv[i], "--break-download-at") && i + 1 < argc)
             pkg_test_break_download(atol(argv[++i]), 1);
         else if (!strcmp(argv[i], "--corrupt-download-at") && i + 1 < argc)
@@ -1214,7 +1229,10 @@ static int real_main(int argc, char **argv)
 
     /* It replaces this program's file and nothing in the package root, so
        it never opens the root: no recovery, no lock of its own. */
-    if (!strcmp(cmd, "self-update")) return apkg_self_update(VERSION + 5, root, check);
+    if (!strcmp(cmd, "self-update")) {
+        suo.check = check;
+        return apkg_self_update(VERSION + 5, root, &suo);
+    }
 
     /* A drawer given by path needs no package root: the description travels
        with the drawer (RFC 0002), so an application unpacked by hand starts

@@ -287,6 +287,17 @@ static int fetch_once(const char *host, const char *path, str *body,
     b = hdr_end + 4;
     blen = raw.len - (size_t)(b - raw.p);
     if (chunked) blen = dechunk(b, blen);
+    else {
+        /* A connection that ends early is a broken download, and is said
+           to be one: left to the checksum it read as a damaged file. */
+        char *cl = strstr(raw.p, "\nContent-Length:");
+        if (!cl) cl = strstr(raw.p, "\ncontent-length:");
+        if (cl && (long)blen < atol(cl + 16)) {
+            snprintf(why, 240, "the connection to %s ended after %lu of %ld bytes", host,
+                     (unsigned long)blen, atol(cl + 16));
+            goto out;
+        }
+    }
     if (!str_add(body, b, blen, max_bytes)) { snprintf(why, 240, "body too large"); goto out; }
     rc = 1;
 

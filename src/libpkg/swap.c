@@ -199,7 +199,7 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
                        const rev_info *from, const char *from_text,
                        const rev_info *to, const char *to_archive,
                        inv_ent *old, int nold, req_ent *reqs, int nreq,
-                       pkg_stop stop, pkg_plan *preview, pkg_err *e)
+                       pkg_stop stop, pkg_plan *preview, int keep_icons, pkg_err *e)
 {
     char tid[64], sroot[PKG_MAXPATH], staging[PKG_MAXPATH], oldtree[PKG_MAXPATH];
     char dest[PKG_MAXPATH], regpath[PKG_MAXPATH], regbefore[PKG_MAXPATH];
@@ -253,6 +253,17 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
     /* 2. The plan, printed; a conflict stops here with nothing touched. */
     nsteps = upgrade_plan(old, nold, newinv, nnew, live, nlive, steps, MAXINV * 2, &conflicts);
     if (nsteps < 0) { st = pkg_fail(e, PKG_E_NOMEM, "too many files to plan", "", id); goto fail_staging; }
+    if (keep_icons) {
+        /* A self-update keeps the icons a user changed (their tool types and
+           positions are settings), where an upgrade would stop and ask. */
+        for (i = 0; i < nsteps; i++) {
+            size_t l = strlen(steps[i].rel);
+            if (steps[i].act == UP_CONFLICT && l > 5 && !strcmp(steps[i].rel + l - 5, ".info")) {
+                steps[i].act = UP_KEEP_USER;
+                conflicts--;
+            }
+        }
+    }
     print_plan(steps, nsteps, dest);
     if (preview) {
         /* Information, not an operation: the counts and the conflicts go
@@ -557,7 +568,7 @@ static pkg_status do_upgrade(pkg_ctx *c, const char *index_path, const char *id,
         rev_label(a, sizeof a, from.version, from.revision); rev_label(b, sizeof b, to.version, to.revision);
         printf("upgrading %s %s -> %s\n", id, a, b);
     }
-    st = swap(c, id, 0, &from, from_text, &to, newarc, old, nold, reqs, nreq, stop, preview, e);
+    st = swap(c, id, 0, &from, from_text, &to, newarc, old, nold, reqs, nreq, stop, preview, 0, e);
 out:
     free(old); free(from_text);
     return st;
@@ -565,6 +576,50 @@ out:
 
 pkg_status pkg_upgrade(pkg_ctx *c, const char *index_path, const char *id, pkg_stop stop, pkg_err *e)
 { return do_upgrade(c, index_path, id, stop, NULL, 1, e); }
+
+/* arospkg updating itself where apkg installed it as a package: the same
+ * transaction as an upgrade, to the release's archive instead of the
+ * catalogue's entry (selfup_io.c checked it against the release's
+ * SHA256SUMS and put it in this root's cache). Everything the catalogue
+ * would have said about the package -- how it starts, its requirements and
+ * relations, its notes -- is kept from the installed record, so the
+ * registry describes exactly what is in the drawer afterwards. */
+pkg_status pkg_selfupdate_swap(pkg_ctx *c, const char *id, const char *archive, const char *version,
+                               const char *url, const char *sha, long size, const char *subdir,
+                               pkg_stop stop, pkg_err *e)
+{
+    rev_info from, to; inv_ent *old; int nold = 0, nreq, i;
+    req_ent reqs[MAXREQ];
+    char regpath[PKG_MAXPATH], *from_text = NULL;
+    pkg_status st;
+
+    c->progress_id = id;
+    registry_path(c, id, regpath, sizeof regpath);
+    if (!u_exists(regpath)) return pkg_fail(e, PKG_E_NOT_FOUND, "not installed", "", id);
+    if (!(old = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV))) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
+    if (swap_read_registry(regpath, &from, old, &nold, &from_text) != 0) {
+        free(old); return pkg_fail(e, PKG_E_IO, "the registry entry is not readable", "", regpath);
+    }
+    to = from;
+    snprintf(to.version, sizeof to.version, "%s", version);
+    to.revision = 0;
+    snprintf(to.url, sizeof to.url, "%s", url);
+    snprintf(to.sha, sizeof to.sha, "%s", sha);
+    to.size = size;
+    snprintf(to.subdir, sizeof to.subdir, "%s", subdir);
+    to.prev_registry[0] = to.prev_archive[0] = 0;
+    nreq = from.app_nreq;
+    for (i = 0; i < nreq; i++) reqs[i] = from.app_reqs[i];
+    req_probe_all(reqs, nreq);
+    {
+        char a[80];
+        rev_label(a, sizeof a, from.version, from.revision);
+        printf("updating %s %s -> %s\n", id, a, version);
+    }
+    st = swap(c, id, 0, &from, from_text, &to, archive, old, nold, reqs, nreq, stop, NULL, 1, e);
+    free(old); free(from_text);
+    return st;
+}
 
 pkg_status pkg_upgrade_preview(pkg_ctx *c, const char *index_path, const char *id,
                                int allow_fetch, pkg_plan *out, pkg_err *e)
@@ -621,7 +676,7 @@ static pkg_status do_rollback(pkg_ctx *c, const char *id, pkg_stop stop, pkg_pla
                                            from.abi[0] ? from.abi : pkg_abi(), e);
         if (rs != PKG_OK) { st = rs; goto out; }
     }
-    st = swap(c, id, 1, &from, from_text, &to, from.prev_archive, old, nold, reqs, nreq, stop, preview, e);
+    st = swap(c, id, 1, &from, from_text, &to, from.prev_archive, old, nold, reqs, nreq, stop, preview, 0, e);
 out:
     free(old); free(dummy); free(from_text); free(to_text);
     return st;

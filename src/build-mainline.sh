@@ -20,7 +20,7 @@ BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h $TLS_SRC "$HERE"/pkg/*.c "$
            | shasum -a 256 | cut -c1-16)
 echo "build id $BUILD_ID  (ABIv1 / mainline, additional)"
 
-"$TC/x86_64-aros-gcc" -O2 -Wall -Wextra -std=gnu99 \
+"$TC/x86_64-aros-gcc" -O2 -Wall -Wextra -std=gnu99 $EXTRA_CFLAGS \
     -DPKG_BUILD_ID='"'"$BUILD_ID"'"' \
     -DPKG_TOOLCHAIN='"'"$TC"'"' \
     -DPKG_ABI='"v1"' \
