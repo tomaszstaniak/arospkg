@@ -213,8 +213,12 @@ int apkg_self_update(const char *current, const char *root, const su_opts *o)
             printf("%s (%s) is another apkg on this machine, not recorded with any installation.\n", cp, cv);
             if (IsInteractive(Input())) {
                 int y = yes_no("Update it together with this installation?");
-                if (y) su_add_copy(&in, cp);
-                su_record(cp, y ? in.drawer : "", &e);
+                if (su_record(cp, y ? in.drawer : "", &e) != PKG_OK) {
+                    fail_e(&e);
+                    printf("Nothing was changed.\n");
+                    return 10;
+                }
+                if (y && su_add_copy(&in, cp) != 0) return fail("cannot read the copy", cp);
                 printf("Recorded: %s %s.\n\n", cp, y ? "belongs to this installation" : "is used on its own");
             } else
                 printf("It is left as it is. Answer in a Shell window, or tie it to this installation with\n"
@@ -312,7 +316,7 @@ static void tell(const char *text)
     /* EasyRequestArgs, not the varargs EasyRequest: on some SDKs that one
        is a link-library stub using a global IntuitionBase. */
     args[0] = (IPTR)text;
-    EasyRequestArgs(NULL, &es, NULL, args);
+    EasyRequestArgs(NULL, &es, NULL, (RAWARG)args);
     CloseLibrary(IntuitionBase);
 }
 
@@ -339,7 +343,17 @@ int apkg_self_update_apply(const char *handoff)
         tell("PkgManager did not close within a minute, so nothing was changed.");
         return 10;
     }
-    if (s == PKG_OK && su_journal_pending() && su_recover(&found, steps, sizeof steps, &e) != PKG_OK) s = e.status;
+    if (s == PKG_OK && su_journal_pending()) {
+        /* A journal here was written after the window planned (it refuses
+           to plan while one exists): another update stopped halfway. It is
+           settled, and this plan, made before it, is not applied. */
+        if (su_recover(&found, steps, sizeof steps, &e) != PKG_OK) s = e.status;
+        else if (st.version[0]) {
+            s = e.status = PKG_E_CONFLICT;
+            snprintf(e.summary, sizeof e.summary, "an earlier update had not finished, and has been settled (%s)", steps);
+            snprintf(e.detail, sizeof e.detail, "Nothing else was changed. Check for a newer version and update again.");
+        }
+    }
     if (s == PKG_OK) s = su_apply(&in, &st, rs.root, &e);
     if (st.dir[0]) u_deltree(st.dir);
     u_delete(handoff);

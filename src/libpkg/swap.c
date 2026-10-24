@@ -31,6 +31,7 @@
 #include "listing.h"
 #include "entries.h"
 #include "verify.h"
+#include "release.h"
 
 #include <proto/dos.h>
 #include <stdio.h>
@@ -586,6 +587,7 @@ pkg_status pkg_upgrade(pkg_ctx *c, const char *index_path, const char *id, pkg_s
  * registry describes exactly what is in the drawer afterwards. */
 pkg_status pkg_selfupdate_swap(pkg_ctx *c, const char *id, const char *archive, const char *version,
                                const char *url, const char *sha, long size, const char *subdir,
+                               const char *expect_version, long expect_revision,
                                pkg_stop stop, pkg_err *e)
 {
     rev_info from, to; inv_ent *old; int nold = 0, nreq, i;
@@ -599,6 +601,16 @@ pkg_status pkg_selfupdate_swap(pkg_ctx *c, const char *id, const char *archive, 
     if (!(old = (inv_ent *)malloc(sizeof(inv_ent) * MAXINV))) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", id);
     if (swap_read_registry(regpath, &from, old, &nold, &from_text) != 0) {
         free(old); return pkg_fail(e, PKG_E_IO, "the registry entry is not readable", "", regpath);
+    }
+    /* Decided here, under this root's lock: the installed revision is still
+       the one the update was planned for, and the release is newer. A
+       self-update never moves a package backwards or sideways. */
+    if (strcmp(from.version, expect_version) || from.revision != expect_revision
+        || pkg_release_vercmp(from.version, version) >= 0) {
+        char a[80];
+        rev_label(a, sizeof a, from.version, from.revision);
+        free(old); free(from_text);
+        return pkg_fail(e, PKG_E_CONFLICT, "the installed package is not the one the update was planned for", a, id);
     }
     to = from;
     snprintf(to.version, sizeof to.version, "%s", version);

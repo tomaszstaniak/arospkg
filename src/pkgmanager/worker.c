@@ -71,6 +71,15 @@ static void worker_main(void)
        lock, so it never waits for, or blocks, a package operation. */
     if (j->kind == JOB_CHECK_RELEASE) {
         st = pkg_release_check(su_base(), NULL, j->current, &j->done->rel, &e);
+        if (st == PKG_OK && j->su) {
+            /* The rest of the installation too, so the window can offer an
+               update when only apkg or a copy is behind. Hashing is slow,
+               so it is done here and not on the window's task. */
+            pkg_err e2;
+            memset(&e2, 0, sizeof e2);
+            j->su->located = su_locate(j->su->program, 0, j->root, NULL, &j->su->in, &j->su->where,
+                                       &j->su->facts, &e2) == PKG_OK;
+        }
     } else if (j->kind == JOB_SU_LOCATE) {
         /* Where this PkgManager's installation is, and its files now: the
            files are hashed, which takes a moment on a slow machine. */

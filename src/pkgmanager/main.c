@@ -1475,8 +1475,15 @@ static void su_done(job_kind kind, pm_msg *m, const char *why)
                                          "Update it together with this PkgManager?",
                                  (IPTR)sujob.c_path, (IPTR)sujob.c_version);
             if (a == 0) { su_say("update cancelled; nothing was changed", NULL); busy(0); return; }
-            if (a == 1) su_add_copy(in, sujob.c_path);
-            su_record(sujob.c_path, a == 1 ? in->drawer : "", &e);
+            if (su_record(sujob.c_path, a == 1 ? in->drawer : "", &e) != PKG_OK) {
+                snprintf(line, sizeof line, "cannot update arospkg: %s (%s); nothing was changed", e.summary, e.subject);
+                su_say(line, NULL); busy(0); return;
+            }
+            if (a == 1 && su_add_copy(in, sujob.c_path) != 0) {
+                snprintf(line, sizeof line, "cannot update arospkg: cannot read %s (recorded as part of this "
+                         "installation); no file was changed", sujob.c_path);
+                su_say(line, NULL); busy(0); return;
+            }
             logline("self-update: %s recorded as %s", sujob.c_path, a == 1 ? "part of this installation" : "on its own");
         }
         snprintf(sujob.stage_dir, sizeof sujob.stage_dir, "%sarospkg-update-%s", u_exists("T:") ? "T:" : "RAM:", announce_nonce);
@@ -1504,7 +1511,8 @@ static void su_done(job_kind kind, pm_msg *m, const char *why)
         /* What happens to the window first: it is what the user has to
            know before pressing Proceed; the files follow. */
         k = (size_t)snprintf(text, sizeof text, "Update arospkg from %s to %s\n\n"
-                             "PkgManager closes now and starts again when the new files are in place. "
+                             /* Broken by hand: Floattext wraps under its own scroller. */
+                             "PkgManager closes now and starts again\nwhen the new files are in place.\n"
                              "Icons and settings are kept.\n\n", PM_VERSION, sujob.st.version);
         if (sujob.st.managed && k < sizeof text)
             k += (size_t)snprintf(text + k, sizeof text - k, "The package arospkg in %s is replaced as an upgrade "
@@ -1660,16 +1668,45 @@ static int on_message(pm_msg *m)
                 snprintf(text, sizeof text, "The latest stable release (%s) has no archive for %s.\n"
                          "This PkgManager %s stays as it is.", r->other_version[0] ? r->other_version : "?",
                          r->target, PM_VERSION);
-            else if (r->cmp < 0)
-                snprintf(text, sizeof text, "A newer release is available.\n"
-                         "This PkgManager: %s\nLatest stable release: %s\n"
-                         "Update arospkg updates PkgManager and apkg together.", PM_VERSION, r->version);
-            else if (r->cmp == 0)
-                snprintf(text, sizeof text, "PkgManager %s is the latest stable release.", PM_VERSION);
-            else snprintf(text, sizeof text, "PkgManager %s is newer than the latest stable release (%s).",
-                          PM_VERSION, r->version);
+            else {
+                /* The whole installation, not this window alone: its apkg,
+                   the copies tied to it and a package record can be behind
+                   while PkgManager is current. Nothing newer is moved back. */
+                const su_install *in = &sujob.in;
+                int older = 0, newer = 0, i, shown = 0;
+                /* A package already at the release: its own files are verify's
+                   business, as the plan says (su_plan). */
+                int pkg_current = in->home == SU_HOME_MANAGED && in->managed_version[0]
+                                  && pkg_release_vercmp(in->managed_version, r->version) >= 0;
+                size_t k = (size_t)snprintf(text, sizeof text, "Latest stable release: %s\n", r->version);
+                if (sujob.located && sujob.where.kind == SU_WHERE_HOME) {
+                    for (i = 0; i < in->n; i++) {
+                        const su_file *f = &in->f[i];
+                        const char *w;
+                        if (f->role != SU_APKG && f->role != SU_PKGMANAGER) continue;
+                        w = su_state_word(f, r->version);
+                        if (!(pkg_current && !f->copy)) {
+                            if (!strcmp(w, "older") || !strcmp(w, "unknown")) older++;
+                            if (!strcmp(w, "newer")) newer++;
+                        }
+                        if (k < sizeof text)
+                            k += (size_t)snprintf(text + k, sizeof text - k, "%s%s %s (%s)", shown++ ? ", " : "",
+                                                  f->copy ? (const char *)FilePart((STRPTR)f->path) : su_role_name(f->role),
+                                                  f->version[0] ? f->version : "?", w);
+                    }
+                    if (su_managed_behind(in, r->version)) older++;
+                    if (in->home == SU_HOME_MANAGED && in->managed_version[0]
+                        && pkg_release_vercmp(in->managed_version, r->version) > 0) newer++;
+                } else if (r->cmp < 0) older++;
+                else if (r->cmp > 0) newer++;
+                if (k < sizeof text)
+                    snprintf(text + k, sizeof text - k, "\n%s", newer ? "Part of this installation is newer than the release; nothing is offered."
+                             : older ? "Update arospkg brings everything to this release."
+                             : "Everything is up to date.");
+                su_offer = !newer && older > 0;
+            }
             about_text(text);
-            su_offer = m->status == PKG_OK && r->found == 1 && r->cmp < 0;
+            if (m->status != PKG_OK || r->found != 1) su_offer = 0;
             logline("release check: status=%d found=%d version=%s other=%s cmp=%d", (int)m->status,
                     r->found, r->version, r->other_version, r->cmp);
             if (j) {

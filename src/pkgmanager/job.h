@@ -27,6 +27,7 @@ typedef struct {
     char        stage_dir[PKG_MAXPATH];
     char        c_path[PKG_MAXPATH];   /* an unrecorded C:apkg to ask about */
     char        c_version[48];
+    int         located;               /* JOB_CHECK_RELEASE: in/where describe this installation */
 } su_job;
 
 struct pm_msg_s;

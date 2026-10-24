@@ -138,6 +138,7 @@ void       swap_archive_ext(const char *url, char *ext, size_t n);
    see swap.c. */
 pkg_status pkg_selfupdate_swap(struct pkg_ctx *, const char *id, const char *archive, const char *version,
                                const char *url, const char *sha, long size, const char *subdir,
+                               const char *expect_version, long expect_revision,
                                pkg_stop stop, pkg_err *);
 
 /* Download `url` to `archive` unless a cached copy already matches; verify

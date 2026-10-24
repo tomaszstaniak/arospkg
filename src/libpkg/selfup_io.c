@@ -51,7 +51,7 @@ const char *su_base(void)
 #endif
 }
 
-static char fail_s[32];
+static char fail_s[PKG_MAXPATH];
 void su_test_fail(const char *how) { snprintf(fail_s, sizeof fail_s, "%s", how ? how : ""); }
 static int fail_at(const char *kind)
 {
@@ -165,10 +165,12 @@ int su_add_copy(su_install *in, const char *path) { return add_file(in, SU_APKG,
 
 /* ------------------------------------------------------------- record */
 
+/* ENVARC: is the record; the ENV: copy is a courtesy that may lag behind
+   a failed write, so it is never read first. */
 static char *record_text(void)
 {
-    char *t = u_read_all("ENV:arospkg/copies.json", NULL);
-    return t ? t : u_read_all(SU_COPIES_FILE, NULL);
+    char *t = u_read_all(SU_COPIES_FILE, NULL);
+    return t ? t : u_read_all("ENV:arospkg/copies.json", NULL);
 }
 
 pkg_status su_record(const char *copy, const char *drawer, pkg_err *e)
@@ -181,11 +183,19 @@ pkg_status su_record(const char *copy, const char *drawer, pkg_err *e)
     if (!now) return pkg_fail(e, PKG_E_NOMEM, "out of memory", "", SU_COPIES_FILE);
     u_mkdir("ENVARC:arospkg"); u_mkdir("ENV:arospkg");
     if (u_write_atomicish(SU_COPIES_FILE, now) != 0) {
+        u_delete("ENVARC:arospkg/copies.json.new");
         free(now);
         return pkg_fail(e, PKG_E_IO, "cannot record which installation this apkg belongs to", "", SU_COPIES_FILE);
     }
-    u_write_atomicish("ENV:arospkg/copies.json", now);
+    if (u_write_atomicish("ENV:arospkg/copies.json", now) != 0) u_delete("ENV:arospkg/copies.json");
     free(now);
+    {
+        /* Said only when it can be read back. */
+        char *back = u_read_all(SU_COPIES_FILE, NULL), d[PKG_MAXPATH];
+        int ok = back && su_copies_lookup(back, c, d, sizeof d) && !strcmp(d, drawer);
+        free(back);
+        if (!ok) return pkg_fail(e, PKG_E_IO, "the choice could not be recorded", "", SU_COPIES_FILE);
+    }
     return PKG_OK;
 }
 
@@ -721,7 +731,25 @@ static pkg_status su_lock(pkg_err *e)
         if (holder && task_alive(holder))
             return pkg_fail(e, PKG_E_LOCKED, "another update of arospkg is running",
                             "Wait for it to finish, then try again.", SU_LOCK_FILE);
-        u_delete(SU_LOCK_FILE);       /* its holder is gone */
+        {
+            /* Its holder is gone. Taken aside by rename, which only one
+               process can win; if what was taken aside is a live holder's
+               (it was taken over meanwhile), it is put back. */
+            char aside[80];
+            snprintf(aside, sizeof aside, "ENV:arospkg/self-update.stale.%s", lock_nonce);
+            if (Rename((CONST_STRPTR)SU_LOCK_FILE, (CONST_STRPTR)aside)) {
+                unsigned long now = 0;
+                have = u_read_all(aside, NULL);
+                if (have) now = strtoul(have, NULL, 16);
+                free(have);
+                if (now && task_alive(now)) {
+                    Rename((CONST_STRPTR)aside, (CONST_STRPTR)SU_LOCK_FILE);
+                    return pkg_fail(e, PKG_E_LOCKED, "another update of arospkg is running",
+                                    "Wait for it to finish, then try again.", SU_LOCK_FILE);
+                }
+                u_delete(aside);
+            }
+        }
     }
     return pkg_fail(e, PKG_E_LOCKED, "cannot take the self-update lock", "", SU_LOCK_FILE);
 }
@@ -914,8 +942,41 @@ pkg_status su_apply(su_install *in, const su_stage *st, const char *root, pkg_er
     managed_swap = st->managed;
     if (!st->nreplace && !managed_swap) return PKG_OK;
 
+    if (!strncmp(fail_s, "hold:", 5)) {
+        /* Testing only: wait, staged, until the file exists, so another
+           operation can be made to happen between the plan and the swap. */
+        int t;
+        for (t = 0; t < 600 * 50 && !u_exists(fail_s + 5); t += 25) Delay(25);
+    }
     if ((s = su_lock(e)) != PKG_OK) return s;
+    if (su_journal_pending()) {
+        /* Another update stopped halfway since this one was planned: its
+           journal is all that can settle it, and is never written over. */
+        su_unlock();
+        return pkg_fail(e, PKG_E_UNRESOLVED_TXN, "an earlier update of arospkg did not finish",
+                        "Nothing was changed. Settle it first: apkg self-update --recover, or Repair now "
+                        "in PkgManager; then update again.", SU_JOURNAL_FILE);
+    }
     if ((s = take_roots(&rs, root, in->home == SU_HOME_MANAGED ? in->root : NULL, e)) != PKG_OK) { su_unlock(); return s; }
+    if (in->home == SU_HOME_MANAGED) {
+        /* The plan was made before the download. Under the root's lock now:
+           the package must still be what was planned for, or an upgrade
+           that ran meanwhile would be undone. */
+        su_install now;
+        memset(&now, 0, sizeof now);
+        snprintf(now.root, sizeof now.root, "%s", in->root);
+        read_managed(&now);
+        for (i = 0; i < in->n; i++)
+            if (!in->f[i].copy && in->f[i].sha[0] && !file_is(in->f[i].path, in->f[i].sha)) break;
+        if (strcmp(now.managed_version, in->managed_version) || now.managed_revision != in->managed_revision || i < in->n) {
+            char now_v[80];
+            snprintf(now_v, sizeof now_v, "%s%s", now.managed_version[0] ? now.managed_version : "not installed",
+                     now.managed_revision ? " (another revision)" : "");
+            s = pkg_fail(e, PKG_E_CONFLICT, "the package arospkg changed since the update was planned",
+                         "Nothing was changed. Check for a newer version again.", now_v);
+            goto out;
+        }
+    }
     {
         /* A window running from this installation would keep its old code
            and later find new files under it: it is closed first. Asked
@@ -1000,7 +1061,7 @@ pkg_status su_apply(su_install *in, const su_stage *st, const char *root, pkg_er
             char subdir[200];
             snprintf(subdir, sizeof subdir, "arospkg-%s.%s", st->version, st->target);
             s = pkg_selfupdate_swap(mc, "arospkg", arc, st->version, st->url, st->sha, st->size, subdir,
-                                    (pkg_stop)fail_at("managed"), e);
+                                    in->managed_version, in->managed_revision, (pkg_stop)fail_at("managed"), e);
         }
         if (s != PKG_OK) {
             if (s == PKG_E_INTERRUPTED) {      /* testing: as if the machine stopped */
@@ -1076,16 +1137,19 @@ pkg_status su_recover(int *found, char *steps, size_t n, pkg_err *e)
 
     *found = 0;
     steps[0] = 0;
-    if (!(text = u_read_all(SU_JOURNAL_FILE, NULL))) return PKG_OK;
+    /* Read and decided under the lock: an update that starts meanwhile
+       refuses while the journal is there (su_apply). */
+    if ((s = su_lock(e)) != PKG_OK) return s;
+    if (!(text = u_read_all(SU_JOURNAL_FILE, NULL))) { su_unlock(); return PKG_OK; }
     *found = 1;
     if (su_journal_parse(text, &j) != 0) {
         free(text);
+        su_unlock();
         snprintf(steps, n, "The journal %s cannot be read. Check apkg and PkgManager with "
                  "\"apkg --version\" and their drawer, then delete the journal.", SU_JOURNAL_FILE);
         return pkg_fail(e, PKG_E_UNRESOLVED_TXN, "an interrupted update of arospkg cannot be settled", steps, SU_JOURNAL_FILE);
     }
     free(text);
-    if ((s = su_lock(e)) != PKG_OK) return s;
     /* Opening a managed home's root runs its own recovery first, which
        settles its transaction; its registry then says which way to go. */
     if ((s = take_roots(&rs, NULL, j.root, e)) != PKG_OK) { su_unlock(); return s; }
@@ -1132,6 +1196,7 @@ pkg_status su_handoff_save(const char *file, const su_install *in, const su_stag
     js_raw(&o, ",\n  "); js_key(&o, "drawer");   js_vstr(&o, in->drawer);
     js_raw(&o, ",\n  "); js_key(&o, "root");     js_vstr(&o, in->root);
     js_raw(&o, ",\n  "); js_key(&o, "managed_version"); js_vstr(&o, in->managed_version);
+    js_raw(&o, ",\n  "); js_key(&o, "managed_revision"); js_vlong(&o, in->managed_revision);
     js_raw(&o, ",\n  "); js_key(&o, "started");  js_vstr(&o, in->started);
     js_raw(&o, ",\n  "); js_key(&o, "files");    js_raw(&o, " [");
     for (i = 0; i < in->n; i++) {
@@ -1194,6 +1259,7 @@ pkg_status su_handoff_load(const char *file, su_install *in, su_stage *st, su_re
     su_jstr(js, t, js_member(js, t, n, 0, "drawer"), in->drawer, sizeof in->drawer);
     su_jstr(js, t, js_member(js, t, n, 0, "root"), in->root, sizeof in->root);
     su_jstr(js, t, js_member(js, t, n, 0, "managed_version"), in->managed_version, sizeof in->managed_version);
+    in->managed_revision = js_long(js, t, js_member(js, t, n, 0, "managed_revision"), 0);
     su_jstr(js, t, js_member(js, t, n, 0, "started"), in->started, sizeof in->started);
     arr = js_member(js, t, n, 0, "files");
     for (el = arr >= 0 ? js_child(t, n, arr) : -1; el >= 0 && in->n < SU_MAXFILES; el = js_sibling(t, n, el)) {
