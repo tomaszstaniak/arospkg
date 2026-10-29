@@ -48,7 +48,8 @@ except ImportError:
 SIBLING_INDEX = HERE.parent.parent / "arospkg-index"
 
 DOWNLOAD_MAX = 64 * 1024 * 1024          # the client's own download limit
-FILE_MAX, TOTAL_MAX = 64 * 1024 * 1024, 256 * 1024 * 1024
+# apkg-pack writes ZIP; the client streams ZIP members up to 128 MiB since 0.6.0 (src/libpkg/limits.h).
+FILE_MAX, TOTAL_MAX = 128 * 1024 * 1024, 256 * 1024 * 1024
 JUNK = re.compile(r"(^|/)(\.DS_Store|\._[^/]*|\.git(/|$)|Thumbs\.db)")
 EM_ARCH = {62: "x86_64", 3: "i386", 183: "aarch64"}
 # Key order of a written manifest: plain keys before any table (TOML puts a
