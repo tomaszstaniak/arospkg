@@ -459,9 +459,12 @@ def cmd_build(a):
                 zi.external_attr = (0o40755 << 16) | 0x10
                 z.writestr(zi, b"")
                 return
-            zi.external_attr = 0o644 << 16
+            body = data if data is not None else src.read_bytes()
+            # ELF programs keep the execute bit, so that UnZip by hand gives them AROS's `e` flag
+            # (apkg itself installs every file rwed). Decided by content, the same on every host.
+            zi.external_attr = (0o755 if body[:4] == b"\x7fELF" else 0o644) << 16
             zi.compress_type = zipfile.ZIP_DEFLATED
-            z.writestr(zi, data if data is not None else src.read_bytes(), compresslevel=9)
+            z.writestr(zi, body, compresslevel=9)
         app_member = f"{drawer.name}/{APP_FILE_NAME}"
         for n in sorted(names):
             if n.endswith("/"):

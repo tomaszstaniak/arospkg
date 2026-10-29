@@ -75,6 +75,9 @@ with tempfile.TemporaryDirectory() as d:
     if "xRick/data/saves/" not in names or ".arospkg/manifest.toml" not in names \
             or "xRick.info" not in names or any(".DS_Store" in n for n in names):
         fails.append(f"archive members: {names}")
+    modes = {i.filename: i.external_attr >> 16 for i in zipfile.ZipFile(z1).infolist()}
+    if modes.get("xRick/xRick") != 0o755 or modes.get("xRick/ReadMe") != 0o644:
+        fails.append(f"ELF programs keep the execute bit, other files do not: {modes}")
     code, out = run("build", dr, "--output", dr / "self.zip")
     if code == 0:
         fails.append("build must refuse an output inside the drawer")
