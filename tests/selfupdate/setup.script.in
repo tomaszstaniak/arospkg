@@ -4,6 +4,7 @@
 ; the machine's own C:apkg and arospkg records put aside for cleanup.script.
 FailAt 21
 Protect RAM:rxt/apkg-b1 +e
+Protect RAM:rxt/apkg-060 +e
 Protect RAM:rxt/apkg-r2 +e
 Protect RAM:rxt/hc +e
 Protect RAM:rxt/putfile +e

@@ -54,11 +54,14 @@ Assign SUG: REMOVE
 RAM:rxt/putfile RESULTS:arospkg-{{R}}/{{R}}-g2.txt >NIL:
 ### gui-g5
 ; G5: this PkgManager is the release, but the apkg beside it and C:apkg are
-; behind: the window must see the whole installation and offer the update.
+; the published 0.6.0: the window must see the whole installation, offer
+; the update, and hand it to an apkg that reads the hand-off without asking
+; 0.6.0 anything but --version (asked "self-update --protocol", 0.6.0
+; updated itself from the network).
 FailAt 21
 Assign SUG: "SYS:SUT/Gui Apps/arospkg-0.6.99-sutest1.x86_64-aros-v11"
-Copy RAM:rxt/apkg-b1 SUG:apkg
-Copy RAM:rxt/apkg-b1 C:apkg
+Copy RAM:rxt/apkg-060 SUG:apkg
+Copy RAM:rxt/apkg-060 C:apkg
 Protect SUG:apkg +e
 Protect C:apkg +e
 Run >NIL: SUG:PkgManager --root "SYS:SUT/G Root" --release-from https://10.0.2.2/r2/ --log RAM:pmg5.log

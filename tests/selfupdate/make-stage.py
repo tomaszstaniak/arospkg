@@ -53,7 +53,7 @@ def release_dir(name, zpath, sums=None):
 
 
 z060, zb1, zr2, zr3 = rel060, archive(b1), archive(r2), archive(r3)
-top060, h060, _ = members(z060)
+top060, h060, apkg_060 = members(z060)
 topb1, hb1, apkg_b1 = members(zb1)
 _, hr2, apkg_r2 = members(zr2)
 _, hr3, _ = members(zr3)
@@ -119,6 +119,7 @@ open(os.path.join(stage, "user.info"), "wb").write(icon)
 for z in (z060, zb1):
     shutil.copy(z, stage)
 open(os.path.join(stage, "apkg-b1"), "wb").write(apkg_b1)
+open(os.path.join(stage, "apkg-060"), "wb").write(apkg_060)
 open(os.path.join(stage, "apkg-r2"), "wb").write(apkg_r2)
 shutil.copy(os.path.join(stage, "apkg-r2"), os.path.join(stage, "hc"))
 shutil.copy(os.path.join(certdir, "ca.crt"), stage)

@@ -17,9 +17,9 @@ URL where you uploaded the ZIP.
 You need Python 3.11 or later on macOS, Linux or Windows. `init`, `check`
 and `build` need nothing else.
 
-Download [`apkg-pack.pyz`](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.1.0/apkg-pack.pyz)
-(0.1.0, [SHA256SUMS](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.1.0/SHA256SUMS),
-[release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/apkg-pack-v0.1.0))
+Download [`apkg-pack.pyz`](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.2.0/apkg-pack.pyz)
+(0.2.0, [SHA256SUMS](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.2.0/SHA256SUMS),
+[release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/apkg-pack-v0.2.0))
 and run it with Python:
 
 ```text

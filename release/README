@@ -1,4 +1,4 @@
-arospkg 0.7.0
+arospkg 0.7.1
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.0:
+0.7.1:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,15 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.1
+------------
+
+- Update arospkg in PkgManager no longer starts an older apkg (0.6.0 or
+  earlier, for example C:apkg or apkg.old) to find the one that finishes
+  the update. In 0.7.0 that older apkg could update itself from the
+  network instead, and the update then stopped with "a file changed since
+  it was checked".
 
 NEW IN 0.7.0
 ------------

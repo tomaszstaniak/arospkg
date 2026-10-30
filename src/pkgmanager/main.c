@@ -28,7 +28,7 @@
 #ifdef PM_TEST_VERSION
 #define PM_VERSION PM_TEST_VERSION
 #else
-#define PM_VERSION "0.7.0"
+#define PM_VERSION "0.7.1"
 #endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
@@ -1314,10 +1314,10 @@ static void su_quote(char *out, size_t n, const char *arg)
     out[k] = 0;
 }
 
-/* Run a command and give back the first line it printed: whether an apkg
+/* Run a command and give back what it printed: whether an apkg
    understands the hand-off this window writes, before the window closes
    for good. */
-static int su_first_line(const char *cmd, char *out, size_t n)
+static int su_output(const char *cmd, char *out, size_t n)
 {
     char file[64], *t;
     struct Process *me = (struct Process *)FindTask(NULL);
@@ -1340,9 +1340,37 @@ static int su_first_line(const char *cmd, char *out, size_t n)
     t = u_read_all(file, NULL);
     u_delete(file);
     if (rc != 0 || !t) { free(t); return -1; }
-    t[strcspn(t, "\r\n")] = 0;
     snprintf(out, n, "%s", t);
     free(t);
+    return 0;
+}
+
+/* Whether the apkg at `path` can finish this window's update. It is asked
+   only for --version first: an apkg before 0.7.0 takes any other request
+   as a command, and "self-update --protocol" made 0.6.0 update itself from
+   the network. An apkg that names the protocol in --version is asked
+   nothing more; 0.7.0, which does not, is asked the way it understands. */
+static int su_speaks(const char *path, char *why, size_t n)
+{
+    char q[PKG_MAXPATH + 8], cmd[PKG_MAXPATH + 64], out[1024], want[40], ver[40] = "";
+    const char *p;
+    su_quote(q, sizeof q, path);
+    snprintf(cmd, sizeof cmd, "%s --version", q);
+    if (su_output(cmd, out, sizeof out) != 0) { snprintf(why, n, "no answer to --version"); return 0; }
+    if (!strncmp(out, "apkg ", 5)) snprintf(ver, sizeof ver, "%.*s", (int)strcspn(out + 5, "\r\n"), out + 5);
+    if ((p = strstr(out, "self-update protocol "))) {
+        if (atoi(p + 21) == SU_PROTOCOL) return 1;
+        snprintf(why, n, "apkg %s, protocol %d", ver, atoi(p + 21));
+        return 0;
+    }
+    if (!ver[0] || pkg_release_vercmp(ver, "0.7.0") < 0) { snprintf(why, n, "apkg %s", ver[0] ? ver : "?"); return 0; }
+    snprintf(want, sizeof want, "arospkg-self-update %d", SU_PROTOCOL);
+    snprintf(cmd, sizeof cmd, "%s self-update --protocol", q);
+    if (su_output(cmd, out, sizeof out) == 0) {
+        out[strcspn(out, "\r\n")] = 0;
+        if (!strcmp(out, want)) return 1;
+    }
+    snprintf(why, n, "apkg %s", ver);
     return 0;
 }
 
@@ -1350,9 +1378,8 @@ static int su_first_line(const char *cmd, char *out, size_t n)
    one just checked, whichever reads this window's hand-off. */
 static int su_helper(char *out, size_t n)
 {
-    char cand[5][PKG_MAXPATH], cmd[PKG_MAXPATH + 64], line[80], want[40];
+    char cand[5][PKG_MAXPATH], why[80];
     int i;
-    snprintf(want, sizeof want, "arospkg-self-update %d", SU_PROTOCOL);
     /* After an interruption the drawer's apkg may be missing, as .new or
        .old beside it; any of them, or C:apkg, will do if it reads this
        hand-off. */
@@ -1363,15 +1390,12 @@ static int su_helper(char *out, size_t n)
     snprintf(cand[4], PKG_MAXPATH, "C:apkg");
     for (i = 0; i < 5; i++) {
         if (!sujob.st.dir[0] && i == 1) continue;
-        char q[PKG_MAXPATH + 8];
         if (!u_exists(cand[i])) continue;
-        su_quote(q, sizeof q, cand[i]);
-        snprintf(cmd, sizeof cmd, "%s self-update --protocol", q);
-        if (su_first_line(cmd, line, sizeof line) == 0 && !strcmp(line, want)) {
+        if (su_speaks(cand[i], why, sizeof why)) {
             snprintf(out, n, "%s", cand[i]);
             return 0;
         }
-        logline("self-update: %s does not read this hand-off (%s)", cand[i], line);
+        logline("self-update: %s does not read this hand-off (%s)", cand[i], why);
     }
     return -1;
 }

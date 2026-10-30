@@ -6,13 +6,13 @@ Both use the same catalogue and installed packages.
 
 ## Downloads
 
-**[Download 0.7.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.x86_64-aros-v11.zip)**
-· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.7.0)
-· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.x86_64-aros-v1.zip)
-· [Raspberry Pi (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.aarch64-aros-raspi.zip)
-· [i386 ABIv0 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.i386-aros-v0.zip)
+**[Download 0.7.1 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.1/arospkg-0.7.1.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.7.1)
+· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.1/arospkg-0.7.1.x86_64-aros-v1.zip)
+· [Raspberry Pi (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.1/arospkg-0.7.1.aarch64-aros-raspi.zip)
+· [i386 ABIv0 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.1/arospkg-0.7.1.i386-aros-v0.zip)
 
-New in 0.7.0: `apkg self-update` and **About** > **Update arospkg** in PkgManager update apkg and PkgManager together, to the same release, wherever arospkg is installed: an unpacked drawer, the package `arospkg`, or a copy such as `C:apkg`. Everything is checked before a file is replaced, and an interrupted update is finished or undone on the next run. On 0.4.x to 0.6.0, run `apkg self-update` twice: the first run updates apkg, the second PkgManager ([details](docs/self-update.md#from-060-and-earlier)).
+New in 0.7: `apkg self-update` and **About** > **Update arospkg** in PkgManager update apkg and PkgManager together, to the same release, wherever arospkg is installed: an unpacked drawer, the package `arospkg`, or a copy such as `C:apkg`. Everything is checked before a file is replaced, and an interrupted update is finished or undone on the next run. On 0.4.x to 0.6.0, run `apkg self-update` twice: the first run updates apkg, the second PkgManager ([details](docs/self-update.md#from-060-and-earlier)).
 
 [Screenshots of 0.5.0 on AROS One](docs/screenshots/0.5.0/README.md) ·
 [0.4.2 screenshots](docs/screenshots/0.4.2/README.md).
@@ -40,7 +40,7 @@ Keep the extracted drawer somewhere permanent, not `RAM:`, if using
 PkgManager (included in the ABIv11, mainline and Pi archives). Installing
 packages requires a working network connection.
 
-**Upgrading from 0.3.x?** Install 0.7.0 manually using the commands above.
+**Upgrading from 0.3.x?** Install 0.7.1 manually using the commands above.
 Keep `SYS:Packages`; it contains your installed programs and package records.
 
 ## Use the graphical interface
@@ -145,7 +145,7 @@ python3 apkg-pack.pyz build build/MyApp --output myapp-1.0.x86_64-aros-v11.zip
 python3 apkg-pack.pyz submit <download-url> --pr
 ```
 
-[Download apkg-pack.pyz](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.1.0/apkg-pack.pyz)
+[Download apkg-pack.pyz](https://github.com/tomaszstaniak/arospkg/releases/download/apkg-pack-v0.2.0/apkg-pack.pyz)
 and run it with Python 3.11 or later on macOS, Linux or Windows; AROS
 support is experimental. Your sources
 can stay private, and packing needs no GitHub account or network. It packs,
@@ -220,14 +220,14 @@ with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.
 
-The 0.7.0 archives were made from the release commit with
-`README=release/README sh tools/make-rc.sh 0.7.0`.
+The 0.7.1 archives were made from the release commit with
+`README=release/README sh tools/make-rc.sh 0.7.1`.
 Despite its name, this script packages stable releases too; without
 `TARGETS` it builds the four released targets and needs their toolchains.
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
 The published release descriptions are kept in `release/notes-<version>.md`
-([0.7.0](release/notes-0.7.0.md), [0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
+([0.7.1](release/notes-0.7.1.md), [0.7.0](release/notes-0.7.0.md), [0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
 builds, then use it for the GitHub release notes.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,
