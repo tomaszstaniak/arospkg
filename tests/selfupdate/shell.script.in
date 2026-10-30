@@ -288,4 +288,5 @@ RAM:rxt/putfile RESULTS:arospkg-{{R}}/{{R}}-r.txt >NIL:
 RAM:rxt/putfile RESULTS:arospkg-{{R}}/{{R}}-j.txt >NIL:
 RAM:rxt/putfile RESULTS:arospkg-{{R}}/{{R}}-s2.txt >NIL:
 RAM:rxt/putfile RESULTS:arospkg-{{R}}/{{R}}-k.txt >NIL:
+RAM:rxt/putfile RESULTS:arospkg-{{R}}/{{R}}-l.txt >NIL:
 RAM:rxt/putfile RESULTS:arospkg-{{R}}/{{R}}-shell-done.txt >NIL:
