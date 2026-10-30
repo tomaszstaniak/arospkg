@@ -407,6 +407,14 @@ them, and so does PkgManager after **Remove**.
   "Demo -- purchasing is not available yet": nothing can be bought, nothing
   is installed, and no data is asked for or sent. See
   [RFC 0003](../rfc/0003-storefront-metadata.md).
+- Web addresses (`http://` and `https://`) that PkgManager shows, in
+  **About**, in the details (source, catalogue, notes) and in messages,
+  are links. Click one to pass it to the browser chosen in Prefs/OpenURL;
+  **Copy** beside it puts the whole address on the clipboard. A long
+  address is shortened on screen only; its bubble help shows it whole.
+  Without openurl.library, or with no browser set up in OpenURL, a click
+  says so and Copy still works. An address with `'`, `*`, `;` or `$` can
+  only be copied. Other addresses (`ftp://`, `mailto:`) stay plain text.
 - PkgManager's ARexx port (`PKGMANAGER`) has `RUN <id>` and `VERIFY <id>`
   besides the earlier commands; see [the ARexx page](../arexx.md).
 

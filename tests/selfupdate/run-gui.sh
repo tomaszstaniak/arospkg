@@ -19,10 +19,10 @@ wait_for() { i=0; while [ ! -f "$RECV/$R-$1.txt" ] && [ $i -lt 120 ]; do sleep 5
 # Where the buttons are: the 2026.09 base, or AROS One 1.3 (LAYOUT=one),
 # whose theme and fonts move them.
 if [ "$LAYOUT" = one ]; then
-  ABOUT="826 78" CHECK="420 519" UPDATE="554 519" CLOSEA="645 519" CYES="326 432"
+  ABOUT="826 78" CHECK="420 538" UPDATE="554 538" CLOSEA="645 538" CYES="326 432"
   PROCEED="378 401" OK="499 403" REPAIR="372 411" CANCEL="857 601" CLOSEW="111 52"
 else
-  ABOUT="829 76" CHECK="437 493" UPDATE="565 493" CLOSEA="639 493" CYES="349 424"
+  ABOUT="829 76" CHECK="437 510" UPDATE="565 510" CLOSEA="639 510" CYES="349 424"
   PROCEED="380 375" OK="499 397" REPAIR="388 403" CANCEL="859 611" CLOSEW="112 52"
 fi
 about() { c $ABOUT; sleep 3; }

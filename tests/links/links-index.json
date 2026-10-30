@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "source": "tests/links/links-index.json -- NOT a repository. Hand-written test data.",
+  "packages": [
+    {
+      "id": "linktest",
+      "version": "1.0",
+      "arch": "x86_64",
+      "abi": "v11",
+      "summary": "TEST ONLY: addresses in the detail pane",
+      "category": "test",
+      "kind": "app",
+      "url": "https://example.invalid/linktest-1.0.x86_64-aros-v11.zip",
+      "size": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "source": "https://example.org/a-rather-long-path/for/the/link-test/that/does-not/fit/in/one/line/of/the/pane?query=one&second=two%20words&third=%41%42%43&fourth=a-value-that-keeps-going-for-a-while&end=1",
+      "license": "MIT",
+      "post_install_notes": [
+        "Manual: https://example.org/docs/linktest?x=1&y=%2F (read it first).",
+        "Copy only: https://example.org/a;b",
+        "Mirror, not a link: ftp://example.org/linktest"
+      ],
+      "depends": [],
+      "subdir": "",
+      "icon": "",
+      "install": {}
+    },
+    {
+      "id": "linktest",
+      "version": "1.0",
+      "arch": "x86_64",
+      "abi": "v1",
+      "summary": "TEST ONLY: addresses in the detail pane",
+      "category": "test",
+      "kind": "app",
+      "url": "https://example.invalid/linktest-1.0.x86_64-aros-v1.zip",
+      "size": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "source": "https://example.org/a-rather-long-path/for/the/link-test/that/does-not/fit/in/one/line/of/the/pane?query=one&second=two%20words&third=%41%42%43&fourth=a-value-that-keeps-going-for-a-while&end=1",
+      "license": "MIT",
+      "post_install_notes": [
+        "Manual: https://example.org/docs/linktest?x=1&y=%2F (read it first).",
+        "Copy only: https://example.org/a;b",
+        "Mirror, not a link: ftp://example.org/linktest"
+      ],
+      "depends": [],
+      "subdir": "",
+      "icon": "",
+      "install": {}
+    }
+  ]
+}
