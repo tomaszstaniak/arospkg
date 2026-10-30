@@ -12,3 +12,8 @@ Echo "rc=$RC want=10" >RAM:su-mv1.rc
 FailAt 21
 SUCM:apkg <NIL: >RAM:su-mv2.out --root SUMR: --self-update-from https://10.0.2.2/r2/ --self-update-fail-at hold:RAM:su-go-n self-update
 Echo "rc=$RC want=10" >RAM:su-mv2.rc
+### bg-la
+FailAt 21
+; L: update A, stopped inside the lock takeover until RAM:su-go-l exists.
+SYS:SUT/LckA/arospkg-0.6.99-sutest1.x86_64-aros-v11/apkg <NIL: >RAM:su-la.out --root SYS:SUT/NoRoot --self-update-from https://10.0.2.2/r2/ --self-update-fail-at takeover:RAM:su-go-l self-update
+Echo "rc=$RC want=0" >RAM:su-la.rc

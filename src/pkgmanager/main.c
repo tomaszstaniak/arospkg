@@ -28,7 +28,7 @@
 #ifdef PM_TEST_VERSION
 #define PM_VERSION PM_TEST_VERSION
 #else
-#define PM_VERSION "0.6.0"
+#define PM_VERSION "0.7.0"
 #endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
@@ -2333,7 +2333,7 @@ static int real_main(int argc, char **argv)
     app = ApplicationObject,
         MUIA_Application_Title,       (IPTR)"PkgManager",
         MUIA_Application_Author,      (IPTR)AROSPKG_AUTHOR,
-        MUIA_Application_Version,     (IPTR)"$VER: PkgManager " PM_VERSION " (12.10.2026)",
+        MUIA_Application_Version,     (IPTR)"$VER: PkgManager " PM_VERSION " (30.10.2026)",
         MUIA_Application_Description, (IPTR)"Install software from AROS Archives",
         MUIA_Application_Base,        (IPTR)"PKGMANAGER",
         SubWindow, (win = WindowObject,

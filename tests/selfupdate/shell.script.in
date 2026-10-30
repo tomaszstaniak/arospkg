@@ -190,6 +190,61 @@ $JB/apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-u
 Echo "rc=$RC want=0" >>RESULTS:arospkg-{{R}}/{{R}}-j.txt
 $H assert-hash $JB/PkgManager {{P2}} >>RESULTS:arospkg-{{R}}/{{R}}-j.txt
 
+; ---- L: a lock left by a process that is gone is taken over. A sees its
+; holder gone and stops right there, before taking it; B and C, two more
+; updates started inside that window, must not get the lock. A then takes
+; it and finishes, nothing of the lock is left, and B goes through.
+Set LA SYS:SUT/LckA/arospkg-0.6.99-sutest1.x86_64-aros-v11
+Set LB SYS:SUT/LckB/arospkg-0.6.99-sutest1.x86_64-aros-v11
+Set LC SYS:SUT/LckC/arospkg-0.6.99-sutest1.x86_64-aros-v11
+MakeDir SYS:SUT/LckA
+MakeDir SYS:SUT/LckB
+MakeDir SYS:SUT/LckC
+UnZip >NIL: RAM:rxt/arospkg-0.6.99-sutest1.x86_64-aros-v11.zip -d SYS:SUT/LckA
+UnZip >NIL: RAM:rxt/arospkg-0.6.99-sutest1.x86_64-aros-v11.zip -d SYS:SUT/LckB
+UnZip >NIL: RAM:rxt/arospkg-0.6.99-sutest1.x86_64-aros-v11.zip -d SYS:SUT/LckC
+Delete RAM:su-go-l RAM:su-go-l-here RAM:su-la.out RAM:su-la.rc QUIET
+MakeDir ENV:arospkg QUIET
+; Holder 1 is no task: the lock of a process that is gone.
+Echo "1 goneholder" >ENV:arospkg/self-update.lock
+Run >NIL: Execute RAM:rxt/bg-la.script
+Lab waitla
+If NOT EXISTS RAM:su-go-l-here
+  Wait 2
+  Skip waitla BACK
+EndIf
+Echo "== l: A stopped inside the takeover; B" >RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$LB/apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Echo "rc=$RC want=10" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Echo "== l: C" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$LC/apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Echo "rc=$RC want=10" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$H assert-hash $LB/apkg {{A1}} >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$H assert-hash $LC/apkg {{A1}} >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Echo "== l: the lock is still the gone holder's" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Type ENV:arospkg/self-update.lock >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Echo "go" >RAM:su-go-l
+Lab waitla2
+If NOT EXISTS RAM:su-la.rc
+  Wait 2
+  Skip waitla2 BACK
+EndIf
+Echo "== l: A's answer" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Type RAM:su-la.out RAM:su-la.rc >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$H assert-hash $LA/apkg {{A2}} >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$H assert-hash $LA/PkgManager {{P2}} >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Echo "== l: nothing of the lock is left" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+List ENV:arospkg PAT=self-update#? >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+If EXISTS ENV:arospkg/self-update.lock
+  Echo "FAIL the lock is still there" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Else
+  Echo "PASS no lock left" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+EndIf
+Echo "== l: B goes through afterwards" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$LB/apkg --root "SYS:SUT/No Root" --self-update-from https://10.0.2.2/r2/ self-update >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+Echo "rc=$RC want=0" >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+$H assert-hash $LB/PkgManager {{P2}} >>RESULTS:arospkg-{{R}}/{{R}}-l.txt
+
 ; ---- S2: 0.6.0 unpacked by hand, its own apkg run twice: the first run
 ; (old code) replaces apkg only, the second updates the rest of the drawer.
 Set O2 SYS:SUT/Old2/arospkg-0.6.0.x86_64-aros-v11

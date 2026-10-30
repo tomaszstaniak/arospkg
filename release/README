@@ -1,4 +1,4 @@
-arospkg 0.6.0
+arospkg 0.7.0
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,13 +36,12 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.5.0:
+0.7.0:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
-  i386-aros-v0       apkg: checked under QEMU, see the release notes
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
-  aarch64-aros-raspi apkg and PkgManager: experimental, compiled and
-                     linked, NOT run on a Raspberry Pi. Please test and
-                     report what works.
+  i386-aros-v0       apkg: experimental
+  aarch64-aros-raspi apkg and PkgManager: experimental (native AROS on
+                     the Raspberry Pi). Please test and report what works.
 
 Downloads: https://github.com/tomaszstaniak/arospkg/releases
 
@@ -73,6 +72,19 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.0
+------------
+
+- apkg self-update and About > Update arospkg in PkgManager update apkg
+  and PkgManager together, to the same release: in a drawer you unpacked,
+  in arospkg installed as a package (as apkg upgrade would, keeping icons
+  you changed), and in a copy such as C:apkg once you say which
+  installation it belongs to. Everything is downloaded and checked first;
+  an interrupted update is finished or undone by the next run, or by
+  Repair now when PkgManager starts. PkgManager closes and starts again.
+- Authors: apkg-pack accepts files up to 128 MiB, as the client does,
+  and keeps the execute bit of programs in the archive.
 
 NEW IN 0.6.0
 ------------
@@ -203,8 +215,8 @@ LIMITS
 ------
 
 - CPU and ABI matching is not proof that every application works.
-- System requirements are checked, but dependencies are not installed
-  automatically. Installer scripts and shared system files are not managed.
+- System requirements such as libraries are checked, not installed.
+  Installer scripts and shared system files are not managed.
 - Downloads use HTTPS and SHA-256 checks. The catalogue is not signed,
   and a matching hash does not establish an application's safety.
 

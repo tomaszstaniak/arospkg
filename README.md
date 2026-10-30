@@ -6,18 +6,18 @@ Both use the same catalogue and installed packages.
 
 ## Downloads
 
-**[Download 0.6.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.6.0/arospkg-0.6.0.x86_64-aros-v11.zip)**
-· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.6.0)
-· [i386 ABIv0](https://github.com/tomaszstaniak/arospkg/releases/download/v0.6.0/arospkg-0.6.0.i386-aros-v0.zip)
-· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.6.0/arospkg-0.6.0.x86_64-aros-v1.zip)
-· [Raspberry Pi 0.5.0 (experimental, untested on a Pi)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.5.0/arospkg-0.5.0.aarch64-aros-raspi.zip)
+**[Download 0.7.0 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.7.0)
+· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.x86_64-aros-v1.zip)
+· [Raspberry Pi (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.aarch64-aros-raspi.zip)
+· [i386 ABIv0 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.0/arospkg-0.7.0.i386-aros-v0.zip)
 
-New in 0.6.0: packages can **depend on** other packages, recommend, conflict with and replace them, and `apkg install` shows the plan before it changes anything. One file in a package may be up to 128 MiB, so larger programs install, and test releases are put in order for `apkg upgrade` (0.9.0-test2-r2, 0.9.0-test4, 0.9.0). `apkg update` says what is new, `apkg recent` lists recent additions, and `apkg show` and PkgManager say whether a build was reviewed and where it was tested. Some catalogue entries need 0.6: earlier versions do not see them. On 0.4.x and 0.5.x, `apkg self-update` installs the new apkg; PkgManager comes from the archive.
+New in 0.7.0: `apkg self-update` and **About** > **Update arospkg** in PkgManager update apkg and PkgManager together, to the same release, wherever arospkg is installed: an unpacked drawer, the package `arospkg`, or a copy such as `C:apkg`. Everything is checked before a file is replaced, and an interrupted update is finished or undone on the next run. On 0.4.x to 0.6.0, run `apkg self-update` twice: the first run updates apkg, the second PkgManager ([details](docs/self-update.md#from-060-and-earlier)).
 
 [Screenshots of 0.5.0 on AROS One](docs/screenshots/0.5.0/README.md) ·
 [0.4.2 screenshots](docs/screenshots/0.4.2/README.md).
 
-The mainline archive includes apkg and PkgManager. There is no 0.6.0 Raspberry Pi build; 0.5.0 remains its latest.
+The mainline and Raspberry Pi archives include apkg and PkgManager too.
 
 ## Install
 
@@ -40,7 +40,7 @@ Keep the extracted drawer somewhere permanent, not `RAM:`, if using
 PkgManager (included in the ABIv11, mainline and Pi archives). Installing
 packages requires a working network connection.
 
-**Upgrading from 0.3.x?** Install 0.6.0 manually using the commands above.
+**Upgrading from 0.3.x?** Install 0.7.0 manually using the commands above.
 Keep `SYS:Packages`; it contains your installed programs and package records.
 
 ## Use the graphical interface
@@ -220,14 +220,14 @@ with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.
 
-The 0.6.0 archives were made from the release commit with
-`README=release/README TARGETS="x86_64-aros-v11 i386-aros-v0 x86_64-aros-v1" sh tools/make-rc.sh 0.6.0`.
+The 0.7.0 archives were made from the release commit with
+`README=release/README sh tools/make-rc.sh 0.7.0`.
 Despite its name, this script packages stable releases too; without
-`TARGETS` it builds all four targets and needs all four toolchains.
+`TARGETS` it builds the four released targets and needs their toolchains.
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
 The published release descriptions are kept in `release/notes-<version>.md`
-([0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
+([0.7.0](release/notes-0.7.0.md), [0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
 builds, then use it for the GitHub release notes.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,

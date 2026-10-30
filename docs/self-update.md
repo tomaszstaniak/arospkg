@@ -141,9 +141,12 @@ the root's lock was left by the stopped run, `apkg unlock` clears it.
 
 ## From 0.6.0 and earlier
 
-These versions replace only the apkg you start. Run `apkg self-update` once
-more after it, and the new apkg updates PkgManager too. If you run it as
-`C:apkg`, say which drawer it belongs to the first time:
+These versions replace only the apkg you start; PkgManager is not touched
+by that first run. Run `apkg self-update` once more, and the new apkg
+updates PkgManager too. Started from the unpacked drawer, it finds
+PkgManager there. Started as `C:apkg`, it asks whether the copy belongs to
+the package `arospkg` when that is installed in the package root;
+otherwise name the drawer in that second run:
 
 ```
 apkg self-update --drawer "Work:arospkg-0.6.0.x86_64-aros-v11"

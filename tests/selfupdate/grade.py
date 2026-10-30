@@ -10,6 +10,10 @@ nothing is only a pass when it also says why. Exit 0 when everything holds.
 import os, re, sys
 
 d, run = sys.argv[1], sys.argv[2]
+# The release versions the run updated to: the labelled test builds, or
+# R2VER=0.7.0 when the run used the final release archive as R2.
+V2 = os.environ.get("R2VER", "0.7.0-sutest2")
+V3 = os.environ.get("R3VER", "0.7.1-sutest3")
 # file -> phrases that must appear in it
 WANT = {
     "s1": ["Recorded: AROS:C/apkg belongs to that installation", "Up to date",
@@ -19,16 +23,18 @@ WANT = {
           "no archive for this CPU", "protected from deletion", "cannot write the new file",
           "The previous version is back", "operation is running", "the refresh finished undisturbed"],
     "r": ["finished: the new version is in place", "undone: the previous version is back"],
-    "m1": ["is replaced as an upgrade", "0.7.0-sutest2"],
+    "m1": ["is replaced as an upgrade", V2],
     "m2": ["is replaced as an upgrade"],
     "mr": ["stopped inside the package transaction", "undone: the previous version is back"],
     "j": ["an earlier update of arospkg did not finish", "JrnA", "finished: the new version is in place"],
-    "s2": ["Updated apkg to 0.7.0-sutest2", "Updated arospkg to 0.7.0-sutest2"],
+    "l": ["another update of arospkg is starting", "goneholder", "PASS no lock left",
+          "Updated arospkg to " + V2],
+    "s2": ["Updated apkg to " + V2, "Updated arospkg to " + V2],
     "k": ["cannot record which installation", "none: apkg on its own"],
     "mv": ["changed since the update was planned", "0.8.0"],
     "a2": ["not recorded which installation", "SUT/Root With Space/arospkg", "Old Apps", "--apkg-only",
            "used on its own, as recorded", "PkgManager is running from this installation",
-           "Updated arospkg to 0.7.1-sutest3"],
+           "Updated arospkg to " + V3],
 }
 ok = bad = 0
 for name, phrases in WANT.items():

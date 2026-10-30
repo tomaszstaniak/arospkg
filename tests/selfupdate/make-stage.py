@@ -6,7 +6,8 @@ pool machine gets staged.
 
 REL060 is the published arospkg 0.6.0 x86_64 ABIv11 archive. B1, R2 and R3
 are the output directories of make-test-release.sh for 0.6.99-sutest1 (the
-new code, older than the test release), 0.7.0-sutest2 and 0.7.1-sutest3.
+new code, older than the test release), 0.7.0-sutest2 (or the release's
+own archive, alone in a directory) and 0.7.1-sutest3.
 
 RELDIR gets the release directories relserver.py serves (r060, b1, r2, r3,
 and r2 again as bad, cut, slow and i386only for the failures), and slowidx

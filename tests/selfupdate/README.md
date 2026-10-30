@@ -40,7 +40,9 @@ python3 tests/selfupdate/relserver.py CERTS REL \
 python3 tests/tools/recv.py RECV 8765 &
 ```
 
-The first archive is the published 0.6.0 for x86_64 ABIv11. Reserve a
+The first archive is the published 0.6.0 for x86_64 ABIv11. To run the
+same scripts against a release itself, pass a directory holding only its
+x86_64 ABIv11 archive as R2 and grade with `R2VER=<version> grade.py`. Reserve a
 machine (`~/Work/AROS/documentation/vm-pool.md`), boot it with STAGE
 (`boot_staged` in `tests/arexx/pool-lib.sh`), then in its Shell:
 
@@ -58,6 +60,6 @@ and package results; the window checks print PASS/FAIL into
 
 | Script | What it shows |
 |---|---|
-| `shell.script` | 0.6.0 as published, then the new apkg with `C:apkg` and `--drawer`; 0.6.0's own apkg run twice; apkg on its own; refusals (bad checksum, broken download, no archive for this machine, protected backup, write and rename failures, an operation in the root, a record that cannot be written); an update stopped between apkg and PkgManager, finished or undone; two updates at once, the second refusing to write over the first one's journal |
+| `shell.script` | 0.6.0 as published, then the new apkg with `C:apkg` and `--drawer`; 0.6.0's own apkg run twice; apkg on its own; refusals (bad checksum, broken download, no archive for this machine, protected backup, write and rename failures, an operation in the root, a record that cannot be written); an update stopped between apkg and PkgManager, finished or undone; two updates at once, the second refusing to write over the first one's journal; a lock left by a process that is gone, taken over by one update while two more, started inside that window, are refused |
 | `managed.script` | arospkg installed as a package in a root with spaces: 0.6.0's own self-update, the package upgrade, a user's icon kept, `verify`, rollback, a copy tied with `--drawer`, a stop inside the package transaction; the package changed by another revision and by a newer version while a self-update waits; a copy with two possible installations; a Shell update refused while PkgManager runs from the installation |
 | `run-gui.sh` + `gui.script.in` | the window: available, the `C:apkg` question, progress, confirmation, restart and result; a second window refused; Cancel during the download; a package started from its icon; Repair now after an interrupted update; a current PkgManager whose apkg and C:apkg are behind |

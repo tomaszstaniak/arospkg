@@ -27,9 +27,9 @@
 static const char *VERSION = "apkg " APKG_TEST_VERSION;
 static const char VERSTAG[] __attribute__((used)) = "$VER: apkg " APKG_TEST_VERSION " (24.10.2026)";
 #else
-static const char *VERSION = "apkg 0.6.0";
+static const char *VERSION = "apkg 0.7.0";
 /* What a self-update reads to tell this file's version without running it. */
-static const char VERSTAG[] __attribute__((used)) = "$VER: apkg 0.6.0 (24.10.2026)";
+static const char VERSTAG[] __attribute__((used)) = "$VER: apkg 0.7.0 (30.10.2026)";
 #endif
 
 /* `show`: the library's account of one package, laid out for a person. The
