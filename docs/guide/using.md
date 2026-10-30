@@ -415,6 +415,7 @@ them, and so does PkgManager after **Remove**.
   Without openurl.library, or with no browser set up in OpenURL, a click
   says so and Copy still works. An address with `'`, `*`, `;` or `$` can
   only be copied. Other addresses (`ftp://`, `mailto:`) stay plain text.
+  [Screenshots](../screenshots/links/).
 - PkgManager's ARexx port (`PKGMANAGER`) has `RUN <id>` and `VERIFY <id>`
   besides the earlier commands; see [the ARexx page](../arexx.md).
 
