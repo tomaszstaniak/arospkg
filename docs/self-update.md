@@ -8,7 +8,7 @@ apkg self-update
 ```
 
 In PkgManager: **About** > **Check for a newer version**, then **Update
-arospkg**.
+arospkg** ([screenshots](screenshots/0.7.1/README.md)).
 
 Both update apkg and the PkgManager of the same installation to the same
 release. Your packages, the catalogue, your package root and your icons

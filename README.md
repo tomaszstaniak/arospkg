@@ -14,6 +14,7 @@ Both use the same catalogue and installed packages.
 
 New in 0.7: `apkg self-update` and **About** > **Update arospkg** in PkgManager update apkg and PkgManager together, to the same release, wherever arospkg is installed: an unpacked drawer, the package `arospkg`, or a copy such as `C:apkg`. Everything is checked before a file is replaced, and an interrupted update is finished or undone on the next run. On 0.4.x to 0.6.0, run `apkg self-update` twice: the first run updates apkg, the second PkgManager ([details](docs/self-update.md#from-060-and-earlier)).
 
+[Updating from PkgManager (0.7.1)](docs/screenshots/0.7.1/README.md) ·
 [Screenshots of 0.5.0 on AROS One](docs/screenshots/0.5.0/README.md) ·
 [0.4.2 screenshots](docs/screenshots/0.4.2/README.md).
 
