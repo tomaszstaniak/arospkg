@@ -6,14 +6,22 @@
 
 #include <stddef.h>
 
-#define LK_URLMAX 1024             /* longer addresses are left as text */
-
 /* The next http:// or https:// address in `p`: its length, and *at its
    start; 0 when there is none. On entry *at is the start of the whole text
    (an address must begin there or after a character that cannot be part of
-   a word). Sentence punctuation after it is left out; other schemes are
-   not addresses here. */
+   a word). In running text an address ends where a sentence would: a
+   final . , : ; ! ? or ' is left out, as is a closing bracket it does not
+   open. An address written as <address> is taken whole, up to the '>',
+   as RFC 3986 (appendix C) suggests for text. Other schemes are not
+   addresses here. Fields that hold nothing but an address go through
+   lk_exact instead: no guessing there. */
 size_t lk_next_url(const char *p, const char **at);
+
+/* 1 when `field`, taken whole and as it is, is an http:// or https://
+   address: something after the scheme, nothing but printable ASCII other
+   than space. A metadata field that is an address is used like this,
+   never cut or trimmed. */
+int lk_exact(const char *field);
 
 /* `url` as shown in at most `max` characters: its start, "...", its end.
    Never what is opened or copied. */
@@ -28,5 +36,29 @@ void lk_shorten(const char *in, char *out, size_t n, int max);
    (to start a browser, or to tell a running one). Such an address can be
    copied, not opened. */
 int lk_unsafe(const char *url);
+
+/* OpenURL starts a browser with a Shell command line that holds the
+   address, and the AROS Shell takes at most 512 characters of one
+   (workbench/c/shell/state.h, LINE_MAX). A longer line fails after
+   OpenURL has already answered yes: a 1500-character address never
+   reached the browser (AROS 2026.09). So longer addresses, with room for
+   the browser's own name, are copied, not opened. */
+#define LK_OPEN_MAX 480
+
+/* Whether `url` may be handed to a browser: LK_OPEN_OK, or why not. */
+enum { LK_OPEN_OK, LK_OPEN_CHARS, LK_OPEN_LONG };
+int lk_openable(const char *url);
+
+/* The addresses of one place, in order, without repeats, however many and
+   however long; each its own copy. Start from {0}. */
+typedef struct { char **v; int n, cap; } lk_list;
+/* Those in the first n characters of running text ((size_t)-1: all), as
+   lk_next_url finds them. */
+void lk_list_text(lk_list *l, const char *text, size_t n);
+/* A field that is an address, exactly as it is (lk_exact); 0 when it is
+   not one, and nothing is added. */
+int lk_list_url(lk_list *l, const char *field);
+int lk_list_same(const lk_list *a, const lk_list *b);
+void lk_list_free(lk_list *l);
 
 #endif

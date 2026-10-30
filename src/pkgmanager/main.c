@@ -29,7 +29,7 @@
 #ifdef PM_TEST_VERSION
 #define PM_VERSION PM_TEST_VERSION
 #else
-#define PM_VERSION "0.7.1"
+#define PM_VERSION "0.7.2"
 #endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
@@ -204,14 +204,20 @@ static void status_plain(const char *text)
     SetAttrs(txt_status, MUIA_Text_Contents, (IPTR)line, TAG_DONE);
 }
 
-/* A message with an address gets its link beside it; the line itself shows
-   a long address shortened, so it does not widen the window. */
-static void status(const char *text)
+/* The line itself shows a long address shortened, so it does not widen
+   the window; the link beside it has the whole one. */
+static void status_line(const char *text)
 {
     static char line[700];
-    lk_show1(LK_STATUS, text);
     lk_shorten(text, line, sizeof line, 40);
     SetAttrs(txt_status, MUIA_Text_Contents, (IPTR)line, TAG_DONE);
+}
+
+/* A message with an address gets its link beside it. */
+static void status(const char *text)
+{
+    lk_show1(LK_STATUS, text);
+    status_line(text);
 }
 
 static void confirm_text(const char *text)
@@ -223,13 +229,30 @@ static void confirm_text(const char *text)
 static void show_err(const char *what, pkg_status st, const pkg_err *e)
 {
     static char buf[640];
+    size_t at = 0, after = 0;
     /* As libpkg wrote it; the front does not re-phrase. On one line, because
        the status is a Text object of one line's height. */
     if (st == PKG_OK) snprintf(buf, sizeof buf, "%s", what);
-    else snprintf(buf, sizeof buf, "%s: %s%s%s%s%s%s", what, e->summary,
-                  e->subject[0] ? " (" : "", e->subject, e->subject[0] ? ")" : "",
-                  e->detail[0] ? " -- " : "", e->detail);
-    status(buf);
+    else {
+        snprintf(buf, sizeof buf, "%s: %s%s%s%s%s%s", what, e->summary,
+                 e->subject[0] ? " (" : "", e->subject, e->subject[0] ? ")" : "",
+                 e->detail[0] ? " -- " : "", e->detail);
+        if (e->subject[0]) {
+            at = strlen(what) + 2 + strlen(e->summary) + 2;
+            after = at + strlen(e->subject);
+        }
+    }
+    /* The subject is a field: when it is an address (a download's), that
+       address exactly, not what a reading of the sentence makes of it. */
+    lk_begin(LK_STATUS);
+    if (after > at && lk_exact(e->subject)) {
+        size_t bl = strlen(buf);
+        lk_text(LK_STATUS, buf, at < bl ? at : bl);
+        lk_url(LK_STATUS, e->subject);
+        if (after < bl) lk_text(LK_STATUS, buf + after, (size_t)-1);
+    } else lk_text(LK_STATUS, buf, (size_t)-1);
+    lk_end(LK_STATUS);
+    status_line(buf);
 }
 
 /* ---------------------------------------------------------------- filters */
@@ -820,6 +843,7 @@ static void verify_store(const char *id, pkg_status st, const pkg_verify_result 
 static void show_detail(void)
 {
     static char buf[6144], head[700];
+    size_t src_at = 0, src_end = 0;      /* the source and catalogue lines in buf */
     char icon_file[PKG_MAXPATH] = "";
     int run_ready;
     char reqs[1024] = "";
@@ -1002,8 +1026,11 @@ static void show_detail(void)
         for (i = 0; i < det.ntests && i < PKG_TESTS_MAX && k < sizeof buf; i++)
             k += (size_t)snprintf(buf + k, sizeof buf - k, "runtime test: %s\n", det.tests[i]);
         pkg_added_text(&det, text, sizeof text);
-        /* A full buffer may hold a cut address (the catalogue allows longer
-           ones); a link must not open a different page. */
+        /* These two are fields: their links are made from the fields, not
+           from this text (which a full buffer may have cut). */
+        src_at = k < sizeof buf ? k : sizeof buf - 1;
+        /* A full field may hold a cut address; a link must not open a
+           different page. */
         if (det.source[0] && k < sizeof buf)
             k += (size_t)snprintf(buf + k, sizeof buf - k, "source: %s\n",
                                   strlen(det.source) + 1 < sizeof det.source ? det.source
@@ -1011,6 +1038,7 @@ static void show_detail(void)
         if (k < sizeof buf)
             k += (size_t)snprintf(buf + k, sizeof buf - k, "added: %s\ncatalogue: %s", text,
                                   det.catalogue[0] ? det.catalogue : "the catalogue file on this machine");
+        src_end = k < sizeof buf ? k : sizeof buf - 1;
     }
     {
         /* What it needs, recommends, conflicts with and replaces, from the
@@ -1048,17 +1076,23 @@ static void show_detail(void)
             memmove(buf + vl + 1, buf, bl + 1);
             memcpy(buf, last_verify.text, vl);
             buf[vl] = '\n';
+            src_at += vl + 1; src_end += vl + 1;
         }
     }
     SetAttrs(txt_head, MUIA_Text_Contents, (IPTR)head, TAG_DONE);
     SetAttrs(txt_detail, MUIA_Floattext_Text, (IPTR)buf, TAG_DONE);
     show_media(e->id, icon_file);
-    {
-        /* Every address the pane shows, the pictures' sources included. */
-        const char *t[3];
-        t[0] = head; t[1] = buf; t[2] = media_now ? provenance : "";
-        lk_show(LK_DETAIL, t, 3);
+    /* Every address the pane shows, the pictures' sources included. */
+    lk_begin(LK_DETAIL);
+    lk_text(LK_DETAIL, head, (size_t)-1);
+    lk_text(LK_DETAIL, buf, src_at);
+    if (src_end > src_at) {
+        if (strlen(det.source) + 1 < sizeof det.source) lk_url(LK_DETAIL, det.source);
+        lk_url(LK_DETAIL, det.catalogue);
     }
+    lk_text(LK_DETAIL, buf + src_end, (size_t)-1);
+    lk_text(LK_DETAIL, media_now ? provenance : "", (size_t)-1);
+    lk_end(LK_DETAIL);
     SetAttrs(btn_open, MUIA_Disabled, busy_now() || !e->installed, TAG_DONE);
     SetAttrs(btn_run, MUIA_Disabled, busy_now() || !run_ready, TAG_DONE);
     SetAttrs(btn_verify, MUIA_Disabled, busy_now() || !e->installed, TAG_DONE);
@@ -1319,9 +1353,11 @@ static void decline(const char *how)
 static void about_links(const char *a, const char *b)
 {
     /* The release page always: what the check talks about. */
-    const char *t[3];
-    t[0] = a; t[1] = b; t[2] = PKG_RELEASE_PAGE;
-    lk_show(LK_RELEASE, t, 3);
+    lk_begin(LK_RELEASE);
+    lk_text(LK_RELEASE, a, (size_t)-1);
+    lk_text(LK_RELEASE, b, (size_t)-1);
+    lk_url(LK_RELEASE, PKG_RELEASE_PAGE);
+    lk_end(LK_RELEASE);
 }
 
 static void about_text(const char *raw)
@@ -2601,12 +2637,12 @@ static int real_main(int argc, char **argv)
         End),
     End;
 
-    if (!app) { rexx_close("CLOSING PkgManager could not open its window"); lk_finish(); DeleteMsgPort(port); su_announce_stop(); return RETURN_FAIL; }
+    if (!app) { rexx_close("CLOSING PkgManager could not open its window"); lk_finish(); lk_free(); DeleteMsgPort(port); su_announce_stop(); return RETURN_FAIL; }
 
     lk_connect(app);
     lk_owner(LK_HOME, win_about); lk_owner(LK_RELEASE, win_about);
     lk_owner(LK_DETAIL, win); lk_owner(LK_STATUS, win); lk_owner(LK_CONFIRM, win_confirm);
-    lk_show1(LK_HOME, AROSPKG_HOMEPAGE);
+    lk_begin(LK_HOME); lk_url(LK_HOME, AROSPKG_HOMEPAGE); lk_end(LK_HOME);
     about_links(NULL, NULL);
     DoMethod(win, MUIM_Notify, MUIA_Window_CloseRequest, TRUE,
              (IPTR)app, 2, MUIM_Application_ReturnID, MUIV_Application_ReturnID_Quit);
@@ -2725,6 +2761,7 @@ static int real_main(int argc, char **argv)
     MUI_DisposeObject(app);
     /* A link still being opened runs this program's code. */
     lk_finish();
+    lk_free();
     pkg_entries_free(&rows);
     pkg_updates_free(&upd);
     DeleteMsgPort(port);

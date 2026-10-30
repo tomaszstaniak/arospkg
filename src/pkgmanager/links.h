@@ -21,12 +21,13 @@
 
 /* The places with links. Each is a group made by lk_area. */
 enum { LK_HOME, LK_RELEASE, LK_DETAIL, LK_CONFIRM, LK_STATUS, LK_AREAS };
-#define LK_ROWS 4                  /* at most this many links per place     */
+#define LK_ROWS 4                  /* rows shown at a time; Previous/Next turn to the others */
 
-/* Return IDs of the link rows: LK_ID_BASE + (area * LK_ROWS + row) * 2,
-   +1 for Copy. Kept clear of the window's own IDs. */
+/* Return IDs: LK_ID(area, row) opens, +1 copies; row LK_ROWS is the pager
+   (Previous, +1 Next). Kept clear of the window's own IDs. */
 #define LK_ID_BASE 1000
-#define LK_ID_END  (LK_ID_BASE + LK_AREAS * LK_ROWS * 2)
+#define LK_ID(a, i) (LK_ID_BASE + ((a) * (LK_ROWS + 1) + (i)) * 2)
+#define LK_ID_END  LK_ID(LK_AREAS, 0)
 
 typedef struct {
     /* The main window's status line, set as it is: what links report there
@@ -45,9 +46,17 @@ void lk_owner(int area, Object *window);
 /* After the application object exists: connects the rows' notifications. */
 void lk_connect(Object *app);
 
-/* The addresses now shown in `area`: those in texts[0..n-1], in order,
-   without repeats, at most LK_ROWS. Rows that keep their address are left
-   alone. n == 0 hides the area. */
+/* The addresses now shown in `area`, in order and without repeats, however
+   many and however long: lk_begin, then lk_text for running text (the
+   first n characters, or all with (size_t)-1; see lk_next_url) and lk_url
+   for a field that is an address and is used exactly as it is (lk_exact;
+   anything else gives no link), then lk_end. Rows that keep their address
+   are left alone; none hides the area. */
+void lk_begin(int area);
+void lk_text(int area, const char *text, size_t n);
+void lk_url(int area, const char *field);
+void lk_end(int area);
+/* The same for running texts only: texts[0..n-1], or one. */
 void lk_show(int area, const char *const *texts, int n);
 void lk_show1(int area, const char *text);
 
@@ -60,5 +69,7 @@ void lk_poll(void);
 /* At quit, after the windows are gone: waits for every open still in
    progress, since its process runs this program's code. */
 void lk_finish(void);
+/* After lk_finish: the addresses' memory. */
+void lk_free(void);
 
 #endif

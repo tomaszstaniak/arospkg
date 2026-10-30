@@ -2,6 +2,7 @@
  * links, how it shortens them, which it will not hand to a browser. */
 #include "../src/pkgmanager/linktext.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int fails;
@@ -74,6 +75,79 @@ int main(void)
     check(!strcmp(buf, "no address here"), "shorten without address");
     lk_shorten("abc https://a.org/1234567890", buf, 8, 40);
     check(strlen(buf) == 7, "shorten respects the buffer");
+
+    /* Running text: <address> is taken as written. */
+    found("get it from <https://example.org/download?token=abc!>.", "https://example.org/download?token=abc!");
+    found("<https://e.org/a.> and https://e.org/b.", "https://e.org/a. | https://e.org/b");
+
+    /* A field that is an address is used exactly as it is. */
+    {
+        lk_list l = {0};
+        const char *f = "https://example.org/download?token=abc!";
+        check(lk_exact(f), "field with final ! is an address");
+        check(lk_list_url(&l, f) && l.n == 1 && !strcmp(l.v[0], f), "field kept whole, final ! included");
+        check(lk_list_url(&l, "https://example.org/x.") && !strcmp(l.v[1], "https://example.org/x."),
+              "field kept whole, final . included");
+        check(!lk_exact("https://"), "scheme alone is no address");
+        check(!lk_exact("https://a.org/b c"), "space: not one address");
+        check(!lk_exact("ftp://a.org/"), "ftp is not linked");
+        check(!lk_exact(""), "empty field");
+        check(!lk_list_url(&l, "/local/path") && l.n == 2, "not an address: nothing added");
+        lk_list_free(&l);
+    }
+
+    /* Every address of a text, however many: nine here, in order, no repeats. */
+    {
+        lk_list l = {0};
+        char text[1024];
+        size_t k = 0; int i;
+        for (i = 1; i <= 9; i++)
+            k += (size_t)snprintf(text + k, sizeof text - k, "link %d: https://e.org/%d, ", i, i);
+        lk_list_text(&l, text, (size_t)-1);
+        lk_list_text(&l, "again https://e.org/3", (size_t)-1);
+        check(l.n == 9, "nine addresses, the repeat once");
+        check(l.n == 9 && !strcmp(l.v[0], "https://e.org/1") && !strcmp(l.v[8], "https://e.org/9"), "in order");
+        lk_list_free(&l);
+    }
+
+    /* Only the first n characters: an address must end inside them. */
+    {
+        lk_list l = {0};
+        const char *t = "a https://e.org/one b https://e.org/two";
+        lk_list_text(&l, t, 19);
+        check(l.n == 1 && !strcmp(l.v[0], "https://e.org/one"), "part of a text");
+        lk_list_text(&l, t, 0);
+        check(l.n == 1, "an empty part adds nothing");
+        lk_list_free(&l);
+    }
+
+    /* Long addresses (5000 characters) are listed whole, labelled short. */
+    {
+        lk_list l = {0}, m = {0};
+        size_t len = 5000, i;
+        char *u = malloc(len + 40), *t = malloc(len + 80), *sh = malloc(len + 80);
+        strcpy(u, "https://example.org/");
+        for (i = strlen(u); i < len; i++) u[i] = (char)('a' + i % 26);
+        u[len - 1] = '!'; u[len] = 0;
+        check(lk_list_url(&l, u) && strlen(l.v[0]) == len && !strcmp(l.v[0], u), "5000-character field whole");
+        snprintf(t, len + 80, "see <%s> or", u);
+        lk_list_text(&m, t, (size_t)-1);
+        check(m.n == 1 && !strcmp(m.v[0], u), "5000-character <address> in text whole");
+        check(lk_list_same(&l, &m), "same lists");
+        lk_shorten(t, sh, len + 80, 40);
+        check(strlen(sh) < 60 && strstr(sh, "...") != NULL, "5000-character address shortened on screen");
+        check(lk_openable(u) == LK_OPEN_LONG, "5000 characters: copied, not opened");
+        u[LK_OPEN_MAX] = 0;
+        check(lk_openable(u) == LK_OPEN_OK, "LK_OPEN_MAX characters may be opened");
+        u[LK_OPEN_MAX] = 'x'; u[LK_OPEN_MAX + 1] = 0;
+        check(lk_openable(u) == LK_OPEN_LONG, "one more is copied only");
+        u[LK_OPEN_MAX + 1] = 'x'; u[len] = 0;
+        check(lk_openable("https://e.org/a;b") == LK_OPEN_CHARS, "; copied only");
+        lk_label(u, buf, sizeof buf, 50);
+        check(strlen(buf) == 50 && buf[49] == '!', "label of a long address keeps its end");
+        lk_list_free(&l); lk_list_free(&m);
+        free(u); free(t); free(sh);
+    }
 
     if (fails) { printf("test_linktext: %d FAILED\n", fails); return 1; }
     printf("test_linktext: all passed\n");

@@ -412,8 +412,14 @@ them, and so does PkgManager after **Remove**.
   are links. Click one to pass it to the browser chosen in Prefs/OpenURL;
   **Copy** beside it puts the whole address on the clipboard. A long
   address is shortened on screen only; its bubble help shows it whole.
+  Four links are shown at a time; with more, **Previous** and **Next**
+  below them turn to the others. Addresses from the catalogue's fields
+  (source, catalogue, a download) are used exactly as written; in the
+  package's notes an address ends before a final `.`, `,`, `:`, `;`, `!`,
+  `?` or `'`, unless it is written as `<address>`.
   Without openurl.library, or with no browser set up in OpenURL, a click
-  says so and Copy still works. An address with `'`, `*`, `;` or `$` can
+  says so and Copy still works. An address with `'`, `*`, `;` or `$`, or
+  longer than 480 characters (more than AROS can hand to a browser), can
   only be copied. Other addresses (`ftp://`, `mailto:`) stay plain text.
   [Screenshots](../screenshots/links/).
 - PkgManager's ARexx port (`PKGMANAGER`) has `RUN <id>` and `VERIFY <id>`

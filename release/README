@@ -1,4 +1,4 @@
-arospkg 0.7.1
+arospkg 0.7.2
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.1:
+0.7.2:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,17 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.2
+------------
+
+- Web addresses in PkgManager are links: in About, in a package's details
+  (source, catalogue, notes, picture credits), in the confirmation window
+  and in messages. Click one to pass it to the browser chosen in
+  Prefs/OpenURL, or click Copy beside it. Every address is listed; with
+  more than four, Previous and Next turn to the others. An address that
+  is too long to hand to a browser (over 480 characters) or holds ', *, ;
+  or $ can only be copied.
 
 NEW IN 0.7.1
 ------------

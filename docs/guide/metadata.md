@@ -287,7 +287,10 @@ fixed vocabulary, and nothing checks these claims. Write only what was done.
 The notes are text, nothing more: no markup, no variables, nothing is run,
 and no terminal sequence can be in them. The package's author can write
 them for their own package, or the index maintainer for an existing upload,
-without repacking the archive. They do not replace structured fields: a
+without repacking the archive. PkgManager makes the `http://` and
+`https://` addresses in them links; one that ends in `.`, `,`, `:`, `;`,
+`!`, `?` or `'` must be written as `<address>`, or that last character is
+taken for punctuation. They do not replace structured fields: a
 library the program needs belongs in `requires_system`, where the client
 checks it. Do not repeat where the package is installed or how to open it:
 the client prints both after every install, with the right path for the

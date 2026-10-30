@@ -9,7 +9,11 @@ is covered on the host by `tests/test_linktext.c`.
   193-character source address with `&` and `%`, notes with a second
   address, one with `;` (copy only) and an `ftp://` address (not a link),
   and a download address that cannot resolve, so **Install** fails with a
-  message that holds an address.
+  message that holds an address. `linkmany` has eight addresses (two
+  pages), a 1500-character source address ending in `!` (copied only),
+  `<address!>` in its notes and a download address ending in `!`;
+  `linkedge` has a 480-character source address, the longest that is
+  opened.
 - `lk_browser.c`: a stand-in browser. OpenURL starts it as
   `lk_browser %u`; it appends what it got to `RAM:lk/opened.txt`, so the
   test compares the exact address handed over.
