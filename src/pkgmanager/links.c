@@ -12,6 +12,7 @@
 #include <proto/dos.h>
 #include <proto/intuition.h>
 #include <proto/muimaster.h>
+#include <proto/graphics.h>
 #include <proto/iffparse.h>
 #include <proto/openurl.h>
 #include <libraries/mui.h>
@@ -60,6 +61,7 @@ static lk_setup S;
 static Object *app_obj;
 static struct MsgPort *reply_port;
 static int pending;                /* opens handed to a process, not yet replied */
+static struct MUI_CustomClass *link_class;
 static int urltext = -1;           /* -1 not tried, 0 class missing, 1 in use */
 
 /* The request a link process carries, and its answer. */
@@ -79,14 +81,38 @@ static void say(const char *t) { if (S.status) S.status(t); }
 
 /* ---------------------------------------------------------------- objects */
 
+/* Urltext 16.1 inherits JAM2 from Zune focus painting, so its Text() can
+   fill a black rectangle. Keep this guard private to PkgManager until
+   the upstream fix is deployed: AROS contrib PR #86. No system patching. */
+BOOPSI_DISPATCHER(IPTR, link_dispatcher, cl, obj, msg)
+{
+    if (msg->MethodID == MUIM_Draw && _rp(obj)) {
+        struct RastPort *rp = _rp(obj);
+        UBYTE mode = rp->DrawMode;
+        IPTR result;
+        SetDrMd(rp, JAM1);
+        result = DoSuperMethodA(cl, obj, msg);
+        SetDrMd(rp, mode);
+        return result;
+    }
+    return DoSuperMethodA(cl, obj, msg);
+}
+BOOPSI_DISPATCHER_END
+
 static Object *new_link(lk_row *r)
 {
     Object *o = NULL;
-    if (urltext != 0) {
+    if (urltext < 0) {
+        link_class = MUI_CreateCustomClass(NULL, MUIC_Urltext, NULL, 0,
+                                           (APTR)link_dispatcher);
+        urltext = link_class != NULL;
+        LOG("links: %s", link_class ? "private Urltext draw guard" : "Urltext.mcc not available, plain text links");
+    }
+    if (link_class) {
         /* Drawing only: its own opening calls OpenURL in this task (the
            window would wait for a browser to start) and keeps 255
            characters of the address, so both are ours. */
-        o = MUI_NewObject(MUIC_Urltext,
+        o = NewObject(link_class->mcc_Class, NULL,
                           MUIA_Urltext_Url, (IPTR)r->url,
                           MUIA_Urltext_Text, (IPTR)r->label,
                           MUIA_Urltext_DoOpenURL, FALSE,
@@ -94,10 +120,6 @@ static Object *new_link(lk_row *r)
                           MUIA_Urltext_SetMax, FALSE,
                           MUIA_ShortHelp, (IPTR)r->help,
                           TAG_DONE);
-        if (urltext < 0) {
-            urltext = o != NULL;
-            LOG("links: %s", o ? "Urltext.mcc draws them" : "Urltext.mcc not available, plain text links");
-        }
     }
     if (!o)
         o = TextObject,
@@ -114,7 +136,7 @@ static Object *new_link(lk_row *r)
 static void notify_link(Object *o, int id)
 {
     if (!o || !app_obj) return;
-    if (urltext == 1)
+    if (link_class && OCLASS(o) == link_class->mcc_Class)
         /* Zune's Immediate mode (Urltext's) sets Selected on a press and
            never Pressed. */
         DoMethod(o, MUIM_Notify, MUIA_Selected, TRUE, (IPTR)app_obj, 2, MUIM_Application_ReturnID, id);
@@ -487,6 +509,9 @@ void lk_finish(void)
 void lk_free(void)
 {
     int a, i;
+    /* The application and every link instance have already been disposed. */
+    if (link_class) { MUI_DeleteCustomClass(link_class); link_class = NULL; }
+    urltext = -1;
     for (a = 0; a < LK_AREAS; a++) {
         lk_list_free(&areas[a].all);
         lk_list_free(&areas[a].coming);

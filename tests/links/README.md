@@ -30,3 +30,9 @@ Build each with the toolchain and SDK of the target, for example
 Run PkgManager with `--root <root> --log <file>`: the log records every
 link opened (and OpenURL's answer) and copied, and whether Urltext.mcc
 draws the links.
+
+## Hover background regression
+
+On a system with unpatched Urltext 16.1, open `linktest` and capture the link rows before hovering. Move over each link and back to the package list. The background must return to the original image (a pixel comparison of the link rows should have no differences). Repeat in About and after changing packages/pages. Test with a Shell current directory outside the application drawer and with Workbench/icon launch. On a system without Urltext, check the plain-text fallback still opens and copies links.
+
+PkgManager uses a private Urltext subclass to select JAM1 around drawing and restore the incoming mode. It is compiled into the executable, so the existing PkgManager self-update covers the fix without extra files. The corresponding class fix is [AROS contrib PR #86](https://github.com/aros-development-team/contrib/pull/86).

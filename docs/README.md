@@ -1,6 +1,6 @@
 # arospkg documentation
 
-Current release: **0.5.0**. Start with the guide for your task.
+Current release: **0.7.3**. Start with the guide for your task.
 
 ## Using the manager
 

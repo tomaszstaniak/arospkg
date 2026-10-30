@@ -6,11 +6,11 @@ Both use the same catalogue and installed packages.
 
 ## Downloads
 
-**[Download 0.7.2 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.2/arospkg-0.7.2.x86_64-aros-v11.zip)**
-· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.7.2)
-· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.2/arospkg-0.7.2.x86_64-aros-v1.zip)
-· [Raspberry Pi (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.2/arospkg-0.7.2.aarch64-aros-raspi.zip)
-· [i386 ABIv0 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.2/arospkg-0.7.2.i386-aros-v0.zip)
+**[Download 0.7.3 for AROS (x86_64, ABIv11)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.3/arospkg-0.7.3.x86_64-aros-v11.zip)**
+· [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.7.3)
+· [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.3/arospkg-0.7.3.x86_64-aros-v1.zip)
+· [Raspberry Pi (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.3/arospkg-0.7.3.aarch64-aros-raspi.zip)
+· [i386 ABIv0 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.3/arospkg-0.7.3.i386-aros-v0.zip)
 
 New in 0.7: `apkg self-update` and **About** > **Update arospkg** in PkgManager update apkg and PkgManager together, to the same release, wherever arospkg is installed: an unpacked drawer, the package `arospkg`, or a copy such as `C:apkg`. Everything is checked before a file is replaced, and an interrupted update is finished or undone on the next run. On 0.4.x to 0.6.0, run `apkg self-update` twice: the first run updates apkg, the second PkgManager ([details](docs/self-update.md#from-060-and-earlier)).
 
@@ -41,7 +41,7 @@ Keep the extracted drawer somewhere permanent, not `RAM:`, if using
 PkgManager (included in the ABIv11, mainline and Pi archives). Installing
 packages requires a working network connection.
 
-**Upgrading from 0.3.x?** Install 0.7.2 manually using the commands above.
+**Upgrading from 0.3.x?** Install 0.7.3 manually using the commands above.
 Keep `SYS:Packages`; it contains your installed programs and package records.
 
 ## Use the graphical interface
@@ -221,14 +221,14 @@ with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.
 
-The 0.7.2 archives were made from the release commit with
-`README=release/README sh tools/make-rc.sh 0.7.2`.
+The 0.7.3 archives were made from the release commit with
+`README=release/README sh tools/make-rc.sh 0.7.3`.
 Despite its name, this script packages stable releases too; without
 `TARGETS` it builds the four released targets and needs their toolchains.
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
 The published release descriptions are kept in `release/notes-<version>.md`
-([0.7.2](release/notes-0.7.2.md), [0.7.1](release/notes-0.7.1.md), [0.7.0](release/notes-0.7.0.md), [0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
+([0.7.3](release/notes-0.7.3.md), [0.7.2](release/notes-0.7.2.md), [0.7.1](release/notes-0.7.1.md), [0.7.0](release/notes-0.7.0.md), [0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
 builds, then use it for the GitHub release notes.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,

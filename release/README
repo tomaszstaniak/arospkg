@@ -1,4 +1,4 @@
-arospkg 0.7.2
+arospkg 0.7.3
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.2:
+0.7.3:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,13 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.3
+------------
+
+- Links no longer leave a black background after hovering over them on
+  systems with older Urltext.mcc. The fix is built into PkgManager.
+  No system libraries need replacing.
 
 NEW IN 0.7.2
 ------------
