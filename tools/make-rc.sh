@@ -38,6 +38,7 @@ for t in $TARGETS; do
     cp "$HERE/release/licenses/zlib-LICENSE" "$D/licenses/"
     cp "$HERE/third_party/mbedtls/LICENSE" "$D/licenses/MbedTLS-3.6.7-LICENSE"
     cp "$HERE/third_party/aros-xterm/LICENSE" "$D/licenses/aros-xterm-client-LICENSE"
+    [ -f "$D/PkgManager" ] && cp "$HERE/third_party/zunekit/LICENSE" "$D/licenses/zunekit-LICENSE"
     # jitterentropy is in the builds without a system getentropy()
     if [ "$t" != x86_64-aros-v1 ] && [ "$t" != aarch64-aros-raspi ]; then
         cp "$HERE/third_party/jitterentropy/LICENSE" "$D/licenses/jitterentropy-3.7.0-LICENSE"

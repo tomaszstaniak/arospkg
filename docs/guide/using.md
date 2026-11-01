@@ -408,19 +408,23 @@ them, and so does PkgManager after **Remove**.
   is installed, and no data is asked for or sent. See
   [RFC 0003](../rfc/0003-storefront-metadata.md).
 - Web addresses (`http://` and `https://`) that PkgManager shows, in
-  **About**, in the details (source, catalogue, notes) and in messages,
-  are links. Click one to pass it to the browser chosen in Prefs/OpenURL;
-  **Copy** beside it puts the whole address on the clipboard. A long
-  address is shortened on screen only; its bubble help shows it whole.
-  Four links are shown at a time; with more, **Previous** and **Next**
-  below them turn to the others. Addresses from the catalogue's fields
-  (source, catalogue, a download) are used exactly as written; in the
-  package's notes an address ends before a final `.`, `,`, `:`, `;`, `!`,
-  `?` or `'`, unless it is written as `<address>`.
-  Without openurl.library, or with no browser set up in OpenURL, a click
-  says so and Copy still works. An address with `'`, `*`, `;` or `$`, or
-  longer than 480 characters (more than AROS can hand to a browser), can
-  only be copied. Other addresses (`ftp://`, `mailto:`) stay plain text.
+  About, in a package's details, in confirmation windows and in messages,
+  are links inside their sentence. Click one to pass it to the browser
+  chosen in Prefs/OpenURL. Dragging over text selects it and opens nothing.
+  The right mouse button on a link offers **Open link**, **Copy link
+  address** and **Copy selected text**. With the keyboard, activate the
+  text with Tab, go from link to link with the Left and Right cursor keys,
+  open with Return, copy with Right Amiga+C and leave with Tab.
+  A long address is shortened on screen only; its bubble help shows it
+  whole, and copying and opening use it whole. Addresses from the
+  catalogue's fields are used exactly as written; in a package's notes an
+  address ends before a final `.`, `,`, `:`, `;`, `!`, `?` or `'`, unless
+  it is written as `<address>`.
+  Without a browser set up, or without openurl.library, a click says so and
+  copying still works. An address with `'`, `*`, `;` or `$`, or one longer
+  than 480 characters (OpenURL hands it to the browser on a Shell line, and
+  the AROS Shell takes at most 512 characters) can only be copied, at any
+  length. Other addresses (`ftp://`, `mailto:`) stay plain text.
   [Screenshots](../screenshots/links/).
 - PkgManager's ARexx port (`PKGMANAGER`) has `RUN <id>` and `VERIFY <id>`
   besides the earlier commands; see [the ARexx page](../arexx.md).
