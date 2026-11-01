@@ -65,7 +65,7 @@ stop_collect() { # RESULTSDIR
   echo "collected $1 $(date +%T)"
 }
 
-# The confirmation window is open when its Cancel button shows at (520,401)
+# The confirmation window is open when its Cancel button shows at (599,393)
 # (main.c places the window at 260,180): button grey there, the list's white
 # if not. Not the title bar, whose colour depends on which window is active.
 confirm_open() {
@@ -74,7 +74,7 @@ confirm_open() {
   python3 -c "
 import sys
 d=open('$SHOTS/.cf.ppm','rb').read().split(b'\n',3); w,h=map(int,d[1].split()); px=d[3]
-o=(401*w+520)*3; r,g,b=px[o:o+3]
+o=(393*w+599)*3; r,g,b=px[o:o+3]
 sys.exit(0 if 200 < min(r,g,b) and max(r,g,b) < 240 else 1)" 2>/dev/null
 }
 wait_confirm() { for i in $(seq 1 30); do confirm_open && return 0; sleep 2; done; echo "no confirmation window"; return 1; }
