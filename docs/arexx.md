@@ -1,8 +1,6 @@
 # Controlling PkgManager from ARexx
 
-While PkgManager is running, any ARexx script can use its catalogue and its
-installer. A script does not have to read `apkg` output or install anything
-itself; it sends a command to the port `PKGMANAGER` and gets an answer.
+While PkgManager is running, any ARexx script can use its catalogue and its installer. A script does not have to read `apkg` output or install anything itself; it sends a command to the port `PKGMANAGER` and gets an answer.
 
 ## What you can do with it
 
@@ -19,10 +17,7 @@ itself; it sends a command to the port `PKGMANAGER` and gets an answer.
 - **Ask for an upgrade or a rollback.** PkgManager shows its plan and the
   user confirms it in the window. A script cannot answer for the user.
 
-Everything goes through the same code the window uses. The same rules apply
-to a script: one operation at a time, and the same checks on the ABI, the
-system requirements, the root lock, conflicts with changed files and
-recovery of an interrupted operation. A script cannot skip any of them.
+Everything goes through the same code the window uses. The same rules apply to a script: one operation at a time, and the same checks on the ABI, the system requirements, the root lock, conflicts with changed files and recovery of an interrupted operation. A script cannot skip any of them.
 
 ## The examples
 
@@ -44,13 +39,9 @@ job 3: installing cls
 cls is installed
 ```
 
-When a script ends with a return code other than 0, `rx` adds a line such as
-`Error executing script 5/0`. That is `rx` reporting the code, which a Shell
-script can test with `If WARN`; nothing went wrong.
+When a script ends with a return code other than 0, `rx` adds a line such as `Error executing script 5/0`. That is `rx` reporting the code, which a Shell script can test with `If WARN`; nothing went wrong.
 
-Each example has its own `ask` procedure of six lines, which you can copy
-into your own scripts. [Results and errors](#results-and-errors) explains how
-it works.
+Each example has its own `ask` procedure of six lines, which you can copy into your own scripts. [Results and errors](#results-and-errors) explains how it works.
 
 ## The port
 
@@ -66,20 +57,18 @@ it works.
   PkgManager works as before with the same title note. The window and `apkg`
   never depend on ARexx.
 - **Which interface:** `VERSION` answers
-  `PkgManager 0.3 ARexx 1 sha256 <hash of the running binary>`. The fourth
+  `PkgManager 0.7.3 ARexx 1 sha256 <hash of the running binary>`. The fourth
   word is the interface version. It changes only when an existing command
   changes meaning; new commands can appear without changing it, and `HELP`
   lists the commands there are.
 
 ## Commands
 
-Names are not case-sensitive and must be written in full. Arguments follow
-AmigaDOS rules: `"double quotes"` hold spaces, `*"` is a quote inside them,
-and keywords can be written `FIELD state` or `FIELD=state`.
+Names are not case-sensitive and must be written in full. Arguments follow AmigaDOS rules: `"double quotes"` hold spaces, `*"` is a quote inside them, and keywords can be written `FIELD state` or `FIELD=state`.
 
 | command | arguments | result on success | typical errors |
 |---|---|---|---|
-| `VERSION` | | `PkgManager 0.5.0 ARexx 1 sha256 <hex>` | |
+| `VERSION` | | `PkgManager 0.7.3 ARexx 1 sha256 <hex>` | |
 | `HELP` | | every command name, space separated | |
 | `LIST` | `[INSTALLED] [MATCH <text>]` | package ids, space separated; empty when none | `NOINDEX` |
 | `INFO` | `<package> [FIELD <name>]` | one `name value` line per field, or only the value of `FIELD` | `NOTFOUND`, `BADARGS` (unknown field) |
@@ -99,38 +88,15 @@ and keywords can be written `FIELD state` or `FIELD=state`.
 | `VERIFY` | `<package>` | job number; the job's `message` gives the counts (as installed, changed locally, missing, not the package's) | `NOTFOUND`, `BUSY`, `CLOSING` |
 | `OUTDATED` | `[SHOW]` | the updates of installed packages, one `name value` line each: `catalogue` (`ok`, `missing`, `unreadable`), `updated`, `stale`, `installed`, `newer`, `ready`, `blocked`, and `packages` with the ids that have something newer. `SHOW` also brings the window forward on the Updates list | |
 
-`INFO` fields: `id version revision state installedversion installedrevision
-summary category arch abi kind size requires canupgrade canrollback
-compatibility requirements`.
-`compatibility` is `native`, `incompatible` or `undetermined`: whether the
-package's declared CPU and ABI match this machine. It is a judgement from
-the catalogue, not a test that the program runs. `requirements` is what
-this machine's check of the package's requirements found just now:
-`satisfied`, `missing`, `undetermined`, `none` (it states none), or `not
-checked` (the package is not compatible). Both are the same verdicts `apkg
-show` prints. `INFO` describes a package built for another target too;
-`LIST` leaves such packages out.
-`state` is `installed` or `available`. `requires` lists the machine
-requirements as the catalogue names them. `canupgrade` and `canrollback` are
-`1` or `0`, answered as the window's buttons are.
+`INFO` fields: `id version revision state installedversion installedrevision summary category arch abi kind size requires canupgrade canrollback compatibility requirements`. `compatibility` is `native`, `incompatible` or `undetermined`: whether the package's declared CPU and ABI match this machine. It is a judgement from the catalogue, not a test that the program runs. `requirements` is what this machine's check of the package's requirements found just now: `satisfied`, `missing`, `undetermined`, `none` (it states none), or `not checked` (the package is not compatible). Both are the same verdicts `apkg show` prints. `INFO` describes a package built for another target too; `LIST` leaves such packages out. `state` is `installed` or `available`. `requires` lists the machine requirements as the catalogue names them. `canupgrade` and `canrollback` are `1` or `0`, answered as the window's buttons are.
 
-`OUTDATED` answers from the same reading of the catalogue and the installed
-packages as `apkg outdated` and the window's Updates list; it downloads
-nothing. `newer` counts updates found, `ready` those that can be started
-now, `blocked` those this machine cannot take. `canupgrade` in `INFO` is the
-window's Upgrade button: 1 only for an update that can be started now.
+`OUTDATED` answers from the same reading of the catalogue and the installed packages as `apkg outdated` and the window's Updates list; it downloads nothing. `newer` counts updates found, `ready` those that can be started now, `blocked` those this machine cannot take. `canupgrade` in `INFO` is the window's Upgrade button: 1 only for an update that can be started now.
 
-`LIST` reads the catalogue as PkgManager last fetched it. `LIST INSTALLED`
-reads the record of installed packages, including any the catalogue no
-longer has; with `MATCH` it searches the catalogue and keeps the installed
-ones. `INFO` finds a package in the catalogue first and in the record of
-installed packages after that. None of these commands changes anything.
+`LIST` reads the catalogue as PkgManager last fetched it. `LIST INSTALLED` reads the record of installed packages, including any the catalogue no longer has; with `MATCH` it searches the catalogue and keeps the installed ones. `INFO` finds a package in the catalogue first and in the record of installed packages after that. None of these commands changes anything.
 
 ## Results and errors
 
-A command that succeeds sets `RESULT` (with `OPTIONS RESULTS`) and RC 0. A
-command that fails sets RC 5, 10 or 20, and `LASTERROR` then says why, as a
-code and a sentence:
+A command that succeeds sets `RESULT` (with `OPTIONS RESULTS`) and RC 0. A command that fails sets RC 5, 10 or 20, and `LASTERROR` then says why, as a code and a sentence:
 
 | RC | code | meaning |
 |---|---|---|
@@ -150,11 +116,7 @@ code and a sentence:
 
 **RC on current AROS distributions.** The Regina interpreter in AROS One
 1.3, and in other ABIv11 systems built before the fix in AROS contrib
-`0258b5de4` (2026-09-18), puts a successful command's result text into RC
-and leaves RC empty after a failure. A script that tests `IF RC = 0` there
-misreads every answer. What holds everywhere is that `RESULT` is set after
-success and dropped after failure. The examples test that, and ask
-`LASTERROR` for the reason:
+`0258b5de4` (2026-09-18), puts a successful command's result text into RC and leaves RC empty after a failure. A script that tests `IF RC = 0` there misreads every answer. What holds everywhere is that `RESULT` is set after success and dropped after failure. The examples test that, and ask `LASTERROR` for the reason:
 
 ```rexx
 ask: PROCEDURE EXPOSE answer error
@@ -166,27 +128,15 @@ ask: PROCEDURE EXPOSE answer error
   RETURN 0
 ```
 
-`LASTERROR` belongs to the script that asks. Two scripts running at once
-each get their own: PkgManager tells them apart by the port their commands
-come back to and the task that owns it. That holds for as long as the error
-is kept. A success from the same script clears it, and once 32 other
-scripts have failed after it, it is dropped to make room. So ask right after
-the failure. The same check has one gap: a new script asking `LASTERROR`
-before it has failed at all could read a finished script's leftover, if its
-port and task happen to land at the same addresses.
+`LASTERROR` belongs to the script that asks. Two scripts running at once each get their own: PkgManager tells them apart by the port their commands come back to and the task that owns it. That holds for as long as the error is kept. A success from the same script clears it, and once 32 other scripts have failed after it, it is dropped to make room. So ask right after the failure. The same check has one gap: a new script asking `LASTERROR` before it has failed at all could read a finished script's leftover, if its port and task happen to land at the same addresses.
 
-PkgManager never sets a variable in the calling script. A version that set `RC2` that way crashed RexxMast after about thirty calls
-made from inside a `PROCEDURE`.
+PkgManager never sets a variable in the calling script. A version that set `RC2` that way crashed RexxMast after about thirty calls made from inside a `PROCEDURE`.
 
 ## Jobs
 
-`UPDATE`, `INSTALL`, `REMOVE`, `UPGRADE` and `ROLLBACK` start a job and
-answer at once with its number. **Accepting a job does not mean it
-succeeded.** A job started by pressing a button in the window gets a
-number too, so a script can follow it.
+`UPDATE`, `INSTALL`, `REMOVE`, `UPGRADE` and `ROLLBACK` start a job and answer at once with its number. **Accepting a job does not mean it succeeded.** A job started by pressing a button in the window gets a number too, so a script can follow it.
 
-`JOB` and `WAIT` answer with these fields:
-`id op package origin state phase done total cancancel error message`.
+`JOB` and `WAIT` answer with these fields: `id op package origin state phase done total cancancel error message`.
 
 | state | meaning |
 |---|---|
@@ -198,10 +148,7 @@ number too, so a script can follow it.
 | `cancelled` | a cancel was honoured and nothing was installed |
 | `declined` | the plan was not confirmed; nothing changed |
 
-`origin` is `arexx` or `window`. `error` for a failed job is one of `LOCKED
-STALELOCK UNRESOLVED NOTFOUND EXISTS VERIFY CONFLICT ARCHIVE IO NOMEM
-NETWORK REQUIRES`. For an upgrade or rollback refused by its plan it is
-`NOTALLOWED` or `CONFLICT`.
+`origin` is `arexx` or `window`. `error` for a failed job is one of `LOCKED STALELOCK UNRESOLVED NOTFOUND EXISTS VERIFY CONFLICT ARCHIVE IO NOMEM NETWORK REQUIRES`. For an upgrade or rollback refused by its plan it is `NOTALLOWED` or `CONFLICT`.
 
 - **One job at a time**, whoever starts it. While one runs or waits for
   confirmation, the window's buttons are disabled and new jobs from ARexx get

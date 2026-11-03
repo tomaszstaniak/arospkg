@@ -7,15 +7,11 @@ apkg self-update --check
 apkg self-update
 ```
 
-In PkgManager: **About** > **Check for a newer version**, then **Update
-arospkg** ([screenshots](screenshots/0.7.1/README.md)).
+In PkgManager: **About** > **Check for a newer version**, then **Update arospkg** ([screenshots](screenshots/0.7.1/README.md)).
 
-Both update apkg and the PkgManager of the same installation to the same
-release. Your packages, the catalogue, your package root and your icons
-stay as they are.
+Both update apkg and the PkgManager of the same installation to the same release. Your packages, the catalogue, your package root and your icons stay as they are.
 
-arospkg 0.6.0 and earlier update apkg only; see [From 0.6.0 and
-earlier](#from-060-and-earlier).
+arospkg 0.6.0 and earlier update apkg only; see [From 0.6.0 and earlier](#from-060-and-earlier).
 
 ## What is updated
 
@@ -28,20 +24,13 @@ Where arospkg is installed decides what is replaced:
 | apkg copied elsewhere, such as `C:apkg` | that copy, together with the installation it belongs to |
 | apkg on its own, without PkgManager | that apkg; no PkgManager is added |
 
-A file the release does not contain is left as it is. Icons (`.info`) are
-never replaced in a drawer you unpacked; in an installed package, an icon
-you changed (its position or tool types) is kept.
+A file the release does not contain is left as it is. Icons (`.info`) are never replaced in a drawer you unpacked; in an installed package, an icon you changed (its position or tool types) is kept.
 
-The previous version stays: as `<file>.old` beside each replaced file, or
-for an installed package as its previous revision (`apkg rollback
-arospkg`).
+The previous version stays: as `<file>.old` beside each replaced file, or for an installed package as its previous revision (`apkg rollback arospkg`).
 
 ## Which installation an apkg belongs to
 
-apkg started from a drawer with PkgManager in it belongs to that drawer. A
-copy elsewhere, usually `C:apkg`, belongs to whichever installation you say,
-and apkg remembers it in `ENVARC:arospkg/copies.json`. It never searches
-your disks for copies, and it never guesses:
+apkg started from a drawer with PkgManager in it belongs to that drawer. A copy elsewhere, usually `C:apkg`, belongs to whichever installation you say, and apkg remembers it in `ENVARC:arospkg/copies.json`. It never searches your disks for copies, and it never guesses:
 
 - When the copy is not recorded and an installation is in sight (the
   package `arospkg` in the package root, or a drawer a running PkgManager
@@ -52,15 +41,11 @@ your disks for copies, and it never guesses:
 - With nothing recorded and nothing in sight, only the copy is updated, and
   apkg says how to include PkgManager.
 
-When you update from an installation's drawer, or from PkgManager, and
-`C:apkg` is not recorded with any installation, you are asked once whether
-it belongs to this one.
+When you update from an installation's drawer, or from PkgManager, and `C:apkg` is not recorded with any installation, you are asked once whether it belongs to this one.
 
 ## In PkgManager
 
-**Check for a newer version** shows the latest stable release and the
-versions of PkgManager, the apkg beside it and the copies tied to it. When
-any of them is behind the release, and none is newer, **Update arospkg**:
+**Check for a newer version** shows the latest stable release and the versions of PkgManager, the apkg beside it and the copies tied to it. When any of them is behind the release, and none is newer, **Update arospkg**:
 
 1. downloads and checks the release; the progress and **Cancel** are at the
    bottom of the main window, which keeps responding;
@@ -71,8 +56,7 @@ any of them is behind the release, and none is newer, **Update arospkg**:
    started it that way, otherwise with the same root and options;
 4. PkgManager then says what happened.
 
-If PkgManager cannot be started again, a requester says so, apart from
-whether the update itself succeeded. Start it from its drawer.
+If PkgManager cannot be started again, a requester says so, apart from whether the update itself succeeded. Start it from its drawer.
 
 Cancelling at any point before **Proceed** leaves everything as it was.
 
@@ -124,9 +108,7 @@ apkg rollback arospkg
 
 ## If an update was interrupted
 
-Before replacing anything, the update writes `ENVARC:arospkg/self-update.json`
-with the files and their checksums, and keeps each new file beside its
-target as `<file>.new`. If the machine stops halfway:
+Before replacing anything, the update writes `ENVARC:arospkg/self-update.json` with the files and their checksums, and keeps each new file beside its target as `<file>.new`. If the machine stops halfway:
 
 - the next `apkg self-update`, or `apkg self-update --recover`, finishes
   the update when every new file is still there, and otherwise puts the
@@ -134,26 +116,17 @@ target as `<file>.new`. If the machine stops halfway:
 - PkgManager, when it starts, offers **Repair now**, which does the same and
   starts it again.
 
-If neither is possible from what is on the disk, nothing is touched and
-apkg prints, file by file, what to rename. An installed package is first
-settled by its own recovery, as for any interrupted package operation; if
-the root's lock was left by the stopped run, `apkg unlock` clears it.
+If neither is possible from what is on the disk, nothing is touched and apkg prints, file by file, what to rename. An installed package is first settled by its own recovery, as for any interrupted package operation; if the root's lock was left by the stopped run, `apkg unlock` clears it.
 
 ## From 0.6.0 and earlier
 
-These versions replace only the apkg you start; PkgManager is not touched
-by that first run. Run `apkg self-update` once more, and the new apkg
-updates PkgManager too. Started from the unpacked drawer, it finds
-PkgManager there. Started as `C:apkg`, it asks whether the copy belongs to
-the package `arospkg` when that is installed in the package root;
-otherwise name the drawer in that second run:
+These versions replace only the apkg you start; PkgManager is not touched by that first run. Run `apkg self-update` once more, and the new apkg updates PkgManager too. Started from the unpacked drawer, it finds PkgManager there. Started as `C:apkg`, it asks whether the copy belongs to the package `arospkg` when that is installed in the package root; otherwise name the drawer in that second run:
 
 ```
 apkg self-update --drawer "Work:arospkg-0.6.0.x86_64-aros-v11"
 ```
 
-arospkg 0.3.2 and earlier have no `self-update`: install a newer release by
-hand from its archive, as the README describes.
+arospkg 0.3.2 and earlier have no `self-update`: install a newer release by hand from its archive, as the README describes.
 
 ## Limits
 

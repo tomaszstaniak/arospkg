@@ -3,7 +3,7 @@ title: "RFC 0002: application folder format"
 status: implemented (schema 1)
 schema: 1
 created: 2026-09-27
-updated: 2026-10-12
+updated: 2026-11-03
 ---
 
 # RFC 0002: application folder format
@@ -11,46 +11,32 @@ updated: 2026-10-12
 | | |
 |---|---|
 | **Status** | **Implemented, schema 1**, in arospkg 0.5.0: `apkg run`, PkgManager's Run button, ARexx `RUN`, `apkg-pack` and `tools/mkindex.py`. |
-| **Companion** | [RFC 0001](0001-package-format.md), the package format; [RFC 0003](0003-storefront-metadata.md), proposed storefront fields |
+| **Companion** | [Package authoring](../guide/authoring.md); [RFC 0003](0003-storefront-metadata.md), proposed storefront fields |
 | **What it replaces** | The schema 0 draft of 2026-09-27, which proposed `application.toml`. Section 10 records what changed and why. |
 
 ## 1. Goal
 
-Make an installed application recognisable and startable as one thing,
-the way macOS bundles and RISC OS application directories are, while it
-stays an ordinary drawer that every AmigaOS and AROS file manager can open,
-browse and start programs from, with no arospkg involved.
+Make an installed application recognisable and startable as one thing, the way macOS bundles and RISC OS application directories are, while it stays an ordinary drawer that every AmigaOS and AROS file manager can open, browse and start programs from, with no arospkg involved.
 
-The package format answers *how does this get onto the disk*. This format
-answers *how is this drawer started*. It travels with the drawer, so it
-also works for an application that was unpacked by hand:
-`apkg run "Work:My Apps/Folio"` reads the drawer and nothing else.
+The package format answers *how does this get onto the disk*. This format answers *how is this drawer started*. It travels with the drawer, so it also works for an application that was unpacked by hand: `apkg run "Work:My Apps/Folio"` reads the drawer and nothing else.
 
 ## 2. One source of truth, and copies with one job each
 
-The author writes the start information **once**, as the `[launch]` table
-of the package manifest. Everything else is generated from it and checked
-against it:
+The author writes the start information **once**, as the `[launch]` table of the package manifest. Everything else is generated from it and checked against it:
 
 | where | written by | read by | job |
 |---|---|---|---|
 | `[launch]` in the package manifest (`.arospkg/manifest.toml`, or the catalogue manifest for an archive we do not build) | the author | `apkg-pack`, `tools/mkindex.py`, the catalogue's CI | **the source** |
 | `<drawer>/application.json` in the archive | `apkg-pack build` | the runtime | lets a drawer unpacked by hand start |
-| `"launch"` in `index-v2.json` | `tools/mkindex.py` | `apkg show`, PkgManager before installing; the installer | says Run will be offered; lets apkg write the file for an archive that has none |
+| `"launch"` in `index-v3.json` and `index-v2.json` | `tools/mkindex.py` | `apkg show`, PkgManager before installing; the installer | says Run will be offered; lets apkg write the file for an archive that has none |
 | `<drawer>/application.json` written at installation | apkg, from the catalogue entry, **only when the archive has none** | the runtime | the same file for third-party archives that are not rebuilt |
 | `"launch"` in the registry entry (`db/installed/<id>.json`) | apkg at installation | apkg's rollback | a rollback re-extracts an archive that may not carry the file, and writes it again |
 
-The **runtime reads only the drawer's `application.json`**. It needs no
-catalogue and no registry, so losing arospkg's records does not stop an
-application from starting.
+The **runtime reads only the drawer's `application.json`**. It needs no catalogue and no registry, so losing arospkg's records does not stop an application from starting.
 
-When an archive carries its own `application.json`, it stands. The
-catalogue's checks (`tools/mkindex.py`, run by the catalogue's CI on every
-pull request) refuse an entry whose archive's file says something
-different from the manifest.
+When an archive carries its own `application.json`, it stands. The catalogue's checks (`tools/mkindex.py`, run by the catalogue's CI on every pull request) refuse an entry whose archive's file says something different from the manifest.
 
-Stack size and tool types are **not** in any of these. They stay in the
-program's icon, which is authoritative for a Workbench start (section 6).
+Stack size and tool types are **not** in any of these. They stay in the program's icon, which is authoritative for a Workbench start (section 6).
 
 ## 3. The folder
 
@@ -87,10 +73,7 @@ mode       = "workbench"      # or "shell"
 | `mode` | yes | `"workbench"`: started as a double-click on its icon starts it. `"shell"`: started as a Shell command. |
 | `working_directory` | no | The current directory it starts in, relative to the drawer. Default: the drawer holding the program. In workbench mode only that default is possible, because Workbench always starts a program in its own drawer. |
 
-No other key is accepted. The client refuses a table with a key it does
-not know instead of ignoring it: a later key could change what "start it"
-means (an argument, another program), and starting it anyway would be
-guessing.
+No other key is accepted. The client refuses a table with a key it does not know instead of ignoring it: a later key could change what "start it" means (an argument, another program), and starting it anyway would be guessing.
 
 ## 5. `application.json`
 
@@ -160,10 +143,7 @@ What `apkg-pack` writes for Folio 0.4.1 (shortened):
 7. **Nothing else.** Starting installs nothing, changes no settings and
    writes nothing in the drawer.
 
-Errors name the cause in the user's words: the description is missing
-(Open folder still works), the program or its icon is missing, a path
-leads out of the drawer, the program is for another CPU or ABI, a library
-is missing.
+Errors name the cause in the user's words: the description is missing (Open folder still works), the program or its icon is missing, a path leads out of the drawer, the program is for another CPU or ABI, a library is missing.
 
 ## 7. What the tools check
 
@@ -177,16 +157,13 @@ is missing.
 - **`tools/mkindex.py`** (the catalogue): the same table rules; that the
   archive contains the program and, for workbench mode, its icon; that an
   `application.json` in the archive agrees with the manifest. The table
-  goes into `index-v2.json` only; `index.json`, for clients up to 0.3.2,
+  goes into `index-v3.json` and `index-v2.json`; `index.json`, for clients up to 0.3.2,
   never carries it.
 - **The client**: everything in section 6, at every start.
 
 ## 8. Packages without a description
 
-A package that says nothing about starting installs and works as before:
-`apkg run` and the Run button say that it does not say how to start it,
-and Open folder shows its drawer. Nothing guesses a program from the
-package's name or from the first executable in the drawer.
+A package that says nothing about starting installs and works as before: `apkg run` and the Run button say that it does not say how to start it, and Open folder shows its drawer. Nothing guesses a program from the package's name or from the first executable in the drawer.
 
 ## 9. Deferred
 

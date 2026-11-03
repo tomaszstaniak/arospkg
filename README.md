@@ -173,18 +173,20 @@ Start at [`docs/README.md`](docs/README.md):
   in one page;
 - [publishing your program](docs/guide/authoring.md): describe, check,
   pack and submit with `apkg-pack`;
-- [packaging guide](docs/guide/packaging.md): from a program's drawer to an
-  approved index entry, tested on AROS;
+- [archive layout and testing](docs/guide/packaging.md): package structure, limits and runtime checks;
 - [metadata reference](docs/guide/metadata.md): every field, and who
   checks it;
-- RFCs: the [embedded package manifest](docs/rfc/0001-package-format.md)
-  (proposal), the [application folder format](docs/rfc/0002-application-folder.md)
-  (implemented: how `apkg run` starts a program) and
-  [storefront metadata](docs/rfc/0003-storefront-metadata.md) (proposal; the
-  0.5.0 pictures and Demo store demonstrate it);
+- [application folder format](docs/rfc/0002-application-folder.md): implemented schema 1, used by `apkg run`;
+- [storefront metadata](docs/rfc/0003-storefront-metadata.md): a proposal with a local demonstration; not supported catalogue fields;
 - [ARexx interface](docs/arexx.md);
 - [release notes](https://github.com/tomaszstaniak/arospkg/releases)
   for changes and known limitations.
+
+## Integration with pkg
+
+Work is under way to combine arospkg and John Knipper's pkg in [apkg-fusion](https://github.com/pomaros/apkg-fusion). The integration uses arospkg's client and context model with pkg's services, including signed publication and a package portal.
+
+The first shared release, maintainer responsibilities and migration commitments still need joint agreement. The instructions here describe released arospkg 0.7.3, not the fusion builds. See the [maintainer handoff](https://github.com/pomaros/apkg-fusion/blob/main/docs/fusion/maintainer-agreement.md) and [integration plan](https://github.com/pomaros/apkg-fusion/blob/main/PLAN.md).
 
 ## Layout
 
