@@ -1953,6 +1953,18 @@ static int on_message(pm_msg *m)
             logline("%s", kept);
             status(kept);
         }
+        else if (m->status == PKG_OK && kind == JOB_REMOVE && m->rem.in_use) {
+            /* An empty drawer another program holds: moved aside, or kept. */
+            static char held[700];
+            if (m->rem.moved_to[0])
+                snprintf(held, sizeof held, "removed %s; its empty drawer was held by another program "
+                         "and was moved to %s; the next install, upgrade or removal deletes it once nothing holds it", cur.id, m->rem.moved_to);
+            else
+                snprintf(held, sizeof held, "removed %s; its empty drawer %s is held by another program "
+                         "and stays until that program ends or a restart", cur.id, m->rem.dir);
+            logline("%s", held);
+            status(held);
+        }
         else if (m->status == PKG_OK && kind != JOB_UPDATE && m->note[0]) {
             /* Said where the user looks: an old package was removed now. */
             static char both[600];

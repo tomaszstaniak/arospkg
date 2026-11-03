@@ -175,6 +175,26 @@ static int dir_is_empty(const char *path)
     return empty;
 }
 
+/* An empty drawer that another process holds a lock on cannot be deleted
+ * until that lock goes; on AROS the first program of a boot to open
+ * gl.library leaves its drawer locked by a process gl.library starts, for
+ * the rest of the boot. Such a drawer is not the user's files and must not
+ * keep the package's place: it is renamed into tmp/, which the next
+ * install, upgrade or removal empties when it opens the root, so it goes
+ * once nothing holds it. Returns 0 when it was
+ * moved, with where to `to`. */
+static int move_held_aside(pkg_ctx *c, const char *dest, const char *id, char *to, size_t n)
+{
+    int k;
+    u_mkdir(c->tmp);
+    for (k = 0; k < 100; k++) {
+        snprintf(to, n, "%s/held-%s-%d", c->tmp, id, k);
+        if (!u_exists(to)) return u_rename(dest, to);
+    }
+    to[0] = 0;
+    return -1;
+}
+
 
 /* --keep-rejected. A download that failed verification is moved aside, not
  * deleted, so the bytes can be compared with the real file. It stays refused:
@@ -344,6 +364,17 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
                         "Usually left by an earlier removal that kept files you "
                         "had changed. Nothing was changed. Move it away and "
                         "install again.", dest);
+    /* Empty but held by another process: moved aside now, before anything is
+       downloaded, or refused now with the reason. Left in place, the publish
+       would fail at the end, after the download and the staging. */
+    if (u_exists(dest) && u_in_use(dest)) {
+        char aside[PKG_MAXPATH];
+        if (move_held_aside(c, dest, id, aside, sizeof aside) != 0)
+            return pkg_fail(e, PKG_E_CONFLICT, "the drawer is in use by another program",
+                            "It is empty, but another program holds it, so it can be neither "
+                            "deleted nor moved. Nothing was changed. Install again when that "
+                            "program has ended, or after a restart.", dest);
+    }
 
     idx = u_read_all(index_path, &len);
     if (!idx) return pkg_fail(e, PKG_E_NOT_FOUND, "cannot read the index",
@@ -589,7 +620,11 @@ pkg_status pkg_install(pkg_ctx *c, const char *index_path, const char *id,
     }
     prog(c, "publish", 0, 1, 0);
     if (u_publish(staging, dest) != 0) {
-        st = pkg_fail(e, PKG_E_IO, "cannot move the package into place", "", dest); goto out;
+        st = pkg_fail(e, PKG_E_IO,
+                      u_exists(dest) && u_in_use(dest) ? "the drawer is in use by another program"
+                                                       : "cannot move the package into place",
+                      "", dest);
+        goto out;
     }
     prog(c, "publish", 1, 1, 0);
     STOP(PKG_STOP_AFTER_DIR);
@@ -772,6 +807,10 @@ pkg_status pkg_remove(pkg_ctx *c, const char *id, pkg_stop stop, pkg_err *e)
 
     inv_remove(dest, inv, ninv, &removed, &kept);
     prune_empty(dest);
+    if (u_exists(dest) && dir_is_empty(dest) && u_in_use(dest)) {
+        c->removal.in_use = 1;
+        move_held_aside(c, dest, id, c->removal.moved_to, sizeof c->removal.moved_to);
+    }
     {
         char sha[65] = "";
         int present = u_exists(icon_dst);
