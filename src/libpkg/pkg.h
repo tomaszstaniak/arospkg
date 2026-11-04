@@ -373,6 +373,8 @@ typedef struct {
     int  others_named;
     char other_names[10][256];
     char dir[PKG_MAXPATH];     /* the drawer, when it is still there */
+    int  in_use;               /* it was empty, but another lock held it */
+    char moved_to[PKG_MAXPATH];/* where such a drawer was moved, if it was */
     char icon[PKG_MAXPATH];    /* a changed drawer icon that was kept */
     char list_file[PKG_MAXPATH];
 } pkg_removal;

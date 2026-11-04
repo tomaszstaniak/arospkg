@@ -1564,6 +1564,14 @@ static int real_main(int argc, char **argv)
                     snprintf(line, sizeof line, "and %d more not installed by apkg", rm.others - rm.others_named);
                     pr_text(line, 4);
                 }
+            } else if (rm.in_use && rm.moved_to[0]) {
+                snprintf(line, sizeof line, "The empty drawer was held by another program, so it was moved "
+                         "to %s; the next install, upgrade or removal in this root deletes it once nothing holds it.", rm.moved_to);
+                pr_text(line, 2);
+            } else if (rm.in_use) {
+                snprintf(line, sizeof line, "The drawer %s was kept: it is empty, but another program holds "
+                         "it. Delete it when that program has ended, or after a restart.", rm.dir);
+                pr_text(line, 2);
             } else if (rm.dir[0]) {
                 snprintf(line, sizeof line, "The drawer %s was kept; it is not empty.", rm.dir);
                 pr_text(line, 2);
