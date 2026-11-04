@@ -1,4 +1,4 @@
-arospkg 0.7.3
+arospkg 0.7.4
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.3:
+0.7.4:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,19 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.4
+------------
+
+- An empty package drawer that another program still holds no longer
+  blocks removal and reinstallation. On AROS, the first program after a
+  restart that opens gl.library keeps its drawer in use until the next
+  restart. apkg now moves such a drawer into the root's tmp drawer, where
+  a later run deletes it once it is free, and says so. Before, removal
+  kept it and reported it as not empty, and installing again failed
+  until a restart.
+- The message about a lock left from a previous boot names the command
+  that clears it, apkg unlock.
 
 NEW IN 0.7.3
 ------------
