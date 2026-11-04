@@ -19,6 +19,10 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_app" \
     "$HERE/test_app.c" "$SRC/app.c" "$SRC/json.c" "$SRC/req.c" "$SRC/err.c"
 "$OUT/test_app"
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_held" \
+    "$HERE/test_held.c" "$SRC/held.c"
+"$OUT/test_held"
+
 python3 "$HERE/../tools/make-demo-store.py" "$OUT/demostore" >/dev/null
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_linktext" \
     "$HERE/test_linktext.c" "$HERE/../src/pkgmanager/linktext.c"
