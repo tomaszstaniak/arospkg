@@ -1960,7 +1960,7 @@ static int on_message(pm_msg *m)
                 snprintf(held, sizeof held, "removed %s; its empty drawer was held by another program "
                          "and was moved to %s; the next install, upgrade or removal deletes it once nothing holds it", cur.id, m->rem.moved_to);
             else
-                snprintf(held, sizeof held, "removed %s; its empty drawer %s is held by another program "
+                snprintf(held, sizeof held, "removed %s; its drawer %s is held by another program "
                          "and stays until that program ends or a restart", cur.id, m->rem.dir);
             logline("%s", held);
             status(held);
