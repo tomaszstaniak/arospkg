@@ -5,6 +5,7 @@
 
 static void net_prog_shim(void *user, unsigned long done, unsigned long total, int *cancel);
 #include "util.h"
+#include "held.h"
 #include "json.h"
 #include "sha256.h"
 #include "arc.h"
@@ -185,14 +186,7 @@ static int dir_is_empty(const char *path)
  * moved, with where to `to`. */
 static int move_held_aside(pkg_ctx *c, const char *dest, const char *id, char *to, size_t n)
 {
-    int k;
-    u_mkdir(c->tmp);
-    for (k = 0; k < 100; k++) {
-        snprintf(to, n, "%s/held-%s-%d", c->tmp, id, k);
-        if (!u_exists(to)) return u_rename(dest, to);
-    }
-    to[0] = 0;
-    return -1;
+    return pkg_move_held_aside(c->tmp, dest, id, to, n);
 }
 
 
@@ -809,7 +803,10 @@ pkg_status pkg_remove(pkg_ctx *c, const char *id, pkg_stop stop, pkg_err *e)
     prune_empty(dest);
     if (u_exists(dest) && dir_is_empty(dest) && u_in_use(dest)) {
         c->removal.in_use = 1;
-        move_held_aside(c, dest, id, c->removal.moved_to, sizeof c->removal.moved_to);
+        /* On failure the drawer stays where it is and moved_to stays empty,
+           so the message says it was kept rather than moved. */
+        if (move_held_aside(c, dest, id, c->removal.moved_to, sizeof c->removal.moved_to) != 0)
+            c->removal.moved_to[0] = 0;
     }
     {
         char sha[65] = "";

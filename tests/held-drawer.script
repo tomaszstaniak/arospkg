@@ -1,0 +1,20 @@
+; A package drawer that another program holds (issues #1 and #3). Copy apkg,
+; holddir (tests/holddir), a small package archive and its index to RAM:T,
+; then run:  Execute RAM:T/held-drawer.script
+; It needs the package's id in the index to be "mini" with subdir "Mini".
+; Expected: the second remove moves the held drawer into tmp/ and says so; the
+; reinstall succeeds; verify finds every file.
+FAILAT 21
+Delete SYS:HeldTest ALL FORCE QUIET
+MakeDir SYS:HeldTest SYS:HeldTest/cache
+Copy RAM:T/mini.apkg.zip SYS:HeldTest/cache/mini.zip
+RAM:T/apkg --root SYS:HeldTest --index RAM:T/index.json install mini
+Run >NIL: RAM:T/holddir SYS:HeldTest/mini 600
+Wait 2
+RAM:T/apkg --root SYS:HeldTest --index RAM:T/index.json remove mini
+List SYS:HeldTest ALL
+Copy RAM:T/mini.apkg.zip SYS:HeldTest/cache/mini.zip
+RAM:T/apkg --root SYS:HeldTest --index RAM:T/index.json install mini
+RAM:T/apkg --root SYS:HeldTest --index RAM:T/index.json verify mini
+RAM:T/apkg --root SYS:HeldTest --index RAM:T/index.json remove mini
+Echo "held-drawer: done"
