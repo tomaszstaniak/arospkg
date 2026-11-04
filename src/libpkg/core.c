@@ -90,7 +90,7 @@ static pkg_status lock_take(pkg_ctx *c, pkg_err *e)
         if (theirs[0] && strcmp(theirs, boot) != 0)
             return pkg_fail(e, PKG_E_STALE_LOCK,
                         "the lock was left by a run from a previous boot",
-                        "Stop every other pkg and PkgManager, then run: pkg unlock",
+                        "Stop every other apkg and PkgManager, then run: apkg unlock",
                         c->lock_owner);
         return pkg_fail(e, PKG_E_LOCKED, "another instance is running",
                     task[0] ? task : "unknown task", c->lock_owner);

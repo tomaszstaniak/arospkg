@@ -25,7 +25,7 @@
 typedef enum {
     PKG_OK = 0,
     PKG_E_LOCKED,          /* another instance holds the lock            */
-    PKG_E_STALE_LOCK,      /* holder is gone; pkg unlock is needed       */
+    PKG_E_STALE_LOCK,      /* holder is gone; apkg unlock is needed      */
     PKG_E_UNRESOLVED_TXN,  /* recovery stopped short; needs a human      */
     PKG_E_NOT_FOUND,
     PKG_E_EXISTS,
