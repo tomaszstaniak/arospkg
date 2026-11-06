@@ -1,16 +1,20 @@
 # Links in PkgManager: guest test material
 
 What the window test of PkgManager's links uses. The address logic itself
-(which text is a link, how it is shortened, which address may be opened)
-is covered on the host by `tests/test_linktext.c`.
+(which text is a link, how it is shortened, which address may be opened, how
+a text and its links are built) is covered on the host by
+`tests/test_linktext.c`. The text view is the Linktext class of zunekit,
+compiled in from `third_party/zunekit` (see `PIN` there); its own tests are in
+zunekit. `--no-text-view` shows the fallback, a Floattext with the addresses
+written out.
 
 - `links-index.json`: a hand-written catalogue for a test root
   (`<root>/db/index.json`). Its one package (x86_64, v11 and v1) has a
   193-character source address with `&` and `%`, notes with a second
   address, one with `;` (copy only) and an `ftp://` address (not a link),
   and a download address that cannot resolve, so **Install** fails with a
-  message that holds an address. `linkmany` has eight addresses (two
-  pages), a 1500-character source address ending in `!` (copied only),
+  message that holds an address. `linkmany` has eight addresses, a
+  1500-character source address ending in `!` (copied only),
   `<address!>` in its notes and a download address ending in `!`;
   `linkedge` has a 480-character source address, the longest that is
   opened.

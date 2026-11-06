@@ -1,36 +1,18 @@
 # Links in PkgManager
 
-PkgManager 0.7.2. The test packages (`linktest`, `linkmany`, `linkedge`)
-come from a hand-written test catalogue, `tests/links/links-index.json`.
+PkgManager 0.7.4-test1. The test packages (`linkmany`, `linkedge`) come from
+a hand-written test catalogue, `tests/links/links-index.json`.
 
-- `pages-2026-09.png`: AROS 2026.09 (no Urltext.mcc: plain Zune text
-  links). `linkmany` has eight addresses: four are shown, and
-  **Previous**/**Next** turn to the others ("addresses 1-4 of 8").
-- `exact-2026-09.png`: the same package, second page. The address written
-  as `<https://example.org/n/7?token=abc!>` in the notes keeps its final
-  `!`; `https://example.org/n/6!` in running text does not. The last row is
-  the 1500-character source address, shortened on screen. Below, a failed
-  download: its address comes from the catalogue field, final `!` included,
-  with its own link and Copy button.
-- `too-long-2026-09.png`: a click on the 1500-character address: it can
-  only be copied, and the status line says why.
-- `pages-aros-one.png`: AROS One 1.3, the same second page, links drawn by
-  Urltext.mcc.
-
-From the first version with links (main after 0.7.1):
-
-- `details-aros-one.png`: AROS One 1.3, the arospkg entry of the
-  catalogue. The source and catalogue addresses are links, drawn by
-  Urltext.mcc, each with a Copy button; the long catalogue address is
-  shortened on screen.
-- `about-aros-one.png`: AROS One 1.3, About after **Check for a newer
-  version**: the home page and the release page as links.
-- `message-link-2026-09.png`: AROS 2026.09. A test package whose download
-  address cannot be reached: the message on the status line shows the
-  address shortened, and its link and Copy button stand beside it. Above,
-  three addresses from the package's notes and source; the `ftp://`
-  address in the notes is not a link.
-- `no-browser-2026-09.png`: AROS 2026.09 with no browser enabled in
-  Prefs/OpenURL: a click on a link says why it could not be opened.
-- `mainline-v1.png`: mainline AROS (ABIv1), the same test package and
-  About; the bubble help shows the whole address.
+- `details-2026-09.png`: AROS 2026.09. Eight addresses inside the notes, the
+  address written as `<https://example.org/n/7?token=abc!>` with its final
+  `!`, and the 1500-character source address shortened on screen.
+- `selection-2026-09.png`: text selected by dragging across two links; nothing
+  was opened.
+- `keyboard-2026-09.png`: the link reached with the cursor keys, framed.
+- `message-2026-09.png`: a failed download. The address in the message is a
+  link, and its final `!` stays with it.
+- `no-browser-2026-09.png`: no browser enabled in Prefs/OpenURL.
+- `menu-aros-one.png`: AROS One 1.3, the menu of a link.
+- `about-aros-one.png`: AROS One 1.3, About with labelled links.
+- `details-mainline.png`: mainline AROS (ABIv1), a package from the real
+  catalogue.
