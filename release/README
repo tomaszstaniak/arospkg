@@ -1,4 +1,4 @@
-arospkg 0.7.4
+arospkg 0.7.5
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.4:
+0.7.5:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,23 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.5
+------------
+
+- Web addresses in PkgManager stand where they occur in the text: in a
+  package's details, in About, in confirmation windows and in messages.
+  The rows of addresses below the text, their Copy buttons and
+  Previous/Next are gone.
+- Click a link to open it in the browser chosen in Prefs/OpenURL. The
+  right mouse button offers Open link and Copy link address. Dragging
+  over text selects it without opening anything; Right Amiga+C copies it.
+- Keyboard: Tab to the text, Left and Right move between links, Return
+  opens, Right Amiga+C copies the link, Tab leaves.
+- A long address is shortened on screen; its bubble help, opening and
+  copying use the whole address. Addresses longer than 480 characters,
+  or with ' * ; or $, can only be copied.
+- The text view is part of PkgManager; no class needs to be installed.
 
 NEW IN 0.7.4
 ------------
