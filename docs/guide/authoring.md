@@ -41,7 +41,7 @@ It writes `build/MyApp.arospkg.toml` beside the drawer. Keep this file with your
 
 For an application, add a launch table. Paths are relative to its drawer:
 
-<!-- validate: fragment -->
+<!-- validate: none -->
 ```toml
 [launch]
 executable = "MyApp"
