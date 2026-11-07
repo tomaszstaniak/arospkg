@@ -177,7 +177,7 @@ Three facts about one variant (`id`, `arch`, `abi`) and one archive, kept apart:
 
 The record (`review/<id>.<arch>.<abi>.json`, `schema` 1) holds the `suite`, the `date`, the `sha256` and `size` of the archive reviewed, the `manifest_digest` (SHA-256 of the entry with its override, as parsed: a comment or a reformatted line is no change, a changed value is), the `result`, each check with its `detail`, and what was `unchecked` and why. `mkindex.py` writes `"reviewed"` only when a passed record's `sha256`, `size` and `manifest_digest` are the entry's. New bytes or changed metadata make the entry Listed until it is reviewed again.
 
-A pull request that changes an entry's data has the changed variants reviewed; one that only changes comments has none. A pull request that edits `review/` or `history.json` fails. After a merge the publish workflow reviews again and commits the records. Its *review_all* run reviews every entry; an entry that no longer passes stays Listed, and the run goes on.
+A pull request that changes an entry's data has the changed variants reviewed; one that only changes comments has none. A pull request that edits `review/` or `history.json` fails. After a merge the publish workflow reviews every entry changed since the last published catalogue and commits the records. That catalogue's commit is the branch `published`, which only the workflow moves, in the same push as `main`; a run whose push is refused because `main` moved leaves it in place and tries again on the new `main`, so two merges in quick succession are both reviewed. Its *review_all* run reviews every entry; an entry that no longer passes stays Listed, and the run goes on.
 
 <a id="runtime-tests"></a>**Runtime tests**, one file per variant:
 
