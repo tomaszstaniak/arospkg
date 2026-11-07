@@ -6,13 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void u_join(char *out, size_t n, const char *a, const char *b)
+int u_join(char *out, size_t n, const char *a, const char *b)
 {
     size_t la = strlen(a);
+    int w;
     if (la && (a[la-1] == '/' || a[la-1] == ':'))
-        snprintf(out, n, "%s%s", a, b);
+        w = snprintf(out, n, "%s%s", a, b);
     else
-        snprintf(out, n, "%s/%s", a, b);
+        w = snprintf(out, n, "%s/%s", a, b);
+    return (w < 0 || (size_t)w >= n) ? -1 : 0;
 }
 
 int u_exists(const char *path)

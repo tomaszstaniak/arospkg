@@ -12,6 +12,10 @@
 #include <stddef.h>
 
 #define PKG_MAXPATH 512
+/* The longest --root: every path apkg derives from it (root/id, root/tmp/
+   <transaction>/<id>/..., root/db/transactions/<transaction>/...) must still
+   fit in PKG_MAXPATH, or a cut-off path could name another package's drawer. */
+#define PKG_MAXROOT 255
 
 /* The catalogue apkg update fetches. index-v3.json is the generation of the
    file this client reads: every package, including those that need

@@ -4,7 +4,8 @@
 
 #define PKG_UTIL_PATH 512
 
-void  u_join(char *out, size_t n, const char *a, const char *b);
+/* a + "/" + b into out; -1 (out cut off) when it does not fit in n bytes */
+int   u_join(char *out, size_t n, const char *a, const char *b);
 int   u_exists(const char *path);
 int   u_isdir(const char *path);
 int   u_mkdir(const char *path);          /* one level; 0 = ok or existed */
