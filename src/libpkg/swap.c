@@ -179,6 +179,42 @@ static int copy_into(const char *from_root, const char *to_root, const char *rel
     return u_copy(src, dst);
 }
 
+/* The user's drawers, with or without files in them. The files were copied
+ * above and made their parents on the way; a drawer the installed revision
+ * never had a file in (one the user or the program made, such as a state
+ * drawer that is empty between two uses) has nothing to make it, and a
+ * program running through the upgrade then writes into a drawer that is
+ * gone. A drawer of the package's own that the target no longer fills is
+ * not carried: the plan removed its files on purpose. */
+static int carry_dirs(const char *from_root, const char *to_root, const char *rel,
+                      const inv_ent *old, int nold)
+{
+    char **names; int cnt, i, bad = 0;
+    char from[PKG_MAXPATH], sub[PKG_MAXPATH];
+    u_join(from, sizeof from, from_root, rel);
+    if (u_listdir(from, &names, &cnt) != 0) return -1;
+    for (i = 0; i < cnt && !bad; i++) {
+        char path[PKG_MAXPATH];
+        size_t l;
+        int k, ours = 0;
+        u_join(path, sizeof path, from, names[i]);
+        if (!u_isdir(path)) continue;
+        if (*rel) snprintf(sub, sizeof sub, "%s/%s", rel, names[i]);
+        else      snprintf(sub, sizeof sub, "%s", names[i]);
+        l = strlen(sub);
+        for (k = 0; k < nold && !ours; k++)
+            ours = strncmp(old[k].rel, sub, l) == 0 && old[k].rel[l] == '/';
+        if (!ours) {
+            char to[PKG_MAXPATH];
+            u_join(to, sizeof to, to_root, sub);
+            if (!u_exists(to) && u_mkpath(to) != 0) bad = 1;
+        }
+        if (!bad && carry_dirs(from_root, to_root, sub, old, nold) != 0) bad = 1;
+    }
+    u_freelist(names, cnt);
+    return bad ? -1 : 0;
+}
+
 static void print_plan(const up_step *steps, int n, const char *dest)
 {
     int i, a = 0, r = 0, d = 0, k = 0, u = 0;
@@ -320,6 +356,10 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
             }
         }
     }
+    if (u_exists(dest) && carry_dirs(dest, staging, "", old, nold) != 0) {
+        st = pkg_fail(e, PKG_E_IO, "cannot carry a drawer over into the new tree", "", dest);
+        goto fail_staging;
+    }
     if (inv_of_tree(staging, "", result, &nresult, MAXINV) != 0) { st = pkg_fail(e, PKG_E_IO, "cannot inventory the result", "", staging); goto fail_staging; }
 
     /* The drawer icon: replaced only if it is ours and unchanged, and the
@@ -405,7 +445,14 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
     }
     STOP(PKG_STOP_AFTER_PLAN);
 
-    /* 5. The swap: two renames. */
+    /* 5. The swap: two renames. A program running from the drawer keeps
+       its lock, which follows the old tree into tmp/: it goes on with the
+       old files, and what it saves from now on lands there, not in the
+       new drawer. Said here, since the swap itself succeeds. */
+    if (u_exists(dest) && u_in_use(dest))
+        printf("note: %s is in use, probably by a running program. It keeps running with the\n"
+               "old files until it is started again, and settings it saves until then are not\n"
+               "kept. Quit it and start it again after this.\n", dest);
     prog(c, "publish", 0, 2, 0);
     if (u_exists(dest) && u_publish(dest, oldtree) != 0) {
         st = pkg_fail(e, PKG_E_IO, "cannot move the drawer aside", "The transaction is kept; the next run rolls it back.", dest); goto out;

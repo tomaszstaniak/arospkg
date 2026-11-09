@@ -64,6 +64,9 @@ def ah(rid, path, key):
 def absent(path, label):
     return (f"If EXISTS {ROOT}/{path}\n  Echo >>RAM:up-console.txt \"FAIL {label}: {path} exists\"\n"
             f"Else\n  Echo >>RAM:up-console.txt \"PASS {label}: {path} absent\"\nEndIf")
+def present(path, label):
+    return (f"If EXISTS {ROOT}/{path}\n  Echo >>RAM:up-console.txt \"PASS {label}: {path} kept\"\n"
+            f"Else\n  Echo >>RAM:up-console.txt \"FAIL {label}: {path} is gone\"\nEndIf")
 
 L = []
 L.append("""; Upgrade and rollback on a controlled package, no network: both revisions
@@ -100,16 +103,20 @@ c(ah("", "Up/Prog", "r1/Up/Prog")); c(ah("", "Up/OldFile", "r1/Up/OldFile")); c(
 say("the user edits config.txt")
 L.append(f'Echo >>{ROOT}/Up/config.txt "user edit"')
 c(ah("", "Up/config.txt", "user/config"))
-say("upgrade to revision 2: Prog replaced, NewFile added, OldFile removed, config kept, icon replaced")
+say("the program makes an empty state drawer, and a drawer in a drawer")
+L.append(f"MakeDir {ROOT}/Up/State {ROOT}/Up/State/Inner")
+say("upgrade to revision 2: Prog replaced, NewFile added, OldFile removed, config kept, icon replaced, empty drawers kept")
 c(run("u-upgrade", 0, "upgrade up", "idx-r2.json"))
 c(ah("", "Up/Prog", "r2/Up/Prog")); c(ah("", "Up/NewFile", "r2/Up/NewFile")); c(ah("", "Up/config.txt", "user/config")); c(ah("", "Up.info", "r2/Up.info"))
 L.append(absent("Up/OldFile", "u-upgrade"))
+L.append(present("Up/State/Inner", "u-upgrade"))
 c(f"{A} info up")
 c(f"List {ROOT}/cache {ROOT}/cache/previous {ROOT}/db/previous")
 say("the user edits NewFile after the upgrade")
 L.append(f'Echo >>{ROOT}/Up/NewFile "user edit"')
-say("rollback: Prog back to r1, OldFile back, NewFile kept as edited, config kept, icon back")
+say("rollback: Prog back to r1, OldFile back, NewFile kept as edited, config kept, icon back, empty drawers kept")
 c(run("u-rollback", 0, "rollback up"))
+L.append(present("Up/State/Inner", "u-rollback"))
 c(ah("", "Up/Prog", "r1/Up/Prog")); c(ah("", "Up/OldFile", "r1/Up/OldFile")); c(ah("", "Up/NewFile", "user/newfile")); c(ah("", "Up/config.txt", "user/config")); c(ah("", "Up.info", "r1/Up.info"))
 say("rollback again: nothing to go back to")
 c(run("u-rollback-none", 4, "rollback up"))
