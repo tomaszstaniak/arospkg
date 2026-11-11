@@ -1,4 +1,4 @@
-arospkg 0.7.5
+arospkg 0.7.6
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.5:
+0.7.6:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,21 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.6
+------------
+
+- An upgrade or rollback keeps every drawer in the package's drawer that
+  the installed files did not fill, including empty ones a program made
+  for itself. Dockbar keeps such a drawer for its widget requests, and
+  every widget action failed with "Could not launch provider" after an
+  upgrade while Dockbar ran.
+- When a program is still running from the drawer being upgraded, apkg
+  says so: the program keeps running from the old files, and what it
+  saves until it is started again is not kept. Quit the program first.
+- An archive member whose path would not fit is refused as "member path
+  too long" instead of being written under a cut-off name. A --root
+  longer than 255 characters is refused.
 
 NEW IN 0.7.5
 ------------
