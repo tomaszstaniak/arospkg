@@ -217,8 +217,8 @@ TC=/path/to/toolchain SDK=/path/to/sdk sh src/build-gui.sh   # PkgManager
 for mainline and the Pi. `tools/make-demo-store.py` builds the demo
 storefront that the archives ship in `Demo/`.
 
-`src/build-mainline.sh`, `src/build-i386.sh`, `src/build-aarch64.sh`
-(hosted) and `src/build-raspi.sh` (native Raspberry Pi) build other targets
+`src/build-mainline.sh`, `src/build-i386.sh` and `src/build-raspi.sh`
+(native Raspberry Pi) build other targets
 with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.

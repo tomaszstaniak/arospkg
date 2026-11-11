@@ -1,7 +1,7 @@
 #!/bin/sh
 # Build PkgManager, the Zune front end, for native AROS on the Raspberry Pi
 # (raspi-aarch64, ABIv1): the toolchain and SDK of build-raspi.sh, the sources
-# of build-gui.sh. The Pi's own Developer SDK, never the hosted Macaros one.
+# of build-gui.sh. The Pi's own Developer SDK, never a hosted aarch64 one.
 set -e
 RPI=${RPI:-$HOME/Work/AROS/toolchains/raspi-aarch64}
 SDK=${SDK:-$RPI/sdk}
