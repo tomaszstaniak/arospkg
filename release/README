@@ -1,4 +1,4 @@
-arospkg 0.7.6
+arospkg 0.7.7
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.6:
+0.7.7:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,15 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.7
+------------
+
+- An upgrade or rollback keeps the package's drawer and replaces what is
+  in it. A Shell path or an assign to the drawer, such as the one a
+  package startup script adds, keeps working: after an upgrade Fastfetch
+  was "object not found" until a reboot. A program running from the
+  drawer keeps the code it loaded until it is started again.
 
 NEW IN 0.7.6
 ------------
