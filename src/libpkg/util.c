@@ -108,6 +108,22 @@ int u_listdir(const char *path, char ***names, int *count)
     return 0;
 }
 
+int u_move_children(const char *from, const char *to, int max, int *moved)
+{
+    char **names; int n, i, bad = 0;
+    *moved = 0;
+    if (u_listdir(from, &names, &n) != 0) return -1;
+    for (i = 0; i < n && !bad; i++) {
+        char a[512], b[512];
+        if (max >= 0 && *moved >= max) break;
+        if (u_join(a, sizeof a, from, names[i]) != 0 || u_join(b, sizeof b, to, names[i]) != 0
+            || u_exists(b) || !Rename((CONST_STRPTR)a, (CONST_STRPTR)b)) bad = 1;
+        else (*moved)++;
+    }
+    u_freelist(names, n);
+    return bad ? -1 : 0;
+}
+
 void u_freelist(char **names, int count)
 {
     int i;

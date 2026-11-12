@@ -29,5 +29,11 @@ int   u_write_atomicish(const char *path, const char *text);
 char *u_read_all(const char *path, size_t *len);   /* caller frees */
 
 int   u_listdir(const char *path, char ***names, int *count); /* caller frees */
+/* Move every entry of directory `from` into directory `to` by renaming it,
+ * keeping `to` itself: locks on `to` (a Shell path, an assign, a running
+ * program's PROGDIR) stay on the same directory. Refuses an entry whose name
+ * exists in `to`. Stops after `max` entries when max >= 0. Returns 0 when
+ * done (or stopped at max), -1 on a failed or refused move; *moved counts. */
+int   u_move_children(const char *from, const char *to, int max, int *moved);
 void  u_freelist(char **names, int count);
 #endif

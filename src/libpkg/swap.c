@@ -414,6 +414,8 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
         js_raw(&o, ",\n  "); js_key(&o, "dir");      js_vstr(&o, dest);
         js_raw(&o, ",\n  "); js_key(&o, "staging");  js_vstr(&o, staging);
         js_raw(&o, ",\n  "); js_key(&o, "oldtree");  js_vstr(&o, oldtree);
+        /* Since 0.7.7: the drawer keeps its identity, its entries move. */
+        js_raw(&o, ",\n  "); js_key(&o, "swap");     js_vstr(&o, "contents");
         js_raw(&o, ",\n  "); js_key(&o, "registry"); js_vstr(&o, regpath);
         js_raw(&o, ",\n  "); js_key(&o, "registry_before"); js_vstr(&o, regbefore);
         js_raw(&o, ",\n  "); js_key(&o, "prev_registry"); js_vstr(&o, is_rollback ? from->prev_registry : prev_reg);
@@ -445,21 +447,36 @@ static pkg_status swap(pkg_ctx *c, const char *id, int is_rollback,
     }
     STOP(PKG_STOP_AFTER_PLAN);
 
-    /* 5. The swap: two renames. A program running from the drawer keeps
-       its lock, which follows the old tree into tmp/: it goes on with the
-       old files, and what it saves from now on lands there, not in the
-       new drawer. Said here, since the swap itself succeeds. */
+    /* 5. The swap. The drawer itself stays where it is: a Shell path, an
+       assign or a running program holds a lock on that directory, and a
+       lock follows the object, not the name. Renaming the drawer aside
+       left every such lock on the old tree, emptied at commit (a package
+       on the path became "object not found" until a reboot). So the old
+       entries move into tmp/, then the new ones into the drawer. A running
+       program keeps the code it loaded; what it saves lands in the new tree.
+       Recovery tells the two halves apart by the 001a marker. */
     if (u_exists(dest) && u_in_use(dest))
-        printf("note: %s is in use, probably by a running program. It keeps running with the\n"
-               "old files until it is started again, and settings it saves until then are not\n"
-               "kept. Quit it and start it again after this.\n", dest);
+        printf("note: %s is in use: by a Shell path or an assign, which keep working,\n"
+               "or by a running program, which keeps its old code until it is started again.\n", dest);
     prog(c, "publish", 0, 2, 0);
-    if (u_exists(dest) && u_publish(dest, oldtree) != 0) {
-        st = pkg_fail(e, PKG_E_IO, "cannot move the drawer aside", "The transaction is kept; the next run rolls it back.", dest); goto out;
-    }
-    STOP(PKG_STOP_AFTER_OLD_MOVED);
-    if (u_publish(staging, dest) != 0) {
-        st = pkg_fail(e, PKG_E_IO, "cannot put the new tree in place", "The transaction is kept; the next run rolls it back.", dest); goto out;
+    {
+        int moved = 0;
+        if (!u_exists(dest) && u_mkdir(dest) != 0) {
+            st = pkg_fail(e, PKG_E_IO, "cannot create the drawer", "", dest); goto out;
+        }
+        if (u_mkdir(oldtree) != 0) {
+            st = pkg_fail(e, PKG_E_IO, "cannot create the place for the old tree", "", oldtree); goto out;
+        }
+        if (u_move_children(dest, oldtree, stop == PKG_STOP_IN_OLD_OUT ? 1 : -1, &moved) != 0) {
+            st = pkg_fail(e, PKG_E_IO, "cannot move the old tree aside", "The transaction is kept; the next run rolls it back.", dest); goto out;
+        }
+        STOP(PKG_STOP_IN_OLD_OUT);
+        txn_marker(c, tid, "001a-old-out");
+        STOP(PKG_STOP_AFTER_OLD_MOVED);
+        if (u_move_children(staging, dest, stop == PKG_STOP_IN_NEW_IN ? 1 : -1, &moved) != 0) {
+            st = pkg_fail(e, PKG_E_IO, "cannot put the new tree in place", "The transaction is kept; the next run rolls it back.", dest); goto out;
+        }
+        STOP(PKG_STOP_IN_NEW_IN);
     }
     prog(c, "publish", 2, 2, 0);
     STOP(PKG_STOP_AFTER_NEW_PUBLISHED);
