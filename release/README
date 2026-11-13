@@ -1,4 +1,4 @@
-arospkg 0.7.7
+arospkg 0.7.8
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,7 +36,7 @@ Click Update index, select a package and click Install, then Run.
 BUILDS
 ------
 
-0.7.7:
+0.7.8:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   i386-aros-v0       apkg: experimental
@@ -72,6 +72,13 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.7.8
+------------
+
+- apkg install refuses a package that the catalogue has only for another
+  system, and says which one it is for. It used to print "Installing",
+  install nothing and end without an error.
 
 NEW IN 0.7.7
 ------------
