@@ -39,9 +39,11 @@ BUILDS
 0.7.8:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
-  i386-aros-v0       apkg: experimental
   aarch64-aros-raspi apkg and PkgManager: experimental (native AROS on
                      the Raspberry Pi). Please test and report what works.
+
+i386 ABIv0 is no longer built. 0.7.8 is its last release; apkg
+self-update there says that newer releases have no archive for it.
 
 Downloads: https://github.com/tomaszstaniak/arospkg/releases
 

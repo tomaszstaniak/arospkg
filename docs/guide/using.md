@@ -1,6 +1,6 @@
 # Using arospkg
 
-Install programs with apkg in the Shell or PkgManager on the desktop, start them, keep them up to date and remove them. [Choose the archive for your CPU and ABI](../../README.md#downloads). This guide describes **0.7.3**. Mainline x86_64 ABIv1, i386 ABIv0 and Raspberry Pi aarch64 ABIv1 builds remain experimental; see the [release notes](../../release/notes-0.7.3.md).
+Install programs with apkg in the Shell or PkgManager on the desktop, start them, keep them up to date and remove them. [Choose the archive for your CPU and ABI](../../README.md#downloads). This guide describes **0.7.3**. Mainline x86_64 ABIv1 and Raspberry Pi aarch64 ABIv1 builds remain experimental (i386 ABIv0 is no longer built; 0.7.8 is its last release); see the [release notes](../../release/notes-0.7.3.md).
 
 ## Install apkg
 

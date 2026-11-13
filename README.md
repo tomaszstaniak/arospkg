@@ -10,7 +10,7 @@ Both use the same catalogue and installed packages.
 · [Release notes](https://github.com/tomaszstaniak/arospkg/releases/tag/v0.7.8)
 · [Mainline x86_64 ABIv1 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.8/arospkg-0.7.8.x86_64-aros-v1.zip)
 · [Raspberry Pi (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.8/arospkg-0.7.8.aarch64-aros-raspi.zip)
-· [i386 ABIv0 (experimental)](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.8/arospkg-0.7.8.i386-aros-v0.zip)
+· i386 ABIv0: no longer built; [0.7.8](https://github.com/tomaszstaniak/arospkg/releases/download/v0.7.8/arospkg-0.7.8.i386-aros-v0.zip) is the last release
 
 New in 0.7: `apkg self-update` and **About** > **Update arospkg** in PkgManager update apkg and PkgManager together, to the same release, wherever arospkg is installed: an unpacked drawer, the package `arospkg`, or a copy such as `C:apkg`. Everything is checked before a file is replaced, and an interrupted update is finished or undone on the next run. On 0.4.x to 0.6.0, run `apkg self-update` twice: the first run updates apkg, the second PkgManager ([details](docs/self-update.md#from-060-and-earlier)).
 
@@ -217,8 +217,9 @@ TC=/path/to/toolchain SDK=/path/to/sdk sh src/build-gui.sh   # PkgManager
 for mainline and the Pi. `tools/make-demo-store.py` builds the demo
 storefront that the archives ship in `Demo/`.
 
-`src/build-mainline.sh`, `src/build-i386.sh` and `src/build-raspi.sh`
-(native Raspberry Pi) build other targets
+`src/build-mainline.sh` and `src/build-raspi.sh` (native Raspberry Pi)
+build other targets (`src/build-i386.sh` still builds i386 ABIv0, which
+is no longer released)
 with their matching SDKs and toolchains. Mainline and the Pi build
 use system `getentropy()`. Check the release notes for each target's
 test coverage.
