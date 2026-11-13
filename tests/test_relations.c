@@ -99,8 +99,8 @@ int main(void)
     plan(NULL, 0, "otherabi", 0);                refused("only for other systems", PKG_E_NOT_FOUND, "dependency only for another ABI");
     /* The package asked for, only in a build for another system: refused
        with the reason, not an empty plan that "installs" nothing (0.6-0.7.7). */
-    plan(NULL, 0, "v1only", 0);                  refused("built for ABIv1; this system is ABIv11", PKG_E_CONFLICT, "target only for another ABI");
-    plan(NULL, 0, "armonly", 0);                 refused("built for aarch64; this system is x86_64", PKG_E_CONFLICT, "target only for another CPU");
+    plan(NULL, 0, "v1only", 0);                  refused("Only a build for ABIv1 is available; this system is ABIv11.", PKG_E_CONFLICT, "target only for another ABI");
+    plan(NULL, 0, "armonly", 0);                 refused("Only a build for aarch64 is available; this system is x86_64.", PKG_E_CONFLICT, "target only for another CPU");
     plan(NULL, 0, "amb", 0);                     refused("more than one build", PKG_E_CONFLICT, "ambiguous dependency");
     plan(NULL, 0, "future", 0);                  refused("newer apkg", PKG_E_REQUIRES, "unknown client feature");
 

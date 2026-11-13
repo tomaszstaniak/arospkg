@@ -229,17 +229,11 @@ static int choose(planner *p, const char *id, const char *wanted_by)
            ended with success and nothing installed. Refuse with that check's
            reason instead. */
         if (p->upgrade) return -2;
-        if (arch[0] && strcmp(arch, p->arch) != 0) {
-            char why[200];
-            snprintf(why, sizeof why, "built for %s; this system is %s", arch, p->arch);
-            return refuse(p, PKG_E_CONFLICT, "%s is %s. It would install and then not start; "
-                          "the catalogue has no build of it for this system.%s", id, why, "");
-        } else {
-            char why[200];
-            snprintf(why, sizeof why, "built for ABI%s; this system is ABI%s", abi[0] ? abi : "?", p->abi);
-            return refuse(p, PKG_E_CONFLICT, "%s is %s. It would install correctly and then fail "
-                          "to start; the catalogue has no build of it for this system.%s", id, why, "");
-        }
+        if (arch[0] && strcmp(arch, p->arch) != 0)
+            return refuse(p, PKG_E_CONFLICT, "Only a build for %s is available; this system is %s.%s",
+                          arch, p->arch, "");
+        return refuse(p, PKG_E_CONFLICT, "Only a build for ABI%s is available; this system is ABI%s.%s",
+                      abi[0] ? abi : "?", p->abi, "");
     }
     return el;
 }
