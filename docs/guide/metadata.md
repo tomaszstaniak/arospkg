@@ -1,13 +1,13 @@
 ---
 title: "arospkg metadata reference"
 status: reference
-describes: arospkg 0.7.3 and apkg-pack 0.2.0, checked 2026-11-03
+describes: arospkg 0.7.8 and apkg-pack 0.2.0, checked 2026-11-22
 audience: index maintainers, application authors, tool writers
 ---
 
 # arospkg metadata reference
 
-Supported fields for released arospkg 0.7.3. Start with the [publishing guide](authoring.md) for new packages or [archive layout and testing](packaging.md) for existing uploads.
+Supported fields for released arospkg 0.7.8. The format has not changed since 0.7.3. Start with the [publishing guide](authoring.md) for new packages or [archive layout and testing](packaging.md) for existing uploads.
 
 ## Three files, three writers
 
@@ -39,6 +39,21 @@ All keys are top-level unless shown inside a table. Keys `mkindex.py` does not k
 
 **Required** means that `mkindex.py` rejects the manifest without it. **Index** says which index key the value is copied to. **Client** says what the client does with it.
 
+### The fields at a glance
+
+| | Fields |
+|---|---|
+| Always needed | `id`, `version`, `kind`, `arch`, `abi`, `depends_checked = true` |
+| Needed in the catalogue, added by `apkg-pack submit` | `status = "approved"`, `url`, `size`, `sha256` |
+| What is installed | `subdir`, `icon` |
+| What it needs | `requires_system`, `depends`, `recommends`, `conflicts`, `replaces` |
+| Shown to the user | `summary`, `category`, `license`, `revision`, `post_install_notes` |
+| How it starts | `[launch]` with `executable` and `mode` |
+| Where it came from | `[source]` |
+| Kept from older entries | `installs_on`, `runs_on`, `does_not_run_on`, `upload_date`, `selected_by` |
+
+An author who uses `apkg-pack` writes the description once with `init` and never fills in the second row. The [publishing guide](authoring.md#a-complete-description) shows a complete one.
+
 ### Review state
 
 | field | type | required | default | meaning and constraints |
@@ -65,7 +80,7 @@ All keys are top-level unless shown inside a table. Keys `mkindex.py` does not k
 | field | type | required | default | index | client | meaning and constraints |
 |---|---|---|---|---|---|---|
 | `arch` | string | yes | none | `arch` | must equal the client's CPU, or install is refused before download | `"x86_64"`, `"aarch64"` or `"i386"`. |
-| `abi` | string | yes | none | `abi` | must equal the client's, or install is refused before download | `"v11"`: ABIv11, including AROS One. `"v1"`: mainline. `"v0"` for the i386 ABIv0 line. Missing or unknown ABI is not native compatibility. |
+| `abi` | string | yes | none | `abi` | must equal the client's, or install is refused before download | `"v11"`: ABIv11 distributions. `"v1"`: mainline. `"v0"` for the i386 ABIv0 line. Missing or unknown ABI is not native compatibility. |
 
 **Choosing between builds.** The client collects the entries with the requested `id`, and keeps those whose `arch` and `abi` both match its own (compatibility `native`):
 
@@ -246,7 +261,7 @@ Optional, recommended for anything built from source. It records where the sourc
 
 | field | type | index | meaning |
 |---|---|---|---|
-| `repository` | string | `source` (this value only) | Repository URL. The 0.7.3 client holds 2047 characters. The generator still warns above the older 255-character display limit; it does not truncate the index value. |
+| `repository` | string | `source` (this value only) | Repository URL. The client holds 2047 characters. The generator still warns above the older 255-character display limit; it does not truncate the index value. |
 | `revision` | string | none | A commit or tag, so the link names a fixed point. |
 | `archive` | string | none | File name of a source archive published beside the package. |
 | `sha256` | string | none | That archive's hash. |
@@ -419,4 +434,4 @@ Skeleton and excluded manifests are omitted with a reason. An invalid approved m
 - With an empty `subdir`, metadata at the archive root is installed too. Prefer a named application drawer.
 - The drawer icon field is checked for existence; a maintainer must confirm it is the intended icon.
 - SHA-256 checks identify the expected bytes. The catalogue is unsigned, and archive review does not establish runtime compatibility or application safety.
-- Cached archives remain after removal. There is no automatic cache pruning in 0.7.3; rollback depends on the saved previous archive and registry.
+- Cached archives remain after removal. There is no automatic cache pruning in 0.7.8; rollback depends on the saved previous archive and registry.

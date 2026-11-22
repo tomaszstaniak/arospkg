@@ -1,6 +1,6 @@
 # Publish your program with apkg-pack
 
-`apkg-pack` turns a built AROS application drawer into a ZIP and prepares its catalogue entry. This guide covers **apkg-pack 0.2.0** and **arospkg 0.7.3**.
+`apkg-pack` turns a built AROS application drawer into a ZIP and prepares its catalogue entry. This guide covers **apkg-pack 0.2.0** and **arospkg 0.7.8**.
 
 Your source repository can stay private. Building a package needs no account or network connection. The tool checks metadata and archive contents; you still need to test the program on AROS.
 
@@ -36,6 +36,46 @@ python3 apkg-pack.pyz init build/MyApp
 `init` reads the drawer name, the program's `$VER:` string, executable CPU and icon, then asks for the remaining fields. It never guesses the ABI. Enter the ABI from your build configuration, the licence and required system libraries or packages.
 
 It writes `build/MyApp.arospkg.toml` beside the drawer. Keep this file with your project and edit it for later releases. `init` will not overwrite it. For release scripts, supply the fields as options and use `--non-interactive`; see `init --help`.
+
+### A complete description
+
+This is the description of Fastfetch 2.70.0 for Raspberry Pi, as its author keeps it beside the drawer:
+
+<!-- validate: none -->
+```toml
+id              = "fastfetch"
+version         = "2.70.0"
+revision        = 4
+summary         = "System information in the Shell, with the AROS logo"
+category        = "utility/misc"
+license         = "MIT"
+kind            = "app"
+arch            = "aarch64"
+abi             = "v1"
+subdir          = "Fastfetch"
+depends         = []
+depends_checked = true
+
+[[requires_system]]
+type = "library"
+id   = "posixc.library"
+
+[[requires_system]]
+type = "library"
+id   = "stdc.library"
+
+[[requires_system]]
+type = "library"
+id   = "stdcio.library"
+
+[launch]
+executable = "fastfetch"
+mode       = "shell"
+```
+
+`init` insists on `id`, `version`, `summary`, `kind`, `arch`, `abi`, `subdir`, and an answer about `depends` and `requires_system`, even when the answer is "none". The rest is optional: `revision`, `category`, `license`, `icon`, `post_install_notes`, `[launch]`, the other relations and `[source]`.
+
+You do not write `url`, `size`, `sha256` or `status`. `submit` adds them when it measures the uploaded archive. The [metadata reference](metadata.md#the-fields-at-a-glance) lists every field with its limits.
 
 ### Say how it starts
 
