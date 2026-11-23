@@ -40,7 +40,7 @@ SOURCES = "_sources"
 # Part of the key of a _sources record: raise it when icons are made
 # differently, so every archive is read again instead of an old result
 # being taken for the new one.
-ICON_GENERATION = 1
+ICON_GENERATION = 2
 # The order in which the builds of one application are asked for its icon.
 BUILD_ORDER = (("x86_64", "v11"), ("x86_64", "v1"), ("aarch64", "v1"))
 STAMP = (1980, 1, 1, 0, 0, 0)
@@ -268,6 +268,99 @@ def icon_pictures(data):
     return pictures_of_icon(decoded(data))
 
 
+def _rle35(data, bits, entries):
+    """The packed data of a colour icon: runs of `bits`-wide values behind
+    count bytes, in one bit stream (the scheme of icon.library 44)."""
+    out = bytearray()
+    pos = buf = nbits = copy = 0
+    while len(out) < entries and (pos < len(data) or (copy and nbits >= bits)):
+        loop = 0
+        if not copy:
+            if nbits < 8:
+                if pos >= len(data):
+                    break
+                buf = (buf << 8) | data[pos]; pos += 1; nbits += 8
+            count = (buf >> (nbits - 8)) & 0xFF
+            nbits -= 8
+            if count <= 127:
+                copy = count + 1
+            elif count > 128:
+                loop = 256 - count + 1
+            else:
+                continue
+        if copy:
+            loop += 1
+        if nbits < bits:
+            if pos >= len(data):
+                break
+            buf = (buf << 8) | data[pos]; pos += 1; nbits += 8
+        value = (buf >> (nbits - bits)) & ((1 << bits) - 1)
+        out.extend([value] * min(loop, entries - len(out)))
+        if copy:
+            copy -= 1
+        nbits -= bits
+        buf &= (1 << nbits) - 1
+    if len(out) != entries:
+        raise ValueError("the colour icon's data ends early")
+    return bytes(out)
+
+
+def classic_icon_image(data):
+    """The picture of a classic icon file (a DiskObject) that carries a
+    colour icon: the FORM ICON written by icon.library 44 and later, with an
+    ARGB chunk (preferred) or a palette image (IMAG). A Pillow RGBA image, or
+    None when the file has neither: a plain planar icon is not converted,
+    because its colours belong to the screen it is shown on."""
+    Image = pillow()
+    at = data.find(b"FORM")
+    while at >= 0 and data[at + 8:at + 12] != b"ICON":
+        at = data.find(b"FORM", at + 4)
+    if at < 0:
+        return None
+    end = min(len(data), at + 8 + int.from_bytes(data[at + 4:at + 8], "big"))
+    pos, size, argb, imag = at + 12, None, None, None
+    while pos + 8 <= end:
+        cid, n = data[pos:pos + 4], int.from_bytes(data[pos + 4:pos + 8], "big")
+        body = data[pos + 8:pos + 8 + n]
+        if cid == b"FACE" and n >= 2:
+            size = (body[0] + 1, body[1] + 1)
+        elif cid == b"ARGB" and argb is None:
+            argb = body
+        elif cid == b"IMAG" and imag is None:
+            imag = body
+        pos += 8 + n + (n & 1)
+    if not size or size[0] > ICON_SOURCE_MAX[0] or size[1] > ICON_SOURCE_MAX[1]:
+        return None
+    w, h = size
+    if argb is not None and len(argb) > 10:
+        # Ten bytes of header, then the pixels (A, R, G, B) through zlib.
+        pixels = zlib.decompress(argb[10:])
+        if len(pixels) >= w * h * 4:
+            a, r, g, b = Image.frombytes("RGBA", size, pixels[:w * h * 4]).split()
+            return Image.merge("RGBA", (r, g, b, a))
+    if imag is not None and len(imag) >= 10:
+        transparent, colours, flags, image_format, palette_format, depth = imag[:6]
+        colours += 1
+        image_size = int.from_bytes(imag[6:8], "big") + 1
+        palette_size = int.from_bytes(imag[8:10], "big") + 1
+        if not flags & 2:
+            return None                 # no palette of its own: its colours are unknown
+        image = imag[10:10 + image_size]
+        palette = imag[10 + image_size:10 + image_size + palette_size]
+        indexes = _rle35(image, depth, w * h) if image_format == 1 else image[:w * h]
+        colour_bytes = _rle35(palette, 8, colours * 3) if palette_format == 1 else palette[:colours * 3]
+        if len(indexes) < w * h or len(colour_bytes) < colours * 3:
+            raise ValueError("the colour icon's data ends early")
+        out = bytearray()
+        for i in indexes:
+            if i >= colours:
+                out += b"\0\0\0\0"
+            else:
+                out += colour_bytes[i * 3:i * 3 + 3] + (b"\0" if (flags & 1) and i == transparent else b"\xff")
+        return Image.frombytes("RGBA", size, bytes(out))
+    return None
+
+
 def pictures_of_icon(img):
     out = {"icon": encoded(on_canvas(img, ICON)), "icon-small": encoded(on_canvas(img, ICON_SMALL))}
     return within_limit(out)
@@ -425,11 +518,16 @@ class Publication:
                 if member not in names:
                     continue
                 data = self.archive_member(archive, member)
-                # A classic icon (a DiskObject) is not converted: no icon.
-                if data[:8] != PNG_SIG:
-                    continue
                 try:
-                    files = icon_pictures(data)
+                    if data[:8] == PNG_SIG:
+                        files = icon_pictures(data)
+                    else:
+                        # A classic icon (a DiskObject) has a picture to
+                        # take only when it carries a colour icon.
+                        img = classic_icon_image(data)
+                        if img is None:
+                            continue
+                        files = pictures_of_icon(img)
                 except Exception as exc:
                     self.note(f"{p['id']}: icon {member} in {archive.name}: {exc}; left out")
                     continue
