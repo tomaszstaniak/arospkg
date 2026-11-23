@@ -191,9 +191,11 @@ PkgManager 0.5.0 to 0.7.8 shipped `Demo/` (pictures for two programs and
 one fictional paid application). It goes:
 
 - the release archives no longer contain `Demo/`;
-- `apkg self-update` deletes the `Demo` drawer of an installation it
-  updates, when it is that demonstration (it holds `storefront.json`). A
-  drawer of the same name without that file is left;
+- `apkg` and PkgManager delete the `Demo` drawer beside them when they
+  are started, when it is that demonstration (it holds
+  `storefront.json`). An update is carried out by the version being
+  replaced, so the new programs do this themselves. A drawer of the same
+  name without that file is left;
 - the *Demo store* filter, the *demo offer* rows, the purchase preview
   window and the `--demo` option are removed;
 - `tools/make-demo-store.py` becomes `tools/make-media.py`.

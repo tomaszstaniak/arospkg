@@ -257,6 +257,10 @@ int su_journal_pending(void);
    how many run without announcing one (before 0.7). */
 int su_running_pkgmanagers(char drawers[][PKG_MAXPATH], int max, int *unannounced);
 /* A PkgManager announces its drawer while it runs; `nonce` names this run. */
+/* Deletes the Demo drawer releases 0.5.0 to 0.7.8 shipped, when it is
+   beside the program that calls this. Called by apkg and PkgManager at
+   their start. */
+void su_drop_old_demo(void);
 void su_announce_start(const char *drawer, char *nonce, size_t n);
 void su_announce_stop(void);
 

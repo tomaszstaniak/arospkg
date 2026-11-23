@@ -1112,6 +1112,9 @@ static int real_main(int argc, char **argv)
 
     memset(&e, 0, sizeof e);
 
+    /* The drawer of an earlier release's demonstration, beside this
+       program: no release reads it any more (selfup.h). */
+    su_drop_old_demo();
     for (i = 1; i < argc; i++) {
         /* After `run <id>` every word is the program's, options included:
            `apkg run folio --help` must not print apkg's help. */

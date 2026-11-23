@@ -21,7 +21,7 @@ arospkg 0.8.0 has a new PkgManager window and can show pictures of packages.
 
 ## Removed
 
-- The demonstration of 0.5.0 to 0.7.8: the archives have no `Demo` drawer, and the **Demo store** view, the **Buy...** window and the `--demo` option are gone. `apkg self-update` deletes the `Demo` drawer of the installation it updates.
+- The demonstration of 0.5.0 to 0.7.8: the archives have no `Demo` drawer, and the **Demo store** view, the **Buy...** window and the `--demo` option are gone. After an update, `apkg` and PkgManager delete the `Demo` drawer beside them the first time they are started.
 
 ## Updating
 

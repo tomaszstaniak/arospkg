@@ -2527,6 +2527,7 @@ static int real_main(int argc, char **argv)
             AddPart((STRPTR)sujob.program, FilePart((STRPTR)name), sizeof sujob.program);
         }
         su_announce_start(self_drawer, announce_nonce, sizeof announce_nonce);
+        su_drop_old_demo();
     }
     display_hook.h_Entry = (HOOKFUNC)AROS_ASMSYMNAME(display_func);
 

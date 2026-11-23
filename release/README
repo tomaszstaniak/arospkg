@@ -110,8 +110,8 @@ NEW IN 0.8.0
   the source repository makes them. PkgManager reads PNG files itself
   and does not need the picture datatype for them.
 - The demonstration of 0.5.0 to 0.7.8 is removed: no Demo drawer in the
-  archives, no Demo store, no Buy... window. apkg self-update deletes
-  the Demo drawer of the installation it updates.
+  archives, no Demo store, no Buy... window. After an update, apkg and
+  PkgManager delete the Demo drawer beside them when first started.
 - Authors: apkg-pack submit takes --screenshot FILE and --caption TEXT
   and puts the screenshots into the catalogue pull request.
 - The window installs or upgrades one package at a time; apkg upgrade
