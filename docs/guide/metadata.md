@@ -1,13 +1,13 @@
 ---
 title: "arospkg metadata reference"
 status: reference
-describes: arospkg 0.7.8 and apkg-pack 0.2.0, checked 2026-11-22
+describes: arospkg 0.8.0 and apkg-pack 0.2.0, checked 2026-11-23
 audience: index maintainers, application authors, tool writers
 ---
 
 # arospkg metadata reference
 
-Supported fields for released arospkg 0.7.8. The format has not changed since 0.7.3. Start with the [publishing guide](authoring.md) for new packages or [archive layout and testing](packaging.md) for existing uploads.
+Supported fields for released arospkg 0.8.0. The format has not changed since 0.7.3. Start with the [publishing guide](authoring.md) for new packages or [archive layout and testing](packaging.md) for existing uploads.
 
 ## Three files, three writers
 
@@ -434,4 +434,4 @@ Skeleton and excluded manifests are omitted with a reason. An invalid approved m
 - With an empty `subdir`, metadata at the archive root is installed too. Prefer a named application drawer.
 - The drawer icon field is checked for existence; a maintainer must confirm it is the intended icon.
 - SHA-256 checks identify the expected bytes. The catalogue is unsigned, and archive review does not establish runtime compatibility or application safety.
-- Cached archives remain after removal. There is no automatic cache pruning in 0.7.8; rollback depends on the saved previous archive and registry.
+- Cached archives remain after removal. There is no automatic cache pruning in 0.8.0; rollback depends on the saved previous archive and registry.

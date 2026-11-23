@@ -1,6 +1,6 @@
 # Package layout and testing
 
-For arospkg 0.7.8 and apkg-pack 0.2.0. To create and submit a new package, follow the [publishing guide](authoring.md). This page covers archive layout, target testing and existing archives maintained by someone other than their author.
+For arospkg 0.8.0 and apkg-pack 0.2.0. To create and submit a new package, follow the [publishing guide](authoring.md). This page covers archive layout, target testing and existing archives maintained by someone other than their author.
 
 ## 1. The archive
 
@@ -25,7 +25,7 @@ Empty drawers are preserved. File protection bits and comments are not restored,
 
 Existing ZIP and LHA uploads can also be listed. Supported ZIP methods are stored and deflate; supported LHA methods are `-lh0-`, `-lh5-`, `-lh6-`, `-lh7-` and directory entries, with header levels 0–2.
 
-| Limit in arospkg 0.7.8 | Maximum |
+| Limit in arospkg 0.8.0 | Maximum |
 |---|---|
 | Downloaded archive | 64 MiB |
 | One unpacked ZIP member | 128 MiB |

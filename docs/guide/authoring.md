@@ -1,6 +1,6 @@
 # Publish your program with apkg-pack
 
-`apkg-pack` turns a built AROS application drawer into a ZIP and prepares its catalogue entry. This guide covers **apkg-pack 0.2.0** and **arospkg 0.7.8**.
+`apkg-pack` turns a built AROS application drawer into a ZIP and prepares its catalogue entry. This guide covers **apkg-pack 0.2.0** and **arospkg 0.8.0**.
 
 Your source repository can stay private. Building a package needs no account or network connection. The tool checks metadata and archive contents; you still need to test the program on AROS.
 

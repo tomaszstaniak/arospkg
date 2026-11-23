@@ -27,7 +27,7 @@ arospkg 0.8.0 has a new PkgManager window and can show pictures of packages.
 
 From 0.7.x, close PkgManager and run `apkg self-update`, or use **About → Check for a newer version → Update arospkg**. From 0.4.x–0.6.0, [follow the two-step update instructions](https://github.com/tomaszstaniak/arospkg/blob/main/docs/self-update.md).
 
-Choose the archive for your system. Checksums are in `SHA256SUMS`.
+Choose the archive for your system. Mainline x86_64 and Raspberry Pi builds remain experimental. Checksums are in `SHA256SUMS`.
 
 ## Known limitations
 
