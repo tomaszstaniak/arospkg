@@ -44,7 +44,7 @@
 #ifdef PM_TEST_VERSION
 #define PM_VERSION PM_TEST_VERSION
 #else
-#define PM_VERSION "0.8.0"
+#define PM_VERSION "0.8.1"
 #endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
@@ -292,6 +292,8 @@ static void row_images_free(void)
     row_img = row_mark = NULL; row_obj = row_markobj = NULL; row_n = 0;
 }
 
+static int passes_filters(const pkg_entry *e);
+
 /* After `rows` is filled and before its entries are inserted. A row whose
    picture cannot be made simply has none. */
 static void row_images_make(void)
@@ -337,13 +339,11 @@ static void row_images_make(void)
         /* What the other columns take: the icon when any row has one, the
            widest name (or the word "Name"), the button in its frame, and
            the gaps and the bar between four columns. */
-        /* The widest the first two columns have been: the list keeps a
-           column's width when its rows are replaced by narrower ones (seen
-           on mainline: a category with one short name and no icon kept
-           the widths of the full list), so these only grow. */
-        static int namew, icons;
+        /* From the rows the list will show: refill has the list measure
+           its columns again once they are in (MUIM_List_Redraw), so each
+           column is as wide as the widest cell now in it. */
         struct RastPort rp;
-        int w;
+        int namew = 0, icons = 0, w;
         InitRastPort(&rp);
         SetFont(&rp, _font(lst_list));
         SetSoftStyle(&rp, FSF_BOLD, AskSoftStyle(&rp));
@@ -351,6 +351,7 @@ static void row_images_make(void)
         if (w > namew) namew = w;
         SetSoftStyle(&rp, FS_NORMAL, AskSoftStyle(&rp));
         for (i = 0; i < rows.n; i++) {
+            if (!passes_filters(&rows.v[i])) continue;
             w = TextLength(&rp, (CONST_STRPTR)shown_name(&rows.v[i]), strlen(shown_name(&rows.v[i])));
             if (w > namew) namew = w;
             if (row_img[i]) icons = 1;
@@ -813,6 +814,11 @@ static void refill(const char *term, const char *keep_id, const char *why)
         show_err("the index cannot be read", st, &e);
     }
     SetAttrs(lst, MUIA_List_Quiet, FALSE, TAG_DONE);
+    /* A list keeps a column's width when its rows are replaced by narrower
+       ones (seen on mainline: the button column stayed pushed out after the
+       icons arrived and the summary column was to be narrower). Redrawing
+       all of it measures every column again. */
+    DoMethod(lst_list, MUIM_List_Redraw, MUIV_List_Redraw_All);
     /* The list forgets its selection when cleared; the user did not. */
     if (again >= 0) SetAttrs(lst, MUIA_List_Active, again, TAG_DONE);
     show_detail();
