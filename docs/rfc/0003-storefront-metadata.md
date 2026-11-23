@@ -1,109 +1,235 @@
 ---
-title: "RFC 0003: storefront metadata (pictures and offers)"
-status: proposal
+title: "RFC 0003: pictures in the catalogue (icons and screenshots)"
+status: implemented
 created: 2026-10-12
+revised: 2026-11-23
 ---
 
-# RFC 0003: storefront metadata — pictures and offers
+# RFC 0003: pictures in the catalogue
 
 | | |
 |---|---|
-| **Status** | **Proposal.** Nothing in the public catalogue carries these fields, no client reads them from a catalogue, and `tools/mkindex.py` does not accept them. |
-| **What exists** | A **demonstration** in PkgManager 0.5.0: a local file shipped beside PkgManager (`Demo/storefront.json`) with pictures for a few real applications and one fictional paid application. Section 5. |
+| **Status** | **Implemented in the client (arospkg 0.8.0) and in the catalogue tools. The public catalogue does not publish pictures yet.** Sections 1 to 8 describe what is implemented. Section 9 (offers) is a note for later and is not built. |
+| **Replaces** | The demonstration of PkgManager 0.5.0 to 0.7.8 (`Demo/storefront.json`), which is removed. Section 7. |
 | **Companion** | [RFC 0002](0002-application-folder.md), the application folder |
 
-## 1. Why this is only a proposal
+## 1. What this is for
 
-Two things a package manager for AROS might show one day — pictures of an
-application, and an application that costs money — raise questions this
-project has not answered: who hosts pictures and how a client fetches them
-without blocking its window; who sells, who keeps the money, what a
-licence is, and what a buyer can rely on. The demonstration shows the
-direction in the window so those questions can be discussed with
-something to look at. It does not answer them.
+A package in the catalogue can have an icon and screenshots. PkgManager
+shows the icon in its list and both on the page of a package; `apkg`
+in a terminal that can draw pictures (Limpet) can use the same files
+later. Pictures are never required: a package without them is listed and
+installed as before.
 
-## 2. Pictures: proposed fields
+Three people can supply pictures, and none of them needs an account or a
+server of their own:
 
-<!-- proposal -->
-```toml
-[[media]]                       # proposed; not accepted by the catalogue
-type    = "screenshot"          # "icon", "screenshot"
-url     = "https://example.org/folio-1.png"
-sha256  = "…"                   # checked like an archive
-size    = 61234                 # bytes
-width   = 640                   # pixels, as the file says
-height  = 400
-caption = "Two-page spread with search results"
+- **Nobody**, for icons: the catalogue takes the icon from the package's
+  archive.
+- **The packager**, for screenshots: PNG files added to the catalogue
+  repository in the same pull request as the manifest.
+- **A distribution's author**, for anything the catalogue lacks: PNG files
+  put into the media drawer of the system they ship. Section 5.
+
+## 2. What the packager does
+
+Screenshots sit in the catalogue repository, beside the manifests, and
+belong to the application, not to one build of it:
+
+```
+gallery/<id>/1.png
+gallery/<id>/2.png
+gallery/<id>/captions.txt          # optional: line N is the caption of entry N
 ```
 
-| field | proposal |
+| rule | value |
 |---|---|
-| `type` | `icon` (one, at most 64 x 64) or `screenshot` (up to 6). |
-| `url` | HTTPS, like archive URLs; a stable address. |
-| `sha256`, `size` | Required, checked before a picture is shown, as an archive is checked before it is unpacked. |
-| `width`, `height` | Required; a client refuses a file whose header says otherwise. Screenshots at most 1280 x 800. |
-| `caption` | Plain ASCII, at most 120 characters, as `post_install_notes` lines are. |
-| format | PNG only, at most 512 KiB, so every AROS with a PNG datatype shows it. |
+| format | PNG, truecolour |
+| count | at most 6 |
+| size | at most 1280 x 800 pixels and 512 KiB each |
+| caption | plain ASCII, at most 120 characters |
+| content | a real screenshot of that program on AROS |
 
-Rules a client would follow:
+Screenshots are not put into the package's archive. A published archive
+is never changed, so pictures in archives would need a new revision of
+every package, and a user would have to download a program to see what it
+looks like.
 
-- Pictures are **never required**: a package without them installs and
-  shows text, as now.
-- Pictures are **fetched off the window's task**, into the cache, with
-  the same size and hash checks as archives, and never block a button.
-- A picture that fails a check is **not shown**, and the panel says why in
-  a line of text; it never falls back to an unchecked file.
-- Pictures of a program are **real screenshots of that program**; a
-  drawing is marked as a mockup in its caption and in the picture itself.
+`apkg-pack submit` takes `--screenshot <file>` and `--caption <text>`,
+both repeatable and in the same order, which copy the files into place in
+the pull request. The screenshots given are the application's whole
+gallery: they take the place of the ones the catalogue has.
 
-## 3. Offers: proposed fields
+Icons need nothing: see section 3.
 
-<!-- proposal -->
-```toml
-[offer]                         # proposed; not accepted by the catalogue
-price    = "9.99"               # a decimal string, never computed with
-currency = "EUR"                # ISO 4217
-seller   = "Example Software"
-terms    = "https://example.org/licence"
-purchase = "https://example.org/buy/paintstudio"
+## 3. What the catalogue does
+
+The `check` workflow refuses a pull request whose screenshots break the
+rules of section 2.
+
+The `publish` workflow, which already downloads every archive it reviews:
+
+1. takes the package's icon from the archive: the icon of the program
+   `launch` names, else the drawer icon the manifest names (`icon`). When
+   that file is a PNG icon it is written as `icon.png` (64 x 64) and
+   `icon-small.png` (24 x 24), truecolour;
+2. scales each screenshot to the sizes the clients show, keeping its
+   proportions: `view` fits in 640 x 400, `thumb` in 160 x 100; the
+   original is kept as `full`;
+3. writes the files to the branch `media` of the catalogue repository,
+   under names that contain the start of their SHA-256, so an address
+   never serves different bytes;
+4. packs every `icon.png` and `icon-small.png` into one archive,
+   `icons-<start of its SHA-256>.zip`, with the paths `<id>/icon.png` and
+   `<id>/icon-small.png`, so a client gets the icons of the whole
+   catalogue in one download;
+5. writes what it made into `index-v3.json` (section 4).
+
+An application with builds for several systems has one set of pictures.
+The icon comes from the first of its builds in a fixed order (x86_64
+ABIv11, x86_64 mainline, AArch64).
+
+## 4. Fields in `index-v3.json`
+
+One `media` object per application id, repeated in each of its builds:
+
+```json
+"media": {
+  "icon":       {"url": "https://…/media/folio/3fa9c1d2-icon.png",       "sha256": "…", "size": 4211, "width": 64, "height": 64},
+  "icon_small": {"url": "https://…/media/folio/9b20e4aa-icon-small.png", "sha256": "…", "size": 1502, "width": 24, "height": 24},
+  "gallery": [
+    {"type": "screenshot",
+     "caption": "Two-page spread with search results",
+     "full":  {"url": "…", "sha256": "…", "size": 61234, "width": 1280, "height": 800},
+     "view":  {"url": "…", "sha256": "…", "size": 20110, "width": 640,  "height": 400},
+     "thumb": {"url": "…", "sha256": "…", "size": 3120,  "width": 160,  "height": 100}}
+  ]
+}
 ```
 
-What a client would do with them, as a proposal:
+The catalogue itself (the top level of `index-v3.json`) names the icon
+archive:
 
-- Show the price, the seller and the terms beside the package.
-- **Buy** opens the seller's own page (`purchase`) in the user's browser.
-  The client never asks for card or account details and never sees them.
-- After buying, the seller's licence or download is the seller's
-  business; the client installs a package as it installs any other.
+```json
+"media_bundle": {"url": "https://…/media/icons-5c0e77a1.zip", "sha256": "…", "size": 1048576}
+```
 
-What this proposal deliberately leaves out: accounts, licence keys,
-copy protection, refunds, taxes, and any payment service. Each of those
-needs its own design and its own agreement with the people involved.
+The gallery is a list of typed entries so that it can hold more than
+screenshots later. Today the only type is `screenshot`. A client skips an
+entry whose type it does not know, so a later type, such as a short video
+with a still picture to show in its place, can be added without breaking
+the clients of this RFC. Video is not designed here: it needs a decision
+on format, size and what plays it on AROS.
 
-## 4. Where the fields would live
+`index-v2.json` and `index.json` never carry `media`. Clients before this
+RFC read `index-v3.json` and ignore the object.
 
-In the catalogue manifest beside `[launch]`, carried into `index-v2.json`
-only. `index.json`, for clients up to 0.3.2, would never carry them.
+A client reads only the addresses and hashes, so it does not matter who
+made the pictures. A catalogue built another way can fill the same object:
+for example from the `Icon:` and `Screenshot:` fields of a signed
+manifest, which name pictures inside the package.
 
-## 5. The demonstration in PkgManager 0.5.0
+## 5. The media drawer
 
-- **File**: `Demo/storefront.json` beside PkgManager, read once at
-  startup. It is built by `tools/make-demo-store.py` from
-  `docs/demo-store/sources.json`. PkgManager runs the same without it.
-- **Pictures**: for Folio and GrafX2, real screenshots taken from those
-  programs on AROS One 1.3 under QEMU on 2026-10-12, and their own icons
-  copied from their release archives. Each set says where it comes from
-  under the pictures. Pictures sit in fixed places: 320 x 200 for the
-  screenshot, 80 x 50 for thumbnails, 64 x 64 for the icon. A missing or
-  oversized picture shows as a line of text. Packages without pictures
-  show text only.
-- **Offer**: one fictional application, *Example Paint Studio*, 9.99 EUR,
-  seller *Example Software (fictional)*, with a picture marked
-  `MOCKUP`. It is listed only under the *Demo store* filter, its state
-  column says *demo offer*, and its details start with
-  "Demo -- purchasing is not available yet".
-- **Buy...** opens a window that explains how a purchase could work
-  (section 3) and has only a Close button. Nothing is bought, installed
-  or sent; no data is asked for.
-- The demonstration's offer ids start with `demo-`, so they cannot be
-  mistaken for a package; the catalogue does not contain them.
+Pictures live in one drawer of the package root, beside `cache`:
+
+```
+<root>/media/<id>/icon.png
+<root>/media/<id>/icon-small.png
+<root>/media/<id>/1.png            # `view`, the size a package's page shows
+<root>/media/<id>/1-thumb.png
+<root>/media/<id>/1-full.png       # optional
+<root>/media/<id>/captions.txt     # optional
+<root>/media/<id>/gallery.sha256   # written by the client: the hashes of the gallery it fetched
+<root>/media/icons.sha256          # written by the client: the hash of the icon archive it unpacked
+```
+
+With the default root this is `SYS:Packages/media/`. `apkg` and
+PkgManager create it with the package root, as they create `cache`.
+
+How a client fills and reads it:
+
+- The icon archive is fetched after the catalogue, when its hash is not
+  the one unpacked last (`<root>/media/icons.sha256`), and unpacked into
+  this drawer. Its icons do not replace the files of a package the
+  catalogue has no entry for.
+- The gallery of a package is fetched the first time its page is opened.
+- Every download is made off the window's task, with the size and
+  SHA-256 checks an archive gets. A file that fails a check is deleted
+  and not shown.
+- A picture already there with the hash the catalogue names is used
+  without any network.
+- For a package the catalogue has **no** pictures for, the files in the
+  drawer are shown as they are, after the checks of the picture's header
+  (PNG, the sizes above). This is how a distribution adds pictures.
+- When the catalogue later gets pictures for that package, they replace
+  the local ones.
+
+**For a distribution's author.** Fill `<root>/media/` in the system
+image. Either copy the drawer from a machine that has shown every
+package (then no user of the distribution needs the network to see
+pictures), or make pictures of your own with
+
+```
+tools/make-media.py ID [--icon FILE] [--screenshot FILE]... [--caption TEXT]... [--no-full] OUT_DRAWER
+```
+
+which writes every size and name above into `OUT_DRAWER/ID/` from
+ordinary PNG or JPEG files. `--no-full` leaves out `N-full.png`. The tool
+needs Python with Pillow.
+
+## 6. Limits a client keeps
+
+- Pictures never block a button and are never needed for an operation.
+- No picture is decoded before its header was checked against the limits.
+- At most 6 screenshots per package; more in a drawer are ignored.
+- A package with no icon shows the text row it shows today.
+
+## 7. The demonstration is removed
+
+PkgManager 0.5.0 to 0.7.8 shipped `Demo/` (pictures for two programs and
+one fictional paid application). It goes:
+
+- the release archives no longer contain `Demo/`;
+- `apkg self-update` deletes the `Demo` drawer of an installation it
+  updates, when it is that demonstration (it holds `storefront.json`). A
+  drawer of the same name without that file is left;
+- the *Demo store* filter, the *demo offer* rows, the purchase preview
+  window and the `--demo` option are removed;
+- `tools/make-demo-store.py` becomes `tools/make-media.py`.
+
+## 8. The window
+
+PkgManager shows pictures in two places:
+
+- **The list**: `icon-small` (24 x 24) in the first column. A package
+  without one has an empty place there, so the names stay in line.
+- **The page of a package**, opened by **Details...** or by a double click
+  on a row, in the same window, with a button back to the list: `icon`
+  (64 x 64) in the header beside the name and summary, and under the
+  header a strip of the screenshots that scrolls sideways, with
+  **Previous** and **Next** and the caption of the picture in view. The
+  strip is hidden when the package has no screenshots.
+
+The line under the list, for the selected package, has no pictures.
+
+The strip shows each picture at 352 x 220, 480 x 300 or 640 x 400,
+depending on the height of the screen (below 700 lines, from 700, from
+900), scaled down from `view`.
+
+PkgManager decodes the PNG files itself (8-bit truecolour, not
+interlaced) and does not use the picture datatype for them.
+
+`thumb` is fetched with `view`, but this version of PkgManager does not
+show thumbnails. `full` is not fetched or shown by this version; both are
+kept for a later one and for other clients.
+
+## 9. Later: offers
+
+A catalogue that also lists applications for sale stays a direction, not
+a plan. It needs a portal that knows sellers and buyers, which this
+project does not run; it would be designed together with the portal's
+maintainer. Nothing in the catalogue or the clients carries an offer, and
+the fields of the earlier revision of this RFC (`[offer]`: price,
+currency, seller, terms, purchase address) are kept here only as a
+starting point for that design.

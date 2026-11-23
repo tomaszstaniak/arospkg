@@ -6,6 +6,7 @@ its catalogue entry from the uploaded archive.
     apkg-pack check  DRAWER | ARCHIVE        the catalogue's own rules
     apkg-pack build  DRAWER --output X.zip   the archive, checked after writing
     apkg-pack submit URL [--index DIR] [--dry-run] | --pr [--repo OWNER/NAME]
+                     [--screenshot FILE.png]... [--caption TEXT]...
 
 The manifest is the one the catalogue uses today (docs/guide/metadata.md),
 without the fields that come from the uploaded file: url, size, sha256 and
@@ -19,8 +20,8 @@ only submit uses the network, and only submit --pr uses git and gh. It does
 not run the program and says nothing about whether it works on any AROS.
 
 The same file is the command in an arospkg checkout and, with mkindex.py,
-catalogue.py and publish_github.py, the standalone apkg-pack.pyz that
-tools/make-apkg-pack.py builds.
+catalogue.py, catalogue_media.py and publish_github.py, the standalone
+apkg-pack.pyz that tools/make-apkg-pack.py builds.
 """
 import argparse
 import difflib
@@ -540,6 +541,47 @@ def published_release(index_dir, m):
     return None
 
 
+def gallery_change(a, index_dir, pid):
+    """The files --screenshot and --caption put in gallery/<id>/ of the
+    catalogue (docs/rfc/0003): {name: bytes}, or None when neither option
+    was given. Checked by the rules the catalogue's own check applies."""
+    if not a.screenshot and not a.caption:
+        return None
+    import catalogue_media as cm
+    problems = []
+    if len(a.screenshot) > cm.SHOTS_MAX:
+        problems.append(f"{len(a.screenshot)} screenshots; the catalogue shows at most {cm.SHOTS_MAX}")
+    if len(a.caption) > len(a.screenshot):
+        problems.append(f"{len(a.caption)} captions for {len(a.screenshot)} screenshot(s); "
+                        "the first --caption belongs to the first --screenshot")
+    files = {}
+    for n, src in enumerate(a.screenshot[:cm.SHOTS_MAX], 1):
+        try:
+            data = Path(src).read_bytes()
+        except OSError as exc:
+            problems.append(f"{src}: {exc.strerror or exc}")
+            continue
+        problems += [f"{src}: {why}" for why in cm.check_picture(data)]
+        files[f"{n}.png"] = data
+    for n, text in enumerate(a.caption, 1):
+        why = cm.check_caption(text.strip())
+        if why:
+            problems.append(f"caption {n}: {why}")
+    if problems:
+        for p in problems:
+            print(p, file=sys.stderr)
+        fail("not submitted")
+    captions = [c.strip() for c in a.caption]
+    if any(captions):
+        files[cm.CAPTIONS] = ("\n".join(captions) + "\n").encode("ascii")
+    return files
+
+
+def gallery_differs(drawer, files):
+    have = {p.name: p.read_bytes() for p in drawer.iterdir() if p.is_file()} if drawer.is_dir() else {}
+    return have != files
+
+
 def cmd_submit(a):
     if not a.url.startswith("https://"):
         fail("the URL must be https://; the client fetches nothing else")
@@ -560,7 +602,13 @@ def cmd_submit(a):
     name = target.name
     new = write_toml(m, GENERATED.format(name=name))
     old = target.read_bytes().decode("utf-8") if target.exists() else None
-    if old == new:
+    # The screenshots given are the application's whole gallery: they take
+    # the place of the ones the catalogue has, they are not added to them.
+    shots = gallery_change(a, index_dir, m["id"])
+    gallery = index_dir / "gallery" / m["id"]
+    if shots is not None and not gallery_differs(gallery, shots):
+        shots = None
+    if old == new and shots is None:
         print(f"{name}: already up to date; nothing to submit")
         return
     was = published_release(index_dir, m)
@@ -578,13 +626,25 @@ def cmd_submit(a):
     diff = difflib.unified_diff((old or "").splitlines(True), new.splitlines(True),
                                 f"a/manifests/{name}", f"b/manifests/{name}")
     sys.stdout.writelines(diff)
+    for n in sorted(shots or {}):
+        print(f"gallery/{m['id']}/{n}: {len(shots[n])} bytes")
     if a.dry_run:
         print("\n(dry run: nothing written)")
         return
-    target.write_text(new, encoding="utf-8", newline="\n")
-    print(f"\nwritten {target}")
+    if old != new:
+        target.write_text(new, encoding="utf-8", newline="\n")
+        print(f"\nwritten {target}")
+    if shots is not None:
+        if gallery.is_dir():
+            for p in gallery.iterdir():
+                if p.is_file() and p.name not in shots:
+                    p.unlink()
+        gallery.mkdir(parents=True, exist_ok=True)
+        for n, data in shots.items():
+            (gallery / n).write_bytes(data)
+        print(f"written {gallery} ({len(shots)} file(s))")
     if a.pr:
-        publish_github.open_pr(work, a.repo, target, m)
+        publish_github.open_pr(work, a.repo, target, m, also=[gallery] if shots is not None else [])
 
 
 def main():
@@ -617,6 +677,11 @@ def main():
     s.add_argument("--pr", action="store_true",
                    help="open a pull request (through your fork if you cannot push to --repo)")
     s.add_argument("--repo", default="tomaszstaniak/arospkg-index", help="the catalogue repository (OWNER/NAME)")
+    s.add_argument("--screenshot", action="append", default=[], metavar="FILE",
+                   help="a screenshot of the program on AROS for the catalogue: PNG, at most 1280 x 800 "
+                        "and 512 KiB; repeat for up to 6, in the order they are shown")
+    s.add_argument("--caption", action="append", default=[], metavar="TEXT",
+                   help="the caption of a screenshot, in the same order: plain ASCII, at most 120 characters")
     s.add_argument("--use-local-copy", metavar="FILE", help=argparse.SUPPRESS)
     a = ap.parse_args()
     {"init": cmd_init, "check": cmd_check, "build": cmd_build, "submit": cmd_submit}[a.cmd](a)

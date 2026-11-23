@@ -120,6 +120,8 @@ static void row_from_element(const char *json, const js_tok *t, int ntok, int el
     member_str(json, t, ntok, el, "arch",     e->arch,     sizeof e->arch);
     member_str(json, t, ntok, el, "abi",      e->abi,      sizeof e->abi);
     member_str(json, t, ntok, el, "kind",     e->kind,     sizeof e->kind);
+    member_str(json, t, ntok, el, "name",     e->name,     sizeof e->name);
+    if (!e->name[0]) member_str(json, t, ntok, el, "subdir", e->name, sizeof e->name);
     e->revision = js_long(json, t, js_member(json, t, ntok, el, "revision"), 0);
     {
         /* The ids only: what a detail panel lists. The probe that says

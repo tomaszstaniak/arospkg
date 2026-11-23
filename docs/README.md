@@ -22,8 +22,7 @@ Current release: **0.7.5**. Start with the guide for your task.
 - [Build from source](../README.md#building)
 - [ARexx interface](arexx.md)
 - [Application folder format](rfc/0002-application-folder.md): implemented schema.
-- [Storefront metadata](rfc/0003-storefront-metadata.md): proposal and local demonstration, not a publishing format.
+- [Pictures in the catalogue](rfc/0003-storefront-metadata.md): icons and screenshots of packages; implemented in the client, not yet published by the public catalogue.
 - [Retired package-format draft](rfc/0001-package-format.md): links to its replacements.
 
-The storefront proposal is demonstrated locally in PkgManager; purchasing is not
-available. Supported package fields are defined in the metadata reference.
+Supported package fields are defined in the metadata reference.

@@ -1,4 +1,4 @@
-arospkg 0.7.8
+arospkg 0.8.0
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -31,12 +31,17 @@ Keep the unpacked drawer and start PkgManager from its icon, or:
 
      Run PkgManager
 
-Click Update index, select a package and click Install, then Run.
+PkgManager fetches the catalogue by itself when there is none or it is
+more than two weeks old. Choose a view or a category on the left, or
+type into Search. Each package has a button at the end of its row:
+Install, Run when it is installed, Upgrade when a newer version can be
+installed. Details..., or a double click on a row, opens the package's
+page. Verify, Roll back and Update index are in the menu.
 
 BUILDS
 ------
 
-0.7.8:
+0.8.0:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
   aarch64-aros-raspi apkg and PkgManager: experimental (native AROS on
@@ -74,6 +79,43 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.8.0
+------------
+
+- PkgManager has a new window. On the left are a Search field and a list
+  of views (All applications, Installed, Updates, Recently added, Last
+  refresh) followed by the catalogue's categories. The number of updates
+  stands beside Updates. The two selectors above the list and the
+  "Not installed" view are gone.
+- Each row of the package list has the icon, the name, the summary and a
+  button: Install, Run or Upgrade. The Version and State columns are
+  gone; version, state and size are in the line under the list, with
+  Open folder and Details....
+- Details..., or a double click on a row, opens the package's page in
+  the same window: icon, name, summary, the main button, Open folder and
+  Remove, the screenshots, and the tabs About and Details. Back returns
+  to the list.
+- A menu: Project (About..., Quit), Catalogue (Update index), Package
+  (Details..., Install, Run, Upgrade, Roll back, Verify, Open folder,
+  Remove). Verify and Roll back are only in the menu. The Update index
+  button is gone from the window.
+- PkgManager fetches the catalogue by itself at start when there is none
+  or it is more than two weeks old.
+- Pictures of packages: icons in the list, screenshots on the package's
+  page. They are kept in SYS:Packages/media/<id>/. The public catalogue
+  does not publish pictures yet; they appear once it carries them. A
+  distribution can already put its own into the media drawer (icon.png,
+  icon-small.png, 1.png and so on, captions.txt); tools/make-media.py in
+  the source repository makes them. PkgManager reads PNG files itself
+  and does not need the picture datatype for them.
+- The demonstration of 0.5.0 to 0.7.8 is removed: no Demo drawer in the
+  archives, no Demo store, no Buy... window. apkg self-update deletes
+  the Demo drawer of the installation it updates.
+- Authors: apkg-pack submit takes --screenshot FILE and --caption TEXT
+  and puts the screenshots into the catalogue pull request.
+- The window installs or upgrades one package at a time; apkg upgrade
+  --all upgrades every package in turn.
 
 NEW IN 0.7.8
 ------------
@@ -266,7 +308,8 @@ archive in the cache. Close the application before either operation or removal.
 
 Self-update keeps the previous files beside the new ones as .old; for
 arospkg installed as a package, "apkg rollback arospkg" goes back. In
-PkgManager: About > Check for a newer version, then Update arospkg.
+PkgManager: About... in the Project menu, Check for a newer version,
+then Update arospkg.
 PkgManager closes and starts again. Details and recovery:
 https://github.com/tomaszstaniak/arospkg/blob/main/docs/self-update.md
 
@@ -276,6 +319,7 @@ FILES AND RECOVERY
   SYS:Packages/<id>/       installed program
   SYS:Packages/db/         installation records; do not edit
   SYS:Packages/cache/      downloaded archives
+  SYS:Packages/media/      pictures of packages (icons, screenshots)
 
 Removal keeps files you changed and files apkg did not install, and lists
 them. A later install will not overwrite a drawer left behind by removal.

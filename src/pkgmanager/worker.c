@@ -10,6 +10,7 @@
  * and the window's own loop does the drawing. */
 #include "job.h"
 #include "../libpkg/util.h"
+#include "../libpkg/media.h"
 #include <stdio.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -147,7 +148,14 @@ static void worker_main(void)
         case JOB_REMOVE:   st = pkg_remove(c, j->id, PKG_STOP_NONE, &e);
                            if (st == PKG_OK) pkg_last_removal(c, &j->done->rem);
                            break;
-        case JOB_UPDATE:   st = pkg_update(c, j->index_url, &e); break;
+        case JOB_UPDATE:   st = pkg_update(c, j->index_url, &e);
+                           /* The icons come with the catalogue. Not having them
+                              is no failure of the update: the list shows text. */
+                           if (st == PKG_OK) { pkg_err e2; memset(&e2, 0, sizeof e2); pkg_media_icons(c, j->index, &e2); }
+                           break;
+        case JOB_MEDIA:    st = j->id[0] ? pkg_media_fetch(c, j->index, j->id, &e)
+                                         : pkg_media_icons(c, j->index, &e);
+                           break;
         case JOB_UPGRADE:  st = pkg_upgrade(c, j->index, j->id, PKG_STOP_NONE, &e); break;
         case JOB_ROLLBACK: st = pkg_rollback(c, j->id, PKG_STOP_NONE, &e); break;
         case JOB_PREVIEW_UPGRADE:  st = pkg_upgrade_preview(c, j->index, j->id, 1, &plan, &e); break;

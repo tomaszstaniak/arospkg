@@ -969,6 +969,21 @@ pkg_status su_precheck(const su_install *in, const char *root, int from_window, 
     return PKG_OK;
 }
 
+/* Releases 0.5.0 to 0.7.8 shipped a drawer Demo beside PkgManager (a
+   demonstration with pictures of two programs). No later release has it or
+   reads it, and an update of a drawer leaves the files a release no longer
+   contains, so it is removed here: only when it is that demonstration (its
+   storefront.json is there), never a drawer of the same name with something
+   else in it. */
+static void drop_demo(const char *drawer)
+{
+    char dir[PKG_MAXPATH], mark[PKG_MAXPATH];
+    if (!drawer || !drawer[0]) return;
+    u_join(dir, sizeof dir, drawer, "Demo");
+    u_join(mark, sizeof mark, dir, "storefront.json");
+    if (u_isdir(dir) && u_exists(mark)) u_deltree(dir);
+}
+
 pkg_status su_apply(su_install *in, const su_stage *st, const char *root, pkg_err *e)
 {
     su_journal j;
@@ -1140,6 +1155,7 @@ pkg_status su_apply(su_install *in, const su_stage *st, const char *root, pkg_er
     }
     clean_news(&j);
     u_delete(SU_JOURNAL_FILE);
+    drop_demo(in->drawer);
     s = PKG_OK;
     goto out;
 

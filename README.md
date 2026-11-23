@@ -52,22 +52,31 @@ From the extracted arospkg drawer, start:
 Run PkgManager
 ```
 
-Click **Update index** to refresh the catalogue, select an application,
-read its requirements and click **Install**. To uninstall it later, select
-it and click **Remove**.
+PkgManager fetches the catalogue by itself when there is none or it is
+more than two weeks old; **Update index** in the Catalogue menu refreshes
+it at any time. The left column has a search field and a list of views
+(**All applications**, **Installed**, **Updates**, **Recently added**,
+**Last refresh**) followed by the catalogue's categories. Each package in
+the list has a button at the end of its row: **Install**, **Run** for an
+installed package, or **Upgrade** when a newer version can be installed.
 
-The line above the list shows when the catalogue was last updated and how
-many installed programs have updates. Choose **Updates (N)** in the state
-selector to see only those. For an installed package the Version column
-shows the installed version and, where there is a newer one, what it would
-become (`1.0 -> 1.1`); the details say the same and give the reason when an
-update is blocked. Select one and click **Upgrade** to see its plan and confirm.
-`Run PkgManager --updates` opens the window on that list.
+**Details...**, or a double click on a row, opens the package's page: what
+it needs, how it starts, whether it runs on this machine, and for an
+installed package **Open folder** (the default location is
+`SYS:Packages/<id>/`) and **Remove**. **Verify** and **Roll back** are in
+the Package menu. Run is offered for packages that say how they start; the
+page says how, or why not.
 
-Select an installed package and click **Run** to start it, or **Open
-folder** to see its drawer (the default location is `SYS:Packages/<id>/`).
-**Verify** checks its files. Run is offered for packages that say how they
-start; the details say how, or why not.
+The status line at the bottom shows when the catalogue was last updated
+and whether installed programs have updates. The **Updates** view lists
+them, with their number beside it; **Upgrade** shows the plan and waits
+for your confirmation. `Run PkgManager --updates` opens the window on that
+list.
+
+PkgManager shows a package's icon in the list and its screenshots on the
+package's page when pictures for it are present. The public catalogue does
+not publish pictures yet; a distribution can already put its own into
+`SYS:Packages/media/` (see [using arospkg](docs/guide/using.md#pictures)).
 
 ![PkgManager: the catalogue, with GrafX2 selected](docs/images/pkgmanager.png)
 
@@ -124,7 +133,7 @@ This selects a separate package root; it does not move existing installs.
 
 Use `apkg --help` for common commands and `apkg --help-all` for the full
 list. `apkg --about` shows project and licence information; PkgManager has
-an **About** button.
+**About...** in its Project menu.
 
 ### If a download fails
 
@@ -177,7 +186,7 @@ Start at [`docs/README.md`](docs/README.md):
 - [metadata reference](docs/guide/metadata.md): every field, and who
   checks it;
 - [application folder format](docs/rfc/0002-application-folder.md): implemented schema 1, used by `apkg run`;
-- [storefront metadata](docs/rfc/0003-storefront-metadata.md): a proposal with a local demonstration; not supported catalogue fields;
+- [pictures in the catalogue](docs/rfc/0003-storefront-metadata.md): icons and screenshots of packages; implemented in the client, not yet published by the public catalogue;
 - [ARexx interface](docs/arexx.md);
 - [release notes](https://github.com/tomaszstaniak/arospkg/releases)
   for changes and known limitations.
@@ -199,7 +208,6 @@ The first shared release, maintainer responsibilities and migration commitments 
 - `tests/`: host unit tests, the scripts run on AROS, and pinned fixtures.
 - `examples/arexx/`: ARexx scripts for PkgManager.
 - `release/`: the README and licences shipped in the release archive.
-- `assets/source/demo-store/`: source images and metadata for the GUI demonstration.
 
 ## Building
 
@@ -214,8 +222,8 @@ TC=/path/to/toolchain SDK=/path/to/sdk sh src/build-gui.sh   # PkgManager
 ```
 
 `src/build-gui-mainline.sh` and `src/build-gui-raspi.sh` build PkgManager
-for mainline and the Pi. `tools/make-demo-store.py` builds the demo
-storefront that the archives ship in `Demo/`.
+for mainline and the Pi. `tools/make-media.py` makes the pictures of a
+package for the media drawer of a system image; it needs Python with Pillow.
 
 `src/build-mainline.sh` and `src/build-raspi.sh` (native Raspberry Pi)
 build other targets (`src/build-i386.sh` still builds i386 ABIv0, which

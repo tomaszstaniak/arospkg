@@ -3,6 +3,7 @@
 
     publish_index.py INDEX_DIR --remote URL [--start SHA] [--base REF]
                      [--review-all] [--attempts N] [--cache DIR]
+                     [--media-base-url URL] [--media-branch NAME]
 
 Reviews what changed since the catalogue last published, regenerates the
 catalogue files with ci_check_index.py --publish and pushes them in one
@@ -20,14 +21,25 @@ forced: a refused push means main has moved, and the step fetches the new
 main and runs again, up to --attempts times; an older run cannot replace a
 newer catalogue.
 
+With --media-base-url (or MEDIA_BASE_URL in the environment) the pictures
+of the catalogue (docs/rfc/0003) are made too, and pushed to the branch
+`media` before the catalogue that names them: an index on main never names
+a picture that is not served yet. Every file there has the start of its
+SHA-256 in its name, so the branch only gains files; it is created without
+a parent when missing, and its push is never forced either. A media push
+followed by a refused catalogue push leaves files nobody names, which
+costs nothing and which the next attempt finds already there.
+
 The token for the push is taken from the environment variable TOKEN (if
 set, the push uses it as x-access-token); it is removed from the
 environment of the check, which reads untrusted archives.
 """
 import argparse
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -66,6 +78,37 @@ def local_sha(repo, ref):
     return r.stdout.strip() or None
 
 
+def media_checkout(remote, branch):
+    """A repository of its own holding the branch `branch` of the remote,
+    or an empty one about to start it. Apart from the index checkout, so
+    that no picture can end up on main and no catalogue file on `branch`."""
+    work = tempfile.mkdtemp(prefix="publish-media-")
+    git(work, "init", "-q")
+    if remote_sha(work, remote, branch):
+        # Only the newest commit: the history of a branch of pictures is
+        # never read here.
+        git(work, "fetch", "-q", "--depth", "1", remote, f"refs/heads/{branch}")
+        git(work, "checkout", "-q", "-B", branch, "FETCH_HEAD")
+    else:
+        git(work, "checkout", "-q", "--orphan", branch)
+    return work
+
+
+def push_media(work, branch, start, push_url, env):
+    """Commit what the run added and push it. True when the remote has it."""
+    git(work, "add", "-A")
+    if git(work, "diff", "--cached", "--quiet", check=False).returncode == 0:
+        print("media unchanged", flush=True)
+        return True
+    git(work, *BOT, "commit", "-q", "-m", f"Pictures for the catalogue of {start[:12]}")
+    r = git(work, "push", "--porcelain", push_url, f"HEAD:refs/heads/{branch}", check=False, env=env)
+    if r.returncode == 0:
+        print(f"media pushed ({branch})", flush=True)
+        return True
+    print(f"media push refused ({branch} has moved): {r.stdout.strip()} {r.stderr.strip()}", flush=True)
+    return False
+
+
 def attempt(repo, remote, start, args, push_url, env):
     """One run at commit `start`: 0 published (or nothing to publish), 1
     refused because main moved, 2 the check failed."""
@@ -86,9 +129,20 @@ def attempt(repo, remote, start, args, push_url, env):
         cmd.append("--review-all")
     if args.use_local_copies:
         cmd += ["--use-local-copies", args.use_local_copies]
+    media = None
+    if args.media_base_url:
+        media = media_checkout(remote, args.media_branch)
+        cmd += ["--media-out", media, "--media-base-url", args.media_base_url]
     check_env = {k: v for k, v in env.items() if k != "TOKEN"}
-    if subprocess.run(cmd, cwd=repo, env=check_env).returncode:
-        return 2
+    try:
+        if subprocess.run(cmd, cwd=repo, env=check_env).returncode:
+            return 2
+        # Before the catalogue: what it names must be served first.
+        if media and not push_media(media, args.media_branch, start, push_url, env):
+            return 1
+    finally:
+        if media:
+            shutil.rmtree(media, ignore_errors=True)
     git(repo, "add", "--", *GENERATED)
     if git(repo, "diff", "--cached", "--quiet", check=False).returncode == 0:
         print("catalogue unchanged", flush=True)
@@ -120,6 +174,10 @@ def main():
     ap.add_argument("--review-all", action="store_true")
     ap.add_argument("--attempts", type=int, default=3)
     ap.add_argument("--cache", default=".cache/ci-archives")
+    ap.add_argument("--media-base-url", metavar="URL", default=os.environ.get("MEDIA_BASE_URL") or None,
+                    help="make the catalogue's pictures and push them to --media-branch, served at URL "
+                         "(default: MEDIA_BASE_URL in the environment; without either, no pictures)")
+    ap.add_argument("--media-branch", default="media")
     ap.add_argument("--use-local-copies", metavar="DIR", help=argparse.SUPPRESS)
     ap.add_argument("--before-push", metavar="CMD", help=argparse.SUPPRESS)  # tests: main moves meanwhile
     args = ap.parse_args()

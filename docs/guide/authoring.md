@@ -143,6 +143,26 @@ python3 apkg-pack.pyz submit <download-url> --index arospkg-index --dry-run
 
 You can send the resulting entry to a maintainer through another channel.
 
+### Screenshots
+
+Add screenshots of the program to the same pull request with `--screenshot`, once per picture, in the order they are to be shown. `--caption` gives each its caption, in the same order:
+
+```text
+python3 apkg-pack.pyz submit <download-url> --pr --screenshot main.png --caption "The main window" --screenshot prefs.png --caption "Settings"
+```
+
+| rule | value |
+|---|---|
+| format | PNG |
+| count | at most 6 |
+| size | at most 1280 x 800 pixels and 512 KiB each |
+| caption | plain ASCII, at most 120 characters |
+| content | a real screenshot of that program on AROS |
+
+The files go into `gallery/<id>/` of the catalogue repository (`1.png`, `2.png`, ..., `captions.txt`). They belong to the application, not to one build, and are not part of your archive. The screenshots you give are the application's whole gallery: they take the place of the ones the catalogue already has for it. The icon needs nothing from you; the catalogue takes it from the archive.
+
+These options need an apkg-pack that has them: `python3 apkg-pack.pyz submit --help` lists `--screenshot` when it does. The public catalogue does not publish pictures yet, so submitted screenshots are not shown in PkgManager until it does. [RFC 0003](../rfc/0003-storefront-metadata.md) describes the format.
+
 <a id="6-after-you-submit"></a>
 ## 5. Review and publication
 

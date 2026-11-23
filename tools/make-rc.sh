@@ -5,8 +5,7 @@
 # A release proper uses the full README: README=release/README tools/make-rc.sh 0.3.1
 # TARGETS limits it to some targets: TARGETS=x86_64-aros-v11 tools/make-rc.sh 0.4.0
 # Targets with PkgManager (x86_64-aros-v11, x86_64-aros-v1, aarch64-aros-raspi)
-# also get its icon, the demonstration storefront (Demo/, built by
-# tools/make-demo-store.py) and application.json, so the drawer starts
+# also get its icon and application.json, so the drawer starts
 # PkgManager with `apkg run` even when it was unpacked by hand.
 set -e
 V=${1:?usage: make-rc.sh VERSION}
@@ -29,7 +28,6 @@ want i386-aros-v0   && { mkdir -p $B/i386-aros-v0;   OUT=$B/i386-aros-v0/apkg   
 want aarch64-aros-raspi && { mkdir -p $B/aarch64-aros-raspi; OUT=$B/aarch64-aros-raspi/apkg sh "$HERE/src/build-raspi.sh" >/dev/null 2>&1;
                              OUT=$B/aarch64-aros-raspi/PkgManager sh "$HERE/src/build-gui-raspi.sh" >/dev/null 2>&1; }
 want x86_64-aros-v1 && { OUT=$B/x86_64-aros-v1/PkgManager sh "$HERE/src/build-gui-mainline.sh" >/dev/null 2>&1; }
-python3 "$HERE/tools/make-demo-store.py" "$B/Demo" >/dev/null
 
 for t in $TARGETS; do
     D="$B/pkg/arospkg-$V.$t"; mkdir -p "$D/licenses"
@@ -48,11 +46,10 @@ for t in $TARGETS; do
     [ "$t" = x86_64-aros-v11 ] && mkdir -p "$D/Examples/ARexx" && cp "$HERE"/examples/arexx/*.rexx "$D/Examples/ARexx/"
     if [ -f "$D/PkgManager" ]; then
         cp "$HERE/release/icons/PkgManager.info" "$D/"
-        cp -R "$B/Demo" "$D/Demo"
         # The libraries the catalogue entry names for this target.
-        case $t in x86_64-aros-v11) a=x86_64 abi=v11 libs=crt.library,stdlib.library,muimaster.library;;
-                   x86_64-aros-v1)  a=x86_64 abi=v1  libs=muimaster.library;;
-                   *)               a=aarch64 abi=v1 libs=muimaster.library;; esac
+        case $t in x86_64-aros-v11) a=x86_64 abi=v11 libs=crt.library,stdlib.library,muimaster.library,cybergraphics.library,diskfont.library;;
+                   x86_64-aros-v1)  a=x86_64 abi=v1  libs=muimaster.library,cybergraphics.library,diskfont.library;;
+                   *)               a=aarch64 abi=v1 libs=muimaster.library,cybergraphics.library,diskfont.library;; esac
         python3 -c "import json,sys; sys.path.insert(0,sys.argv[1]); import mkindex
 m={'id':'arospkg','version':sys.argv[2],'arch':sys.argv[3],'abi':sys.argv[4],
    'requires_system':[{'type':'library','id':l} for l in sys.argv[6].split(',')],

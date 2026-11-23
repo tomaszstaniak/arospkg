@@ -56,7 +56,9 @@ def ensure_fork(work, repo, me):
     return json.loads(run(work, "gh", "api", f"repos/{me}/{name}").stdout)["clone_url"]
 
 
-def open_pr(work, repo, manifest, m):
+def open_pr(work, repo, manifest, m, also=()):
+    """also: drawers of the clone that belong to the submission as they
+    now are, files removed from them included (its screenshots)."""
     rev = m.get("revision", 0)
     branch = f"submit/{m['id']}-{m['arch']}-{m['abi']}-{m['version']}-r{rev}"
     me = run(work, "gh", "api", "user", "--jq", ".login").stdout.strip()
@@ -73,6 +75,8 @@ def open_pr(work, repo, manifest, m):
             f" for {m['arch']}/{m['abi']}"
     run(work, "git", "switch", "-q", "-c", branch)
     run(work, "git", "add", "--", str(manifest.relative_to(work)))
+    for extra in also:
+        run(work, "git", "add", "-A", "--", str(extra.relative_to(work)))
     run(work, "git", "commit", "-q", "-m", f"{title}\n\nFrom {m['url']}\nsha256 {m['sha256']}, {m['size']} bytes.")
     if can_push:
         remote, head = "origin", branch

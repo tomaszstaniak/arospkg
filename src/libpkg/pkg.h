@@ -76,6 +76,8 @@ typedef struct {
     int  installed;        /* a registry entry exists for this id */
     char installed_version[64];   /* from the registry, when installed */
     long installed_revision;      /* from the registry; 0 when it stated none */
+    char name[64];         /* what to call it in a list: the catalogue's name, else its
+                              drawer's; "" when neither is known (then the id is shown) */
 } pkg_entry;
 
 /* What an upgrade or a rollback would do, from the library's own planner --

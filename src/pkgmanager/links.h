@@ -20,7 +20,7 @@
 #include "linktext.h"
 
 /* The places with text. */
-enum { LK_ABOUT, LK_RELEASE, LK_DETAIL, LK_HEAD, LK_CREDIT, LK_CONFIRM, LK_STATUS, LK_AREAS };
+enum { LK_ABOUT, LK_RELEASE, LK_DETAIL, LK_PKGABOUT, LK_CONFIRM, LK_STATUS, LK_AREAS };
 
 typedef struct {
     /* The main window's status line, set as it is: what links report there

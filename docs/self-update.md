@@ -7,7 +7,7 @@ apkg self-update --check
 apkg self-update
 ```
 
-In PkgManager: **About** > **Check for a newer version**, then **Update arospkg** ([screenshots](screenshots/0.7.1/README.md)).
+In PkgManager: **About...** in the Project menu, **Check for a newer version**, then **Update arospkg** ([screenshots](screenshots/0.7.1/README.md)).
 
 Both update apkg and the PkgManager of the same installation to the same release. Your packages, the catalogue, your package root and your icons stay as they are.
 
@@ -24,7 +24,7 @@ Where arospkg is installed decides what is replaced:
 | apkg copied elsewhere, such as `C:apkg` | that copy, together with the installation it belongs to |
 | apkg on its own, without PkgManager | that apkg; no PkgManager is added |
 
-A file the release does not contain is left as it is. Icons (`.info`) are never replaced in a drawer you unpacked; in an installed package, an icon you changed (its position or tool types) is kept.
+A file the release does not contain is left as it is, with one exception: releases 0.5.0 to 0.7.8 shipped a `Demo` drawer beside PkgManager, which later releases neither contain nor read. The update deletes it, and only when it is that demonstration (it holds `storefront.json`); a drawer of the same name with other contents stays. Icons (`.info`) are never replaced in a drawer you unpacked; in an installed package, an icon you changed (its position or tool types) is kept.
 
 The previous version stays: as `<file>.old` beside each replaced file, or for an installed package as its previous revision (`apkg rollback arospkg`).
 

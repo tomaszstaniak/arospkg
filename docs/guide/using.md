@@ -1,6 +1,6 @@
 # Using arospkg
 
-Install programs with apkg in the Shell or PkgManager on the desktop, start them, keep them up to date and remove them. [Choose the archive for your CPU and ABI](../../README.md#downloads). This guide describes **0.7.3**. Mainline x86_64 ABIv1 and Raspberry Pi aarch64 ABIv1 builds remain experimental (i386 ABIv0 is no longer built; 0.7.8 is its last release); see the [release notes](../../release/notes-0.7.3.md).
+Install programs with apkg in the Shell or PkgManager on the desktop, start them, keep them up to date and remove them. [Choose the archive for your CPU and ABI](../../README.md#downloads). This guide describes **0.8.0**. Mainline x86_64 ABIv1 and Raspberry Pi aarch64 ABIv1 builds remain experimental (i386 ABIv0 is no longer built; 0.7.8 is its last release); see the [release notes](../../release/notes-0.8.0.md).
 
 ## Install apkg
 
@@ -14,7 +14,7 @@ apkg update
 
 Check that the version and ABI match the archive you downloaded. Keep your existing `SYS:Packages`. Use this manual installation when upgrading from 0.3.x. From 0.4–0.6, follow the [two-step self-update instructions](../self-update.md#from-060-and-earlier).
 
-PkgManager is included in the x86_64 ABIv11, mainline and Raspberry Pi archives. Keep its unpacked folder on disk. To use the graphical interface, double-click its icon or run `Run PkgManager` from that folder. Click **Update index**, select a package and click **Install**.
+PkgManager is included in the x86_64 ABIv11, mainline and Raspberry Pi archives. Keep its unpacked folder on disk. To use the graphical interface, double-click its icon or run `Run PkgManager` from that folder. PkgManager fetches the catalogue by itself when there is none yet. Click **Install** at the end of a package's row. The [PkgManager section](#pkgmanager) describes the window.
 
 ## Find and install a program
 
@@ -32,7 +32,7 @@ Installed zunecalc 1.0
   Open folder: apkg open zunecalc
 ```
 
-`apkg open zunecalc` opens that drawer in Wanderer. In PkgManager, select the package and press **Open folder**. With `--root`, the printed command carries the same root, so it can be copied as it is.
+`apkg open zunecalc` opens that drawer in Wanderer. In PkgManager, select the package and press **Open folder** under the list. With `--root`, the printed command carries the same root, so it can be copied as it is.
 
 ### What a package needs, recommends or replaces
 
@@ -76,7 +76,7 @@ apkg run grep -c TODO Work:notes.txt
 apkg run --check grafx2
 ```
 
-A package that says how it is started can be started by name, from the Shell or with PkgManager's **Run** button. There are two kinds:
+A package that says how it is started can be started by name, from the Shell or with **Run** in PkgManager. There are two kinds:
 
 - **Workbench programs** start exactly as a double-click on their icon
   starts them: with the stack and tool types set in the icon, in their own
@@ -227,7 +227,7 @@ Output redirected to a file (`apkg outdated >RAM:updates.txt`) is plain text, as
 
 ### Updating arospkg itself
 
-`self-update --check` lists apkg and PkgManager as installed and the latest stable release. `self-update` updates both to that release, keeping the previous files as `.old` (or, for arospkg installed as a package, as its previous revision). In PkgManager, **About** > **Check for a newer version** and then **Update arospkg** do the same; PkgManager closes and starts again. A copy such as `C:apkg` is updated with the installation you tie it to; apkg asks once, or takes `--drawer` or `--apkg-only`. When the latest release has no archive for your machine, `--check` says so and nothing changes. [Updating arospkg](../self-update.md) has the details.
+`self-update --check` lists apkg and PkgManager as installed and the latest stable release. `self-update` updates both to that release, keeping the previous files as `.old` (or, for arospkg installed as a package, as its previous revision). In PkgManager, **About...** in the Project menu, then **Check for a newer version** and **Update arospkg** do the same; PkgManager closes and starts again. A copy such as `C:apkg` is updated with the installation you tie it to; apkg asks once, or takes `--drawer` or `--apkg-only`. When the latest release has no archive for your machine, `--check` says so and nothing changes. [Updating arospkg](../self-update.md) has the details.
 
 ## Check the installed files
 
@@ -235,7 +235,7 @@ Output redirected to a file (`apkg outdated >RAM:updates.txt`) is plain text, as
 apkg verify folio
 ```
 
-compares every installed file with what was installed: as installed, changed locally, missing, or in the drawer without being the package's. It repairs nothing. PkgManager's **Verify** shows the same at the top of the details.
+compares every installed file with what was installed: as installed, changed locally, missing, or in the drawer without being the package's. It repairs nothing. In PkgManager, **Verify** in the Package menu does the same; the result is on the **Details** tab of the package's page.
 
 ## Remove
 
@@ -243,53 +243,123 @@ compares every installed file with what was installed: as installed, changed loc
 apkg remove zunecalc
 ```
 
-Files you changed, and files apkg did not install, are kept; apkg lists them, and so does PkgManager after **Remove**.
+Files you changed, and files apkg did not install, are kept; apkg lists them, and so does PkgManager after **Remove** (on the package's page and in the Package menu).
 
 ### Cached archives
 
-Downloads in `<root>/cache/` can remain after a package is removed. arospkg 0.7.3 has no automatic cache pruning or `clean` command. Rollback needs the previous archive and its registry record; deleting them removes that rollback option. Do not delete cache or transaction files while an operation or recovery is in progress.
+Downloads in `<root>/cache/` can remain after a package is removed. arospkg 0.8.0 has no automatic cache pruning or `clean` command. Rollback needs the previous archive and its registry record; deleting them removes that rollback option. Do not delete cache or transaction files while an operation or recovery is in progress.
 
 ## PkgManager
 
-- The state selector filters the list: **All**, **Installed**, **Not
-  installed**, **Updates (N)**, **Recently added**, **Last refresh** and,
-  when the demonstration storefront is present, **Demo store**.
+### The window
+
+- **Left column**: a **Search** field and, under it, a list of views:
+  **All applications**, **Installed**, **Updates**, **Recently added** and
+  **Last refresh**, then the categories of the catalogue. One row is chosen
+  at a time: a view, or one category. When installed packages have
+  updates, their number stands beside **Updates** as a small coloured
+  badge. `Run PkgManager --updates` opens the window on that view.
+- **Right**: the name of what is listed, as a heading, then the packages.
+  Each row has the package's icon (when it has one), its name, its summary
+  (cut with "..." when the list is narrow) and, at the end, a small button
+  that says what a click does: **Install** for a package that is not
+  installed, **Run** for an installed one, **Upgrade** for an installed one
+  with a newer version or revision that can be installed.
+- **Under the list**: the selected package, with its name, version, state
+  and size, and a line for whatever needs attention, such as an available
+  update. **Open folder** is there for an installed package, and
+  **Details...** for every package.
+- **At the bottom**: one status line with the catalogue's date, whether
+  updates are available, and what the list shows. A progress bar with
+  **Cancel** appears while an operation runs.
+
+### A package's page
+
+**Details...**, or a double click on a row, opens the package's page in the
+same window. **Back** returns to the list.
+
+- The header has the icon, the name, the summary, a line with the version,
+  state, size and category, and the main button (**Install**, **Run** or
+  **Upgrade**). For an installed package, **Open folder** and **Remove**
+  are under it.
+- When the package has screenshots, they are shown in a strip under the
+  header. **Previous** and **Next** move through them; each can have a
+  caption.
+- **About** has the notes from the package, what it needs, recommends,
+  conflicts with and replaces, with the state of each, its source address
+  and when the catalogue first published it.
+- **Details** has the location, how the package starts, whether it runs on
+  this machine, the requirements probed here, the status (Listed or
+  Reviewed) and the runtime tests recorded for this archive, the
+  catalogue's address, and the result of the last **Verify**.
+
+### The menu
+
+- **Project**: **About...** and **Quit**. The About window has **Check for
+  a newer version** and **Update arospkg**.
+- **Catalogue**: **Update index** (Right Amiga+U) fetches the catalogue.
+- **Package**: **Details...**, **Install**, **Run**, **Upgrade**, **Roll
+  back**, **Verify**, **Open folder** and **Remove**, for the selected
+  package. **Verify** and **Roll back** are only in the menu.
+
+### What it does
+
+- When PkgManager starts and there is no catalogue, or the catalogue is
+  more than two weeks old, it fetches the catalogue by itself.
 - **Recently added** lists the 25 newest applications and new builds for
-  this machine, newest first, with the catalogue's date in the State
-  column; the same list as `apkg recent --builds --limit 25`. **Last
-  refresh** lists what the last catalogue update brought, as
-  `apkg recent --since-last-update`. After **Update index** the line under
-  the list says how many new applications, new builds and updates it found.
-  A catalogue without dates, or no recorded update, is said as such, never
-  shown as "nothing new".
+  this machine, newest first; the same list as
+  `apkg recent --builds --limit 25`. **Last refresh** lists what the last
+  catalogue update brought, as `apkg recent --since-last-update`. In both,
+  the summary starts with the kind of news in bold: *added* or *new build*
+  with the catalogue's date, *updated*, *new* or *back*. After **Update
+  index** the status line says how many new applications, new builds and
+  updates it found. A catalogue without dates, or no recorded update, is
+  said as such, never shown as "nothing new".
 - **Install** shows the plan in a confirmation window when it changes more
-  than the selected package (what it needs, what it replaces). **Remove**
-  refuses a package another one needs, and says which. The details list
-  what a package needs, recommends, conflicts with and replaces, with the
-  state of each.
-- The details show the status (Listed or Reviewed), the runtime tests
-  recorded for this archive, when the catalogue first published it and
-  where the catalogue came from.
-- The details start with what matters first and stay in view: the version
-  installed, whether it runs on this machine and how it starts. Below them
-  are the location, updates, notes from the package and the requirements.
-- **Run**, **Open folder**, **Verify**, **Upgrade** (with the plan shown
-  first, and your confirmation), **Roll back** and **Remove** act on the
-  selected installed package. Downloads, checks and starts run on a worker
-  process, so the window keeps answering; **Cancel** stops a download.
+  than the selected package (what it needs, what it replaces). **Upgrade**
+  and **Roll back** show their plan first and wait for your confirmation.
+  **Remove** refuses a package another one needs, and says which.
+- The window installs or upgrades one package at a time. For every update
+  in one go, use `apkg upgrade --all` in the Shell.
+- Downloads, checks and starts run on a worker process, so the window
+  keeps answering; **Cancel** stops a download.
 - Without a catalogue, or with one that cannot be read, PkgManager still
   lists what is installed, and Run, Open folder, Verify, Roll back and
   Remove still work.
-- Some applications show pictures beside the details: their icon, a
-  screenshot and small thumbnails, with a line saying where the pictures
-  come from. In 0.5.0 these are a **demonstration**: a few real screenshots
-  shipped with PkgManager in its `Demo` drawer, not pictures from the
-  catalogue. An application without pictures shows text only.
-- **Demo store** lists one fictional paid application with a price. **Buy...**
-  shows how buying could work in a later version. It is marked
-  "Demo -- purchasing is not available yet": nothing can be bought, nothing
-  is installed, and no data is asked for or sent. See
-  [RFC 0003](../rfc/0003-storefront-metadata.md).
+
+### Pictures
+
+A package can have an icon and up to six screenshots. They are kept in the
+`media` drawer of the package root, `SYS:Packages/media/<id>/` by default;
+apkg and PkgManager create the drawer together with the root.
+
+- The catalogue can name one archive with the icons of all its packages,
+  which PkgManager fetches together with the catalogue, and screenshots
+  for each package, which it fetches the first time that package's page
+  is opened. Each file is checked against the size and SHA-256 the
+  catalogue states. **The public catalogue does not publish pictures
+  yet**: they appear once it carries them.
+- A distribution can already supply its own. Files put into the media
+  drawer are shown for every package the catalogue has no pictures for:
+  `icon.png` (64x64), `icon-small.png` (24x24), `1.png`, `2.png` and so on
+  (screenshots, at most 640x400) and `captions.txt` (line N is the caption
+  of screenshot N). `tools/make-media.py` in the source repository makes
+  them from ordinary PNG or JPEG files, on a computer with Python and
+  Pillow:
+
+  ```text
+  python3 tools/make-media.py folio --icon folio.png --screenshot shot1.png --caption "Two pages side by side" media
+  ```
+
+  The last argument is the media drawer; the files go into `media/folio/`.
+- PkgManager reads PNG files itself (8-bit truecolour, not interlaced) and
+  does not need the picture datatype for them. A package without pictures
+  is listed with text only, and no operation depends on pictures.
+- [RFC 0003](../rfc/0003-storefront-metadata.md) has the file names, sizes
+  and catalogue fields.
+
+### Links and ARexx
+
 - Web addresses (`http://` and `https://`) that PkgManager shows, in
   About, in a package's details, in confirmation windows and in messages,
   are links inside their sentence. Click one to pass it to the browser

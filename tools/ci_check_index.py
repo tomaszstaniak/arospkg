@@ -3,6 +3,7 @@
 
     ci_check_index.py INDEX_DIR [--base REF] [--out-dir DIR] [--cache DIR]
                       [--review-dir DIR] [--review-all] [--commit SHA]
+                      [--media-out DIR --media-base-url URL]
 
 For every manifest whose TOML data changed since REF (all without --base): download
 the archive at its url, within the client's limits, and run the automatic
@@ -23,6 +24,14 @@ Reviewed is what the suite found, not what a pull request says. In the
 publish run (--publish), a change to history.json that reached main
 anyway fails, and every review record that changed is thrown away and its
 entry reviewed again.
+
+gallery/ (screenshots, docs/rfc/0003) is checked whole on every run: the
+format, count and size of the pictures, the captions, and that each drawer
+is named after a listed application. A pull request that breaks a rule
+fails. In the publish run a picture that breaks one is left out and named,
+and the catalogue is still published: one bad file on main must not stop
+every other package. --media-out and --media-base-url make the pictures
+(mkindex.py --media-out), for the publish workflow.
 
 Nothing from the checkout is executed: manifests are read as TOML data;
 archives are listed and their members' first bytes read through a pipe,
@@ -112,6 +121,22 @@ def safe_name(m):
         and m.get("abi") in mkindex.ABIS
 
 
+def gallery_problems(index_dir):
+    """What is wrong in gallery/, one line each. An application is listed
+    when a manifest for it is approved, in this checkout: a pull request
+    brings the manifest and the screenshots together."""
+    import catalogue_media as cm
+    ids = set()
+    for f in (index_dir / "manifests").glob("*.toml"):
+        try:
+            m = tomllib.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if m.get("status") == "approved" and not m.get("excluded") and isinstance(m.get("id"), str):
+            ids.add(m["id"])
+    return cm.check_gallery(index_dir / "gallery", ids)
+
+
 def download(url, dest):
     req = urllib.request.Request(url, headers={"User-Agent": "arospkg-index-check"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
@@ -136,7 +161,11 @@ def main():
     ap.add_argument("--publish", action="store_true",
                     help="the run after a merge: review/ and history.json in the checkout are the workflow's")
     ap.add_argument("--today", help=argparse.SUPPRESS)
+    ap.add_argument("--media-out", metavar="DIR", help="make the catalogue's pictures into DIR (mkindex.py --media-out)")
+    ap.add_argument("--media-base-url", metavar="URL", help="the address DIR is served at")
     a = ap.parse_args()
+    if bool(a.media_out) != bool(a.media_base_url):
+        sys.exit("--media-out and --media-base-url go together")
     index_dir = Path(a.index_dir).resolve()
     base_ok = a.base and subprocess.run(["git", "rev-parse", "--verify", "--quiet", a.base + "^{commit}"],
                                         cwd=index_dir, capture_output=True).returncode == 0
@@ -166,6 +195,12 @@ def main():
                         files.append(f)
                 except Exception:
                     pass
+    for why in gallery_problems(index_dir):
+        if a.publish:
+            print(f"{why} (left out of the catalogue)")
+        else:
+            print(why)
+            problems += 1
     import shutil
     import tempfile
     work = Path(tempfile.mkdtemp(prefix="ci-review-"))
@@ -267,6 +302,11 @@ def main():
             cmd += ["--history", str(boot)]
         if a.today:
             cmd += ["--today", a.today]
+        if a.media_out:
+            # Icons come from the archives downloaded above; an entry that
+            # did not change keeps the icon an earlier run read.
+            cmd += ["--media-out", a.media_out, "--media-base-url", a.media_base_url,
+                    "--gallery", str(index_dir / "gallery"), "--cache", str(cache)]
         r = subprocess.run(cmd)
         if r.returncode:
             problems += 1

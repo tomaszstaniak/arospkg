@@ -280,6 +280,13 @@ pkg_status pkg_open(const char *root, pkg_mode mode, pkg_ctx **out, pkg_err *e)
 
     u_mkpath(c->root); u_mkdir(c->db); u_mkdir(c->installed);
     u_mkdir(c->txns);  u_mkdir(c->doctor); u_mkdir(c->cache); u_mkdir(c->tmp);
+    {
+        /* Where the pictures of packages are kept (media.h): made with the
+           root, so a distribution can fill it before anything is fetched. */
+        char media[PKG_MAXPATH + 8];
+        snprintf(media, sizeof media, "%s/media", root);
+        u_mkdir(media);
+    }
 
     if (mode == PKG_OPEN_READ) {
         /* Read-only never recovers and never locks, but it must not present a

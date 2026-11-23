@@ -9,8 +9,8 @@ on such a tag, never as the repository's latest release: apkg self-update
 downloads from releases/latest.
 
 The archive holds the files this checkout runs, unchanged: apkg-pack (as
-apkg_pack.py), mkindex.py and catalogue.py, whose rules the catalogue CI
-uses too, publish_github.py for submit --pr, and the licence. Nothing is
+apkg_pack.py), mkindex.py, catalogue.py and catalogue_media.py, whose rules
+the catalogue CI uses too, publish_github.py for submit --pr, and the licence. Nothing is
 rewritten, so the standalone tool cannot drift from the checked-in one.
 Members are written in a fixed order with a fixed time: the same commit
 gives the same bytes with the same Python zlib.
@@ -26,6 +26,7 @@ MEMBERS = {                       # name in the archive: file in this checkout
     "apkg_pack.py": "tools/apkg-pack",
     "mkindex.py": "tools/mkindex.py",
     "catalogue.py": "tools/catalogue.py",
+    "catalogue_media.py": "tools/catalogue_media.py",
     "publish_github.py": "tools/publish_github.py",
     "LICENSE": "LICENSE",
 }

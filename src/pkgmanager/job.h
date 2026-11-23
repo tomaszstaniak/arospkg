@@ -12,7 +12,8 @@
 typedef enum { JOB_NONE, JOB_INSTALL, JOB_REMOVE, JOB_UPDATE,
                JOB_PREVIEW_UPGRADE, JOB_UPGRADE, JOB_PREVIEW_ROLLBACK, JOB_ROLLBACK,
                JOB_CHECK_RELEASE, JOB_VERIFY, JOB_RUN,
-               JOB_SU_LOCATE, JOB_SU_STAGE } job_kind;
+               JOB_SU_LOCATE, JOB_SU_STAGE,
+               JOB_MEDIA /* pictures: the gallery of `id`, or with no id the catalogue's icons */ } job_kind;
 
 /* Updating arospkg (libpkg/selfup.h): what the worker finds and stages for
    the window, which shows it and decides. Too big for a message, and only

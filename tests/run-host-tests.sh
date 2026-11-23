@@ -23,14 +23,13 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_held" \
     "$HERE/test_held.c" "$SRC/held.c"
 "$OUT/test_held"
 
-python3 "$HERE/../tools/make-demo-store.py" "$OUT/demostore" >/dev/null
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_linktext" \
     "$HERE/test_linktext.c" "$HERE/../src/pkgmanager/linktext.c"
 "$OUT/test_linktext"
 
-$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_demo" \
-    "$HERE/test_demo.c" "$HERE/../src/pkgmanager/demo.c" "$SRC/json.c"
-"$OUT/test_demo" "$OUT/demostore"
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_pngdec" \
+    "$HERE/test_pngdec.c" "$SRC/pngdec.c" -lz
+"$OUT/test_pngdec"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_icon" \
     "$HERE/test_icon.c" "$SRC/icon.c"
@@ -138,6 +137,8 @@ python3 "$HERE/test_apkg_pack.py" || fail=1
 python3 "$HERE/test_ci_check.py" || fail=1
 python3 "$HERE/test_publish_index.py" || fail=1
 python3 "$HERE/test_publish_github.py" || fail=1
+echo "== test_media"
+python3 "$HERE/test_media.py" || fail=1
 echo "== test_doc_examples"
 python3 "$HERE/test_doc_examples.py" || fail=1
 echo "== test_presentation"

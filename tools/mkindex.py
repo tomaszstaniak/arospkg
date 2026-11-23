@@ -764,9 +764,19 @@ def main():
     ap.add_argument("--runtime-dir", help="runtime-tests/<id>.<arch>.<abi>.toml: maintainer test records")
     ap.add_argument("--today", help="the publication date for new variants (default: today, UTC)")
     ap.add_argument("--commit", default="", help="the commit being published, recorded in history.json")
+    ap.add_argument("--media-out", metavar="DIR",
+                    help="make the pictures of the catalogue (docs/rfc/0003) into DIR, laid out as they are "
+                         "served: <id>/<sha8>-icon.png ..., icons-<sha8>.zip; index-v3.json then names them. "
+                         "Icons come from the archives in --cache. Needs Pillow and --media-base-url")
+    ap.add_argument("--media-base-url", metavar="URL", help="the address DIR is served at")
+    ap.add_argument("--gallery", metavar="DIR", help="the catalogue's gallery/ (screenshots); with --media-out")
     args = ap.parse_args()
     if args.out:
         sys.exit("--out is gone: use --out-dir DIR, which gets index-v2.json and index.json")
+    if args.media_out and not (args.media_base_url or "").startswith("https://"):
+        sys.exit("--media-out needs --media-base-url https://...: the client fetches nothing else")
+    if (args.gallery or args.media_base_url) and not args.media_out:
+        sys.exit("--gallery and --media-base-url do nothing without --media-out DIR")
 
     files = sorted(Path(args.manifests).glob("*.toml"))
     published, rejected, seen = [], [], {}
@@ -956,7 +966,23 @@ def main():
     # 0.4 and 0.5: what they can install as described, so nothing that needs
     # a client feature they lack (they would skip the dependencies and call
     # the install a success).
-    texts = {v3_path: json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": packages}, indent=2) + "\n"}
+    # Pictures (docs/rfc/0003) go to index-v3.json only: one object per
+    # application, the same in each of its builds. The older files share
+    # these entries, so index-v3.json gets copies.
+    v3 = {"schema": 1, "source": cat.CATALOGUE, "packages": packages}
+    if args.media_out:
+        import catalogue_media as cm
+        pub = cm.Publication(args.media_out, args.media_base_url, cache=args.cache, gallery=args.gallery,
+                             archive_names=archive_names, archive_member=archive_member)
+        media, media_bundle = pub.run(packages)
+        for note in pub.notes:
+            print(f"  media: {note}")
+        print(f"media                  {len(media)} application(s) with pictures, "
+              f"{sum(1 for m in media.values() if 'icon' in m)} with an icon")
+        v3 = {"schema": 1, "source": cat.CATALOGUE,
+              **({"media_bundle": media_bundle} if media_bundle else {}),
+              "packages": [{**p, "media": media[p["id"]]} if p["id"] in media else p for p in packages]}
+    texts = {v3_path: json.dumps(v3, indent=2) + "\n"}
     for path, pkgs in ((v2_path, v2_packages), (old_path, old_packages)):
         texts[path] = json.dumps({"schema": 1, "source": cat.CATALOGUE, "packages": pkgs},
                                  indent=2) + "\n"
