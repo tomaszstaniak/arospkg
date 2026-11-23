@@ -78,7 +78,7 @@ package's page when pictures for it are present. The public catalogue does
 not publish pictures yet; a distribution can already put its own into
 `SYS:Packages/media/` (see [using arospkg](docs/guide/using.md#pictures)).
 
-![PkgManager: the catalogue, with GrafX2 selected](docs/images/pkgmanager.png)
+![PkgManager: the list of applications, with Arca installed](docs/images/pkgmanager.png)
 
 ## Use the Shell
 
