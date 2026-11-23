@@ -23,6 +23,7 @@
 #define MUIA_Pic_Badge  PIC_TAG(4)    /* I.. a short text: the object is a badge, sized by its text */
 #define MUIA_Pic_Label  PIC_TAG(5)    /* I.. a word shown as a button's label */
 #define MUIA_Pic_Widest PIC_TAG(6)    /* I.. the widest word of its kind */
+#define MUIA_Pic_Head   PIC_TAG(7)    /* I.. the label is a heading in a place MUIA_Pic_Width wide */
 
 struct pic_data {
     unsigned char *px;      /* A,R,G,B per pixel, or NULL */
@@ -35,6 +36,7 @@ struct pic_data {
     char badge[12];         /* not a picture: this text on a rounded patch of the highlight colour */
     char label[16];         /* not a picture: this word, as on a button */
     char widest[16];        /* ...in a place wide enough for this one, so a column of them lines up */
+    int head;               /* the label is a column's heading: bold, at the left, in a place boxw wide */
 };
 
 static struct MUI_CustomClass *pic_class;
@@ -48,6 +50,7 @@ static IPTR pic_new_m(Class *cl, Object *obj, struct opSet *msg)
     d->boxw = (int)GetTagData(MUIA_Pic_Width, 16, msg->ops_AttrList);
     d->boxh = (int)GetTagData(MUIA_Pic_Height, 16, msg->ops_AttrList);
     d->flex = (int)GetTagData(MUIA_Pic_Flex, 0, msg->ops_AttrList);
+    d->head = (int)GetTagData(MUIA_Pic_Head, 0, msg->ops_AttrList);
     {
         const char *b = (const char *)GetTagData(MUIA_Pic_Badge, 0, msg->ops_AttrList);
         if (b) { strncpy(d->badge, b, sizeof d->badge - 1); d->badge[sizeof d->badge - 1] = 0; }
@@ -86,7 +89,7 @@ static IPTR pic_minmax_m(Class *cl, Object *obj, struct MUIP_AskMinMax *msg)
         InitRastPort(&rp);
         SetFont(&rp, _font(obj));
         d->boxh = _font(obj)->tf_YSize;
-        d->boxw = TextLength(&rp, (CONST_STRPTR)w, strlen(w)) + 10;
+        if (!d->head) d->boxw = TextLength(&rp, (CONST_STRPTR)w, strlen(w)) + 10;
     }
     msg->MinMaxInfo->MinWidth  += d->flex ? d->boxw / 4 : d->boxw; msg->MinMaxInfo->DefWidth  += d->boxw;
     msg->MinMaxInfo->MinHeight += d->flex ? d->boxh / 4 : d->boxh; msg->MinMaxInfo->DefHeight += d->boxh;
@@ -156,9 +159,11 @@ static IPTR pic_draw_m(Class *cl, Object *obj, struct MUIP_Draw *msg)
         SetFont(rp, _font(obj));
         SetAPen(rp, _pens(obj)[MPEN_TEXT]);
         SetDrMd(rp, JAM1);
-        Move(rp, _mleft(obj) + (_mwidth(obj) - TextLength(rp, (CONST_STRPTR)d->label, strlen(d->label))) / 2,
+        if (d->head) SetSoftStyle(rp, FSF_BOLD, AskSoftStyle(rp));
+        Move(rp, d->head ? _mleft(obj) : _mleft(obj) + (_mwidth(obj) - TextLength(rp, (CONST_STRPTR)d->label, strlen(d->label))) / 2,
              _mtop(obj) + (_mheight(obj) - _font(obj)->tf_YSize) / 2 + _font(obj)->tf_Baseline);
         Text(rp, (CONST_STRPTR)d->label, strlen(d->label));
+        if (d->head) SetSoftStyle(rp, FS_NORMAL, AskSoftStyle(rp));
         return 0;
     }
     if (!(msg->flags & (MADF_DRAWOBJECT | MADF_DRAWUPDATE)) || !d->px) return 0;
@@ -284,5 +289,16 @@ Object *pic_label_button(const char *label, const char *widest)
                      MUIA_Pic_Label, (IPTR)label, MUIA_Pic_Widest, (IPTR)widest,
                      MUIA_Frame, MUIV_Frame_Button,
                      MUIA_Background, MUII_ButtonBack,
+                     TAG_DONE);
+}
+
+Object *pic_heading(const char *label, int width)
+{
+    if (!pic_class) return NULL;
+    return NewObject(pic_class->mcc_Class, NULL,
+                     MUIA_Pic_Label, (IPTR)label, MUIA_Pic_Width, width, MUIA_Pic_Head, 1,
+                     MUIA_Frame, MUIV_Frame_None,
+                     MUIA_InnerLeft, 0, MUIA_InnerRight, 0, MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
+                     MUIA_FillArea, FALSE,
                      TAG_DONE);
 }

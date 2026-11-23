@@ -41,4 +41,9 @@ Object *pic_new_button(int w, int h);
 /* A word in a button's frame, for a list row: `label`, in a place wide
    enough for `widest`, so that a column of them has one width. */
 Object *pic_label_button(const char *label, const char *widest);
+
+/* A column's heading for a list's title row: `label` in bold in a place
+   exactly `width` pixels wide. A list's column is as wide as its widest
+   cell, so this is how a column is given a width. */
+Object *pic_heading(const char *label, int width);
 #endif

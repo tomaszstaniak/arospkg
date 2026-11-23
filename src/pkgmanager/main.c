@@ -173,15 +173,39 @@ static const char *shown_name(const pkg_entry *e)
    rows are made: the summary may use what is left of the list's width. */
 static int row_other_width;
 #define ROW_WIDEST_ACTION "Upgrade"
+/* The width the summary column has, in pixels: what the list's width leaves
+   after the other columns. The column is held to exactly this by its
+   heading (pic_heading) and its texts are cut to it, so the button after it
+   stands at the list's right edge whatever the summaries are. */
+static int row_room, row_list_width;
+static APTR row_head;
+static Object *row_headobj;
+
+/* How wide the rows of the package list are. A Zune list is a group of two:
+   the area that shows the rows and its own scroller beside it, so the
+   list's own width is not the rows' (measured on mainline: 576 against
+   553). The area is the group's first member. 0 before the window is
+   open. */
+static int list_rows_width(void)
+{
+    struct List *kids = NULL;
+    Object *state, *kid;
+    if (!lst_list) return 0;
+    GetAttr(MUIA_Group_ChildList, lst_list, (IPTR *)&kids);
+    if (!kids) return 0;
+    state = (Object *)kids->lh_Head;
+    kid = NextObject(&state);
+    return kid && _mwidth(kid) > 0 ? _mwidth(kid) : 0;
+}
 
 static void summary_fit(char *text)
 {
     struct RastPort rp;
     struct TextExtent te;
     int room, len = (int)strlen(text), fit;
-    if (!lst_list || !_font(lst_list) || _mwidth(lst_list) <= 0) return;
-    room = _mwidth(lst_list) - row_other_width;
-    if (room < 40) room = 40;
+    if (!lst_list || !_font(lst_list)) return;
+    room = row_room;
+    if (room < 40) return;
     InitRastPort(&rp);
     SetFont(&rp, _font(lst_list));
     if (TextLength(&rp, (CONST_STRPTR)text, len) <= room) return;
@@ -200,7 +224,9 @@ AROS_UFH3S(void, display_func,
     (void)hook;
     if (!e) {
         array[0] = (char *)""; array[1] = (char *)"\33bName";
+        static char headimg[24];
         array[2] = (char *)"\33bSummary"; array[3] = (char *)"";
+        if (row_head) { snprintf(headimg, sizeof headimg, "\33O[%08lx]", (unsigned long)(IPTR)row_head); array[2] = headimg; }
     } else {
         /* The hook is called for one row at a time and MUI draws it before
            the next, so one buffer of each kind serves every row. */
@@ -243,6 +269,9 @@ static struct Hook display_hook;
 static void row_images_free(void)
 {
     int i;
+    if (row_head) DoMethod(lst_list, MUIM_List_DeleteImage, (IPTR)row_head);
+    if (row_headobj) MUI_DisposeObject(row_headobj);
+    row_head = NULL; row_headobj = NULL;
     for (i = 0; i < row_n; i++) {
         if (row_img && row_img[i]) DoMethod(lst_list, MUIM_List_DeleteImage, (IPTR)row_img[i]);
         if (row_obj && row_obj[i]) MUI_DisposeObject(row_obj[i]);
@@ -269,19 +298,6 @@ static void row_images_make(void)
         return;
     }
     row_n = rows.n;
-    if (_font(lst_list)) {
-        /* The icon, the widest name, the button and the gaps and bars
-           between four columns. */
-        struct RastPort rp;
-        int namew = 0;
-        InitRastPort(&rp);
-        SetFont(&rp, _font(lst_list));
-        for (i = 0; i < rows.n; i++) {
-            int w = TextLength(&rp, (CONST_STRPTR)shown_name(&rows.v[i]), strlen(shown_name(&rows.v[i])));
-            if (w > namew) namew = w;
-        }
-        row_other_width = PKG_ICON_SMALL_W + namew + TextLength(&rp, (CONST_STRPTR)ROW_WIDEST_ACTION, strlen(ROW_WIDEST_ACTION)) + 18 + 40;
-    }
     for (i = 0; i < rows.n; i++) {
         char path[PKG_MAXPATH];
         Object *o;
@@ -304,6 +320,39 @@ static void row_images_make(void)
         if (pic_set(o, path, NULL, 0) != 0) { MUI_DisposeObject(o); continue; }
         row_img[i] = (APTR)DoMethod(lst_list, MUIM_List_CreateImage, (IPTR)o, 0);
         if (row_img[i]) row_obj[i] = o; else MUI_DisposeObject(o);
+    }
+    row_room = 0;
+    row_list_width = list_rows_width();
+    if (_font(lst_list) && row_list_width > 0) {
+        /* What the other columns take: the icon when any row has one, the
+           widest name (or the word "Name"), the button in its frame, and
+           the gaps and the bar between four columns. */
+        /* The widest the first two columns have been: the list keeps a
+           column's width when its rows are replaced by narrower ones (seen
+           on mainline: a category with one short name and no icon kept
+           the widths of the full list), so these only grow. */
+        static int namew, icons;
+        struct RastPort rp;
+        int w;
+        InitRastPort(&rp);
+        SetFont(&rp, _font(lst_list));
+        SetSoftStyle(&rp, FSF_BOLD, AskSoftStyle(&rp));
+        w = TextLength(&rp, (CONST_STRPTR)"Name", 4);
+        if (w > namew) namew = w;
+        SetSoftStyle(&rp, FS_NORMAL, AskSoftStyle(&rp));
+        for (i = 0; i < rows.n; i++) {
+            w = TextLength(&rp, (CONST_STRPTR)shown_name(&rows.v[i]), strlen(shown_name(&rows.v[i])));
+            if (w > namew) namew = w;
+            if (row_img[i]) icons = 1;
+        }
+        row_other_width = (icons ? PKG_ICON_SMALL_W : 0) + namew
+                          + TextLength(&rp, (CONST_STRPTR)ROW_WIDEST_ACTION, strlen(ROW_WIDEST_ACTION)) + 10 + 40;
+        row_room = row_list_width - row_other_width;
+logline("list columns: rows %d wide, icons %d, name %d, other %d, summary %d", row_list_width, icons, namew, row_other_width, row_room);
+        if (row_room >= 40 && (row_headobj = pic_heading("Summary", row_room)) != NULL) {
+            row_head = (APTR)DoMethod(lst_list, MUIM_List_CreateImage, (IPTR)row_headobj, 0);
+            if (!row_head) { MUI_DisposeObject(row_headobj); row_headobj = NULL; }
+        }
     }
 }
 
@@ -2856,14 +2905,19 @@ static int real_main(int argc, char **argv)
                between them is "All applications". */
             IPTR a = (IPTR)MUIV_List_Active_Off;
             GetAttr(MUIA_List_Active, lst_side, &a);
+            char want_cat[32] = "";
+            int want_view = ST_ALL;
             if ((LONG)a == MUIV_List_Active_Off) break;
-            if ((LONG)a >= SIDE_FIRST_CAT && (LONG)a - SIDE_FIRST_CAT < cat_count) {
-                snprintf(cat_chosen, sizeof cat_chosen, "%s", cat_names[a - SIDE_FIRST_CAT]);
-                view_state = ST_ALL;
-            } else {
-                cat_chosen[0] = 0;
-                view_state = (LONG)a < SIDE_VIEWS ? (int)a : ST_ALL;
-            }
+            if ((LONG)a >= SIDE_FIRST_CAT && (LONG)a - SIDE_FIRST_CAT < cat_count)
+                snprintf(want_cat, sizeof want_cat, "%s", cat_names[a - SIDE_FIRST_CAT]);
+            else want_view = (LONG)a < SIDE_VIEWS ? (int)a : ST_ALL;
+            /* Only a choice that differs is one: making the side list again
+               (every refill does) sets its active row, and that must not
+               be read as the user choosing it, or each refill would start
+               the next (measured: the window refilled without end). */
+            if (!strcmp(want_cat, cat_chosen) && want_view == view_state) break;
+            snprintf(cat_chosen, sizeof cat_chosen, "%s", want_cat);
+            view_state = want_view;
             logline("filter category=%s state=%d", cat_chosen[0] ? cat_chosen : "all", view_state);
             refill_keep("filter");
         } break;
@@ -2921,6 +2975,13 @@ static int real_main(int argc, char **argv)
             }
             if (sigs & rxsig) rexx_poll(rexx_command);
             if (sigs & lk_signal()) lk_poll();
+        }
+        /* The summary column is sized to the list's width, so a window
+           that changed size has its rows made again. */
+        if (row_list_width && list_rows_width() > 0 && list_rows_width() != row_list_width && !busy_now()) {
+            refill_keep("resize");
+            /* Also when the refill made no rows: once per change of size. */
+            row_list_width = list_rows_width();
         }
         if (rexx_quit && !busy_now()) break;
         if (su_handed_off) break;
