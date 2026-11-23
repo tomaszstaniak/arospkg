@@ -28,6 +28,16 @@
 #include <stdarg.h>
 #include <strings.h>
 
+/* A text that does not fit its place ends in "..." where Zune can do that
+   (MUIA_Text_Shorten, as in MUI 5). A Zune without the attribute ignores it
+   and clips the text, as it always did, so it is set wherever a text may be
+   wider than the window. Defined here for SDKs whose headers do not have
+   it yet. */
+#ifndef MUIA_Text_Shorten
+#define MUIA_Text_Shorten            0x80428bbd
+#define MUIV_Text_Shorten_ElideRight 5
+#endif
+
 /* PM_TEST_VERSION names a clearly labelled test build, so a self-update
    test can start from a version older than the test release; a release
    never sets it. */
@@ -422,6 +432,7 @@ static Object *name_text(void)
         MUIA_Text_Contents, (IPTR)"",
         MUIA_Text_PreParse, (IPTR)"\33b",
         MUIA_Text_SetMin, FALSE,
+        MUIA_Text_Shorten, MUIV_Text_Shorten_ElideRight,
     End;
 }
 
@@ -431,6 +442,7 @@ static Object *summary_text(void)
     return TextObject,
         MUIA_Text_Contents, (IPTR)"",
         MUIA_Text_SetMin, FALSE,
+        MUIA_Text_Shorten, MUIV_Text_Shorten_ElideRight,
     End;
 }
 
@@ -2694,6 +2706,7 @@ static int real_main(int argc, char **argv)
                                             MUIA_Font, MUIV_Font_Tiny,
                                             MUIA_Text_Contents, (IPTR)"",
                                             MUIA_Text_SetMin, FALSE,
+                                            MUIA_Text_Shorten, MUIV_Text_Shorten_ElideRight,
                                         End),
                                     End),
                                     Child, (VGroup, MUIA_HorizWeight, 0,
@@ -2735,6 +2748,7 @@ static int real_main(int argc, char **argv)
                                     MUIA_Font, MUIV_Font_Tiny,
                                     MUIA_Text_Contents, (IPTR)"\n",
                                     MUIA_Text_SetMin, FALSE,
+                                    MUIA_Text_Shorten, MUIV_Text_Shorten_ElideRight,
                                 End),
                             End),
                             Child, (VGroup, MUIA_HorizWeight, 0,
