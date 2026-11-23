@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 
 /* The ABI tags a build can declare and an index can carry. The same list is
@@ -121,7 +122,17 @@ static void row_from_element(const char *json, const js_tok *t, int ntok, int el
     member_str(json, t, ntok, el, "abi",      e->abi,      sizeof e->abi);
     member_str(json, t, ntok, el, "kind",     e->kind,     sizeof e->kind);
     member_str(json, t, ntok, el, "name",     e->name,     sizeof e->name);
-    if (!e->name[0]) member_str(json, t, ntok, el, "subdir", e->name, sizeof e->name);
+    if (!e->name[0])
+    {
+        /* The drawer's name is how the program calls itself ("Alien Breed
+           HD"), unless it is the archive's name: the id with a version or
+           a target after it ("arospkg-0.7.8.x86_64-aros-v11") says less
+           than the id. */
+        size_t k = strlen(e->id);
+        member_str(json, t, ntok, el, "subdir", e->name, sizeof e->name);
+        if (k && !strncasecmp(e->name, e->id, k) && (e->name[k] == '-' || e->name[k] == '_' || e->name[k] == '.'))
+            e->name[0] = 0;
+    }
     e->revision = js_long(json, t, js_member(json, t, ntok, el, "revision"), 0);
     {
         /* The ids only: what a detail panel lists. The probe that says
