@@ -214,16 +214,29 @@ void pic_exit(void)
     pic_class = NULL;
 }
 
-Object *pic_new(int w, int h, int press, int in_list, int flex)
+/* Every object of the class is made from a tag array, never from a list of
+   arguments: NewObject() with arguments takes them from the stack as they
+   were pushed, and on AArch64 a value narrower than 64 bits is pushed with
+   whatever the upper half of its slot held. A background or frame number
+   then read as a pointer, and PkgManager 0.8.0 and 0.8.1 failed on the
+   Raspberry Pi as soon as the list had icons. */
+static Object *pic_make(const struct TagItem *tags)
 {
     if (!pic_class) return NULL;
-    return NewObject(pic_class->mcc_Class, NULL,
-                     MUIA_Pic_Width, w, MUIA_Pic_Height, h, MUIA_Pic_Flex, flex,
-                     MUIA_Frame, MUIV_Frame_None,
-                     MUIA_InnerLeft, 0, MUIA_InnerRight, 0, MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
-                     in_list ? MUIA_FillArea : TAG_IGNORE, FALSE,
-                     press ? MUIA_InputMode : TAG_IGNORE, MUIV_InputMode_RelVerify,
-                     TAG_DONE);
+    return NewObjectA(pic_class->mcc_Class, NULL, (struct TagItem *)tags);
+}
+
+Object *pic_new(int w, int h, int press, int in_list, int flex)
+{
+    struct TagItem tags[] = {
+        { MUIA_Pic_Width, (IPTR)w }, { MUIA_Pic_Height, (IPTR)h }, { MUIA_Pic_Flex, (IPTR)flex },
+        { MUIA_Frame, (IPTR)MUIV_Frame_None },
+        { MUIA_InnerLeft, 0 }, { MUIA_InnerRight, 0 }, { MUIA_InnerTop, 0 }, { MUIA_InnerBottom, 0 },
+        { in_list ? MUIA_FillArea : TAG_IGNORE, (IPTR)FALSE },
+        { press ? MUIA_InputMode : TAG_IGNORE, (IPTR)MUIV_InputMode_RelVerify },
+        { TAG_DONE, 0 }
+    };
+    return pic_make(tags);
 }
 
 int pic_set(Object *o, const char *path, char *why, int whyn)
@@ -263,42 +276,46 @@ void pic_set_glyph(Object *o, const char *const *rows, int w, int h)
 
 Object *pic_badge(const char *text)
 {
-    if (!pic_class) return NULL;
-    return NewObject(pic_class->mcc_Class, NULL,
-                     MUIA_Pic_Badge, (IPTR)text,
-                     MUIA_Frame, MUIV_Frame_None,
-                     MUIA_InnerLeft, 0, MUIA_InnerRight, 0, MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
-                     MUIA_FillArea, FALSE,
-                     TAG_DONE);
+    struct TagItem tags[] = {
+        { MUIA_Pic_Badge, (IPTR)text },
+        { MUIA_Frame, (IPTR)MUIV_Frame_None },
+        { MUIA_InnerLeft, 0 }, { MUIA_InnerRight, 0 }, { MUIA_InnerTop, 0 }, { MUIA_InnerBottom, 0 },
+        { MUIA_FillArea, (IPTR)FALSE },
+        { TAG_DONE, 0 }
+    };
+    return pic_make(tags);
 }
 
 Object *pic_new_button(int w, int h)
 {
-    if (!pic_class) return NULL;
-    return NewObject(pic_class->mcc_Class, NULL,
-                     MUIA_Pic_Width, w, MUIA_Pic_Height, h,
-                     MUIA_Frame, MUIV_Frame_Button,
-                     MUIA_Background, MUII_ButtonBack,
-                     TAG_DONE);
+    struct TagItem tags[] = {
+        { MUIA_Pic_Width, (IPTR)w }, { MUIA_Pic_Height, (IPTR)h },
+        { MUIA_Frame, (IPTR)MUIV_Frame_Button },
+        { MUIA_Background, (IPTR)MUII_ButtonBack },
+        { TAG_DONE, 0 }
+    };
+    return pic_make(tags);
 }
 
 Object *pic_label_button(const char *label, const char *widest)
 {
-    if (!pic_class) return NULL;
-    return NewObject(pic_class->mcc_Class, NULL,
-                     MUIA_Pic_Label, (IPTR)label, MUIA_Pic_Widest, (IPTR)widest,
-                     MUIA_Frame, MUIV_Frame_Button,
-                     MUIA_Background, MUII_ButtonBack,
-                     TAG_DONE);
+    struct TagItem tags[] = {
+        { MUIA_Pic_Label, (IPTR)label }, { MUIA_Pic_Widest, (IPTR)widest },
+        { MUIA_Frame, (IPTR)MUIV_Frame_Button },
+        { MUIA_Background, (IPTR)MUII_ButtonBack },
+        { TAG_DONE, 0 }
+    };
+    return pic_make(tags);
 }
 
 Object *pic_heading(const char *label, int width)
 {
-    if (!pic_class) return NULL;
-    return NewObject(pic_class->mcc_Class, NULL,
-                     MUIA_Pic_Label, (IPTR)label, MUIA_Pic_Width, width, MUIA_Pic_Head, 1,
-                     MUIA_Frame, MUIV_Frame_None,
-                     MUIA_InnerLeft, 0, MUIA_InnerRight, 0, MUIA_InnerTop, 0, MUIA_InnerBottom, 0,
-                     MUIA_FillArea, FALSE,
-                     TAG_DONE);
+    struct TagItem tags[] = {
+        { MUIA_Pic_Label, (IPTR)label }, { MUIA_Pic_Width, (IPTR)width }, { MUIA_Pic_Head, 1 },
+        { MUIA_Frame, (IPTR)MUIV_Frame_None },
+        { MUIA_InnerLeft, 0 }, { MUIA_InnerRight, 0 }, { MUIA_InnerTop, 0 }, { MUIA_InnerBottom, 0 },
+        { MUIA_FillArea, (IPTR)FALSE },
+        { TAG_DONE, 0 }
+    };
+    return pic_make(tags);
 }

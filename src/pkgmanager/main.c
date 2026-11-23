@@ -44,7 +44,7 @@
 #ifdef PM_TEST_VERSION
 #define PM_VERSION PM_TEST_VERSION
 #else
-#define PM_VERSION "0.8.1"
+#define PM_VERSION "0.8.2"
 #endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
@@ -62,7 +62,7 @@ static int car_w = 480, car_h = 300;
 static Object *app, *win, *menus, *str_search, *lst_side, *lst_sidelist, *txt_view, *lst, *lst_list,
               *gauge, *grp_progress, *btn_cancel,
               *btn_open, *btn_details,
-              *btn_main2, *btn_open2, *btn_remove2, *btn_back,
+              *btn_main2, *btn_open2, *btn_remove2, *btn_back, *grp_head,
               *win_confirm, *btn_proceed, *btn_decline,
               *win_about, *btn_about_close, *btn_check, *btn_selfupdate,
               *pg_main, *reg_page, *grp_car, *virt_car, *grp_carnav, *txt_caption, *btn_prev, *btn_next,
@@ -929,11 +929,23 @@ static void show_actions(int off)
     const char *label = can.upgrade ? "Upgrade" : can.run ? "Run" : can.install ? "Install" :
                         selected() && selected()->installed ? "Run" : "Install";
     main_action = can.upgrade ? ID_UPGRADE : can.run ? ID_RUN : can.install ? ID_INSTALL : 0;
-    SetAttrs(btn_main2, MUIA_Text_Contents, (IPTR)label, MUIA_Disabled, off || !main_action, TAG_DONE);
-    /* Open folder and Remove are there only for an installed package. */
+    /* The page's header is laid out again when its buttons change: a
+       button that appears, or a longer word on the main one, makes the
+       column of buttons wider, and without this it kept its old width and
+       the new buttons stood partly outside the window. */
+    {
+        static int was_open = -1, was_remove = -1;
+        static const char *was_label;
+        int change = was_open != !!can.open || was_remove != !!can.remove || was_label != label;
+        if (change) DoMethod(grp_head, MUIM_Group_InitChange);
+        SetAttrs(btn_main2, MUIA_Text_Contents, (IPTR)label, MUIA_Disabled, off || !main_action, TAG_DONE);
+        /* Open folder and Remove are there only for an installed package. */
+        SetAttrs(btn_open2,   MUIA_ShowMe, can.open, MUIA_Disabled, off, TAG_DONE);
+        SetAttrs(btn_remove2, MUIA_ShowMe, can.remove, MUIA_Disabled, off, TAG_DONE);
+        if (change) DoMethod(grp_head, MUIM_Group_ExitChange);
+        was_open = !!can.open; was_remove = !!can.remove; was_label = label;
+    }
     SetAttrs(btn_open,    MUIA_ShowMe, can.open, MUIA_Disabled, off, TAG_DONE);
-    SetAttrs(btn_open2,   MUIA_ShowMe, can.open, MUIA_Disabled, off, TAG_DONE);
-    SetAttrs(btn_remove2, MUIA_ShowMe, can.remove, MUIA_Disabled, off, TAG_DONE);
     SetAttrs(btn_details, MUIA_Disabled, !selected(), TAG_DONE);
     DoMethod(menus, MUIM_SetUData, ID_DETAILS,  MUIA_Menuitem_Enabled, selected() != NULL);
     DoMethod(menus, MUIM_SetUData, ID_INSTALL,  MUIA_Menuitem_Enabled, !off && can.install);
@@ -959,6 +971,9 @@ static void page_open(int tab)
     if (!e) return;
     if (tab >= 0) SetAttrs(reg_page, MUIA_Group_ActivePage, tab, TAG_DONE);
     SetAttrs(pg_main, MUIA_Group_ActivePage, 1, TAG_DONE);
+    /* Its buttons may have changed while the page was not shown. */
+    DoMethod(grp_head, MUIM_Group_InitChange);
+    DoMethod(grp_head, MUIM_Group_ExitChange);
     if (media_now.nshots) show_shot(shot_now < media_now.nshots ? shot_now : 0);
     logline("page of %s opened, tab %d, pictures %d%s", e->id, tab, media_now.nshots, media_now.due ? ", gallery due" : "");
     if (media_now.due && !busy_now() && !no_auto) begin(JOB_MEDIA, e->id, "page");
@@ -2737,7 +2752,7 @@ static int real_main(int argc, char **argv)
                             Child, (btn_back = glyph_button(glyph_back, 12, "Back", "Back to the list")),
                             Child, HSpace(0),
                         End),
-                        Child, (HGroup,
+                        Child, (grp_head = HGroup,
                             MUIA_Frame, MUIV_Frame_Group,
                             MUIA_Background, MUII_GroupBack,
                             Child, (VGroup, MUIA_HorizWeight, 0,
