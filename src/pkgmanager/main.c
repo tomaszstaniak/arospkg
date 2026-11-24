@@ -44,12 +44,12 @@
 #ifdef PM_TEST_VERSION
 #define PM_VERSION PM_TEST_VERSION
 #else
-#define PM_VERSION "0.8.2"
+#define PM_VERSION "0.8.3"
 #endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
        ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN, ID_RUN, ID_VERIFY,
-       ID_CHECK, ID_SELFUPDATE, ID_MAIN, ID_DETAILS, ID_BACK, ID_PREV, ID_NEXT, ID_QUIT, ID_ROWCLICK, ID_ROWDOUBLE };
+       ID_CHECK, ID_SELFUPDATE, ID_MAIN, ID_DETAILS, ID_BACK, ID_PREV, ID_NEXT, ID_QUIT, ID_ROWCLICK, ID_ROWDOUBLE, ID_ONLYINST };
 
 /* The pictures on a package's page stand side by side in a strip that
    scrolls sideways, each in a place of this size (a larger one is scaled
@@ -503,12 +503,16 @@ static char upd_label[32] = "Updates";
    as apkg recent: the first newest first, the second by kind (new, new
    builds, updated), as apkg lists it. Under them, after an empty row, the
    categories. One row is chosen at a time: a view of everything, or one
-   category. */
+   category. "Installed only" beside the list's name narrows either. */
 static STRPTR state_entries[] = { (STRPTR)"All applications", (STRPTR)"Installed", (STRPTR)upd_label,
                                   (STRPTR)"Recently added", (STRPTR)"Last refresh", NULL };
 #define SIDE_VIEWS 5
 #define SIDE_FIRST_CAT (SIDE_VIEWS + 1)
 static int view_state;            /* ST_*: the view chosen; ST_ALL while a category is */
+/* "Installed only", beside the list's name: it narrows whatever the side
+   list has chosen, so a category can be seen as what is installed of it. */
+static int only_installed;
+static Object *chk_inst;
 static APTR side_badge;           /* the list image of the update count, or NULL */
 static Object *side_badgeobj;
 /* How many of the newest additions "Recently added" lists. */
@@ -589,6 +593,7 @@ static void rebuild_categories(const pkg_entries *all)
 static int passes_filters(const pkg_entry *e)
 {
     IPTR st = state_now();
+    if (only_installed && !e->installed) return 0;
     if (cat_chosen[0]) {
         char top[32];
         top_category(e->category, top, sizeof top);
@@ -795,7 +800,7 @@ static void refill(const char *term, const char *keep_id, const char *why)
         else if (shown == 0 && passes_filters_is_updates())
             snprintf(msg, sizeof msg, "%s", upd.installed ? "no updates for the installed packages" : "nothing is installed");
         else if (shown == 0)
-            snprintf(msg, sizeof msg, "no packages match%s%s%s",
+            snprintf(msg, sizeof msg, "no %spackages match%s%s%s", only_installed ? "installed " : "",
                      term && *term ? " \"" : "", term && *term ? term : "", term && *term ? "\"" : "");
         else
             snprintf(msg, sizeof msg, "%d package%s%s%s%s", shown, shown == 1 ? "" : "s",
@@ -2386,6 +2391,8 @@ static void rx_show(rexx_msg *m, const rx_req *r)
     SetAttrs(str_search, MUIA_NoNotify, TRUE, MUIA_String_Contents, (IPTR)"", TAG_DONE);
     last_term[0] = 0; cat_chosen[0] = 0;
     view_state = ST_ALL;
+    only_installed = 0;
+    SetAttrs(chk_inst, MUIA_NoNotify, TRUE, MUIA_Selected, FALSE, TAG_DONE);
     page_close();
     refill("", r->package, "arexx show");
     sel = selected();
@@ -2664,7 +2671,7 @@ static int real_main(int argc, char **argv)
     app = ApplicationObject,
         MUIA_Application_Title,       (IPTR)"PkgManager",
         MUIA_Application_Author,      (IPTR)AROSPKG_AUTHOR,
-        MUIA_Application_Version,     (IPTR)"$VER: PkgManager " PM_VERSION " (23.11.2026)",
+        MUIA_Application_Version,     (IPTR)"$VER: PkgManager " PM_VERSION " (24.11.2026)",
         MUIA_Application_Description, (IPTR)"Install software from AROS Archives",
         MUIA_Application_Base,        (IPTR)"PKGMANAGER",
         SubWindow, (win = WindowObject,
@@ -2704,6 +2711,17 @@ static int real_main(int argc, char **argv)
                                 Child, (HGroup,
                                     Child, (txt_view = name_text()),
                                     Child, HSpace(0),
+                                    Child, (chk_inst = ImageObject,
+                                        ImageButtonFrame,
+                                        MUIA_InputMode,      MUIV_InputMode_Toggle,
+                                        MUIA_Image_Spec,     MUII_CheckMark,
+                                        MUIA_Image_FreeVert, TRUE,
+                                        MUIA_Background,     MUII_ButtonBack,
+                                        MUIA_ShowSelState,   FALSE,
+                                        MUIA_CycleChain,     1,
+                                        MUIA_ShortHelp,      (IPTR)"List only what is installed of the chosen view or category.",
+                                    End),
+                                    Child, Label1("Installed only"),
                                 End),
                                 Child, (lst = ListviewObject,
                                     MUIA_CycleChain, 1,
@@ -2876,6 +2894,7 @@ static int real_main(int argc, char **argv)
     DoMethod(str_search, MUIM_Notify, MUIA_String_Acknowledge, MUIV_EveryTime,
              (IPTR)app, 2, MUIM_Application_ReturnID, ID_SEARCH);
     DoMethod(lst_side, MUIM_Notify, MUIA_List_Active, MUIV_EveryTime, (IPTR)app, 2, MUIM_Application_ReturnID, ID_FILTER);
+    DoMethod(chk_inst, MUIM_Notify, MUIA_Selected, MUIV_EveryTime, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ONLYINST);
     /* Both are set on the list itself, not on the view around it. */
     DoMethod(lst_list, MUIM_Notify, MUIA_Listview_ClickColumn, MUIV_EveryTime, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ROWCLICK);
     DoMethod(lst_list, MUIM_Notify, MUIA_Listview_DoubleClick, TRUE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_ROWDOUBLE);
@@ -2955,6 +2974,14 @@ static int real_main(int argc, char **argv)
             view_state = want_view;
             logline("filter category=%s state=%d", cat_chosen[0] ? cat_chosen : "all", view_state);
             refill_keep("filter");
+        } break;
+        case ID_ONLYINST: {
+            IPTR on = 0;
+            GetAttr(MUIA_Selected, chk_inst, &on);
+            if (!!on == only_installed) break;
+            only_installed = !!on;
+            logline("filter installed-only=%d", only_installed);
+            refill_keep("installed only");
         } break;
         case ID_SELECT:  show_detail(); break;
         case ID_DETAILS: page_open(-1); break;
