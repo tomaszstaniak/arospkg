@@ -259,7 +259,9 @@ Downloads in `<root>/cache/` can remain after a package is removed. arospkg 0.8.
   at a time: a view, or one category. When installed packages have
   updates, their number stands beside **Updates** as a small coloured
   badge. `Run PkgManager --updates` opens the window on that view.
-- **Right**: the name of what is listed, as a heading, then the packages.
+- **Right**: the name of what is listed, as a heading, and beside it
+  **Installed only**, which narrows the chosen view or category to what is
+  installed (the installed games, for example). Then the packages.
   Each row has the package's icon (when it has one), its name, its summary
   (cut with "..." when the list is narrow) and, at the end, a small button
   that says what a click does: **Install** for a package that is not
