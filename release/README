@@ -1,4 +1,4 @@
-arospkg 0.8.3
+arospkg 0.8.4
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -41,11 +41,15 @@ page. Verify, Roll back and Update index are in the menu.
 BUILDS
 ------
 
-0.8.3:
+0.8.4:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
-  x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS)
+  x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS,
+                     nightly builds of 2026-11-24 or later)
   aarch64-aros-raspi apkg and PkgManager: experimental (native AROS on
-                     the Raspberry Pi). Please test and report what works.
+                     the Raspberry Pi, nightly builds of 2026-11-24 or
+                     later). Please test and report what works.
+
+On a mainline or Raspberry Pi nightly build before 2026-11-24, use 0.8.3.
 
 i386 ABIv0 is no longer built. 0.7.8 is its last release; apkg
 self-update there says that newer releases have no archive for it.
@@ -79,6 +83,16 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.8.4
+------------
+
+- The mainline x86_64 and Raspberry Pi builds are made for nightly builds
+  of 2026-11-24 or later. That nightly changed a system structure that
+  programs are built against: with 0.8.3 on it, output sent to a file was
+  lost on x86_64 and apkg stopped with a bus fault on the Raspberry Pi.
+  These builds do not run on earlier nightly builds; keep 0.8.3 there.
+- No change for ABIv11 systems.
 
 NEW IN 0.8.3
 ------------

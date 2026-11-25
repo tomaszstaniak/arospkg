@@ -17,7 +17,9 @@ BUILD_ID=$(cat "$HERE"/libpkg/*.c "$HERE"/libpkg/*.h $TLS_SRC "$HERE"/pkgmanager
            | shasum -a 256 | cut -c1-16)
 echo "build id $BUILD_ID  (PkgManager, ABIv1 / mainline, additional)"
 
-"$CC" -O2 -Wall -Wextra -std=gnu99 $EXTRA_CFLAGS \
+# The SDK is also the sysroot: the compiler's own default may be another
+# system's, and the startup code linked in must match the headers.
+"$CC" -O2 -Wall -Wextra -std=gnu99 --sysroot="$SDK" $EXTRA_CFLAGS \
     -DPKG_BUILD_ID='"'"$BUILD_ID"'"' \
     -DPKG_TOOLCHAIN='"'"$(echo "$TC" | sed "s|^$HOME|~|")"'"' \
     -DPKG_ABI='"v1"' \

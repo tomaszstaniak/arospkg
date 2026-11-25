@@ -3,6 +3,8 @@
 # commit, one archive per CPU/ABI, into dist/rc/. Nothing is uploaded.
 #   tools/make-rc.sh 0.3.1-rc1
 # A release proper uses the full README: README=release/README tools/make-rc.sh 0.3.1
+# SDK_V1 and SDK_RASPI name the Developer SDK of the mainline and Raspberry Pi
+# builds (default: the one in each build script).
 # TARGETS limits it to some targets: TARGETS=x86_64-aros-v11 tools/make-rc.sh 0.4.0
 # Targets with PkgManager (x86_64-aros-v11, x86_64-aros-v1, aarch64-aros-raspi)
 # also get its icon and application.json, so the drawer starts
@@ -23,11 +25,11 @@ OUT=$OUT_/PkgManager sh "$HERE/src/build-gui.sh" >/dev/null 2>&1
 # be built on request: TARGETS="... i386-aros-v0".
 TARGETS=${TARGETS:-x86_64-aros-v11 x86_64-aros-v1 aarch64-aros-raspi}
 want() { case " $TARGETS " in *" $1 "*) return 0;; esac; return 1; }
-want x86_64-aros-v1 && { mkdir -p $B/x86_64-aros-v1; OUT=$B/x86_64-aros-v1/apkg sh "$HERE/src/build-mainline.sh" >/dev/null 2>&1; }
+want x86_64-aros-v1 && { mkdir -p $B/x86_64-aros-v1; env ${SDK_V1:+SDK="$SDK_V1"} OUT=$B/x86_64-aros-v1/apkg sh "$HERE/src/build-mainline.sh" >/dev/null 2>&1; }
 want i386-aros-v0   && { mkdir -p $B/i386-aros-v0;   OUT=$B/i386-aros-v0/apkg   sh "$HERE/src/build-i386.sh"     >/dev/null 2>&1; }
-want aarch64-aros-raspi && { mkdir -p $B/aarch64-aros-raspi; OUT=$B/aarch64-aros-raspi/apkg sh "$HERE/src/build-raspi.sh" >/dev/null 2>&1;
-                             OUT=$B/aarch64-aros-raspi/PkgManager sh "$HERE/src/build-gui-raspi.sh" >/dev/null 2>&1; }
-want x86_64-aros-v1 && { OUT=$B/x86_64-aros-v1/PkgManager sh "$HERE/src/build-gui-mainline.sh" >/dev/null 2>&1; }
+want aarch64-aros-raspi && { mkdir -p $B/aarch64-aros-raspi; env ${SDK_RASPI:+SDK="$SDK_RASPI"} OUT=$B/aarch64-aros-raspi/apkg sh "$HERE/src/build-raspi.sh" >/dev/null 2>&1;
+                             env ${SDK_RASPI:+SDK="$SDK_RASPI"} OUT=$B/aarch64-aros-raspi/PkgManager sh "$HERE/src/build-gui-raspi.sh" >/dev/null 2>&1; }
+want x86_64-aros-v1 && { env ${SDK_V1:+SDK="$SDK_V1"} OUT=$B/x86_64-aros-v1/PkgManager sh "$HERE/src/build-gui-mainline.sh" >/dev/null 2>&1; }
 
 for t in $TARGETS; do
     D="$B/pkg/arospkg-$V.$t"; mkdir -p "$D/licenses"
