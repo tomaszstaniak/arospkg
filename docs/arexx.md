@@ -79,6 +79,7 @@ Names are not case-sensitive and must be written in full. Arguments follow Amiga
 | `REMOVE` | `<package>` | job number | `NOTFOUND`, `BUSY`, `CLOSING` |
 | `UPGRADE` | `<package>` | job number; the user confirms the plan in the window | `NOTFOUND`, `BUSY`, `CLOSING` |
 | `ROLLBACK` | `<package>` | job number; the user confirms the plan in the window | `NOTFOUND`, `BUSY`, `CLOSING` |
+| `UPGRADEALL` | | job number (`op` is `upgrade-all`); the user confirms the list in the window. The job is `done` when every package was upgraded or there was nothing to upgrade, `failed` when any failed (`error` is the first failure's), `cancelled` when it was stopped; `message` has the counts | `BUSY`, `CLOSING` |
 | `JOB` | `[<job>] [FIELD <name>]` | the job's fields (below); the latest job when no number is given | `NOJOB` |
 | `WAIT` | `[<job>] [FIELD <name>]` | the same, but only once the job has ended | `NOJOB` |
 | `CANCEL` | `[<job>]` | `requested`, or `declined` for a job waiting for confirmation | `NOTCANCELLABLE`, `FINISHED`, `NOJOB` |

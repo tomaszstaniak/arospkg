@@ -1,4 +1,4 @@
-arospkg 0.8.4
+arospkg 0.8.5
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -36,12 +36,14 @@ more than two weeks old. Choose a view or a category on the left, or
 type into Search. Each package has a button at the end of its row:
 Install, Run when it is installed, Upgrade when a newer version can be
 installed. Details..., or a double click on a row, opens the package's
-page. Verify, Roll back and Update index are in the menu.
+page. Above the list, Upgrade all... installs every update that can
+be installed, and Update index fetches the catalogue. Verify and Roll
+back are in the menu.
 
 BUILDS
 ------
 
-0.8.4:
+0.8.5:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS,
                      nightly builds of 2026-11-24 or later)
@@ -83,6 +85,17 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.8.5
+------------
+
+- PkgManager: Upgrade all... above the list (and in the Catalogue
+  menu) upgrades every package that can be, one after the other, after
+  showing the list and waiting for your confirmation. A package that
+  fails stays as it was and the others continue.
+- PkgManager: Update index is a button above the list again; it is
+  still in the Catalogue menu.
+- ARexx: UPGRADEALL.
 
 NEW IN 0.8.4
 ------------

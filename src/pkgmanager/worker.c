@@ -158,6 +158,39 @@ static void worker_main(void)
                            break;
         case JOB_UPGRADE:  st = pkg_upgrade(c, j->index, j->id, PKG_STOP_NONE, &e); break;
         case JOB_ROLLBACK: st = pkg_rollback(c, j->id, PKG_STOP_NONE, &e); break;
+        case JOB_UPGRADE_ALL: {
+            /* As apkg upgrade --all: each package is its own transaction,
+               with its own protection of changed files and its own way
+               back; one that fails leaves the others as they are. Cancel
+               ends the group at the package it reached, or before the
+               next one, never inside a step that cannot be cancelled. */
+            pkg_updates u; int i;
+            pm_msg *d = j->done;
+            memset(&u, 0, sizeof u);
+            if ((st = pkg_updates_get(c, j->index, 1, &u, &e)) != PKG_OK) break;
+            if (u.catalogue != PKG_CAT_OK) {
+                st = e.status = PKG_E_NOT_FOUND;
+                snprintf(e.summary, sizeof e.summary, "no readable catalogue, so there is nothing to upgrade to");
+                pkg_updates_free(&u);
+                break;
+            }
+            for (i = 0; i < u.n; i++) if (u.rows[i].state == PKG_UPD_AVAILABLE) d->all_n++;
+            for (i = 0; i < u.n; i++) {
+                pkg_err e1; pkg_status s1;
+                if (u.rows[i].state != PKG_UPD_AVAILABLE) continue;
+                if (j->cancel) { d->all_stopped = 1; break; }
+                memset(&e1, 0, sizeof e1);
+                s1 = pkg_upgrade(c, j->index, u.rows[i].id, PKG_STOP_NONE, &e1);
+                if (s1 == PKG_OK) d->all_done++;
+                else if (s1 == PKG_E_CANCELLED) { d->all_stopped = 1; break; }
+                else if (!d->all_failed++) {
+                    st = s1; e = e1;
+                    snprintf(d->all_first, sizeof d->all_first, "%s", u.rows[i].id);
+                }
+            }
+            pkg_updates_free(&u);
+            break;
+        }
         case JOB_PREVIEW_UPGRADE:  st = pkg_upgrade_preview(c, j->index, j->id, 1, &plan, &e); break;
         case JOB_PREVIEW_ROLLBACK: st = pkg_rollback_preview(c, j->id, &plan, &e); break;
         default: break;

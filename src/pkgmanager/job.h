@@ -13,7 +13,8 @@ typedef enum { JOB_NONE, JOB_INSTALL, JOB_REMOVE, JOB_UPDATE,
                JOB_PREVIEW_UPGRADE, JOB_UPGRADE, JOB_PREVIEW_ROLLBACK, JOB_ROLLBACK,
                JOB_CHECK_RELEASE, JOB_VERIFY, JOB_RUN,
                JOB_SU_LOCATE, JOB_SU_STAGE,
-               JOB_MEDIA /* pictures: the gallery of `id`, or with no id the catalogue's icons */ } job_kind;
+               JOB_MEDIA, /* pictures: the gallery of `id`, or with no id the catalogue's icons */
+               JOB_UPGRADE_ALL /* every package that can be upgraded now, one after the other */ } job_kind;
 
 /* Updating arospkg (libpkg/selfup.h): what the worker finds and stages for
    the window, which shows it and decides. Too big for a message, and only
@@ -75,6 +76,11 @@ typedef struct pm_msg_s {
     pkg_run_result run;         /* JOB_RUN: what was started */
     pkg_removal    rem;         /* JOB_REMOVE: what was kept in place */
     char           note[200];   /* a replacement recovery finished when the root was opened */
+    /* JOB_UPGRADE_ALL: how many could be upgraded, how many were, how many
+       failed (status and err are the first failure's, all_first its id),
+       and whether the group was stopped before its end. */
+    int            all_n, all_done, all_failed, all_stopped;
+    char           all_first[PKG_MAXID];
 } pm_msg;
 
 /* Start the worker process for `j`. Returns 0 on success; the worker will

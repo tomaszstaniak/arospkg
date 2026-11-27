@@ -44,12 +44,13 @@
 #ifdef PM_TEST_VERSION
 #define PM_VERSION PM_TEST_VERSION
 #else
-#define PM_VERSION "0.8.4"
+#define PM_VERSION "0.8.5"
 #endif
 
 enum { ID_SEARCH = 1, ID_INSTALL, ID_REMOVE, ID_UPDATE, ID_CANCEL, ID_SELECT, ID_FILTER,
        ID_UPGRADE, ID_ROLLBACK, ID_PROCEED, ID_DECLINE, ID_ABOUT, ID_ABOUT_CLOSE, ID_OPEN, ID_RUN, ID_VERIFY,
-       ID_CHECK, ID_SELFUPDATE, ID_MAIN, ID_DETAILS, ID_BACK, ID_PREV, ID_NEXT, ID_QUIT, ID_ROWCLICK, ID_ROWDOUBLE, ID_ONLYINST };
+       ID_CHECK, ID_SELFUPDATE, ID_MAIN, ID_DETAILS, ID_BACK, ID_PREV, ID_NEXT, ID_QUIT, ID_ROWCLICK, ID_ROWDOUBLE, ID_ONLYINST,
+       ID_UPGRADEALL };
 
 /* The pictures on a package's page stand side by side in a strip that
    scrolls sideways, each in a place of this size (a larger one is scaled
@@ -61,7 +62,7 @@ static int car_w = 480, car_h = 300;
 
 static Object *app, *win, *menus, *str_search, *lst_side, *lst_sidelist, *txt_view, *lst, *lst_list,
               *gauge, *grp_progress, *btn_cancel,
-              *btn_open, *btn_details,
+              *btn_open, *btn_details, *btn_upall, *btn_update,
               *btn_main2, *btn_open2, *btn_remove2, *btn_back, *grp_head,
               *win_confirm, *btn_proceed, *btn_decline,
               *win_about, *btn_about_close, *btn_check, *btn_selfupdate,
@@ -625,9 +626,9 @@ static void show_catalogue(void)
     char *line = cat_line;
     size_t n = sizeof cat_line;
     if (upd.catalogue == PKG_CAT_MISSING)
-        snprintf(line, n, "\33bNo catalogue yet\33n -- choose Update index in the Catalogue menu.");
+        snprintf(line, n, "\33bNo catalogue yet\33n -- choose Update index.");
     else if (upd.catalogue == PKG_CAT_UNREADABLE)
-        snprintf(line, n, "\33bThe catalogue cannot be read\33n (%s) -- choose Update index in the Catalogue menu.", upd.catalogue_error);
+        snprintf(line, n, "\33bThe catalogue cannot be read\33n (%s) -- choose Update index.", upd.catalogue_error);
     else {
         size_t k = (size_t)snprintf(line, n, "Catalogue of %s%s. ",
                                     upd.catalogue_when[0] ? upd.catalogue_when : "(date unknown)",
@@ -638,10 +639,11 @@ static void show_catalogue(void)
             snprintf(line + k, n - k, "\33b%d update%s\33n, none installable now (see the package's Details).",
                      upd.newer, upd.newer == 1 ? "" : "s");
         else if (upd.blocked)
-            snprintf(line + k, n - k, "\33b%d update%s available\33n (%d of them blocked).",
+            snprintf(line + k, n - k, "\33b%d update%s available\33n (%d of them blocked): Upgrade all installs the rest.",
                      upd.newer, upd.newer == 1 ? "" : "s", upd.blocked);
         else
-            snprintf(line + k, n - k, "\33b%d update%s available\33n: choose Updates above.", upd.newer, upd.newer == 1 ? "" : "s");
+            snprintf(line + k, n - k, "\33b%d update%s available\33n: Upgrade all installs %s.", upd.newer, upd.newer == 1 ? "" : "s",
+                     upd.newer == 1 ? "it" : "them");
     }
     (void)st;
 }
@@ -686,8 +688,8 @@ static void news_status(char *msg, size_t n, int shown)
 {
     if (news_st != PKG_OK) { snprintf(msg, n, "%s", news_err.summary); return; }
     if (state_now() == ST_LAST) {
-        if (!news.recorded) snprintf(msg, n, "no catalogue update recorded on this machine yet -- choose Update index in the Catalogue menu");
-        else if (!news.current) snprintf(msg, n, "the catalogue was replaced since the last recorded update -- choose Update index in the Catalogue menu");
+        if (!news.recorded) snprintf(msg, n, "no catalogue update recorded on this machine yet -- choose Update index");
+        else if (!news.current) snprintf(msg, n, "the catalogue was replaced since the last recorded update -- choose Update index");
         else if (news.first) snprintf(msg, n, "update of %s: %s Recently added lists the newest.", news.when, news.first_why);
         else if (!news.n) snprintf(msg, n, "update of %s: nothing new for this machine", news.when);
         else snprintf(msg, n, "update of %s: %d new, %d new build%s, %d updated%s", news.when, news.apps,
@@ -695,7 +697,7 @@ static void news_status(char *msg, size_t n, int shown)
         return;
     }
     if (!news.n && news.unknown_dates)
-        snprintf(msg, n, "the catalogue gives no dates for its applications -- choose Update index in the Catalogue menu");
+        snprintf(msg, n, "the catalogue gives no dates for its applications -- choose Update index");
     else if (!news.n) snprintf(msg, n, "no dated applications for this machine");
     else {
         size_t k = (size_t)snprintf(msg, n, "the %d most recently added for this machine, newest first", shown);
@@ -791,8 +793,8 @@ static void refill(const char *term, const char *keep_id, const char *why)
                 upd.newer, upd.ready, upd.blocked, pkg_cat_word(upd.catalogue), upd.catalogue_when);
         if (no_catalogue)
             snprintf(msg, sizeof msg, "%d installed package%s shown; %s", shown, shown == 1 ? "" : "s",
-                     no_catalogue == PKG_E_NOT_FOUND ? "no catalogue yet -- choose Update index in the Catalogue menu"
-                                                     : "the catalogue cannot be read -- choose Update index in the Catalogue menu");
+                     no_catalogue == PKG_E_NOT_FOUND ? "no catalogue yet -- choose Update index"
+                                                     : "the catalogue cannot be read -- choose Update index");
         else if (rows.n == 0 && hidden == 0 && !(term && *term))
             snprintf(msg, sizeof msg, "the index lists no packages");
         else if (state_now() == ST_RECENT || state_now() == ST_LAST)
@@ -813,7 +815,7 @@ static void refill(const char *term, const char *keep_id, const char *why)
         status_list(msg);
     } else if (st == PKG_E_NOT_FOUND) {
         logline("refill (%s): no index", why);
-        status("no index yet -- choose Update index in the Catalogue menu");
+        status("no index yet -- choose Update index");
     } else {
         logline("refill (%s): index unreadable: %s", why, e.summary);
         show_err("the index cannot be read", st, &e);
@@ -961,6 +963,14 @@ static void show_actions(int off)
     DoMethod(menus, MUIM_SetUData, ID_OPEN,     MUIA_Menuitem_Enabled, !off && can.open);
     DoMethod(menus, MUIM_SetUData, ID_REMOVE,   MUIA_Menuitem_Enabled, !off && can.remove);
     DoMethod(menus, MUIM_SetUData, ID_UPDATE,   MUIA_Menuitem_Enabled, !off);
+    /* Upgrade all is in the window only while something can be upgraded;
+       Update index is always there. */
+    {
+        int ready = upd.catalogue == PKG_CAT_OK && upd.ready > 0;
+        SetAttrs(btn_upall,  MUIA_ShowMe, ready, MUIA_Disabled, off, TAG_DONE);
+        SetAttrs(btn_update, MUIA_Disabled, off, TAG_DONE);
+        DoMethod(menus, MUIM_SetUData, ID_UPGRADEALL, MUIA_Menuitem_Enabled, !off && ready);
+    }
 
 }
 
@@ -1334,6 +1344,7 @@ static const char *opname(job_kind k)
     case JOB_RUN: return "run";
     case JOB_SU_LOCATE: case JOB_SU_STAGE: return "self-update";
     case JOB_MEDIA: return "pictures";
+    case JOB_UPGRADE_ALL: return "upgrade-all";
     default: return "none";
     }
 }
@@ -1401,6 +1412,7 @@ static int start(job_kind kind, const char *id)
     status(kind == JOB_INSTALL ? "installing..." : kind == JOB_REMOVE ? "removing..." :
            kind == JOB_UPDATE ? "updating the index..." :
            kind == JOB_UPGRADE ? "upgrading..." : kind == JOB_ROLLBACK ? "rolling back..." :
+           kind == JOB_UPGRADE_ALL ? "upgrading, one package at a time..." :
            kind == JOB_PREVIEW_UPGRADE ? "working out what the upgrade would do..." :
            kind == JOB_CHECK_RELEASE ? "asking for the latest release..." :
            kind == JOB_VERIFY ? "checking the installed files..." :
@@ -1416,6 +1428,7 @@ static int start(job_kind kind, const char *id)
 
 /* Every operation starts here, from a button or from a script. */
 static int install_gate(rx_job *j);
+static int upgrade_all_gate(rx_job *j);
 static void proceed(const char *how);
 
 static rx_job *begin(job_kind kind, const char *pkg, const char *origin)
@@ -1432,6 +1445,7 @@ static rx_job *begin(job_kind kind, const char *pkg, const char *origin)
     active = j;
     logline("job %ld %s %s from %s", j->id, j->op, j->package[0] ? j->package : "-", origin);
     if (kind == JOB_INSTALL && install_gate(j)) return j;
+    if (kind == JOB_UPGRADE_ALL && upgrade_all_gate(j)) return j;
     if (start(kind, pkg) != 0) finish(j, RXJ_FAILED, "CANNOTSTART", "could not start the worker process");
     return j;
 }
@@ -1490,6 +1504,57 @@ static int install_gate(rx_job *j)
     return 1;
 }
 
+/* Before Upgrade all: which packages, from which version to which, and
+ * which are left out and why -- the plan apkg upgrade --all prints. Always
+ * settles the job or leaves it waiting for the answer; returns 1. */
+static int upgrade_all_gate(rx_job *j)
+{
+    static char text[3000];
+    size_t k; int i, n = 0, skipped = 0, more = 0;
+    if (upd.catalogue != PKG_CAT_OK || !upd.ready) {
+        const char *why = upd.catalogue != PKG_CAT_OK ? "there is no readable catalogue -- choose Update index"
+                        : upd.newer ? "nothing can be upgraded now (see the package's Details)"
+                        : "everything installed is current";
+        logline("upgrade all: %s", why);
+        finish(j, RXJ_DONE, "", why);
+        status(why);
+        return 1;
+    }
+    k = (size_t)snprintf(text, sizeof text, "Upgrade all\n\n");
+    for (i = 0; i < upd.n; i++) {
+        const pkg_update_row *r = &upd.rows[i];
+        char a[80], b[80];
+        if (r->state != PKG_UPD_AVAILABLE) { if (r->newer) skipped++; continue; }
+        n++;
+        if (k + 220 > sizeof text - 600) { more++; continue; }
+        rev_label(a, sizeof a, r->installed_version, r->installed_revision);
+        rev_label(b, sizeof b, r->available_version, r->available_revision);
+        k += (size_t)snprintf(text + k, sizeof text - k, "%d. %s  %s -> %s\n", n, r->id, a, b);
+    }
+    if (more) k += (size_t)snprintf(text + k, sizeof text - k, "and %d more\n", more);
+    if (skipped) {
+        k += (size_t)snprintf(text + k, sizeof text - k, "\nLeft out:\n");
+        for (i = 0; i < upd.n && k + 400 < sizeof text; i++) {
+            const pkg_update_row *r = &upd.rows[i];
+            if (r->state == PKG_UPD_AVAILABLE || !r->newer) continue;
+            k += (size_t)snprintf(text + k, sizeof text - k, "%s: %.200s\n", r->id, r->why);
+        }
+    }
+    if (k < sizeof text)
+        snprintf(text + k, sizeof text - k, "\n%d package%s, one at a time. Files you changed are kept.\n"
+                 "One that fails leaves the others as they are.\n"
+                 "Close the programs in the list first if they are running.\n\nProceed?", n, n == 1 ? "" : "s");
+    logline("upgrade all: plan of %d package%s (%d left out) waits for confirmation", n, n == 1 ? "" : "s", skipped);
+    j->state = RXJ_CONFIRM;
+    snprintf(j->message, sizeof j->message, "%d package%s to upgrade; the plan waits for confirmation", n, n == 1 ? "" : "s");
+    confirming = 1;
+    status("waiting for your decision");
+    if (auto_yes) { proceed("confirmed automatically (--yes)"); return 1; }
+    SetAttrs(win_confirm, MUIA_Window_Open, TRUE, TAG_DONE);
+    confirm_text(text);
+    return 1;
+}
+
 /* The plan is shown in a window of its own rather than a requester: a
  * requester runs its own loop until it is answered, and the ARexx port --
  * served from this loop -- would stop answering for as long as the user
@@ -1513,7 +1578,8 @@ static void proceed(const char *how)
     j->state = RXJ_RUNNING;
     j->phase[0] = 0; j->done = j->total = 0; j->can_cancel = 0;
     if (!strcmp(j->op, "install")) install_confirmed = 1;
-    if (start(!strcmp(j->op, "install") ? JOB_INSTALL : !strcmp(j->op, "upgrade") ? JOB_UPGRADE : JOB_ROLLBACK,
+    if (start(!strcmp(j->op, "install") ? JOB_INSTALL : !strcmp(j->op, "upgrade") ? JOB_UPGRADE :
+              !strcmp(j->op, "upgrade-all") ? JOB_UPGRADE_ALL : JOB_ROLLBACK,
               j->package) != 0)
         finish(j, RXJ_FAILED, "CANNOTSTART", "could not start the worker process");
 }
@@ -1906,7 +1972,10 @@ static int on_message(pm_msg *m)
     }
     if (m->kind == PM_PROGRESS) {
         unsigned long pct = m->total ? (m->done * 100UL) / m->total : (m->done ? 100 : 0);
-        if (m->total) snprintf(info, sizeof info, "%s %lu%%", m->phase, pct);
+        /* Upgrade all: which package the bar is about. */
+        if (cur.kind == JOB_UPGRADE_ALL && m->id[0] && m->total) snprintf(info, sizeof info, "%.40s: %s %lu%%", m->id, m->phase, pct);
+        else if (cur.kind == JOB_UPGRADE_ALL && m->id[0]) snprintf(info, sizeof info, "%.40s: %s", m->id, m->phase);
+        else if (m->total) snprintf(info, sizeof info, "%s %lu%%", m->phase, pct);
         else snprintf(info, sizeof info, "%s", m->phase);
         SetAttrs(gauge, MUIA_Gauge_Current, pct, MUIA_Gauge_InfoText, (IPTR)info, TAG_DONE);
         /* Stated by the event, not inferred from the phase. */
@@ -1924,10 +1993,10 @@ static int on_message(pm_msg *m)
         static const char *verb[] = { "none", "install", "remove", "update",
                                       "preview upgrade", "upgrade", "preview rollback", "rollback",
                                       "check for a newer version", "verify", "start",
-                                      "update arospkg", "update arospkg", "fetch pictures" };
+                                      "update arospkg", "update arospkg", "fetch pictures", "upgrade all" };
         static const char *past[] = { "", "installed", "removed", "index updated",
                                       "", "upgraded", "", "rolled back", "checked", "verified", "started",
-                                      "", "", "pictures fetched" };
+                                      "", "", "pictures fetched", "upgraded" };
         job_kind kind = cur.kind;
         rx_job *j = active;
         char line[160], why[640];
@@ -2044,6 +2113,41 @@ static int on_message(pm_msg *m)
             busy(0);
             if (m->status == PKG_OK) status(text);
             else show_err(verb[kind], m->status, &m->err);
+            return 0;
+        }
+        if (kind == JOB_UPGRADE_ALL) {
+            /* One line for the group: how many of how many, the first
+               failure in libpkg's words, and whether it was stopped. */
+            static char text[900];
+            int left = m->all_n - m->all_done;
+            size_t k;
+            if (!m->all_n && m->status != PKG_OK) snprintf(text, sizeof text, "upgrade all: %s", why);
+            else {
+                k = (size_t)snprintf(text, sizeof text, "upgraded %d of %d package%s", m->all_done, m->all_n,
+                                     m->all_n == 1 ? "" : "s");
+                if (m->all_failed && k < sizeof text)
+                    k += (size_t)snprintf(text + k, sizeof text - k, "; %d failed%s%s: %s", m->all_failed,
+                                          m->all_failed > 1 ? ", the first " : ", ", m->all_first, why);
+                if (m->all_stopped && k < sizeof text)
+                    k += (size_t)snprintf(text + k, sizeof text - k, "; stopped, %d left as %s", left - m->all_failed,
+                                          left - m->all_failed == 1 ? "it was" : "they were");
+            }
+            logline("%s", text);
+            if (j) {
+                if (m->all_failed || (!m->all_n && m->status != PKG_OK))
+                    finish(j, RXJ_FAILED, rx_statusword(m->status), text);
+                else if (m->all_stopped) finish(j, RXJ_CANCELLED, "", text);
+                else finish(j, RXJ_DONE, "", text);
+            }
+            if (quit_pending) return 1;
+            if (m->note[0]) logline("finished an interrupted replacement: %s", m->note);
+            busy(0);
+            {
+                IPTR t = 0;
+                GetAttr(MUIA_String_Contents, str_search, &t);
+                refill((const char *)t, NULL, "done");
+            }
+            status(text);
             return 0;
         }
         if (kind == JOB_PREVIEW_UPGRADE || kind == JOB_PREVIEW_ROLLBACK) {
@@ -2410,7 +2514,7 @@ static void rx_start(rexx_msg *m, const rx_req *r)
     job_kind kind = r->cmd == RXC_UPDATE ? JOB_UPDATE : r->cmd == RXC_INSTALL ? JOB_INSTALL :
                     r->cmd == RXC_REMOVE ? JOB_REMOVE : r->cmd == RXC_UPGRADE ? JOB_PREVIEW_UPGRADE :
                     r->cmd == RXC_RUN ? JOB_RUN : r->cmd == RXC_VERIFY ? JOB_VERIFY :
-                    JOB_PREVIEW_ROLLBACK;
+                    r->cmd == RXC_UPGRADEALL ? JOB_UPGRADE_ALL : JOB_PREVIEW_ROLLBACK;
     rx_job *j;
     if (quit_pending || rexx_quit) { rx_fail(m, RX_RC_ERROR, "CLOSING PkgManager is closing"); return; }
     if (busy_now()) {
@@ -2420,7 +2524,7 @@ static void rx_start(rexx_msg *m, const rx_req *r)
         else rx_fail(m, RX_RC_WARN, "BUSY another operation is running");
         return;
     }
-    if (kind != JOB_UPDATE) {
+    if (kind != JOB_UPDATE && kind != JOB_UPGRADE_ALL) {
         pkg_ctx *c = rx_open(m); pkg_entry e; int in_index, known;
         if (!c) return;
         known = lookup(c, r->package, &e, &in_index, NULL, NULL, 0);
@@ -2532,7 +2636,7 @@ static void rexx_dispatch(rexx_msg *m, const char *line)
     case RXC_SHOW:         rx_show(m, &r); break;
     case RXC_OUTDATED:     rx_outdated(m, &r); break;
     case RXC_UPDATE: case RXC_INSTALL: case RXC_REMOVE: case RXC_UPGRADE: case RXC_ROLLBACK:
-    case RXC_RUN: case RXC_VERIFY:
+    case RXC_RUN: case RXC_VERIFY: case RXC_UPGRADEALL:
         rx_start(m, &r); break;
     case RXC_JOB: case RXC_WAIT: rx_jobcmd(m, &r); break;
     case RXC_CANCEL:       rx_cancel(m, &r); break;
@@ -2651,6 +2755,7 @@ static int real_main(int argc, char **argv)
             { NM_ITEM,  (STRPTR)"Quit",           (STRPTR)"Q", 0, 0, (APTR)ID_QUIT },
             { NM_TITLE, (STRPTR)"Catalogue",      NULL, 0, 0, NULL },
             { NM_ITEM,  (STRPTR)"Update index",   (STRPTR)"U", 0, 0, (APTR)ID_UPDATE },
+            { NM_ITEM,  (STRPTR)"Upgrade all...", NULL, 0, 0, (APTR)ID_UPGRADEALL },
             { NM_TITLE, (STRPTR)"Package",        NULL, 0, 0, NULL },
             { NM_ITEM,  (STRPTR)"Details...",     (STRPTR)"D", 0, 0, (APTR)ID_DETAILS },
             { NM_ITEM,  NM_BARLABEL,              NULL, 0, 0, NULL },
@@ -2722,6 +2827,11 @@ static int real_main(int argc, char **argv)
                                         MUIA_ShortHelp,      (IPTR)"List only what is installed of the chosen view or category.",
                                     End),
                                     Child, Label1("Installed only"),
+                                    /* What concerns every package: all the
+                                       upgrades at once, shown while there
+                                       are any, and a new catalogue. */
+                                    Child, (btn_upall  = SimpleButton("Upgrade all...")),
+                                    Child, (btn_update = SimpleButton("Update index")),
                                 End),
                                 Child, (lst = ListviewObject,
                                     MUIA_CycleChain, 1,
@@ -2907,6 +3017,10 @@ static int real_main(int argc, char **argv)
     DoMethod(btn_open,    MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_OPEN);
     DoMethod(btn_open2,   MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_OPEN);
     DoMethod(btn_details, MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_DETAILS);
+    DoMethod(btn_upall,   MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_UPGRADEALL);
+    DoMethod(btn_update,  MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_UPDATE);
+    SetAttrs(btn_upall,  MUIA_HorizWeight, 0, MUIA_ShortHelp, (IPTR)"Upgrade every installed package that has a newer version, one after the other.", TAG_DONE);
+    SetAttrs(btn_update, MUIA_HorizWeight, 0, MUIA_ShortHelp, (IPTR)"Fetch the catalogue again.", TAG_DONE);
     DoMethod(btn_back,    MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_BACK);
     DoMethod(btn_prev,    MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_PREV);
     DoMethod(btn_next,    MUIM_Notify, MUIA_Pressed, FALSE, (IPTR)app, 2, MUIM_Application_ReturnID, ID_NEXT);
@@ -3012,6 +3126,7 @@ static int real_main(int argc, char **argv)
             if (main_action) DoMethod(app, MUIM_Application_ReturnID, main_action);
             break;
         case ID_UPDATE:  if (!busy_now()) { logline("update chosen"); begin(JOB_UPDATE, NULL, "window"); } break;
+        case ID_UPGRADEALL: if (!busy_now()) { logline("upgrade all chosen"); begin(JOB_UPGRADE_ALL, NULL, "window"); } break;
         case ID_INSTALL: { pkg_entry *e = selected(); if (e && can.install) { logline("install pressed for %s", e->id); begin(JOB_INSTALL, e->id, "window"); } } break;
         case ID_REMOVE:  { pkg_entry *e = selected(); if (e && can.remove) { logline("remove pressed for %s", e->id); begin(JOB_REMOVE, e->id, "window"); } } break;
         case ID_OPEN:    { pkg_entry *e = selected(); if (e && can.open) open_folder(e->id); } break;

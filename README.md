@@ -53,7 +53,7 @@ Run PkgManager
 ```
 
 PkgManager fetches the catalogue by itself when there is none or it is
-more than two weeks old; **Update index** in the Catalogue menu refreshes
+more than two weeks old; **Update index** above the list refreshes
 it at any time. The left column has a search field and a list of views
 (**All applications**, **Installed**, **Updates**, **Recently added**,
 **Last refresh**) followed by the catalogue's categories. Each package in
@@ -70,7 +70,8 @@ page says how, or why not.
 The status line at the bottom shows when the catalogue was last updated
 and whether installed programs have updates. The **Updates** view lists
 them, with their number beside it; **Upgrade** shows the plan and waits
-for your confirmation. `Run PkgManager --updates` opens the window on that
+for your confirmation. **Upgrade all...** above the list does the same
+for every update that can be installed, one package after the other. `Run PkgManager --updates` opens the window on that
 list.
 
 PkgManager shows a package's icon in the list and its screenshots on the
@@ -239,7 +240,7 @@ Despite its name, this script packages stable releases too; without
 `tools/make-release.sh` is the older packaging path, not the release recipe.
 
 The published release descriptions are kept in `release/notes-<version>.md`
-([0.8.4](release/notes-0.8.4.md), [0.8.3](release/notes-0.8.3.md), [0.8.2](release/notes-0.8.2.md), [0.8.1](release/notes-0.8.1.md), [0.8.0](release/notes-0.8.0.md), [0.7.8](release/notes-0.7.8.md), [0.7.7](release/notes-0.7.7.md), [0.7.6](release/notes-0.7.6.md), [0.7.5](release/notes-0.7.5.md), [0.7.4](release/notes-0.7.4.md), [0.7.3](release/notes-0.7.3.md), [0.7.2](release/notes-0.7.2.md), [0.7.1](release/notes-0.7.1.md), [0.7.0](release/notes-0.7.0.md), [0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
+([0.8.5](release/notes-0.8.5.md), [0.8.4](release/notes-0.8.4.md), [0.8.3](release/notes-0.8.3.md), [0.8.2](release/notes-0.8.2.md), [0.8.1](release/notes-0.8.1.md), [0.8.0](release/notes-0.8.0.md), [0.7.8](release/notes-0.7.8.md), [0.7.7](release/notes-0.7.7.md), [0.7.6](release/notes-0.7.6.md), [0.7.5](release/notes-0.7.5.md), [0.7.4](release/notes-0.7.4.md), [0.7.3](release/notes-0.7.3.md), [0.7.2](release/notes-0.7.2.md), [0.7.1](release/notes-0.7.1.md), [0.7.0](release/notes-0.7.0.md), [0.6.0](release/notes-0.6.0.md), [0.5.0](release/notes-0.5.0.md), [0.4.2](release/notes-0.4.2.md), [0.4.1](release/notes-0.4.1.md), [0.4.0](release/notes-0.4.0.md)). Update that file when adding
 builds, then use it for the GitHub release notes.
 
 `tests/run-host-tests.sh` runs the unit tests on the host: ZIP, LHA,

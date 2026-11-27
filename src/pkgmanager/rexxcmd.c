@@ -39,6 +39,7 @@ static const cmddef cmds[] = {
     { RXC_OUTDATED,     "OUTDATED",     1, { A_SWITCH_SHOW }, 0 },
     { RXC_RUN,          "RUN",          1, { A_POS_PKG }, 1 },
     { RXC_VERIFY,       "VERIFY",       1, { A_POS_PKG }, 1 },
+    { RXC_UPGRADEALL,   "UPGRADEALL",   0, { 0 }, 0 },
 };
 #define NCMDS (int)(sizeof cmds / sizeof cmds[0])
 

@@ -261,7 +261,9 @@ Downloads in `<root>/cache/` can remain after a package is removed. arospkg 0.8.
   badge. `Run PkgManager --updates` opens the window on that view.
 - **Right**: the name of what is listed, as a heading, and beside it
   **Installed only**, which narrows the chosen view or category to what is
-  installed (the installed games, for example). Then the packages.
+  installed (the installed games, for example). At the end of that line,
+  **Upgrade all...**, shown while an update can be installed, and
+  **Update index**, which fetches the catalogue. Then the packages.
   Each row has the package's icon (when it has one), its name, its summary
   (cut with "..." when the list is narrow) and, at the end, a small button
   that says what a click does: **Install** for a package that is not
@@ -299,7 +301,9 @@ same window. **Back** returns to the list.
 
 - **Project**: **About...** and **Quit**. The About window has **Check for
   a newer version** and **Update arospkg**.
-- **Catalogue**: **Update index** (Right Amiga+U) fetches the catalogue.
+- **Catalogue**: **Update index** (Right Amiga+U) fetches the catalogue;
+  **Upgrade all...** upgrades every package that can be. Both are also
+  buttons above the list.
 - **Package**: **Details...**, **Install**, **Run**, **Upgrade**, **Roll
   back**, **Verify**, **Open folder** and **Remove**, for the selected
   package. **Verify** and **Roll back** are only in the menu.
@@ -321,8 +325,15 @@ same window. **Back** returns to the list.
   than the selected package (what it needs, what it replaces). **Upgrade**
   and **Roll back** show their plan first and wait for your confirmation.
   **Remove** refuses a package another one needs, and says which.
-- The window installs or upgrades one package at a time. For every update
-  in one go, use `apkg upgrade --all` in the Shell.
+- **Upgrade all...** lists the packages it will upgrade, with the
+  installed and the new version, and those it leaves out, with the
+  reason, and waits for your confirmation. Then it upgrades them one
+  after the other, as `apkg upgrade --all` does: each package is its own
+  operation, files you changed are kept, and one that fails (because a
+  file you changed would be overwritten, for example) stays as it was
+  while the others continue. **Cancel** during a download stops the
+  group there. The status line then says how many were upgraded and what
+  went wrong with the first that failed.
 - Downloads, checks and starts run on a worker process, so the window
   keeps answering; **Cancel** stops a download.
 - Without a catalogue, or with one that cannot be read, PkgManager still
