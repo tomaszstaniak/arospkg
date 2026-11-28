@@ -1,6 +1,6 @@
 /* Extraction limits and what reaches the disk: a member over 0.5.0's 64 MiB
- * limit extracts with constant memory, the 128 MiB member and 256 MiB total
- * limits still refuse, and an archive whose directory lies about a member
+ * limit extracts with constant memory, archives over the limits of 0.8.5
+ * extract, the 1 GiB member and 2 GiB total limits refuse, and an archive whose directory lies about a member
  * (CRC, size, stored sizes) is refused rather than written as declared. */
 #include "../src/libpkg/zip.h"
 #include "../src/libpkg/limits.h"
@@ -41,8 +41,10 @@ int main(int argc, char **argv)
 #else
     ok(ru.ru_maxrss - before < 16 * 1024, "with constant memory: the peak grew by less than 16 MiB");
 #endif
-    ok(run(dir, "over.zip", why) != 0 && strstr(why, "size limit"), "a 129 MiB member is over the 128 MiB limit");
-    ok(run(dir, "total.zip", why) != 0 && strstr(why, "total size limit"), "300 MiB in all is over the 256 MiB limit");
+    ok(run(dir, "was-over.zip", why) == 0, "a 129 MiB member extracts (refused by 0.8.5's 128 MiB limit)");
+    ok(run(dir, "was-total.zip", why) == 0, "300 MiB in all extracts (refused by 0.8.5's 256 MiB limit)");
+    ok(run(dir, "over.zip", why) != 0 && strstr(why, "size limit"), "a member of 1 GiB and 1 MiB is over the 1 GiB limit");
+    ok(run(dir, "total.zip", why) != 0 && strstr(why, "total size limit"), "2.1 GiB in all is over the 2 GiB limit");
     ok(run(dir, "stored.zip", why) == 0, "a stored member extracts");
     ok(run(dir, "badcrc.zip", why) != 0 && strstr(why, "CRC"), "a member whose CRC-32 does not match is refused");
     ok(run(dir, "smaller.zip", why) != 0 && strstr(why, "larger than declared"),

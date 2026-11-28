@@ -138,6 +138,8 @@ Metadata validation checks: ids are package ids; a minimum version is dotted num
 
 **Large members.** apkg before 0.6 refuses an archive with a member that unpacks to more than 64 MiB ("member over size limit"); 0.6 accepts up to 128 MiB in a ZIP. The review record (`tools/review.py`, suite 3) notes the largest member, and an entry whose largest member is over 64 MiB carries `"client_features": ["large-members"]` and is published only in `index-v3.json`. Entries reviewed before suite 3 carry no size record and are listed as before.
 
+**Large archives.** apkg up to 0.8.5 refuses a download over 64 MiB, a ZIP member that unpacks to more than 128 MiB, an LHA member over 64 MiB, and an archive that unpacks to more than 256 MiB in all. 0.8.6 writes a download to the disk as it arrives and accepts 1 GiB downloaded, 1 GiB for one ZIP member and 2 GiB in all; an LHA archive and each of its members may be 256 MiB. An entry over a limit of 0.8.5 carries `"client_features": ["large-archives"]` and is published only in `index-v3.json`. Earlier clients that read that file do not install an entry with a feature they do not know, and say that a newer apkg is needed.
+
 **States.** For each relation `show` keeps apart: the id is in the catalogue (for any system); the catalogue has a build for this system, new enough; the registry has it in this root; and the relation is satisfied (installed, for this system, new enough). An author's declaration never makes an entry Reviewed or runtime tested.
 
 A library requirement is decided on the machine, in this order:

@@ -153,15 +153,18 @@ def _check_cpu(m, heads):
     return "passed", detail
 
 
-# What the client accepts (src/libpkg/limits.h), and what clients before 0.6
-# accepted for one member. An entry with a larger member names the client
-# feature "large-members" (mkindex.client_features) and is left out of
-# index-v2.json, which those clients read.
-MAX_DOWNLOAD = 64 * 1024 * 1024
-MAX_MEMBER_ZIP = 128 * 1024 * 1024
-MAX_MEMBER_LHA = 64 * 1024 * 1024
-MAX_TOTAL = 256 * 1024 * 1024
-OLD_CLIENT_MAX_MEMBER = 64 * 1024 * 1024
+# What the client accepts (src/libpkg/limits.h), and what earlier clients
+# accepted. An entry with a member over what clients before 0.6 took names the
+# client feature "large-members", one over any limit of clients up to 0.8.5
+# names "large-archives" (mkindex.client_features); both are left out of
+# index-v2.json, and a client that does not know a feature does not install
+# the entry.
+MAX_DOWNLOAD = 1024 * 1024 * 1024
+MAX_MEMBER_ZIP = 1024 * 1024 * 1024
+MAX_MEMBER_LHA = 256 * 1024 * 1024
+MAX_ARCHIVE_LHA = 256 * 1024 * 1024
+MAX_TOTAL = 2048 * 1024 * 1024
+OLD_CLIENT_MAX_MEMBER = mkindex.OLD_CLIENT_MAX_MEMBER
 
 
 def archive_sizes(path):
@@ -215,17 +218,22 @@ def review(m, archive, data=None, today=None):
     if names is not None:
         try:
             big_name, big, total, kind = archive_sizes(archive)
-            sizes = {"largest_member": big, "unpacked": total}
+            sizes = {"largest_member": big, "unpacked": total, "kind": kind}
             limit = MAX_MEMBER_ZIP if kind == "zip" else MAX_MEMBER_LHA
             over = []
             if len(data) > MAX_DOWNLOAD:
                 over.append(f"the archive is {len(data)} bytes, over the {MAX_DOWNLOAD}-byte download limit")
+            if kind == "lha" and len(data) > MAX_ARCHIVE_LHA:
+                over.append(f"the LHA archive is {len(data)} bytes, over the {MAX_ARCHIVE_LHA} bytes "
+                            f"the client reads of one; a ZIP archive may be larger")
             if big > limit:
                 over.append(f"{big_name} unpacks to {big} bytes, over the {limit}-byte limit for one member")
             if total > MAX_TOTAL:
                 over.append(f"the members unpack to {total} bytes, over the {MAX_TOTAL}-byte limit")
             note = f"largest member {big} bytes ({big_name}), {total} bytes unpacked"
-            if not over and big > OLD_CLIENT_MAX_MEMBER:
+            if not over and mkindex.over_085_limits(len(data), sizes):
+                note += "; over a limit of clients up to 0.8.5, which refuse it"
+            elif not over and big > OLD_CLIENT_MAX_MEMBER:
                 note += "; over 64 MiB, which clients before 0.6 refuse"
             add("sizes", "failed" if over else "passed", "; ".join(over) or note)
         except Exception as exc:

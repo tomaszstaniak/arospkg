@@ -16,11 +16,24 @@ with zipfile.ZipFile(path("big.zip"), "w", zipfile.ZIP_DEFLATED) as z:
     z.writestr("App/App", (b"AROS" * 1024) * (big // 4096))
     z.writestr("App/README", b"read me\n")
     z.writestr("App.info", b"I" * 64)
-with zipfile.ZipFile(path("over.zip"), "w", zipfile.ZIP_DEFLATED) as z:
-    z.writestr("App/App", b"\0" * (129 * 1024 * 1024))
-with zipfile.ZipFile(path("total.zip"), "w", zipfile.ZIP_DEFLATED) as z:
+def zeros(z, name, mib):
+    block = b"\0" * (1024 * 1024)
+    with z.open(name, "w") as f:
+        for _ in range(mib):
+            f.write(block)
+
+# Over the limits of 0.8.6: one member of 1 GiB + 1 MiB, and 2.1 GiB in all.
+with zipfile.ZipFile(path("over.zip"), "w", zipfile.ZIP_DEFLATED, compresslevel=1) as z:
+    zeros(z, "App/App", 1025)
+with zipfile.ZipFile(path("total.zip"), "w", zipfile.ZIP_DEFLATED, compresslevel=1) as z:
     for i in range(3):
-        z.writestr("App/part%d" % i, b"\0" * (100 * 1024 * 1024))
+        zeros(z, "App/part%d" % i, 700)
+# What 0.8.5 refused and 0.8.6 takes: a 129 MiB member, and 300 MiB in all.
+with zipfile.ZipFile(path("was-over.zip"), "w", zipfile.ZIP_DEFLATED, compresslevel=1) as z:
+    zeros(z, "App/App", 129)
+with zipfile.ZipFile(path("was-total.zip"), "w", zipfile.ZIP_DEFLATED, compresslevel=1) as z:
+    for i in range(3):
+        zeros(z, "App/part%d" % i, 100)
 with zipfile.ZipFile(path("stored.zip"), "w", zipfile.ZIP_STORED) as z:
     z.writestr("App/data", os.urandom(300000))
 

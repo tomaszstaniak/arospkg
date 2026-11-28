@@ -109,6 +109,9 @@ python3 "$HERE/make-zip-limits.py" "$OUT/zip-limits"
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_zip_limits" \
     "$HERE/test_zip_limits.c" "$SRC/zip.c" "$HERE/host_util.c" -lz
 
+$CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_httpresp" \
+    "$HERE/test_httpresp.c" "$SRC/httpresp.c"
+
 python3 "$HERE/make-lha-fixtures.py"
 
 $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_lha" \
@@ -118,7 +121,7 @@ $CC -O1 -Wall -Wextra -std=gnu99 -o "$OUT/test_longpath" \
     "$HERE/test_longpath.c" "$SRC/arc.c" "$SRC/lha.c" "$SRC/zip.c" "$HERE/host_util.c" -lz
 
 fail=0
-for t in test_sha256 test_req test_icon test_listing test_entries test_upgrade test_verify test_zip test_lha test_longpath test_rexxcmd; do
+for t in test_sha256 test_req test_icon test_listing test_entries test_upgrade test_verify test_zip test_lha test_longpath test_rexxcmd test_httpresp; do
     echo "== $t"
     "$OUT/$t" || fail=1
 done

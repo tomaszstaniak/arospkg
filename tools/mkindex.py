@@ -197,8 +197,25 @@ REL_KEYS = ("depends", "recommends", "conflicts", "replaces")
 # "large-members": a member over 64 MiB unpacked, which clients before 0.6
 # refused ("member over size limit"). Known from the entry's review record
 # (tools/review.py, suite 3 on), so an entry reviewed before that has none.
-CLIENT_FEATURES = ("relations", "large-members")
+#
+# "large-archives": an archive over a limit of clients up to 0.8.5: 64 MiB
+# downloaded, 128 MiB for one unpacked ZIP member, 64 MiB for one unpacked
+# LHA member, 256 MiB unpacked in all. Those clients refuse an entry that
+# names a feature they do not know, before downloading.
+CLIENT_FEATURES = ("relations", "large-members", "large-archives")
 OLD_CLIENT_MAX_MEMBER = 64 * 1024 * 1024
+LIMITS_085 = {"download": 64 * 1024 * 1024, "member_zip": 128 * 1024 * 1024,
+              "member_lha": 64 * 1024 * 1024, "unpacked": 256 * 1024 * 1024}
+
+
+def over_085_limits(size, sizes):
+    """Whether an archive of `size` bytes with the review record's `sizes` is
+    more than clients up to 0.8.5 accept."""
+    sizes = sizes or {}
+    member = LIMITS_085["member_lha" if sizes.get("kind") == "lha" else "member_zip"]
+    return ((size or 0) > LIMITS_085["download"]
+            or sizes.get("largest_member", 0) > member
+            or sizes.get("unpacked", 0) > LIMITS_085["unpacked"])
 DEPEND_RE = re.compile(r"^([a-z][a-z0-9._-]{0,63})(?: >= ([0-9]{1,9}(?:\.[0-9]{1,9}){0,7}))?$")
 
 
@@ -295,6 +312,9 @@ def client_features(m, review_rec=None):
     out = ["relations"] if any(m.get(k) for k in ("depends", "conflicts", "replaces")) else []
     if review_rec and (review_rec.get("sizes") or {}).get("largest_member", 0) > OLD_CLIENT_MAX_MEMBER:
         out.append("large-members")
+    size = m.get("size")
+    if over_085_limits(size if isinstance(size, int) else 0, (review_rec or {}).get("sizes")):
+        out.append("large-archives")
     return out
 
 

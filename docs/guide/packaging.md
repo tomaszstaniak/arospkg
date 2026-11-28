@@ -25,15 +25,18 @@ Empty drawers are preserved. File protection bits and comments are not restored,
 
 Existing ZIP and LHA uploads can also be listed. Supported ZIP methods are stored and deflate; supported LHA methods are `-lh0-`, `-lh5-`, `-lh6-`, `-lh7-` and directory entries, with header levels 0–2.
 
-| Limit in arospkg 0.8.0 | Maximum |
-|---|---|
-| Downloaded archive | 64 MiB |
-| One unpacked ZIP member | 128 MiB |
-| One unpacked LHA member | 64 MiB |
-| All unpacked members | 256 MiB |
+| Limit | arospkg 0.8.6 | 0.6 to 0.8.5 |
+|---|---|---|
+| Downloaded ZIP archive | 1 GiB | 64 MiB |
+| Downloaded LHA archive | 256 MiB | 64 MiB |
+| One unpacked ZIP member | 1 GiB | 128 MiB |
+| One unpacked LHA member | 256 MiB | 64 MiB |
+| All unpacked members | 2 GiB | 256 MiB |
 | Drawer icon | 1 MiB |
 | Files in a package | 2048 |
 | Path inside the installed drawer | 255 bytes |
+
+An archive over a limit of 0.8.5 is offered only to arospkg 0.8.6 and later; see [Large archives](metadata.md). Use ZIP for a large package: an LHA archive is read into memory whole, a ZIP is not.
 
 Use relative paths with `/` separators. Avoid absolute paths, volume names, `..`, control characters and names that differ only in case. Run `apkg-pack check` before publishing; the catalogue review also checks archive paths and layout.
 

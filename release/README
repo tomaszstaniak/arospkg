@@ -1,4 +1,4 @@
-arospkg 0.8.5
+arospkg 0.8.6
 =============
 
 Find, install, start, update and remove software for AROS, with apkg in
@@ -43,7 +43,7 @@ back are in the menu.
 BUILDS
 ------
 
-0.8.5:
+0.8.6:
   x86_64-aros-v11    apkg and PkgManager: stable (AROS One)
   x86_64-aros-v1     apkg and PkgManager: experimental (mainline AROS,
                      nightly builds of 2026-11-24 or later)
@@ -85,6 +85,15 @@ before the command:
   apkg --root "Work:Packages" run soliton
 
 Use the same root for later operations on those packages.
+
+NEW IN 0.8.6
+------------
+
+- Larger packages: an archive may be 1 GiB (before: 64 MiB), one file
+  in a ZIP 1 GiB (128 MiB), all files of a package 2 GiB (256 MiB).
+  An LHA archive and each of its files may be 256 MiB.
+- A download is written to the disk as it arrives and no longer held
+  in memory first.
 
 NEW IN 0.8.5
 ------------

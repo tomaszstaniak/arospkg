@@ -321,14 +321,14 @@ pkg_status pkg_media_icons(pkg_ctx *c, const char *index_path, pkg_err *e)
     pkg_status st;
     mfile f;
     if (bundle_of(index_path, &f) != 0 || !pkg_media_icons_due(c->root, index_path)) return PKG_OK;
-    if (f.size > PKG_MAX_DOWNLOAD)
+    if (f.size > PKG_MEDIA_MAXBUNDLE)
         return pkg_fail(e, PKG_E_ARCHIVE, "the catalogue's archive of icons is too large", "", f.url);
     pkg_media_dir(c->root, NULL, dir, sizeof dir); u_mkdir(dir);
     snprintf(arc, sizeof arc, "%s/icons.zip", c->cache);
     st = fetch_verified(c, "icons", f.url, f.sha, f.size, arc, e);
     if (st != PKG_OK) return st;
     prog(c, "extract", 0, 1, 0);
-    if (zip_extract(arc, dir, "", PKG_MEDIA_MAXBYTES, PKG_MAX_DOWNLOAD, NULL, NULL, why) != 0) {
+    if (zip_extract(arc, dir, "", PKG_MEDIA_MAXBYTES, PKG_MEDIA_MAXBUNDLE, NULL, NULL, why) != 0) {
         u_delete(arc);
         return pkg_fail(e, PKG_E_ARCHIVE, "the catalogue's archive of icons was rejected", why, f.url);
     }

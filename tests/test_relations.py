@@ -125,6 +125,22 @@ if r.returncode or v3["big"].get("client_features") != ["large-members"] or "cli
     fails.append(f"a member over 64 MiB needs large-members and is left out of index-v2.json: {r.stdout}{r.stderr} {v2}")
 if mkindex.client_features(M(id="x"), {"sizes": {"largest_member": 64 * 1024 * 1024}}):
     fails.append("exactly 64 MiB is still within what old clients accept")
+# Large archives: over a limit of clients up to 0.8.5.
+MIB = 1024 * 1024
+for what, size, sizes, want in (
+        ("a 65 MiB archive", 65 * MIB, {"largest_member": MIB, "unpacked": MIB, "kind": "zip"}, ["large-archives"]),
+        ("a 64 MiB archive", 64 * MIB, {"largest_member": MIB, "unpacked": MIB, "kind": "zip"}, []),
+        ("a 65 MiB archive without a review record", 65 * MIB, None, ["large-archives"]),
+        ("a 129 MiB ZIP member", MIB, {"largest_member": 129 * MIB, "unpacked": 129 * MIB, "kind": "zip"},
+         ["large-members", "large-archives"]),
+        ("a 128 MiB ZIP member", MIB, {"largest_member": 128 * MIB, "unpacked": 128 * MIB, "kind": "zip"}, ["large-members"]),
+        ("a 65 MiB LHA member", MIB, {"largest_member": 65 * MIB, "unpacked": 65 * MIB, "kind": "lha"},
+         ["large-members", "large-archives"]),
+        ("257 MiB unpacked", MIB, {"largest_member": MIB, "unpacked": 257 * MIB, "kind": "zip"}, ["large-archives"]),
+        ("256 MiB unpacked", MIB, {"largest_member": MIB, "unpacked": 256 * MIB, "kind": "zip"}, [])):
+    got = mkindex.client_features(M(id="x", size=size), {"sizes": sizes} if sizes else None)
+    if got != want:
+        fails.append(f"{what}: features {got}, want {want}")
 
 if fails:
     print("\n".join(fails)); print(f"RELATIONS: {len(fails)} failed"); sys.exit(1)

@@ -11,6 +11,7 @@
 
 #define PKG_MEDIA_SHOTS     6
 #define PKG_MEDIA_MAXBYTES  (512L * 1024)
+#define PKG_MEDIA_MAXBUNDLE (64L * 1024 * 1024)   /* the catalogue's archive of icons, packed and unpacked */
 #define PKG_ICON_W          64
 #define PKG_ICON_H          64
 #define PKG_ICON_SMALL_W    24

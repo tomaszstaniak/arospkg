@@ -48,7 +48,7 @@ except ImportError:
 # standalone tool has no such neighbour and is told where the index is.
 SIBLING_INDEX = HERE.parent.parent / "arospkg-index"
 
-DOWNLOAD_MAX = 64 * 1024 * 1024          # the client's own download limit
+DOWNLOAD_MAX = 1024 * 1024 * 1024          # the client's own download limit
 # apkg-pack writes ZIP; the client streams ZIP members up to 128 MiB since 0.6.0 (src/libpkg/limits.h).
 FILE_MAX, TOTAL_MAX = 128 * 1024 * 1024, 256 * 1024 * 1024
 JUNK = re.compile(r"(^|/)(\.DS_Store|\._[^/]*|\.git(/|$)|Thumbs\.db)")

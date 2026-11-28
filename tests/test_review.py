@@ -128,7 +128,8 @@ if "another CPU" not in cpu["detail"]:
 
 # Sizes: recorded for the catalogue, and checked against what the client accepts.
 rec, *_ = run("sizes recorded", GOOD, "passed")
-if rec.get("sizes") != {"largest_member": len(GOOD[1][1]), "unpacked": sum(len(d) for n, d in GOOD if not n.endswith("/"))}:
+if rec.get("sizes") != {"largest_member": len(GOOD[1][1]), "unpacked": sum(len(d) for n, d in GOOD if not n.endswith("/")),
+                        "kind": "zip"}:
     fails.append(f"the largest member and the unpacked total are recorded: {rec.get('sizes')}")
 big = 70 * 1024 * 1024
 deflated = lambda ms: zip_of(ms, zipfile.ZIP_DEFLATED)
@@ -136,11 +137,40 @@ rec, *_ = run("a member over 64 MiB", GOOD + [("Demo/Big", b"\0" * big)], "passe
 sz = [c for c in rec["checks"] if c["name"] == "sizes"][0]
 if rec["sizes"]["largest_member"] != big or "clients before 0.6" not in sz["detail"]:
     fails.append(f"a member over 64 MiB passes and says which clients refuse it: {sz}")
-run("a member over 128 MiB", GOOD + [("Demo/Huge", b"\0" * (129 * 1024 * 1024))], "failed", "sizes", "limit for one member",
+# What clients up to 0.8.5 refused passes, and the record says who refuses it.
+for name, members, make in (
+        ("a member over 128 MiB", GOOD + [("Demo/Huge", b"\0" * (129 * 1024 * 1024))], deflated),
+        ("an archive over 64 MiB", GOOD + [("Demo/Noise", os.urandom(65 * 1024 * 1024))], zip_of),
+        ("an LHA member over 64 MiB", [("Demo/Demo", elf(62)), ("Demo/Demo.info", b"i"), ("Demo.info", b"i"),
+                                       ("Demo/Big", b"\0" * big)], lha_of)):
+    rec, *_ = run(name, members, "passed", make=make)
+    sz = [c for c in rec["checks"] if c["name"] == "sizes"][0]
+    if "clients up to 0.8.5" not in sz["detail"]:
+        fails.append(f"{name} passes and says which clients refuse it: {sz}")
+# The client's limits refuse. They are 1 GiB and more, so the test lowers them
+# instead of making archives of that size.
+kept = (rv.MAX_DOWNLOAD, rv.MAX_MEMBER_ZIP, rv.MAX_MEMBER_LHA, rv.MAX_ARCHIVE_LHA, rv.MAX_TOTAL)
+mib = 1024 * 1024
+rv.MAX_MEMBER_ZIP = 2 * mib
+run("a ZIP member over the limit", GOOD + [("Demo/Huge", b"\0" * (3 * mib))], "failed", "sizes", "limit for one member",
     make=deflated)
-run("an archive over 64 MiB", GOOD + [("Demo/Noise", os.urandom(65 * 1024 * 1024))], "failed", "sizes", "download limit")
-run("an LHA member over 64 MiB", [("Demo/Demo", elf(62)), ("Demo/Demo.info", b"i"), ("Demo.info", b"i"),
-                                  ("Demo/Big", b"\0" * big)], "failed", "sizes", "limit for one member", make=lha_of)
+rv.MAX_MEMBER_ZIP = kept[1]
+rv.MAX_DOWNLOAD = 2 * mib
+run("an archive over the download limit", GOOD + [("Demo/Noise", os.urandom(3 * mib))], "failed", "sizes", "download limit")
+rv.MAX_DOWNLOAD = kept[0]
+rv.MAX_TOTAL = 2 * mib
+run("members over the total", GOOD + [("Demo/A", b"\0" * (2 * mib)), ("Demo/B", b"\0" * mib)], "failed", "sizes",
+    "bytes, over the", make=deflated)
+rv.MAX_TOTAL = kept[4]
+lha_members = [("Demo/Demo", elf(62)), ("Demo/Demo.info", b"i"), ("Demo.info", b"i")]
+rv.MAX_MEMBER_LHA = 2 * mib
+run("an LHA member over the limit", lha_members + [("Demo/Big", b"\0" * (3 * mib))], "failed", "sizes",
+    "limit for one member", make=lha_of)
+rv.MAX_MEMBER_LHA = kept[2]
+rv.MAX_ARCHIVE_LHA = 2 * mib
+run("an LHA archive over what the client reads", lha_members + [("Demo/Noise", os.urandom(3 * mib))], "failed", "sizes",
+    "the client reads of one", make=lha_of)
+rv.MAX_ARCHIVE_LHA = kept[3]
 
 def zip_with_link(members, link, target):
     b = io.BytesIO()

@@ -11,7 +11,7 @@
 #include <string.h>
 
 /* Client features this client implements (mkindex.py CLIENT_FEATURES). */
-static const char *const FEATURES[] = { "relations", "large-members" };
+static const char *const FEATURES[] = { "relations", "large-members", "large-archives" };
 
 static int lc(int ch) { return (ch >= 'A' && ch <= 'Z') ? ch - 'A' + 'a' : ch; }
 

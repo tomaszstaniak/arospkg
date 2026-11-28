@@ -31,6 +31,20 @@ const char *arc_kind(const char *archive)
     return NULL;
 }
 
+static int lha_too_large(const char *archive, char why[160])
+{
+    FILE *f = fopen(archive, "rb");
+    long size = -1;
+    if (f) {
+        if (fseek(f, 0, SEEK_END) == 0) size = ftell(f);
+        fclose(f);
+    }
+    if (size <= PKG_MAX_MEMBER_BUFFERED) return 0;
+    snprintf(why, 160, "an LHA archive over %ld MiB is not read; a ZIP archive may be larger",
+             PKG_MAX_MEMBER_BUFFERED / (1024L * 1024));
+    return 1;
+}
+
 int arc_extract(const char *archive, const char *dest, const char *strip,
                 long max_file, long max_total,
                 arc_cb cb, void *user, char why[160])
@@ -41,10 +55,12 @@ int arc_extract(const char *archive, const char *dest, const char *strip,
         return -1;
     }
     /* The LHA reader holds the archive and each member in memory. */
-    if (!strcmp(kind, "lha"))
+    if (!strcmp(kind, "lha")) {
+        if (lha_too_large(archive, why)) return -1;
         return lha_extract(archive, dest, strip,
                            max_file > PKG_MAX_MEMBER_BUFFERED ? PKG_MAX_MEMBER_BUFFERED : max_file, max_total,
                            (lha_cb)cb, user, why);
+    }
     return zip_extract(archive, dest, strip, max_file, max_total,
                        (zip_cb)cb, user, why);
 }
@@ -57,8 +73,10 @@ int arc_extract_member(const char *archive, const char *member,
         snprintf(why, 160, "not a ZIP or LHA archive");
         return -1;
     }
-    if (!strcmp(kind, "lha"))
+    if (!strcmp(kind, "lha")) {
+        if (lha_too_large(archive, why)) return -1;
         return lha_extract_member(archive, member, dest_file,
                                   max_file > PKG_MAX_MEMBER_BUFFERED ? PKG_MAX_MEMBER_BUFFERED : max_file, why);
+    }
     return zip_extract_member(archive, member, dest_file, max_file, why);
 }

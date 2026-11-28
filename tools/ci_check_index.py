@@ -51,7 +51,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mkindex  # noqa: E402
 import review as rv  # noqa: E402
-DOWNLOAD_MAX = 64 * 1024 * 1024
+DOWNLOAD_MAX = 1024 * 1024 * 1024
 TIMEOUT = 300
 
 
